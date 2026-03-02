@@ -8,6 +8,7 @@ import AppLayout from "@/components/AppLayout";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import SocietarioPage from "@/pages/SocietarioPage";
+import SocietarioEmpresaPage from "@/pages/SocietarioEmpresaPage";
 import CertificadosPage from "@/pages/CertificadosPage";
 import ProcuracoesPage from "@/pages/ProcuracoesPage";
 import FiscalPage from "@/pages/FiscalPage";
@@ -42,6 +43,8 @@ const App = () => (
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/societario" element={<SocietarioPage />} />
+              <Route path="/societario/:id" element={<SocietarioEmpresaPage />} />
+              <Route path="/societario/:id/editar" element={<SocietarioEmpresaPage />} />
               <Route path="/certificados" element={<CertificadosPage />} />
               <Route path="/procuracoes" element={<ProcuracoesPage />} />
               <Route path="/fiscal" element={<FiscalPage />} />
