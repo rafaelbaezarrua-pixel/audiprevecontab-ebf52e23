@@ -1,135 +1,170 @@
 import React, { useEffect, useState } from "react";
-import { db, ref, onValue, push, remove, update } from "@/lib/firebase";
-import { Plus, Edit2, Trash2, X, Search, CheckCircle, Circle } from "lucide-react";
+import { db, ref, onValue, update } from "@/lib/firebase";
+import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
-interface Obrigacao {
+interface Empresa {
   id: string;
-  empresa: string;
-  obrigacao: string;
-  competencia: string;
-  dataVencimento: string;
-  status: string;
-  responsavel?: string;
+  nomeEmpresa: string;
+  cnpj: string;
+  situacao: string;
+  regimeTributario: string;
 }
 
-const obrigacoesLista = ["DCTF", "ECD", "ECF", "DIRF", "RAIS", "SPED Fiscal", "SPED Contribuições", "DEFIS", "DASN-SIMEI", "GFIP", "eSocial", "EFD-Reinf", "Outro"];
+interface ObrigacaoItem {
+  status: string; // pendente | concluida
+  responsavel?: string;
+  dataEntrega?: string;
+}
+
+type ObrigacaoData = Record<string, ObrigacaoItem>;
+
+const obrigacoesSimples = ["PGDAS-D", "DEFIS", "DCTF Web", "eSocial", "EFD-Reinf", "DIRF", "RAIS"];
+const obrigacoesLucro = ["DCTF", "ECD", "ECF", "SPED Fiscal", "SPED Contribuições", "DCTF Web", "eSocial", "EFD-Reinf", "DIRF", "RAIS", "GFIP"];
 
 const ObrigacoesPage: React.FC = () => {
-  const [items, setItems] = useState<Obrigacao[]>([]);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [obrigData, setObrigData] = useState<Record<string, ObrigacaoData>>({});
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<Obrigacao | null>(null);
-  const [form, setForm] = useState({ empresa: "", obrigacao: "DCTF", competencia: "", dataVencimento: "", status: "pendente", responsavel: "" });
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, ObrigacaoData>>({});
 
   useEffect(() => {
-    const unsub = onValue(ref(db, "obrigacoes"), (snap) => {
+    const unsub = onValue(ref(db, "empresas"), (snap) => {
       const data = snap.val() || {};
-      setItems(Object.entries(data).map(([id, val]: any) => ({ id, ...val })));
+      setEmpresas(Object.entries(data).map(([id, val]: any) => ({ id, ...val })).filter((e: Empresa) => e.situacao !== "baixada"));
     });
     return () => unsub();
   }, []);
 
-  const filtered = items.filter(o =>
-    (o.empresa?.toLowerCase().includes(search.toLowerCase()) || o.obrigacao?.toLowerCase().includes(search.toLowerCase())) &&
-    (!competencia || o.competencia === competencia)
-  );
+  useEffect(() => {
+    const unsub = onValue(ref(db, `obrigacoes_mensal/${competencia}`), (snap) => {
+      setObrigData(snap.val() || {});
+    });
+    return () => unsub();
+  }, [competencia]);
 
-  const openNew = () => { setEditing(null); setForm({ empresa: "", obrigacao: "DCTF", competencia, dataVencimento: "", status: "pendente", responsavel: "" }); setShowForm(true); };
-  const openEdit = (o: Obrigacao) => { setEditing(o); setForm({ empresa: o.empresa, obrigacao: o.obrigacao, competencia: o.competencia, dataVencimento: o.dataVencimento || "", status: o.status, responsavel: o.responsavel || "" }); setShowForm(true); };
+  const filtered = empresas.filter(e => e.nomeEmpresa?.toLowerCase().includes(search.toLowerCase()));
 
-  const toggleStatus = async (o: Obrigacao) => {
-    const newStatus = o.status === "concluída" ? "pendente" : "concluída";
-    await update(ref(db, `obrigacoes/${o.id}`), { status: newStatus });
-    toast.success(newStatus === "concluída" ? "Marcada como concluída!" : "Marcada como pendente!");
+  const getObrigacoes = (regime: string) => {
+    if (regime === "simples" || regime === "mei") return obrigacoesSimples;
+    return obrigacoesLucro;
   };
 
-  const handleSave = async () => {
-    if (!form.empresa.trim()) { toast.error("Empresa obrigatória"); return; }
+  const toggleExpand = (id: string) => {
+    if (expanded === id) { setExpanded(null); return; }
+    setExpanded(id);
+    const emp = empresas.find(e => e.id === id);
+    const current = obrigData[id] || {};
+    const obrigacoes = getObrigacoes(emp?.regimeTributario || "simples");
+    const formData: ObrigacaoData = {};
+    obrigacoes.forEach(o => {
+      formData[o] = current[o] || { status: "pendente", responsavel: "", dataEntrega: "" };
+    });
+    setEditForm(prev => ({ ...prev, [id]: formData }));
+  };
+
+  const toggleStatus = (empresaId: string, obrigacao: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [empresaId]: {
+        ...prev[empresaId],
+        [obrigacao]: {
+          ...prev[empresaId]?.[obrigacao],
+          status: prev[empresaId]?.[obrigacao]?.status === "concluida" ? "pendente" : "concluida"
+        }
+      }
+    }));
+  };
+
+  const handleSave = async (empresaId: string) => {
     try {
-      if (editing) { await update(ref(db, `obrigacoes/${editing.id}`), form); toast.success("Atualizada!"); }
-      else { await push(ref(db, "obrigacoes"), form); toast.success("Cadastrada!"); }
-      setShowForm(false);
+      await update(ref(db, `obrigacoes_mensal/${competencia}/${empresaId}`), editForm[empresaId]);
+      toast.success("Obrigações salvas!");
     } catch (err: any) { toast.error(err.message); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Excluir?")) return;
-    await remove(ref(db, `obrigacoes/${id}`));
-    toast.success("Excluída!");
+  const getProgress = (empresaId: string) => {
+    const data = obrigData[empresaId] || {};
+    const items = Object.values(data);
+    if (items.length === 0) return 0;
+    return Math.round((items.filter(i => i.status === "concluida").length / items.length) * 100);
   };
 
-  const totalPendente = filtered.filter(o => o.status !== "concluída").length;
-  const totalConcluida = filtered.filter(o => o.status === "concluída").length;
+  const totalCompleted = empresas.filter(e => getProgress(e.id) === 100).length;
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="relative max-w-xs">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
-          </div>
-          <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-card-foreground">Obrigações Acessórias</h1>
+          <p className="text-sm text-muted-foreground mt-1">Checklist mensal de obrigações por empresa</p>
         </div>
-        <button onClick={openNew} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Plus size={16} /> Nova Obrigação</button>
+        <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="stat-card"><p className="text-sm text-muted-foreground">Pendentes</p><p className="text-xl font-bold text-warning mt-1">{totalPendente}</p></div>
-        <div className="stat-card"><p className="text-sm text-muted-foreground">Concluídas</p><p className="text-xl font-bold text-success mt-1">{totalConcluida}</p></div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Empresas</p><p className="text-2xl font-bold text-primary mt-1">{empresas.length}</p></div>
+        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">100% Concluídas</p><p className="text-2xl font-bold text-success mt-1">{totalCompleted}</p></div>
+        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Pendentes</p><p className="text-2xl font-bold text-warning mt-1">{empresas.length - totalCompleted}</p></div>
       </div>
 
-      <div className="module-card overflow-x-auto">
-        <table className="data-table">
-          <thead><tr><th className="w-10"></th><th>Empresa</th><th>Obrigação</th><th>Vencimento</th><th>Responsável</th><th>Status</th><th className="text-right">Ações</th></tr></thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma obrigação</td></tr>
-            ) : filtered.map(o => (
-              <tr key={o.id}>
-                <td><button onClick={() => toggleStatus(o)} className="text-muted-foreground hover:text-success">{o.status === "concluída" ? <CheckCircle size={18} className="text-success" /> : <Circle size={18} />}</button></td>
-                <td className="font-medium text-card-foreground">{o.empresa}</td>
-                <td><span className="badge-status badge-info">{o.obrigacao}</span></td>
-                <td className="text-muted-foreground">{o.dataVencimento ? new Date(o.dataVencimento).toLocaleDateString("pt-BR") : "—"}</td>
-                <td className="text-muted-foreground">{o.responsavel || "—"}</td>
-                <td><span className={`badge-status ${o.status === "concluída" ? "badge-success" : "badge-warning"}`}>{o.status === "concluída" ? "Concluída" : "Pendente"}</span></td>
-                <td className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => openEdit(o)} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary"><Edit2 size={15} /></button>
-                    <button onClick={() => handleDelete(o.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={15} /></button>
+      <div className="relative max-w-sm">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
+      </div>
+
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <div className="module-card text-center py-12 text-muted-foreground">Nenhuma empresa encontrada</div>
+        ) : filtered.map(emp => {
+          const isOpen = expanded === emp.id;
+          const progress = getProgress(emp.id);
+          const form = editForm[emp.id] || {};
+
+          return (
+            <div key={emp.id} className="module-card !p-0 overflow-hidden">
+              <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => toggleExpand(emp.id)}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Building2 size={16} className="text-primary" />
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  <div>
+                    <p className="font-medium text-card-foreground">{emp.nomeEmpresa}</p>
+                    <p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium">{progress}%</span>
+                  {isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+                </div>
+              </div>
 
-      {showForm && (
-        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-card rounded-xl shadow-2xl w-full max-w-lg border border-border" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b border-border"><h3 className="text-lg font-bold text-card-foreground">{editing ? "Editar" : "Nova"} Obrigação</h3><button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button></div>
-            <div className="p-5 space-y-4">
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Empresa</label><input value={form.empresa} onChange={e => setForm({ ...form, empresa: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-sm font-medium text-card-foreground mb-1">Obrigação</label><select value={form.obrigacao} onChange={e => setForm({ ...form, obrigacao: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none">{obrigacoesLista.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
-                <div><label className="block text-sm font-medium text-card-foreground mb-1">Competência</label><input type="month" value={form.competencia} onChange={e => setForm({ ...form, competencia: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-sm font-medium text-card-foreground mb-1">Vencimento</label><input type="date" value={form.dataVencimento} onChange={e => setForm({ ...form, dataVencimento: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-                <div><label className="block text-sm font-medium text-card-foreground mb-1">Responsável</label><input value={form.responsavel} onChange={e => setForm({ ...form, responsavel: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-              </div>
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Status</label><select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none"><option value="pendente">Pendente</option><option value="concluída">Concluída</option></select></div>
+              {isOpen && (
+                <div className="border-t border-border p-5 space-y-3 bg-muted/10">
+                  {Object.entries(form).map(([obrigacao, item]) => (
+                    <div key={obrigacao} className="flex items-center gap-3 p-3 rounded-lg hover:bg-card transition-colors">
+                      <button onClick={() => toggleStatus(emp.id, obrigacao)} className="flex-shrink-0">
+                        {item.status === "concluida" ? <CheckCircle size={20} className="text-success" /> : <Circle size={20} className="text-muted-foreground" />}
+                      </button>
+                      <span className={`text-sm font-medium flex-1 ${item.status === "concluida" ? "text-muted-foreground line-through" : "text-card-foreground"}`}>{obrigacao}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-end pt-3 border-t border-border">
+                    <button onClick={() => handleSave(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}>
+                      <Save size={14} /> Salvar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex justify-end gap-2 p-5 border-t border-border">
-              <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:bg-muted">Cancelar</button>
-              <button onClick={handleSave} className="px-4 py-2 text-sm font-semibold text-primary-foreground rounded-lg shadow-md" style={{ background: "var(--gradient-primary)" }}>Salvar</button>
-            </div>
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 };
