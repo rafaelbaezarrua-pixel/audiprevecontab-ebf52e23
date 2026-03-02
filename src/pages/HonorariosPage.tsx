@@ -1,123 +1,161 @@
 import React, { useEffect, useState } from "react";
-import { db, ref, onValue, push, remove, update } from "@/lib/firebase";
-import { Plus, Edit2, Trash2, X, Search } from "lucide-react";
+import { db, ref, onValue, update } from "@/lib/firebase";
+import { Search, ChevronDown, ChevronUp, Save, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
-interface Honorario {
+interface Empresa {
   id: string;
-  empresa: string;
-  valor: number;
-  competencia: string;
-  status: string;
+  nomeEmpresa: string;
+  cnpj: string;
+  situacao: string;
+}
+
+interface HonorarioData {
+  valor?: number;
+  status?: string; // pendente | pago
   dataPagamento?: string;
   observacao?: string;
 }
 
 const HonorariosPage: React.FC = () => {
-  const [items, setItems] = useState<Honorario[]>([]);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [honData, setHonData] = useState<Record<string, HonorarioData>>({});
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<Honorario | null>(null);
-  const [form, setForm] = useState({ empresa: "", valor: "", competencia: "", status: "pendente", observacao: "" });
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, HonorarioData>>({});
 
   useEffect(() => {
-    const unsub = onValue(ref(db, "honorarios"), (snap) => {
+    const unsub = onValue(ref(db, "empresas"), (snap) => {
       const data = snap.val() || {};
-      setItems(Object.entries(data).map(([id, val]: any) => ({ id, ...val })));
+      setEmpresas(Object.entries(data).map(([id, val]: any) => ({ id, ...val })).filter((e: Empresa) => e.situacao !== "baixada"));
     });
     return () => unsub();
   }, []);
 
-  const filtered = items.filter(h =>
-    (h.empresa?.toLowerCase().includes(search.toLowerCase())) &&
-    (!competencia || h.competencia === competencia)
-  );
+  useEffect(() => {
+    const unsub = onValue(ref(db, `honorarios_mensal/${competencia}`), (snap) => {
+      setHonData(snap.val() || {});
+    });
+    return () => unsub();
+  }, [competencia]);
 
-  const openNew = () => { setEditing(null); setForm({ empresa: "", valor: "", competencia, status: "pendente", observacao: "" }); setShowForm(true); };
-  const openEdit = (h: Honorario) => { setEditing(h); setForm({ empresa: h.empresa, valor: String(h.valor || ""), competencia: h.competencia, status: h.status, observacao: h.observacao || "" }); setShowForm(true); };
+  const filtered = empresas.filter(e => e.nomeEmpresa?.toLowerCase().includes(search.toLowerCase()));
 
-  const handleSave = async () => {
-    if (!form.empresa.trim()) { toast.error("Empresa obrigatória"); return; }
-    const payload = { ...form, valor: parseFloat(form.valor) || 0 };
+  const toggleExpand = (id: string) => {
+    if (expanded === id) { setExpanded(null); return; }
+    setExpanded(id);
+    const current = honData[id] || {};
+    setEditForm(prev => ({
+      ...prev,
+      [id]: {
+        valor: current.valor || 0,
+        status: current.status || "pendente",
+        dataPagamento: current.dataPagamento || "",
+        observacao: current.observacao || "",
+      }
+    }));
+  };
+
+  const handleSave = async (empresaId: string) => {
     try {
-      if (editing) { await update(ref(db, `honorarios/${editing.id}`), payload); toast.success("Atualizado!"); }
-      else { await push(ref(db, "honorarios"), payload); toast.success("Cadastrado!"); }
-      setShowForm(false);
+      await update(ref(db, `honorarios_mensal/${competencia}/${empresaId}`), editForm[empresaId]);
+      toast.success("Honorário salvo!");
     } catch (err: any) { toast.error(err.message); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Excluir?")) return;
-    await remove(ref(db, `honorarios/${id}`));
-    toast.success("Excluído!");
+  const updateForm = (empresaId: string, field: string, value: any) => {
+    setEditForm(prev => ({ ...prev, [empresaId]: { ...prev[empresaId], [field]: value } }));
   };
 
-  const totalPendente = filtered.filter(h => h.status === "pendente").reduce((a, b) => a + (b.valor || 0), 0);
-  const totalPago = filtered.filter(h => h.status === "pago").reduce((a, b) => a + (b.valor || 0), 0);
+  const totalPendente = Object.entries(honData).reduce((a, [, v]) => a + (v.status !== "pago" ? (v.valor || 0) : 0), 0);
+  const totalPago = Object.entries(honData).reduce((a, [, v]) => a + (v.status === "pago" ? (v.valor || 0) : 0), 0);
+
+  const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
+  const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="relative max-w-xs">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
-          </div>
-          <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-card-foreground">Honorários</h1>
+          <p className="text-sm text-muted-foreground mt-1">Controle mensal de honorários por empresa</p>
         </div>
-        <button onClick={openNew} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Plus size={16} /> Novo Honorário</button>
+        <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="stat-card"><p className="text-sm text-muted-foreground">Pendente</p><p className="text-xl font-bold text-warning mt-1">R$ {totalPendente.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
-        <div className="stat-card"><p className="text-sm text-muted-foreground">Recebido</p><p className="text-xl font-bold text-success mt-1">R$ {totalPago.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Pendente</p><p className="text-2xl font-bold text-warning mt-1">R$ {totalPendente.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
+        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Recebido</p><p className="text-2xl font-bold text-success mt-1">R$ {totalPago.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
       </div>
 
-      <div className="module-card overflow-x-auto">
-        <table className="data-table">
-          <thead><tr><th>Empresa</th><th>Valor</th><th>Competência</th><th>Status</th><th className="text-right">Ações</th></tr></thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum honorário</td></tr>
-            ) : filtered.map(h => (
-              <tr key={h.id}>
-                <td className="font-medium text-card-foreground">{h.empresa}</td>
-                <td className="text-card-foreground font-medium">R$ {(h.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
-                <td className="text-muted-foreground">{h.competencia}</td>
-                <td><span className={`badge-status ${h.status === "pago" ? "badge-success" : "badge-warning"}`}>{h.status === "pago" ? "Pago" : "Pendente"}</span></td>
-                <td className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => openEdit(h)} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary"><Edit2 size={15} /></button>
-                    <button onClick={() => handleDelete(h.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={15} /></button>
+      <div className="relative max-w-sm">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
+      </div>
+
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <div className="module-card text-center py-12 text-muted-foreground">Nenhuma empresa encontrada</div>
+        ) : filtered.map(emp => {
+          const isOpen = expanded === emp.id;
+          const form = editForm[emp.id] || {};
+          const current = honData[emp.id] || {};
+          const isPago = current.status === "pago";
+
+          return (
+            <div key={emp.id} className="module-card !p-0 overflow-hidden">
+              <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => toggleExpand(emp.id)}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Building2 size={16} className="text-primary" />
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showForm && (
-        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-card rounded-xl shadow-2xl w-full max-w-lg border border-border" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b border-border"><h3 className="text-lg font-bold text-card-foreground">{editing ? "Editar" : "Novo"} Honorário</h3><button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button></div>
-            <div className="p-5 space-y-4">
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Empresa</label><input value={form.empresa} onChange={e => setForm({ ...form, empresa: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-sm font-medium text-card-foreground mb-1">Valor</label><input type="number" step="0.01" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-                <div><label className="block text-sm font-medium text-card-foreground mb-1">Competência</label><input type="month" value={form.competencia} onChange={e => setForm({ ...form, competencia: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
+                  <div>
+                    <p className="font-medium text-card-foreground">{emp.nomeEmpresa}</p>
+                    <p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {current.valor ? <span className="text-sm font-medium text-card-foreground">R$ {(current.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span> : null}
+                  <span className={`badge-status ${isPago ? "badge-success" : "badge-warning"}`}>{isPago ? "Pago" : "Pendente"}</span>
+                  {isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+                </div>
               </div>
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Status</label><select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Observação</label><textarea value={form.observacao} onChange={e => setForm({ ...form, observacao: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" rows={2} /></div>
+
+              {isOpen && (
+                <div className="border-t border-border p-5 space-y-4 bg-muted/10">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className={labelCls}>Valor do Honorário</label>
+                      <input type="number" step="0.01" value={form.valor || ""} onChange={e => updateForm(emp.id, "valor", parseFloat(e.target.value) || 0)} className={inputCls} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Status</label>
+                      <select value={form.status || "pendente"} onChange={e => updateForm(emp.id, "status", e.target.value)} className={inputCls}>
+                        <option value="pendente">Pendente</option>
+                        <option value="pago">Pago</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelCls}>Data do Pagamento</label>
+                      <input type="date" value={form.dataPagamento || ""} onChange={e => updateForm(emp.id, "dataPagamento", e.target.value)} className={inputCls} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Observação</label>
+                    <textarea value={form.observacao || ""} onChange={e => updateForm(emp.id, "observacao", e.target.value)} className={inputCls} rows={2} />
+                  </div>
+                  <div className="flex justify-end">
+                    <button onClick={() => handleSave(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}>
+                      <Save size={14} /> Salvar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex justify-end gap-2 p-5 border-t border-border">
-              <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:bg-muted">Cancelar</button>
-              <button onClick={handleSave} className="px-4 py-2 text-sm font-semibold text-primary-foreground rounded-lg shadow-md" style={{ background: "var(--gradient-primary)" }}>Salvar</button>
-            </div>
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 };

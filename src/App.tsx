@@ -10,6 +10,8 @@ import DashboardPage from "@/pages/DashboardPage";
 import SocietarioPage from "@/pages/SocietarioPage";
 import SocietarioEmpresaPage from "@/pages/SocietarioEmpresaPage";
 import CertificadosPage from "@/pages/CertificadosPage";
+import CertidoesPage from "@/pages/CertidoesPage";
+import LicencasPage from "@/pages/LicencasPage";
 import ProcuracoesPage from "@/pages/ProcuracoesPage";
 import FiscalPage from "@/pages/FiscalPage";
 import PessoalPage from "@/pages/PessoalPage";
@@ -45,7 +47,9 @@ const App = () => (
               <Route path="/societario" element={<SocietarioPage />} />
               <Route path="/societario/:id" element={<SocietarioEmpresaPage />} />
               <Route path="/societario/:id/editar" element={<SocietarioEmpresaPage />} />
+              <Route path="/licencas" element={<LicencasPage />} />
               <Route path="/certificados" element={<CertificadosPage />} />
+              <Route path="/certidoes" element={<CertidoesPage />} />
               <Route path="/procuracoes" element={<ProcuracoesPage />} />
               <Route path="/fiscal" element={<FiscalPage />} />
               <Route path="/pessoal" element={<PessoalPage />} />
