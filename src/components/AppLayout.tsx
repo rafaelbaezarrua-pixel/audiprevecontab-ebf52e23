@@ -5,7 +5,7 @@ import {
   Building2, FileText, Award, Clock, Calculator,
   Users, Receipt, RefreshCw, DollarSign, ClipboardList,
   LayoutDashboard, Settings, LogOut, ChevronLeft, ChevronRight,
-  Bell, Menu, Shield as ShieldIcon
+  Bell, Menu, Shield
 } from "lucide-react";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 
@@ -23,7 +23,7 @@ const navItems: NavItemConfig[] = [
   { id: "societario", label: "Societário", icon: <Building2 size={18} />, path: "/societario", moduleKey: "societario", section: "DEPARTAMENTOS" },
   { id: "fiscal", label: "Fiscal", icon: <Receipt size={18} />, path: "/fiscal", moduleKey: "fiscal" },
   { id: "pessoal", label: "Pessoal", icon: <Users size={18} />, path: "/pessoal", moduleKey: "pessoal" },
-  { id: "licencas", label: "Licenças", icon: <ShieldIcon size={18} />, path: "/licencas", moduleKey: "societario", section: "CONTROLES" },
+  { id: "licencas", label: "Licenças", icon: <Shield size={18} />, path: "/licencas", moduleKey: "societario", section: "CONTROLES" },
   { id: "certificados", label: "Certificados", icon: <Award size={18} />, path: "/certificados", moduleKey: "certificados" },
   { id: "certidoes", label: "Certidões", icon: <FileText size={18} />, path: "/certidoes", moduleKey: "certificados" },
   { id: "procuracoes", label: "Procurações", icon: <FileText size={18} />, path: "/procuracoes", moduleKey: "procuracoes" },
