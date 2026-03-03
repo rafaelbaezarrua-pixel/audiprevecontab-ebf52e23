@@ -64,8 +64,8 @@ const ConfiguracoesPage: React.FC = () => {
       toast.error("Nome, email e senha são obrigatórios");
       return;
     }
-    if (form.password.length < 6) {
-      toast.error("Senha deve ter pelo menos 6 caracteres");
+    if (form.password.length < 8 || !/[A-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
+      toast.error("Senha deve ter pelo menos 8 caracteres, com letra maiúscula e número");
       return;
     }
     try {
@@ -170,7 +170,7 @@ const ConfiguracoesPage: React.FC = () => {
             <div className="p-5 space-y-4">
               <div><label className="block text-sm font-medium text-card-foreground mb-1">Nome</label><input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
               <div><label className="block text-sm font-medium text-card-foreground mb-1">Email</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Senha</label><input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Mínimo 6 caracteres" /></div>
+              <div><label className="block text-sm font-medium text-card-foreground mb-1">Senha</label><input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Mín. 8 caracteres, maiúscula e número" /></div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="isAdmin" checked={form.isAdmin} onChange={e => setForm({ ...form, isAdmin: e.target.checked })} className="rounded" />
                 <label htmlFor="isAdmin" className="text-sm font-medium text-card-foreground">Administrador</label>
