@@ -69,18 +69,12 @@ const ConfiguracoesPage: React.FC = () => {
       return;
     }
     try {
-      const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { data: { nome_completo: form.nome } } });
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: { email: form.email, password: form.password, nome: form.nome, isAdmin: form.isAdmin, modules: form.modules },
+      });
       if (error) throw error;
-      if (data.user) {
-        if (form.isAdmin) {
-          await supabase.from("user_roles").insert({ user_id: data.user.id, role: "admin" as const });
-        }
-        const moduleInserts = Object.entries(form.modules).filter(([, v]) => v).map(([k]) => ({ user_id: data.user!.id, module_name: k }));
-        if (moduleInserts.length > 0) {
-          await supabase.from("user_module_permissions").insert(moduleInserts);
-        }
-      }
-      toast.success("Usuário criado com sucesso!");
+      if (data?.error) throw new Error(data.error);
+      toast.success("Usuário criado com sucesso! O usuário poderá fazer login com as credenciais fornecidas.");
       setShowForm(false);
       setForm({ nome: "", email: "", password: "", departamento: "", isAdmin: false, modules: {} });
       loadUsers();
