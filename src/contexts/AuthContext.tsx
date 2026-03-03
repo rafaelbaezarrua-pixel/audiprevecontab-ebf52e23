@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id);
     const isAdmin = roles?.some(r => r.role === "admin") || false;
 
-    const { data: profile } = await supabase.from("profiles").select("nome_completo, profile_completed, terms_accepted_at").eq("user_id", currentUser.id).single();
+    const { data: profile } = await supabase.from("profiles").select("nome_completo, profile_completed, terms_accepted_at").eq("user_id", currentUser.id).maybeSingle();
 
     const profileCompleted = profile?.profile_completed || false;
     const termsAccepted = !!profile?.terms_accepted_at;
