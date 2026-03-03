@@ -44,12 +44,36 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Email and password required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (typeof email !== "string" || !emailRegex.test(email) || email.length > 255) {
+      return new Response(JSON.stringify({ error: "Invalid email format" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Validate password strength
+    if (typeof password !== "string" || password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return new Response(JSON.stringify({ error: "Password must be at least 8 characters with an uppercase letter and a number" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Sanitize nome
+    const sanitizedNome = typeof nome === "string" ? nome.trim().slice(0, 200) : "";
+
+    // Validate module names against allowed list
+    const allowedModules = ["societario", "fiscal", "pessoal", "certidoes", "certificados", "licencas", "procuracoes", "honorarios", "obrigacoes", "parcelamentos", "recalculos", "vencimentos"];
+    if (modules && typeof modules === "object") {
+      for (const key of Object.keys(modules)) {
+        if (!allowedModules.includes(key)) {
+          return new Response(JSON.stringify({ error: `Invalid module: ${key}` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+    }
+
     // Create user with auto-confirm so they can login immediately
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { nome_completo: nome || "" },
+      user_metadata: { nome_completo: sanitizedNome },
     });
 
     if (createError) {
@@ -61,9 +85,9 @@ Deno.serve(async (req) => {
     // Ensure profile exists (trigger may not fire immediately)
     const { data: existingProfile } = await supabaseAdmin.from("profiles").select("id").eq("user_id", userId).maybeSingle();
     if (existingProfile) {
-      await supabaseAdmin.from("profiles").update({ nome_completo: nome || "" }).eq("user_id", userId);
+      await supabaseAdmin.from("profiles").update({ nome_completo: sanitizedNome }).eq("user_id", userId);
     } else {
-      await supabaseAdmin.from("profiles").insert({ user_id: userId, nome_completo: nome || "" });
+      await supabaseAdmin.from("profiles").insert({ user_id: userId, nome_completo: sanitizedNome });
     }
 
     // Assign admin role if requested
