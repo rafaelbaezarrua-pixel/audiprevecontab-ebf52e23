@@ -28,7 +28,7 @@ const navItems: NavItemConfig[] = [
   { id: "certidoes", label: "Certidões", icon: <FileText size={18} />, path: "/certidoes", moduleKey: "certificados" },
   { id: "procuracoes", label: "Procurações", icon: <FileText size={18} />, path: "/procuracoes", moduleKey: "procuracoes" },
   { id: "vencimentos", label: "Vencimentos", icon: <Clock size={18} />, path: "/vencimentos", moduleKey: "vencimentos" },
-  { id: "obrigacoes", label: "Obrigações", icon: <ClipboardList size={18} />, path: "/obrigacoes", moduleKey: "obrigacoes" },
+  
   { id: "parcelamentos", label: "Parcelamentos", icon: <Calculator size={18} />, path: "/parcelamentos", moduleKey: "parcelamentos", section: "FINANCEIRO" },
   { id: "honorarios", label: "Honorários", icon: <DollarSign size={18} />, path: "/honorarios", moduleKey: "honorarios" },
   { id: "recalculos", label: "Recálculos", icon: <RefreshCw size={18} />, path: "/recalculos", moduleKey: "recalculos" },

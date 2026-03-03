@@ -24,7 +24,6 @@ const moduleLabels: Record<string, string> = {
   parcelamentos: "Parcelamentos",
   recalculos: "Recálculos",
   honorarios: "Honorários",
-  obrigacoes: "Obrigações",
 };
 
 const ConfiguracoesPage: React.FC = () => {
