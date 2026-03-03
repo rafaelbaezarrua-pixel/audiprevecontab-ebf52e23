@@ -21,6 +21,8 @@ export interface UserPermissions {
   nome?: string;
   email?: string;
   departamento?: string;
+  profileCompleted?: boolean;
+  termsAccepted?: boolean;
 }
 
 interface AuthContextType {
@@ -30,6 +32,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -46,12 +49,6 @@ const allModulesTrue = {
   honorarios: true, obrigacoes: true, licencas: true, certidoes: true,
 };
 
-const allModulesFalse = {
-  societario: false, fiscal: false, pessoal: false, certificados: false,
-  procuracoes: false, vencimentos: false, parcelamentos: false, recalculos: false,
-  honorarios: false, obrigacoes: false, licencas: false, certidoes: false,
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -59,20 +56,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const loadUserData = async (currentUser: User) => {
-    // Check role
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", currentUser.id);
-
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id);
     const isAdmin = roles?.some(r => r.role === "admin") || false;
 
-    // Get profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("nome_completo")
-      .eq("user_id", currentUser.id)
-      .single();
+    const { data: profile } = await supabase.from("profiles").select("nome_completo, profile_completed, terms_accepted_at").eq("user_id", currentUser.id).single();
+
+    const profileCompleted = profile?.profile_completed || false;
+    const termsAccepted = !!profile?.terms_accepted_at;
 
     if (isAdmin) {
       setUserData({
@@ -80,14 +70,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         modules: allModulesTrue,
         nome: profile?.nome_completo || currentUser.email || "Admin",
         email: currentUser.email || "",
+        profileCompleted,
+        termsAccepted,
       });
     } else {
-      // Get module permissions
-      const { data: perms } = await supabase
-        .from("user_module_permissions")
-        .select("module_name")
-        .eq("user_id", currentUser.id);
-
+      const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", currentUser.id);
       const moduleSet = new Set(perms?.map(p => p.module_name) || []);
       setUserData({
         isAdmin: false,
@@ -107,15 +94,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
         nome: profile?.nome_completo || currentUser.email || "Usuário",
         email: currentUser.email || "",
+        profileCompleted,
+        termsAccepted,
       });
     }
+  };
+
+  const refreshUserData = async () => {
+    if (user) await loadUserData(user);
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
-
       if (newSession?.user) {
         setTimeout(() => loadUserData(newSession.user), 0);
       } else {
@@ -146,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, userData, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, session, userData, loading, login, logout, refreshUserData }}>
       {children}
     </AuthContext.Provider>
   );
