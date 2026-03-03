@@ -19,7 +19,7 @@ import VencimentosPage from "@/pages/VencimentosPage";
 import ParcelamentosPage from "@/pages/ParcelamentosPage";
 import RecalculosPage from "@/pages/RecalculosPage";
 import HonorariosPage from "@/pages/HonorariosPage";
-import ObrigacoesPage from "@/pages/ObrigacoesPage";
+
 import ConfiguracoesPage from "@/pages/ConfiguracoesPage";
 import CompletarPerfilPage from "@/pages/CompletarPerfilPage";
 import TermosPage from "@/pages/TermosPage";
@@ -80,7 +80,7 @@ const App = () => (
               <Route path="/parcelamentos" element={<ParcelamentosPage />} />
               <Route path="/recalculos" element={<RecalculosPage />} />
               <Route path="/honorarios" element={<HonorariosPage />} />
-              <Route path="/obrigacoes" element={<ObrigacoesPage />} />
+              
               <Route path="/perfil" element={<PerfilPage />} />
               <Route path="/configuracoes" element={<ConfiguracoesPage />} />
             </Route>
