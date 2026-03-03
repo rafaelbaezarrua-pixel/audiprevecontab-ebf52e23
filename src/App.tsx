@@ -21,11 +21,32 @@ import RecalculosPage from "@/pages/RecalculosPage";
 import HonorariosPage from "@/pages/HonorariosPage";
 import ObrigacoesPage from "@/pages/ObrigacoesPage";
 import ConfiguracoesPage from "@/pages/ConfiguracoesPage";
+import CompletarPerfilPage from "@/pages/CompletarPerfilPage";
+import TermosPage from "@/pages/TermosPage";
+import PerfilPage from "@/pages/PerfilPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading, userData } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+
+  // Redirect to profile completion if not completed
+  if (userData && !userData.profileCompleted) {
+    return <Navigate to="/completar-perfil" replace />;
+  }
+
+  // Redirect to terms if profile completed but terms not accepted
+  if (userData && userData.profileCompleted && !userData.termsAccepted) {
+    return <Navigate to="/termos" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
@@ -41,6 +62,8 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/completar-perfil" element={<OnboardingRoute><CompletarPerfilPage /></OnboardingRoute>} />
+            <Route path="/termos" element={<OnboardingRoute><TermosPage /></OnboardingRoute>} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<DashboardPage />} />
@@ -58,6 +81,7 @@ const App = () => (
               <Route path="/recalculos" element={<RecalculosPage />} />
               <Route path="/honorarios" element={<HonorariosPage />} />
               <Route path="/obrigacoes" element={<ObrigacoesPage />} />
+              <Route path="/perfil" element={<PerfilPage />} />
               <Route path="/configuracoes" element={<ConfiguracoesPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
