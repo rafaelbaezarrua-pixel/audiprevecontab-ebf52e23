@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { db, ref, onValue, set, remove } from "@/lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, X, Shield, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
@@ -35,13 +33,29 @@ const ConfiguracoesPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ nome: "", email: "", password: "", departamento: "", isAdmin: false, modules: {} as Record<string, boolean> });
 
-  useEffect(() => {
-    const unsub = onValue(ref(db, "usuarios"), (snap) => {
-      const data = snap.val() || {};
-      setUsuarios(Object.entries(data).map(([id, val]: any) => ({ id, ...val, modules: val.modules || {} })));
-    });
-    return () => unsub();
-  }, []);
+  const loadUsers = async () => {
+    const { data: profiles } = await supabase.from("profiles").select("*");
+    if (!profiles) return;
+
+    const users: Usuario[] = [];
+    for (const p of profiles) {
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", p.user_id);
+      const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", p.user_id);
+      const modules: Record<string, boolean> = {};
+      perms?.forEach(pm => { modules[pm.module_name] = true; });
+      users.push({
+        id: p.user_id,
+        nome: p.nome_completo || "Sem nome",
+        email: "",
+        isAdmin: roles?.some(r => r.role === "admin") || false,
+        departamento: "",
+        modules,
+      });
+    }
+    setUsuarios(users);
+  };
+
+  useEffect(() => { loadUsers(); }, []);
 
   if (!userData?.isAdmin) return <Navigate to="/dashboard" replace />;
 
@@ -55,37 +69,51 @@ const ConfiguracoesPage: React.FC = () => {
       return;
     }
     try {
-      const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
-      await set(ref(db, `usuarios/${cred.user.uid}`), {
-        nome: form.nome,
-        email: form.email,
-        departamento: form.departamento,
-        isAdmin: form.isAdmin,
-        modules: form.modules,
-        criadoEm: new Date().toISOString(),
-      });
+      const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { data: { nome_completo: form.nome } } });
+      if (error) throw error;
+      if (data.user) {
+        if (form.isAdmin) {
+          await supabase.from("user_roles").insert({ user_id: data.user.id, role: "admin" as const });
+        }
+        const moduleInserts = Object.entries(form.modules).filter(([, v]) => v).map(([k]) => ({ user_id: data.user!.id, module_name: k }));
+        if (moduleInserts.length > 0) {
+          await supabase.from("user_module_permissions").insert(moduleInserts);
+        }
+      }
       toast.success("Usuário criado com sucesso!");
       setShowForm(false);
       setForm({ nome: "", email: "", password: "", departamento: "", isAdmin: false, modules: {} });
+      loadUsers();
     } catch (err: any) {
       toast.error("Erro: " + err.message);
     }
   };
 
-  const toggleModule = (userId: string, module: string, current: boolean) => {
-    set(ref(db, `usuarios/${userId}/modules/${module}`), !current);
+  const toggleModule = async (userId: string, module: string, current: boolean) => {
+    if (current) {
+      await supabase.from("user_module_permissions").delete().eq("user_id", userId).eq("module_name", module);
+    } else {
+      await supabase.from("user_module_permissions").insert({ user_id: userId, module_name: module });
+    }
     toast.success(`${moduleLabels[module]} ${!current ? "habilitado" : "desabilitado"}`);
+    loadUsers();
   };
 
-  const toggleAdmin = (userId: string, current: boolean) => {
-    set(ref(db, `usuarios/${userId}/isAdmin`), !current);
+  const toggleAdmin = async (userId: string, current: boolean) => {
+    if (current) {
+      await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin" as const);
+    } else {
+      await supabase.from("user_roles").insert({ user_id: userId, role: "admin" as const });
+    }
     toast.success(!current ? "Promovido a admin" : "Removido de admin");
+    loadUsers();
   };
 
   const handleDelete = async (userId: string) => {
     if (!window.confirm("Excluir este usuário do sistema?")) return;
-    await remove(ref(db, `usuarios/${userId}`));
+    await supabase.from("profiles").delete().eq("user_id", userId);
     toast.success("Usuário removido!");
+    loadUsers();
   };
 
   return (
@@ -149,7 +177,6 @@ const ConfiguracoesPage: React.FC = () => {
               <div><label className="block text-sm font-medium text-card-foreground mb-1">Nome</label><input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
               <div><label className="block text-sm font-medium text-card-foreground mb-1">Email</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
               <div><label className="block text-sm font-medium text-card-foreground mb-1">Senha</label><input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Mínimo 6 caracteres" /></div>
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Departamento</label><input value={form.departamento} onChange={e => setForm({ ...form, departamento: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="isAdmin" checked={form.isAdmin} onChange={e => setForm({ ...form, isAdmin: e.target.checked })} className="rounded" />
                 <label htmlFor="isAdmin" className="text-sm font-medium text-card-foreground">Administrador</label>
