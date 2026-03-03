@@ -85,9 +85,9 @@ Deno.serve(async (req) => {
     // Ensure profile exists (trigger may not fire immediately)
     const { data: existingProfile } = await supabaseAdmin.from("profiles").select("id").eq("user_id", userId).maybeSingle();
     if (existingProfile) {
-      await supabaseAdmin.from("profiles").update({ nome_completo: nome || "" }).eq("user_id", userId);
+      await supabaseAdmin.from("profiles").update({ nome_completo: sanitizedNome }).eq("user_id", userId);
     } else {
-      await supabaseAdmin.from("profiles").insert({ user_id: userId, nome_completo: nome || "" });
+      await supabaseAdmin.from("profiles").insert({ user_id: userId, nome_completo: sanitizedNome });
     }
 
     // Assign admin role if requested
