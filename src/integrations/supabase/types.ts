@@ -441,7 +441,9 @@ export type Database = {
           foto_url: string | null
           id: string
           nome_completo: string | null
+          profile_completed: boolean | null
           telefone: string | null
+          terms_accepted_at: string | null
           updated_at: string | null
           user_id: string
         }
@@ -454,7 +456,9 @@ export type Database = {
           foto_url?: string | null
           id?: string
           nome_completo?: string | null
+          profile_completed?: boolean | null
           telefone?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -467,7 +471,9 @@ export type Database = {
           foto_url?: string | null
           id?: string
           nome_completo?: string | null
+          profile_completed?: boolean | null
           telefone?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string | null
           user_id?: string
         }
