@@ -182,6 +182,7 @@ export type Database = {
           forma_envio: string | null
           id: string
           observacoes: Json | null
+          ramo_empresarial: string | null
           recebimento_arquivos: string | null
           status_guia: Database["public"]["Enums"]["guia_status"] | null
           tipo_nota: string | null
@@ -196,6 +197,7 @@ export type Database = {
           forma_envio?: string | null
           id?: string
           observacoes?: Json | null
+          ramo_empresarial?: string | null
           recebimento_arquivos?: string | null
           status_guia?: Database["public"]["Enums"]["guia_status"] | null
           tipo_nota?: string | null
@@ -210,6 +212,7 @@ export type Database = {
           forma_envio?: string | null
           id?: string
           observacoes?: Json | null
+          ramo_empresarial?: string | null
           recebimento_arquivos?: string | null
           status_guia?: Database["public"]["Enums"]["guia_status"] | null
           tipo_nota?: string | null

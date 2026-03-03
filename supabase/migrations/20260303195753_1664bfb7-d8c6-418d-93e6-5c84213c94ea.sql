@@ -1,0 +1,1 @@
+ALTER TABLE public.fiscal ADD COLUMN ramo_empresarial text;
