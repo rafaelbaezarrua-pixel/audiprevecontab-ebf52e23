@@ -1,53 +1,38 @@
 import React, { useEffect, useState } from "react";
-import { db, ref, onValue, update } from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Empresa {
   id: string;
-  nomeEmpresa: string;
-  cnpj: string;
-  situacao: string;
-  regimeTributario: string;
+  nome_empresa: string;
+  cnpj: string | null;
+  situacao: string | null;
+  regime_tributario: string | null;
 }
-
-interface ObrigacaoItem {
-  status: string; // pendente | concluida
-  responsavel?: string;
-  dataEntrega?: string;
-}
-
-type ObrigacaoData = Record<string, ObrigacaoItem>;
 
 const obrigacoesSimples = ["PGDAS-D", "DEFIS", "DCTF Web", "eSocial", "EFD-Reinf", "DIRF", "RAIS"];
 const obrigacoesLucro = ["DCTF", "ECD", "ECF", "SPED Fiscal", "SPED Contribuições", "DCTF Web", "eSocial", "EFD-Reinf", "DIRF", "RAIS", "GFIP"];
 
+type ObrigacaoStatus = Record<string, boolean>;
+
 const ObrigacoesPage: React.FC = () => {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
-  const [obrigData, setObrigData] = useState<Record<string, ObrigacaoData>>({});
   const [search, setSearch] = useState("");
-  const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, ObrigacaoData>>({});
+  const [statuses, setStatuses] = useState<Record<string, ObrigacaoStatus>>({});
 
   useEffect(() => {
-    const unsub = onValue(ref(db, "empresas"), (snap) => {
-      const data = snap.val() || {};
-      setEmpresas(Object.entries(data).map(([id, val]: any) => ({ id, ...val })).filter((e: Empresa) => e.situacao !== "baixada"));
-    });
-    return () => unsub();
+    const load = async () => {
+      const { data } = await supabase.from("empresas").select("*").neq("situacao", "baixada");
+      if (data) setEmpresas(data);
+    };
+    load();
   }, []);
 
-  useEffect(() => {
-    const unsub = onValue(ref(db, `obrigacoes_mensal/${competencia}`), (snap) => {
-      setObrigData(snap.val() || {});
-    });
-    return () => unsub();
-  }, [competencia]);
+  const filtered = empresas.filter(e => e.nome_empresa?.toLowerCase().includes(search.toLowerCase()));
 
-  const filtered = empresas.filter(e => e.nomeEmpresa?.toLowerCase().includes(search.toLowerCase()));
-
-  const getObrigacoes = (regime: string) => {
+  const getObrigacoes = (regime: string | null) => {
     if (regime === "simples" || regime === "mei") return obrigacoesSimples;
     return obrigacoesLucro;
   };
@@ -55,41 +40,28 @@ const ObrigacoesPage: React.FC = () => {
   const toggleExpand = (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
-    const emp = empresas.find(e => e.id === id);
-    const current = obrigData[id] || {};
-    const obrigacoes = getObrigacoes(emp?.regimeTributario || "simples");
-    const formData: ObrigacaoData = {};
-    obrigacoes.forEach(o => {
-      formData[o] = current[o] || { status: "pendente", responsavel: "", dataEntrega: "" };
-    });
-    setEditForm(prev => ({ ...prev, [id]: formData }));
+    if (!statuses[id]) {
+      const emp = empresas.find(e => e.id === id);
+      const obrigacoes = getObrigacoes(emp?.regime_tributario || "simples");
+      const initial: ObrigacaoStatus = {};
+      obrigacoes.forEach(o => { initial[o] = false; });
+      setStatuses(prev => ({ ...prev, [id]: initial }));
+    }
   };
 
   const toggleStatus = (empresaId: string, obrigacao: string) => {
-    setEditForm(prev => ({
+    setStatuses(prev => ({
       ...prev,
-      [empresaId]: {
-        ...prev[empresaId],
-        [obrigacao]: {
-          ...prev[empresaId]?.[obrigacao],
-          status: prev[empresaId]?.[obrigacao]?.status === "concluida" ? "pendente" : "concluida"
-        }
-      }
+      [empresaId]: { ...prev[empresaId], [obrigacao]: !prev[empresaId]?.[obrigacao] }
     }));
   };
 
-  const handleSave = async (empresaId: string) => {
-    try {
-      await update(ref(db, `obrigacoes_mensal/${competencia}/${empresaId}`), editForm[empresaId]);
-      toast.success("Obrigações salvas!");
-    } catch (err: any) { toast.error(err.message); }
-  };
-
   const getProgress = (empresaId: string) => {
-    const data = obrigData[empresaId] || {};
-    const items = Object.values(data);
-    if (items.length === 0) return 0;
-    return Math.round((items.filter(i => i.status === "concluida").length / items.length) * 100);
+    const s = statuses[empresaId];
+    if (!s) return 0;
+    const vals = Object.values(s);
+    if (vals.length === 0) return 0;
+    return Math.round((vals.filter(Boolean).length / vals.length) * 100);
   };
 
   const totalCompleted = empresas.filter(e => getProgress(e.id) === 100).length;
@@ -101,7 +73,6 @@ const ObrigacoesPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-card-foreground">Obrigações Acessórias</h1>
           <p className="text-sm text-muted-foreground mt-1">Checklist mensal de obrigações por empresa</p>
         </div>
-        <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold" />
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -121,7 +92,7 @@ const ObrigacoesPage: React.FC = () => {
         ) : filtered.map(emp => {
           const isOpen = expanded === emp.id;
           const progress = getProgress(emp.id);
-          const form = editForm[emp.id] || {};
+          const s = statuses[emp.id] || {};
 
           return (
             <div key={emp.id} className="module-card !p-0 overflow-hidden">
@@ -131,7 +102,7 @@ const ObrigacoesPage: React.FC = () => {
                     <Building2 size={16} className="text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium text-card-foreground">{emp.nomeEmpresa}</p>
+                    <p className="font-medium text-card-foreground">{emp.nome_empresa}</p>
                     <p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p>
                   </div>
                 </div>
@@ -146,19 +117,14 @@ const ObrigacoesPage: React.FC = () => {
 
               {isOpen && (
                 <div className="border-t border-border p-5 space-y-3 bg-muted/10">
-                  {Object.entries(form).map(([obrigacao, item]) => (
+                  {Object.entries(s).map(([obrigacao, done]) => (
                     <div key={obrigacao} className="flex items-center gap-3 p-3 rounded-lg hover:bg-card transition-colors">
                       <button onClick={() => toggleStatus(emp.id, obrigacao)} className="flex-shrink-0">
-                        {item.status === "concluida" ? <CheckCircle size={20} className="text-success" /> : <Circle size={20} className="text-muted-foreground" />}
+                        {done ? <CheckCircle size={20} className="text-success" /> : <Circle size={20} className="text-muted-foreground" />}
                       </button>
-                      <span className={`text-sm font-medium flex-1 ${item.status === "concluida" ? "text-muted-foreground line-through" : "text-card-foreground"}`}>{obrigacao}</span>
+                      <span className={`text-sm font-medium flex-1 ${done ? "text-muted-foreground line-through" : "text-card-foreground"}`}>{obrigacao}</span>
                     </div>
                   ))}
-                  <div className="flex justify-end pt-3 border-t border-border">
-                    <button onClick={() => handleSave(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}>
-                      <Save size={14} /> Salvar
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
