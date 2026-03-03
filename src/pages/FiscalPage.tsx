@@ -96,7 +96,6 @@ const FiscalPage: React.FC = () => {
         {filtered.map(emp => {
           const isOpen = expanded === emp.id;
           const form = editForm[emp.id] || {};
-          const isSimples = emp.regime_tributario === "simples" || emp.regime_tributario === "mei";
           const done = fiscalData[emp.id]?.status_guia === "enviada" || fiscalData[emp.id]?.status_guia === "gerada";
           return (
             <div key={emp.id} className="module-card !p-0 overflow-hidden">
