@@ -5,7 +5,7 @@ import {
   Building2, FileText, Award, Clock, Calculator,
   Users, Receipt, RefreshCw, DollarSign, ClipboardList,
   LayoutDashboard, Settings, LogOut, ChevronLeft, ChevronRight,
-  Bell, Menu, Shield
+  Bell, Menu, Shield, User
 } from "lucide-react";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 
@@ -135,7 +135,15 @@ const AppLayout: React.FC = () => {
         </nav>
 
         {/* User footer */}
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-3 border-t border-sidebar-border space-y-1">
+          <button
+            onClick={() => handleNav("/perfil")}
+            className={`nav-item w-full ${location.pathname === "/perfil" ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
+            title={collapsed ? "Meu Perfil" : undefined}
+          >
+            <User size={18} />
+            {!collapsed && <span>Meu Perfil</span>}
+          </button>
           <div className={`flex items-center gap-3 p-2 rounded-lg ${collapsed ? "justify-center" : ""}`}>
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
               <span className="text-primary-foreground text-sm font-bold">{initials}</span>
