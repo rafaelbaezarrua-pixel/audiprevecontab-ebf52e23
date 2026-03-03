@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const allowedOrigins = [
   "https://audiprevecontab.lovable.app",
   "https://id-preview--420f3c5a-1dd8-481b-a931-6ca79485e462.lovable.app",
+  "https://420f3c5a-1dd8-481b-a931-6ca79485e462.lovableproject.com",
   "http://localhost:5173",
   "http://localhost:8080",
 ];
