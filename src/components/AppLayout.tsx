@@ -48,6 +48,7 @@ const AppLayout: React.FC = () => {
   };
 
   const initials = (userData?.nome || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const { User: UserIcon } = await import("lucide-react").then(() => ({ User: Users })); // not needed, using inline
 
   const handleNav = (path: string) => {
     navigate(path);
