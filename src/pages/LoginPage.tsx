@@ -46,7 +46,6 @@ const LoginPage: React.FC = () => {
         <div className="p-8">
           <div className="text-center mb-8">
             <img src={logoAudipreve} alt="Audipreve" className="w-24 h-24 object-contain mx-auto mb-4" />
-            <p className="text-sm text-muted-foreground mt-1">Sistema de Controle Contábil</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
