@@ -33,16 +33,24 @@ const FiscalPage: React.FC = () => {
 
   const filtered = empresas.filter(e => e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search));
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
     const existing = fiscalData[id] || {};
+    let fixedFields = { tipo_nota: "", recebimento_arquivos: "", aliquota: "", ramo_empresarial: "" };
+    if (!existing.id) {
+      const { data: prev } = await supabase.from("fiscal").select("tipo_nota, recebimento_arquivos, aliquota, ramo_empresarial").eq("empresa_id", id).order("competencia", { ascending: false }).limit(1);
+      if (prev?.[0]) {
+        fixedFields = { tipo_nota: prev[0].tipo_nota || "", recebimento_arquivos: prev[0].recebimento_arquivos || "", aliquota: prev[0].aliquota?.toString() || "", ramo_empresarial: prev[0].ramo_empresarial || "" };
+      }
+    } else {
+      fixedFields = { tipo_nota: existing.tipo_nota || "", recebimento_arquivos: existing.recebimento_arquivos || "", aliquota: existing.aliquota?.toString() || "", ramo_empresarial: existing.ramo_empresarial || "" };
+    }
     setEditForm(prev => ({
       ...prev, [id]: {
-        tipo_nota: existing.tipo_nota || "", recebimento_arquivos: existing.recebimento_arquivos || "",
-        forma_envio: existing.forma_envio || "", aliquota: existing.aliquota || "",
+        ...fixedFields, forma_envio: existing.forma_envio || "",
         status_guia: existing.status_guia || "pendente", data_envio: existing.data_envio || "",
-        observacoes: existing.observacoes || {}, ramo_empresarial: existing.ramo_empresarial || "",
+        observacoes: existing.observacoes || {},
       }
     }));
   };
