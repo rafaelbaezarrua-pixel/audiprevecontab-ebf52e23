@@ -14,7 +14,7 @@ export interface UserPermissions {
     parcelamentos: boolean;
     recalculos: boolean;
     honorarios: boolean;
-    obrigacoes: boolean;
+    
     licencas: boolean;
     certidoes: boolean;
   };
@@ -46,7 +46,7 @@ export const useAuth = () => {
 const allModulesTrue = {
   societario: true, fiscal: true, pessoal: true, certificados: true,
   procuracoes: true, vencimentos: true, parcelamentos: true, recalculos: true,
-  honorarios: true, obrigacoes: true, licencas: true, certidoes: true,
+  honorarios: true, licencas: true, certidoes: true,
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           parcelamentos: moduleSet.has("parcelamentos"),
           recalculos: moduleSet.has("recalculos"),
           honorarios: moduleSet.has("honorarios"),
-          obrigacoes: moduleSet.has("obrigacoes"),
+          
           licencas: moduleSet.has("licencas"),
           certidoes: moduleSet.has("certidoes"),
         },
