@@ -47,13 +47,13 @@ const TermosPage: React.FC = () => {
           <div>
             <h2 className="text-lg font-bold text-card-foreground mb-3">1. Termos de Uso do Sistema</h2>
             <div className="bg-muted/30 rounded-lg p-4 text-sm text-foreground space-y-3 border border-border">
-              <p><strong>1.1.</strong> Este sistema é de uso exclusivo e confidencial da Audipreve Contabilidade e de seus colaboradores devidamente autorizados.</p>
-              <p><strong>1.2.</strong> O acesso ao sistema é pessoal e intransferível, sendo o usuário integralmente responsável por todas as ações realizadas com suas credenciais.</p>
-              <p><strong>1.3.</strong> É terminantemente proibido compartilhar credenciais de acesso (login e senha) com terceiros, sob qualquer circunstância.</p>
-              <p><strong>1.4.</strong> O usuário compromete-se a utilizar o sistema exclusivamente para as finalidades profissionais relacionadas às atividades da Audipreve Contabilidade.</p>
-              <p><strong>1.5.</strong> Qualquer uso indevido, tentativa de acesso não autorizado ou violação dos termos poderá resultar em suspensão imediata do acesso e aplicação das sanções legais cabíveis.</p>
-              <p><strong>1.6.</strong> A Audipreve Contabilidade reserva-se o direito de monitorar, registrar e auditar todas as atividades realizadas no sistema para fins de segurança e conformidade.</p>
-              <p><strong>1.7.</strong> O sistema pode ser atualizado, modificado ou descontinuado a qualquer momento, mediante aviso prévio aos usuários.</p>
+              <p><strong>1.1. Natureza do Sistema:</strong> Este sistema é uma ferramenta de trabalho de propriedade exclusiva e confidencial da Audipreve Contabilidade, destinado estritamente a colaboradores e parceiros devidamente autorizados.</p>
+              <p><strong>1.2. Credenciais de Acesso:</strong> O acesso é pessoal, nominal e intransferível. O usuário é o único e integral responsável por toda e qualquer operação realizada sob suas credenciais (login e senha).</p>
+              <p><strong>1.3. Proibição de Compartilhamento:</strong> É terminantemente proibido o compartilhamento de credenciais com terceiros, inclusive outros colaboradores, sob qualquer pretexto. A guarda da senha é de responsabilidade exclusiva do usuário.</p>
+              <p><strong>1.4. Finalidade Profissional:</strong> O usuário compromete-se a utilizar o sistema e seus recursos exclusivamente para a execução de suas atividades profissionais em prol da Audipreve Contabilidade, sendo vedado o uso para fins pessoais ou estranhos ao serviço.</p>
+              <p><strong>1.5. Sanções por Uso Indevido:</strong> Qualquer tentativa de violação, acesso não autorizado ou uso em desacordo com estes termos resultará na suspensão imediata das credenciais, sem prejuízo da aplicação de sanções disciplinares (conforme a CLT) e medidas judiciais cabíveis.</p>
+              <p><strong>1.6. Monitoramento e Auditoria:</strong> A Audipreve Contabilidade reserva-se o direito de monitorar, registrar e auditar os logs de acesso e as atividades realizadas no sistema. O usuário declara ciência de que não há expectativa de privacidade quanto às ações executadas em ambiente corporativo.</p>
+              <p><strong>1.7. Manutenção e Alterações:</strong> O sistema poderá sofrer atualizações, modificações ou interrupções para manutenção, buscando sempre a melhoria da segurança e funcionalidade.</p>
             </div>
           </div>
 
@@ -61,13 +61,18 @@ const TermosPage: React.FC = () => {
           <div>
             <h2 className="text-lg font-bold text-card-foreground mb-3">2. Termo de Responsabilidade — LGPD e Sigilo de Informações</h2>
             <div className="bg-muted/30 rounded-lg p-4 text-sm text-foreground space-y-3 border border-border">
-              <p><strong>2.1.</strong> Em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 — LGPD) e demais normas aplicáveis, o usuário declara ciência e compromisso com as seguintes obrigações:</p>
-              <p><strong>2.2. Sigilo e Confidencialidade:</strong> Todas as informações acessadas por meio deste sistema — incluindo, mas não se limitando a, dados pessoais, dados sensíveis, informações financeiras, fiscais e societárias de clientes — são estritamente confidenciais. O usuário obriga-se a manter sigilo absoluto sobre tais informações durante e após o término de sua relação com a Audipreve Contabilidade.</p>
-              <p><strong>2.3. Finalidade e Necessidade:</strong> Os dados pessoais e informações disponíveis no sistema devem ser acessados e utilizados exclusivamente para a finalidade específica das atividades profissionais, respeitando os princípios da necessidade e adequação previstos na LGPD.</p>
-              <p><strong>2.4. Proibição de Compartilhamento:</strong> É expressamente vedado copiar, transferir, transmitir, divulgar ou compartilhar qualquer dado pessoal ou informação confidencial obtida por meio do sistema com terceiros não autorizados, seja por meio eletrônico, impresso ou verbal.</p>
-              <p><strong>2.5. Incidentes de Segurança:</strong> O usuário compromete-se a comunicar imediatamente à administração da Audipreve Contabilidade qualquer incidente de segurança, violação de dados ou suspeita de acesso indevido de que tenha conhecimento.</p>
-              <p><strong>2.6. Responsabilidade:</strong> O descumprimento das obrigações previstas neste termo sujeitará o usuário às penalidades previstas na LGPD, no Código Civil, na legislação trabalhista e demais normas aplicáveis, incluindo responsabilização por perdas e danos, sem prejuízo das sanções administrativas e disciplinares cabíveis.</p>
-              <p><strong>2.7. Consentimento:</strong> Ao aceitar este termo, o usuário consente com o tratamento de seus dados pessoais (nome, CPF, e-mail, telefone, endereço) pela Audipreve Contabilidade para fins de gestão do acesso ao sistema, controle de atividades e cumprimento de obrigações legais e regulatórias.</p>
+              <p><strong>2.1. Conformidade Legal:</strong> O usuário declara ciência e obriga-se a cumprir as disposições da Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 — LGPD), bem como as normas éticas do Conselho Federal de Contabilidade (CFC).</p>
+              <p><strong>2.2. Dever de Sigilo e Confidencialidade:</strong> Todas as informações acessadas — dados pessoais, dados sensíveis, segredos de negócio, dados financeiros, fiscais e societários de clientes — são estritamente confidenciais. Este dever de sigilo permanece em vigor mesmo após o término do vínculo (trabalhista ou contratual) com a Audipreve Contabilidade, sob pena de responsabilização civil e criminal.</p>
+              <p><strong>2.3. Princípios da LGPD:</strong> O tratamento de dados deve observar rigorosamente os princípios da finalidade, necessidade e adequação. O acesso a dados de clientes só deve ocorrer quando indispensável para o cumprimento da obrigação profissional específica.</p>
+              <p><strong>2.4. Vedação de Extração de Dados:</strong> É expressamente proibido copiar, fotografar, imprimir, transferir ou transmitir qualquer dado confidencial para dispositivos externos (pen drives, e-mails pessoais, nuvens privadas ou aplicativos de mensagens) sem autorização prévia e formal da diretoria.</p>
+              <p><strong>2.5. Notificação de Incidentes:</strong> O usuário deve comunicar imediatamente ao Encarregado de Dados (DPO) ou à administração qualquer suspeita de vazamento, perda de dados ou acesso indevido por terceiros.</p>
+              <p><strong>2.6. Responsabilidade e Penalidades:</strong> O descumprimento das obrigações aqui previstas sujeitará o infrator a:</p>
+              <ul className="list-disc list-inside pl-4 space-y-1">
+                <li><strong>Esfera Trabalhista:</strong> Advertência, suspensão ou dispensa por justa causa (Art. 482 da CLT).</li>
+                <li><strong>Esfera Civil:</strong> Reparação de danos e perdas causadas à empresa ou a terceiros.</li>
+                <li><strong>Esfera Criminal:</strong> Penalidades previstas no Código Penal (Violação de sigilo profissional).</li>
+              </ul>
+              <p><strong>2.7. Consentimento e Tratamento de Dados do Usuário:</strong> Ao acessar o sistema, o usuário consente com a coleta e tratamento de seus próprios dados (nome, CPF, logs de IP e geolocalização) pela Audipreve Contabilidade, necessários para a segurança da informação, controle de acesso e cumprimento de obrigações legais.</p>
             </div>
           </div>
         </div>
