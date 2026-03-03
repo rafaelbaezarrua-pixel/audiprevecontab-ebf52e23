@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
-  Building2, FileText, Shield, Award, Clock, Calculator,
+  Building2, FileText, Award, Clock, Calculator,
   Users, Receipt, RefreshCw, DollarSign, ClipboardList,
   LayoutDashboard, Settings, LogOut, ChevronLeft, ChevronRight,
-  Bell, Menu
+  Bell, Menu, Shield as ShieldIcon
 } from "lucide-react";
+import logoAudipreve from "@/assets/logo-audipreve.png";
 
 interface NavItemConfig {
   id: string;
@@ -22,7 +23,7 @@ const navItems: NavItemConfig[] = [
   { id: "societario", label: "Societário", icon: <Building2 size={18} />, path: "/societario", moduleKey: "societario", section: "DEPARTAMENTOS" },
   { id: "fiscal", label: "Fiscal", icon: <Receipt size={18} />, path: "/fiscal", moduleKey: "fiscal" },
   { id: "pessoal", label: "Pessoal", icon: <Users size={18} />, path: "/pessoal", moduleKey: "pessoal" },
-  { id: "licencas", label: "Licenças", icon: <Shield size={18} />, path: "/licencas", moduleKey: "societario", section: "CONTROLES" },
+  { id: "licencas", label: "Licenças", icon: <ShieldIcon size={18} />, path: "/licencas", moduleKey: "societario", section: "CONTROLES" },
   { id: "certificados", label: "Certificados", icon: <Award size={18} />, path: "/certificados", moduleKey: "certificados" },
   { id: "certidoes", label: "Certidões", icon: <FileText size={18} />, path: "/certidoes", moduleKey: "certificados" },
   { id: "procuracoes", label: "Procurações", icon: <FileText size={18} />, path: "/procuracoes", moduleKey: "procuracoes" },
@@ -76,9 +77,7 @@ const AppLayout: React.FC = () => {
         <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <Shield size={20} className="text-primary-foreground" />
-              </div>
+              <img src={logoAudipreve} alt="Audipreve" className="w-10 h-10 object-contain" />
               <div>
                 <h1 className="text-lg font-bold text-card-foreground">Audipreve</h1>
                 <p className="text-xs text-sidebar-muted">{userData?.departamento || "Contabilidade"}</p>
@@ -86,9 +85,7 @@ const AppLayout: React.FC = () => {
             </div>
           )}
           {collapsed && (
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mx-auto">
-              <Shield size={20} className="text-primary-foreground" />
-            </div>
+            <img src={logoAudipreve} alt="Audipreve" className="w-10 h-10 object-contain mx-auto" />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
