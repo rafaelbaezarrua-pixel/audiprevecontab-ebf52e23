@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { Shield, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import logoAudipreve from "@/assets/logo-audipreve.png";
 
 const LoginPage: React.FC = () => {
   const { user, loading, login } = useAuth();
@@ -14,9 +15,7 @@ const LoginPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">
-            <Shield size={32} className="text-primary-foreground" />
-          </div>
+          <img src={logoAudipreve} alt="Audipreve" className="w-20 h-20 object-contain mx-auto mb-4" />
           <Loader2 className="animate-spin mx-auto text-primary" size={24} />
           <p className="text-muted-foreground mt-3 text-sm">Carregando sistema...</p>
         </div>
@@ -44,9 +43,7 @@ const LoginPage: React.FC = () => {
       <div className="bg-card rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-border">
         <div className="p-8">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">
-              <Shield size={40} className="text-primary-foreground" />
-            </div>
+            <img src={logoAudipreve} alt="Audipreve" className="w-24 h-24 object-contain mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-card-foreground">Audipreve</h1>
             <p className="text-sm text-muted-foreground mt-1">Sistema de Controle Contábil</p>
           </div>
