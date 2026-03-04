@@ -26,6 +26,7 @@ import CompletarPerfilPage from "@/pages/CompletarPerfilPage";
 import TermosPage from "@/pages/TermosPage";
 import PerfilPage from "@/pages/PerfilPage";
 import NotFound from "@/pages/NotFound";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const queryClient = new QueryClient();
 
@@ -55,43 +56,45 @@ const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/completar-perfil" element={<OnboardingRoute><CompletarPerfilPage /></OnboardingRoute>} />
-            <Route path="/termos" element={<OnboardingRoute><TermosPage /></OnboardingRoute>} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/societario" element={<SocietarioPage />} />
-              <Route path="/societario/:id" element={<SocietarioEmpresaPage />} />
-              <Route path="/societario/:id/editar" element={<SocietarioEmpresaPage />} />
-              <Route path="/licencas" element={<LicencasPage />} />
-              <Route path="/certificados" element={<CertificadosPage />} />
-              <Route path="/certidoes" element={<CertidoesPage />} />
-              <Route path="/procuracoes" element={<ProcuracoesPage />} />
-              <Route path="/fiscal" element={<FiscalPage />} />
-              <Route path="/pessoal" element={<PessoalPage />} />
-              <Route path="/vencimentos" element={<VencimentosPage />} />
-              <Route path="/parcelamentos" element={<ParcelamentosPage />} />
-              <Route path="/parcelamentos/novo" element={<ParcelamentoFormPage />} />
-              <Route path="/recalculos" element={<RecalculosPage />} />
-              <Route path="/honorarios" element={<HonorariosPage />} />
+  <ThemeProvider defaultTheme="dark" storageKey="audipreve-theme">
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/completar-perfil" element={<OnboardingRoute><CompletarPerfilPage /></OnboardingRoute>} />
+              <Route path="/termos" element={<OnboardingRoute><TermosPage /></OnboardingRoute>} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/societario" element={<SocietarioPage />} />
+                <Route path="/societario/:id" element={<SocietarioEmpresaPage />} />
+                <Route path="/societario/:id/editar" element={<SocietarioEmpresaPage />} />
+                <Route path="/licencas" element={<LicencasPage />} />
+                <Route path="/certificados" element={<CertificadosPage />} />
+                <Route path="/certidoes" element={<CertidoesPage />} />
+                <Route path="/procuracoes" element={<ProcuracoesPage />} />
+                <Route path="/fiscal" element={<FiscalPage />} />
+                <Route path="/pessoal" element={<PessoalPage />} />
+                <Route path="/vencimentos" element={<VencimentosPage />} />
+                <Route path="/parcelamentos" element={<ParcelamentosPage />} />
+                <Route path="/parcelamentos/novo" element={<ParcelamentoFormPage />} />
+                <Route path="/recalculos" element={<RecalculosPage />} />
+                <Route path="/honorarios" element={<HonorariosPage />} />
 
-              <Route path="/perfil" element={<PerfilPage />} />
-              <Route path="/configuracoes" element={<ConfiguracoesPage />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+                <Route path="/perfil" element={<PerfilPage />} />
+                <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

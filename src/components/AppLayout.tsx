@@ -5,9 +5,10 @@ import {
   Building2, FileText, Award, Clock, Calculator,
   Users, Receipt, RefreshCw, DollarSign, ClipboardList,
   LayoutDashboard, Settings, LogOut, ChevronLeft, ChevronRight,
-  Bell, Menu, Shield, User
+  Bell, Menu, Shield, User, Sun, Moon
 } from "lucide-react";
 import logoAudipreve from "@/assets/logo-audipreve.png";
+import { useTheme } from "@/components/theme-provider";
 
 interface NavItemConfig {
   id: string;
@@ -29,9 +30,9 @@ const navItems: NavItemConfig[] = [
   { id: "procuracoes", label: "Procurações", icon: <FileText size={18} />, path: "/procuracoes", moduleKey: "procuracoes" },
   { id: "vencimentos", label: "Vencimentos", icon: <Clock size={18} />, path: "/vencimentos", moduleKey: "vencimentos" },
   { id: "parcelamentos", label: "Parcelamentos", icon: <Calculator size={18} />, path: "/parcelamentos", moduleKey: "parcelamentos" },
+  { id: "recalculos", label: "Recálculos", icon: <RefreshCw size={18} />, path: "/recalculos", moduleKey: "recalculos" },
 
   { id: "honorarios", label: "Honorários", icon: <DollarSign size={18} />, path: "/honorarios", moduleKey: "honorarios", section: "FINANCEIRO" },
-  { id: "recalculos", label: "Recálculos", icon: <RefreshCw size={18} />, path: "/recalculos", moduleKey: "recalculos" },
 ];
 
 const AppLayout: React.FC = () => {
@@ -40,6 +41,7 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const hasAccess = (moduleKey?: string) => {
     if (!moduleKey) return true;
@@ -181,6 +183,17 @@ const AppLayout: React.FC = () => {
           <div className="flex items-center gap-3">
             <button className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors relative">
               <Bell size={18} className="text-muted-foreground" />
+            </button>
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors relative"
+              title="Alternar Tema"
+            >
+              {theme === 'dark' ? (
+                <Sun size={18} className="text-muted-foreground" />
+              ) : (
+                <Moon size={18} className="text-muted-foreground" />
+              )}
             </button>
             <div className="hidden sm:block px-3 py-1.5 bg-muted rounded-lg">
               <p className="text-xs font-medium text-muted-foreground capitalize">{currentDate}</p>

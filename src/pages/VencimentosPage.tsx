@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, AlertTriangle, CheckCircle, Search } from "lucide-react";
+import { useEmpresas } from "@/hooks/useEmpresas";
 
 interface Vencimento { empresa: string; tipo: string; data: string; diasRestantes: number; status: string; }
 
@@ -10,6 +11,7 @@ const calcStatus = (dias: number) => dias < 0 ? "vencido" : dias <= 30 ? "próxi
 const licencaLabels: Record<string, string> = { alvara: "Alvará", vigilancia_sanitaria: "Vigilância Sanitária", corpo_bombeiros: "Corpo de Bombeiros", meio_ambiente: "Meio Ambiente" };
 
 const VencimentosPage: React.FC = () => {
+  const { empresas, loading } = useEmpresas("vencimentos");
   const [vencimentos, setVencimentos] = useState<Vencimento[]>([]);
   const [filter, setFilter] = useState("todos");
   const [search, setSearch] = useState("");
@@ -17,9 +19,8 @@ const VencimentosPage: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       const list: Vencimento[] = [];
-      const { data: empresas } = await supabase.from("empresas").select("id, nome_empresa");
       const empMap: Record<string, string> = {};
-      empresas?.forEach(e => { empMap[e.id] = e.nome_empresa; });
+      empresas.forEach(e => { empMap[e.id] = e.nome_empresa; });
 
       // Licencas com vencimento
       const { data: lics } = await supabase.from("licencas").select("*").eq("status", "com_vencimento").not("vencimento", "is", null);
@@ -40,8 +41,8 @@ const VencimentosPage: React.FC = () => {
       list.sort((a, b) => a.diasRestantes - b.diasRestantes);
       setVencimentos(list);
     };
-    load();
-  }, []);
+    if (empresas.length > 0) load();
+  }, [empresas]);
 
   const searchFiltered = vencimentos.filter(v => {
     const matchSearch = !search || v.empresa.toLowerCase().includes(search.toLowerCase()) || v.tipo.toLowerCase().includes(search.toLowerCase());
@@ -49,6 +50,10 @@ const VencimentosPage: React.FC = () => {
   });
 
   const counts = { vencido: vencimentos.filter(v => v.status === "vencido").length, proximo: vencimentos.filter(v => v.status === "próximo").length, emDia: vencimentos.filter(v => v.status === "em dia").length };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
