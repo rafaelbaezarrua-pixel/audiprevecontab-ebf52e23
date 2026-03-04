@@ -38,13 +38,16 @@ const PessoalPage: React.FC = () => {
     setEditForm(prev => ({
       ...prev, [id]: {
         forma_envio: existing.forma_envio || "", qtd_funcionarios: existing.qtd_funcionarios || 0,
-        qtd_pro_labore: existing.qtd_pro_labore || 0, possui_vt: existing.possui_vt || false,
-        possui_va: existing.possui_va || false, possui_recibos: existing.possui_recibos || false, vt_status: existing.vt_status || "pendente",
-        vt_data_envio: existing.vt_data_envio || "", va_status: existing.va_status || "pendente",
-        va_data_envio: existing.va_data_envio || "", inss_status: existing.inss_status || "pendente",
-        inss_data_envio: existing.inss_data_envio || "", fgts_status: existing.fgts_status || "pendente",
-        fgts_data_envio: existing.fgts_data_envio || "", recibos_status: existing.recibos_status || "pendente",
-        recibos_data_envio: existing.recibos_data_envio || "", dctf_web_gerada: existing.dctf_web_gerada || false,
+        qtd_pro_labore: existing.qtd_pro_labore || 0,
+        possui_vt: existing.possui_vt || false, possui_va: existing.possui_va || false,
+        possui_vc: existing.possui_vc || false, possui_recibos: existing.possui_recibos || false,
+        qtd_recibos: existing.qtd_recibos || 0,
+        vt_status: existing.vt_status || "pendente", vt_data_envio: existing.vt_data_envio || "",
+        va_status: existing.va_status || "pendente", va_data_envio: existing.va_data_envio || "",
+        vc_status: existing.vc_status || "pendente", vc_data_envio: existing.vc_data_envio || "",
+        inss_status: existing.inss_status || "pendente", inss_data_envio: existing.inss_data_envio || "",
+        fgts_status: existing.fgts_status || "pendente", fgts_data_envio: existing.fgts_data_envio || "",
+        dctf_web_gerada: existing.dctf_web_gerada || false,
       }
     }));
   };
@@ -56,12 +59,14 @@ const PessoalPage: React.FC = () => {
       const payload = {
         empresa_id: empresaId, competencia, forma_envio: form.forma_envio || null,
         qtd_funcionarios: parseInt(form.qtd_funcionarios) || 0, qtd_pro_labore: parseInt(form.qtd_pro_labore) || 0,
-        possui_vt: form.possui_vt || false, possui_va: form.possui_va || false, possui_recibos: form.possui_recibos || false,
+        possui_vt: form.possui_vt || false, possui_va: form.possui_va || false,
+        possui_vc: form.possui_vc || false, possui_recibos: form.possui_recibos || false,
+        qtd_recibos: parseInt(form.qtd_recibos) || 0,
         vt_status: form.vt_status as any, vt_data_envio: form.vt_data_envio || null,
         va_status: form.va_status as any, va_data_envio: form.va_data_envio || null,
+        vc_status: form.vc_status as any, vc_data_envio: form.vc_data_envio || null,
         inss_status: form.inss_status as any, inss_data_envio: form.inss_data_envio || null,
         fgts_status: form.fgts_status as any, fgts_data_envio: form.fgts_data_envio || null,
-        recibos_status: form.recibos_status as any, recibos_data_envio: form.recibos_data_envio || null,
         dctf_web_gerada: form.dctf_web_gerada || false,
       };
       if (existing?.id) {
@@ -110,22 +115,73 @@ const PessoalPage: React.FC = () => {
               </div>
               {isOpen && (
                 <div className="border-t border-border p-5 space-y-5 bg-muted/10">
+                  {/* Informações */}
                   <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} /></div>
                       <div><label className={labelCls}>Qtd Funcionários</label><input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className={inputCls} /></div>
                       <div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div>
-                      <div className="flex items-end gap-3"><label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.possui_vt || false} onChange={e => updateForm(emp.id, "possui_vt", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> VT</label><label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.possui_va || false} onChange={e => updateForm(emp.id, "possui_va", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> VA</label><label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.possui_recibos || false} onChange={e => updateForm(emp.id, "possui_recibos", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> Recibos</label></div>
                     </div>
                   </div>
+
+                  {/* Trabalhistas */}
+                  <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Trabalhistas - {competencia}</h3>
+                    <div className="space-y-3">
+                      {/* Recibos - campo de quantidade */}
+                      <div className="grid grid-cols-3 gap-3 items-center">
+                        <label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer">
+                          <input type="checkbox" checked={form.possui_recibos || false} onChange={e => updateForm(emp.id, "possui_recibos", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> Recibos
+                        </label>
+                        {form.possui_recibos ? (
+                          <div><label className={labelCls}>Qtd Recibos</label><input type="number" value={form.qtd_recibos || 0} onChange={e => updateForm(emp.id, "qtd_recibos", e.target.value)} className={inputCls} /></div>
+                        ) : <div />}
+                        <div />
+                      </div>
+                      {/* VT, VA, VC - checkbox + status + data */}
+                      {[
+                        { label: "VT", checkKey: "possui_vt", statusKey: "vt_status", dateKey: "vt_data_envio" },
+                        { label: "VA", checkKey: "possui_va", statusKey: "va_status", dateKey: "va_data_envio" },
+                        { label: "VC", checkKey: "possui_vc", statusKey: "vc_status", dateKey: "vc_data_envio" },
+                      ].map(item => (
+                        <div key={item.label} className="grid grid-cols-3 gap-3 items-center">
+                          <label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer">
+                            <input type="checkbox" checked={form[item.checkKey] || false} onChange={e => updateForm(emp.id, item.checkKey, e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> {item.label}
+                          </label>
+                          {form[item.checkKey] ? (
+                            <>
+                              <select value={form[item.statusKey] || "pendente"} onChange={e => updateForm(emp.id, item.statusKey, e.target.value)} className={inputCls}>
+                                <option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option>
+                              </select>
+                              <input type="date" value={form[item.dateKey] || ""} onChange={e => updateForm(emp.id, item.dateKey, e.target.value)} className={inputCls} />
+                            </>
+                          ) : (<><div /><div /></>)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Encargos */}
                   <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Encargos - {competencia}</h3>
                     <div className="space-y-3">
-                      {[...(form.possui_vt ? [{ label: "VT", statusKey: "vt_status", dateKey: "vt_data_envio" }] : []), ...(form.possui_va ? [{ label: "VA", statusKey: "va_status", dateKey: "va_data_envio" }] : []), ...(form.possui_recibos ? [{ label: "Recibos", statusKey: "recibos_status", dateKey: "recibos_data_envio" }] : []), { label: "INSS", statusKey: "inss_status", dateKey: "inss_data_envio" }, { label: "FGTS", statusKey: "fgts_status", dateKey: "fgts_data_envio" }].map(enc => (
-                        <div key={enc.label} className="grid grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">{enc.label}</span><select value={form[enc.statusKey] || "pendente"} onChange={e => updateForm(emp.id, enc.statusKey, e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select><input type="date" value={form[enc.dateKey] || ""} onChange={e => updateForm(emp.id, enc.dateKey, e.target.value)} className={inputCls} /></div>
+                      {[{ label: "INSS", statusKey: "inss_status", dateKey: "inss_data_envio" }, { label: "FGTS", statusKey: "fgts_status", dateKey: "fgts_data_envio" }].map(enc => (
+                        <div key={enc.label} className="grid grid-cols-3 gap-3 items-center">
+                          <span className="text-sm font-medium text-card-foreground">{enc.label}</span>
+                          <select value={form[enc.statusKey] || "pendente"} onChange={e => updateForm(emp.id, enc.statusKey, e.target.value)} className={inputCls}>
+                            <option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option>
+                          </select>
+                          <input type="date" value={form[enc.dateKey] || ""} onChange={e => updateForm(emp.id, enc.dateKey, e.target.value)} className={inputCls} />
+                        </div>
                       ))}
-                      <div className="grid grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">DCTF Web</span><select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}><option value="nao">Não Gerada</option><option value="sim">Gerada</option></select><div /></div>
+                      <div className="grid grid-cols-3 gap-3 items-center">
+                        <span className="text-sm font-medium text-card-foreground">DCTF Web</span>
+                        <select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}>
+                          <option value="nao">Não Gerada</option><option value="sim">Gerada</option>
+                        </select>
+                        <div />
+                      </div>
                     </div>
                   </div>
+
                   <div className="flex justify-end"><button onClick={() => handleSave(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Save size={14} /> Salvar</button></div>
                 </div>
               )}
