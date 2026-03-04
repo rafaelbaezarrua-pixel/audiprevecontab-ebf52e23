@@ -334,10 +334,13 @@ export type Database = {
           id: string
           inss_data_envio: string | null
           inss_status: Database["public"]["Enums"]["guia_status"] | null
+          possui_recibos: boolean | null
           possui_va: boolean | null
           possui_vt: boolean | null
           qtd_funcionarios: number | null
           qtd_pro_labore: number | null
+          recibos_data_envio: string | null
+          recibos_status: Database["public"]["Enums"]["guia_status"] | null
           updated_at: string | null
           va_data_envio: string | null
           va_status: Database["public"]["Enums"]["guia_status"] | null
@@ -355,10 +358,13 @@ export type Database = {
           id?: string
           inss_data_envio?: string | null
           inss_status?: Database["public"]["Enums"]["guia_status"] | null
+          possui_recibos?: boolean | null
           possui_va?: boolean | null
           possui_vt?: boolean | null
           qtd_funcionarios?: number | null
           qtd_pro_labore?: number | null
+          recibos_data_envio?: string | null
+          recibos_status?: Database["public"]["Enums"]["guia_status"] | null
           updated_at?: string | null
           va_data_envio?: string | null
           va_status?: Database["public"]["Enums"]["guia_status"] | null
@@ -376,10 +382,13 @@ export type Database = {
           id?: string
           inss_data_envio?: string | null
           inss_status?: Database["public"]["Enums"]["guia_status"] | null
+          possui_recibos?: boolean | null
           possui_va?: boolean | null
           possui_vt?: boolean | null
           qtd_funcionarios?: number | null
           qtd_pro_labore?: number | null
+          recibos_data_envio?: string | null
+          recibos_status?: Database["public"]["Enums"]["guia_status"] | null
           updated_at?: string | null
           va_data_envio?: string | null
           va_status?: Database["public"]["Enums"]["guia_status"] | null
