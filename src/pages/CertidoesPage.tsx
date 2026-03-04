@@ -2,12 +2,13 @@ import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Plus, Trash2, ChevronDown, ChevronUp, Building2, FileText, Upload, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { useEmpresas } from "@/hooks/useEmpresas";
 
 const tiposCertidao = ["CND Federal", "CND Estadual", "CND Municipal", "CND FGTS", "CND Trabalhista", "CNDT", "Certidão INSS", "Certidão Tributos Federais", "Outra"];
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
 
 const CertidoesPage: React.FC = () => {
-  const [empresas, setEmpresas] = useState<any[]>([]);
+  const { empresas, loading } = useEmpresas("certidoes");
   const [certidoes, setCertidoes] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -18,8 +19,6 @@ const CertidoesPage: React.FC = () => {
   const newFileInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
-    const { data: emps } = await supabase.from("empresas").select("id, nome_empresa, cnpj").order("nome_empresa");
-    setEmpresas(emps || []);
     const { data: certs } = await supabase.from("certidoes").select("*");
     setCertidoes(certs || []);
   };
@@ -90,6 +89,10 @@ const CertidoesPage: React.FC = () => {
 
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

@@ -2,24 +2,17 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle } from "lucide-react";
 import { toast } from "sonner";
+import { useEmpresas } from "@/hooks/useEmpresas";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI" };
 
 const FiscalPage: React.FC = () => {
-  const [empresas, setEmpresas] = useState<any[]>([]);
+  const { empresas, loading } = useEmpresas("fiscal");
   const [fiscalData, setFiscalData] = useState<Record<string, any>>({});
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
-
-  useEffect(() => {
-    const load = async () => {
-      const { data: emps } = await supabase.from("empresas").select("*").neq("situacao", "baixada").order("nome_empresa");
-      setEmpresas(emps || []);
-    };
-    load();
-  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -87,6 +80,10 @@ const FiscalPage: React.FC = () => {
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
   const completedCount = empresas.filter(e => fiscalData[e.id]?.status_guia === "enviada" || fiscalData[e.id]?.status_guia === "gerada").length;
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

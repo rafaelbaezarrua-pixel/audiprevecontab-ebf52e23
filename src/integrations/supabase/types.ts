@@ -131,6 +131,7 @@ export type Database = {
           data_abertura: string | null
           endereco: Json | null
           id: string
+          modulos_ativos: string[] | null
           natureza_juridica: string | null
           nome_empresa: string
           porte_empresa: string | null
@@ -146,6 +147,7 @@ export type Database = {
           data_abertura?: string | null
           endereco?: Json | null
           id?: string
+          modulos_ativos?: string[] | null
           natureza_juridica?: string | null
           nome_empresa: string
           porte_empresa?: string | null
@@ -161,6 +163,7 @@ export type Database = {
           data_abertura?: string | null
           endereco?: Json | null
           id?: string
+          modulos_ativos?: string[] | null
           natureza_juridica?: string | null
           nome_empresa?: string
           porte_empresa?: string | null
@@ -171,6 +174,41 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      empresa_acessos: {
+        Row: {
+          id: string
+          empresa_id: string
+          user_id: string
+          modulos_permitidos: string[]
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          empresa_id: string
+          user_id: string
+          modulos_permitidos?: string[]
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          user_id?: string
+          modulos_permitidos?: string[]
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_acessos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       fiscal: {
         Row: {
@@ -221,6 +259,109 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fiscal_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      honorarios_config: {
+        Row: {
+          created_at: string | null
+          empresa_id: string
+          id: string
+          updated_at: string | null
+          valor_honorario: number | null
+          valor_por_funcionario: number | null
+          valor_por_recalculo: number | null
+          valor_trabalhista: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id: string
+          id?: string
+          updated_at?: string | null
+          valor_honorario?: number | null
+          valor_por_funcionario?: number | null
+          valor_por_recalculo?: number | null
+          valor_trabalhista?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string
+          id?: string
+          updated_at?: string | null
+          valor_honorario?: number | null
+          valor_por_funcionario?: number | null
+          valor_por_recalculo?: number | null
+          valor_trabalhista?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "honorarios_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: true
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      honorarios_mensal: {
+        Row: {
+          competencia: string
+          created_at: string | null
+          data_envio: string | null
+          data_vencimento: string | null
+          empresa_id: string
+          forma_envio: string | null
+          id: string
+          observacoes: Json | null
+          pago: boolean | null
+          qtd_funcionarios: number | null
+          qtd_recalculos: number | null
+          status: Database["public"]["Enums"]["guia_status"] | null
+          teve_encargo_trabalhista: boolean | null
+          updated_at: string | null
+          valor_total: number | null
+        }
+        Insert: {
+          competencia: string
+          created_at?: string | null
+          data_envio?: string | null
+          data_vencimento?: string | null
+          empresa_id: string
+          forma_envio?: string | null
+          id?: string
+          observacoes?: Json | null
+          pago?: boolean | null
+          qtd_funcionarios?: number | null
+          qtd_recalculos?: number | null
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          teve_encargo_trabalhista?: boolean | null
+          updated_at?: string | null
+          valor_total?: number | null
+        }
+        Update: {
+          competencia?: string
+          created_at?: string | null
+          data_envio?: string | null
+          data_vencimento?: string | null
+          empresa_id?: string
+          forma_envio?: string | null
+          id?: string
+          observacoes?: Json | null
+          pago?: boolean | null
+          qtd_funcionarios?: number | null
+          qtd_recalculos?: number | null
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          teve_encargo_trabalhista?: boolean | null
+          updated_at?: string | null
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "honorarios_mensal_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
@@ -593,6 +734,66 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recalculos: {
+        Row: {
+          id: string
+          empresa_id: string | null
+          parcelamento_id: string | null
+          modulo_origem: string
+          competencia: string
+          guia: string
+          data_recalculo: string | null
+          data_envio: string | null
+          forma_envio: string | null
+          status: Database["public"]["Enums"]["guia_status"] | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          empresa_id?: string | null
+          parcelamento_id?: string | null
+          modulo_origem: string
+          competencia: string
+          guia: string
+          data_recalculo?: string | null
+          data_envio?: string | null
+          forma_envio?: string | null
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          empresa_id?: string | null
+          parcelamento_id?: string | null
+          modulo_origem?: string
+          competencia?: string
+          guia?: string
+          data_recalculo?: string | null
+          data_envio?: string | null
+          forma_envio?: string | null
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recalculos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recalculos_parcelamento_id_fkey"
+            columns: ["parcelamento_id"]
+            isOneToOne: false
+            referencedRelation: "parcelamentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       socios: {
         Row: {

@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Save, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { useEmpresas } from "@/hooks/useEmpresas";
 
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
 
 const ProcuracoesPage: React.FC = () => {
-  const [empresas, setEmpresas] = useState<any[]>([]);
+  const { empresas, loading } = useEmpresas("procuracoes");
   const [procData, setProcData] = useState<Record<string, any>>({});
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
@@ -15,8 +16,6 @@ const ProcuracoesPage: React.FC = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data: emps } = await supabase.from("empresas").select("id, nome_empresa, cnpj").order("nome_empresa");
-      setEmpresas(emps || []);
       const { data: procs } = await supabase.from("procuracoes").select("*");
       const map: Record<string, any> = {};
       procs?.forEach(p => { map[p.empresa_id] = p; });
@@ -66,6 +65,10 @@ const ProcuracoesPage: React.FC = () => {
 
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

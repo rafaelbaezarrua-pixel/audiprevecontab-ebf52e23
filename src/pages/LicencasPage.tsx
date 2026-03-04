@@ -5,6 +5,7 @@ import {
   Shield, CheckCircle, Clock, AlertTriangle, Save
 } from "lucide-react";
 import { toast } from "sonner";
+import { useEmpresas } from "@/hooks/useEmpresas";
 
 const licencaLabels: Record<string, string> = {
   alvara: "Alvará de Funcionamento",
@@ -28,7 +29,7 @@ const calcDias = (data?: string | null) => {
 type TabType = "licencas" | "taxas";
 
 const LicencasPage: React.FC = () => {
-  const [empresas, setEmpresas] = useState<any[]>([]);
+  const { empresas, loading } = useEmpresas("licencas");
   const [licencas, setLicencas] = useState<any[]>([]);
   const [taxas, setTaxas] = useState<any[]>([]);
 
@@ -41,8 +42,6 @@ const LicencasPage: React.FC = () => {
   const [taxasForm, setTaxasForm] = useState<Record<string, Record<string, any>>>({});
 
   const loadBaseData = async () => {
-    const { data: emps } = await supabase.from("empresas").select("id, nome_empresa, cnpj").neq("situacao", "baixada").order("nome_empresa");
-    setEmpresas(emps || []);
     const { data: lics } = await supabase.from("licencas").select("*");
     setLicencas(lics || []);
   };
@@ -141,6 +140,10 @@ const LicencasPage: React.FC = () => {
 
   const inputCls = "w-full px-3 py-1.5 border border-border rounded-md bg-background text-foreground text-xs focus:ring-1 focus:ring-primary outline-none";
   const labelCls = "block text-[11px] font-semibold text-muted-foreground mb-1 uppercase tracking-wider";
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

@@ -2,22 +2,15 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle } from "lucide-react";
 import { toast } from "sonner";
+import { useEmpresas } from "@/hooks/useEmpresas";
 
 const PessoalPage: React.FC = () => {
-  const [empresas, setEmpresas] = useState<any[]>([]);
+  const { empresas, loading } = useEmpresas("pessoal");
   const [pessoalData, setPessoalData] = useState<Record<string, any>>({});
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
-
-  useEffect(() => {
-    const load = async () => {
-      const { data: emps } = await supabase.from("empresas").select("*").neq("situacao", "baixada").order("nome_empresa");
-      setEmpresas(emps || []);
-    };
-    load();
-  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -89,6 +82,10 @@ const PessoalPage: React.FC = () => {
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
   const completedCount = empresas.filter(e => pessoalData[e.id]?.dctf_web_gerada).length;
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
