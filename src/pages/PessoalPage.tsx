@@ -56,11 +56,12 @@ const PessoalPage: React.FC = () => {
       const payload = {
         empresa_id: empresaId, competencia, forma_envio: form.forma_envio || null,
         qtd_funcionarios: parseInt(form.qtd_funcionarios) || 0, qtd_pro_labore: parseInt(form.qtd_pro_labore) || 0,
-        possui_vt: form.possui_vt || false, possui_va: form.possui_va || false,
+        possui_vt: form.possui_vt || false, possui_va: form.possui_va || false, possui_recibos: form.possui_recibos || false,
         vt_status: form.vt_status as any, vt_data_envio: form.vt_data_envio || null,
         va_status: form.va_status as any, va_data_envio: form.va_data_envio || null,
         inss_status: form.inss_status as any, inss_data_envio: form.inss_data_envio || null,
         fgts_status: form.fgts_status as any, fgts_data_envio: form.fgts_data_envio || null,
+        recibos_status: form.recibos_status as any, recibos_data_envio: form.recibos_data_envio || null,
         dctf_web_gerada: form.dctf_web_gerada || false,
       };
       if (existing?.id) {
