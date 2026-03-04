@@ -39,11 +39,12 @@ const PessoalPage: React.FC = () => {
       ...prev, [id]: {
         forma_envio: existing.forma_envio || "", qtd_funcionarios: existing.qtd_funcionarios || 0,
         qtd_pro_labore: existing.qtd_pro_labore || 0, possui_vt: existing.possui_vt || false,
-        possui_va: existing.possui_va || false, vt_status: existing.vt_status || "pendente",
+        possui_va: existing.possui_va || false, possui_recibos: existing.possui_recibos || false, vt_status: existing.vt_status || "pendente",
         vt_data_envio: existing.vt_data_envio || "", va_status: existing.va_status || "pendente",
         va_data_envio: existing.va_data_envio || "", inss_status: existing.inss_status || "pendente",
         inss_data_envio: existing.inss_data_envio || "", fgts_status: existing.fgts_status || "pendente",
-        fgts_data_envio: existing.fgts_data_envio || "", dctf_web_gerada: existing.dctf_web_gerada || false,
+        fgts_data_envio: existing.fgts_data_envio || "", recibos_status: existing.recibos_status || "pendente",
+        recibos_data_envio: existing.recibos_data_envio || "", dctf_web_gerada: existing.dctf_web_gerada || false,
       }
     }));
   };
@@ -55,11 +56,12 @@ const PessoalPage: React.FC = () => {
       const payload = {
         empresa_id: empresaId, competencia, forma_envio: form.forma_envio || null,
         qtd_funcionarios: parseInt(form.qtd_funcionarios) || 0, qtd_pro_labore: parseInt(form.qtd_pro_labore) || 0,
-        possui_vt: form.possui_vt || false, possui_va: form.possui_va || false,
+        possui_vt: form.possui_vt || false, possui_va: form.possui_va || false, possui_recibos: form.possui_recibos || false,
         vt_status: form.vt_status as any, vt_data_envio: form.vt_data_envio || null,
         va_status: form.va_status as any, va_data_envio: form.va_data_envio || null,
         inss_status: form.inss_status as any, inss_data_envio: form.inss_data_envio || null,
         fgts_status: form.fgts_status as any, fgts_data_envio: form.fgts_data_envio || null,
+        recibos_status: form.recibos_status as any, recibos_data_envio: form.recibos_data_envio || null,
         dctf_web_gerada: form.dctf_web_gerada || false,
       };
       if (existing?.id) {
@@ -113,12 +115,12 @@ const PessoalPage: React.FC = () => {
                       <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} /></div>
                       <div><label className={labelCls}>Qtd Funcionários</label><input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className={inputCls} /></div>
                       <div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div>
-                      <div className="flex items-end gap-3"><label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.possui_vt || false} onChange={e => updateForm(emp.id, "possui_vt", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> VT</label><label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.possui_va || false} onChange={e => updateForm(emp.id, "possui_va", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> VA</label></div>
+                      <div className="flex items-end gap-3"><label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.possui_vt || false} onChange={e => updateForm(emp.id, "possui_vt", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> VT</label><label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.possui_va || false} onChange={e => updateForm(emp.id, "possui_va", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> VA</label><label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.possui_recibos || false} onChange={e => updateForm(emp.id, "possui_recibos", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> Recibos</label></div>
                     </div>
                   </div>
                   <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Encargos - {competencia}</h3>
                     <div className="space-y-3">
-                      {[...(form.possui_vt ? [{ label: "VT", statusKey: "vt_status", dateKey: "vt_data_envio" }] : []), ...(form.possui_va ? [{ label: "VA", statusKey: "va_status", dateKey: "va_data_envio" }] : []), { label: "INSS", statusKey: "inss_status", dateKey: "inss_data_envio" }, { label: "FGTS", statusKey: "fgts_status", dateKey: "fgts_data_envio" }].map(enc => (
+                      {[...(form.possui_vt ? [{ label: "VT", statusKey: "vt_status", dateKey: "vt_data_envio" }] : []), ...(form.possui_va ? [{ label: "VA", statusKey: "va_status", dateKey: "va_data_envio" }] : []), ...(form.possui_recibos ? [{ label: "Recibos", statusKey: "recibos_status", dateKey: "recibos_data_envio" }] : []), { label: "INSS", statusKey: "inss_status", dateKey: "inss_data_envio" }, { label: "FGTS", statusKey: "fgts_status", dateKey: "fgts_data_envio" }].map(enc => (
                         <div key={enc.label} className="grid grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">{enc.label}</span><select value={form[enc.statusKey] || "pendente"} onChange={e => updateForm(emp.id, enc.statusKey, e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select><input type="date" value={form[enc.dateKey] || ""} onChange={e => updateForm(emp.id, enc.dateKey, e.target.value)} className={inputCls} /></div>
                       ))}
                       <div className="grid grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">DCTF Web</span><select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}><option value="nao">Não Gerada</option><option value="sim">Gerada</option></select><div /></div>
