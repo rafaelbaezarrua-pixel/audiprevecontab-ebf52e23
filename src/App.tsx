@@ -17,6 +17,7 @@ import FiscalPage from "@/pages/FiscalPage";
 import PessoalPage from "@/pages/PessoalPage";
 import VencimentosPage from "@/pages/VencimentosPage";
 import ParcelamentosPage from "@/pages/ParcelamentosPage";
+import ParcelamentoFormPage from "@/pages/ParcelamentoFormPage";
 import RecalculosPage from "@/pages/RecalculosPage";
 import HonorariosPage from "@/pages/HonorariosPage";
 
@@ -78,9 +79,10 @@ const App = () => (
               <Route path="/pessoal" element={<PessoalPage />} />
               <Route path="/vencimentos" element={<VencimentosPage />} />
               <Route path="/parcelamentos" element={<ParcelamentosPage />} />
+              <Route path="/parcelamentos/novo" element={<ParcelamentoFormPage />} />
               <Route path="/recalculos" element={<RecalculosPage />} />
               <Route path="/honorarios" element={<HonorariosPage />} />
-              
+
               <Route path="/perfil" element={<PerfilPage />} />
               <Route path="/configuracoes" element={<ConfiguracoesPage />} />
             </Route>
