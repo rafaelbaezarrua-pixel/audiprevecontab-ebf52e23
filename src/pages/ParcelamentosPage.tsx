@@ -1,85 +1,384 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit2, Trash2, X, Search } from "lucide-react";
+import {
+  Search,
+  ChevronDown,
+  ChevronUp,
+  Save,
+  CheckCircle,
+  Circle,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
-
-const tiposParcelamento = ["Previdenciário", "Simples Nacional", "MEI", "IRPF", "Dívida Ativa", "ICMS", "Outros"];
-
-const calcPrevisao = (dataInicio: string, qtd: number) => {
-  if (!dataInicio || !qtd) return "";
-  const d = new Date(dataInicio); d.setMonth(d.getMonth() + qtd);
-  return d.toISOString().slice(0, 10);
-};
+import { useNavigate } from "react-router-dom";
 
 const ParcelamentosPage: React.FC = () => {
-  const [items, setItems] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const [parcelamentos, setParcelamentos] = useState<any[]>([]);
+  const [mensalData, setMensalData] = useState<Record<string, any>>({});
   const [search, setSearch] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ tipo_pessoa: "empresa", nome_pessoa_fisica: "", cpf_pessoa_fisica: "", tipo_parcelamento: "Simples Nacional", data_inicio: "", qtd_parcelas: "", forma_envio: "", data_envio: "" });
+  const [competencia, setCompetencia] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, any>>({});
 
-  const load = async () => { const { data } = await supabase.from("parcelamentos").select("*").order("created_at", { ascending: false }); setItems(data || []); };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const loadParcelamentos = async () => {
+      const { data } = await supabase
+        .from("parcelamentos")
+        .select("*")
+        .order("nome_pessoa_fisica");
+      setParcelamentos(data || []);
+    };
+    loadParcelamentos();
+  }, []);
 
-  const filtered = items.filter(p => p.nome_pessoa_fisica?.toLowerCase().includes(search.toLowerCase()) || p.cpf_pessoa_fisica?.includes(search));
+  useEffect(() => {
+    const loadMensal = async () => {
+      const { data } = await supabase
+        .from("parcelamentos_mensal")
+        .select("*")
+        .eq("competencia", competencia);
+      const map: Record<string, any> = {};
+      data?.forEach((f) => {
+        map[f.parcelamento_id] = f;
+      });
+      setMensalData(map);
+    };
+    loadMensal();
+  }, [competencia]);
 
-  const openNew = () => { setEditing(null); setForm({ tipo_pessoa: "empresa", nome_pessoa_fisica: "", cpf_pessoa_fisica: "", tipo_parcelamento: "Simples Nacional", data_inicio: "", qtd_parcelas: "", forma_envio: "", data_envio: "" }); setShowForm(true); };
-  const openEdit = (p: any) => { setEditing(p); setForm({ tipo_pessoa: p.tipo_pessoa || "empresa", nome_pessoa_fisica: p.nome_pessoa_fisica || "", cpf_pessoa_fisica: p.cpf_pessoa_fisica || "", tipo_parcelamento: p.tipo_parcelamento || "", data_inicio: p.data_inicio || "", qtd_parcelas: String(p.qtd_parcelas || ""), forma_envio: p.forma_envio || "", data_envio: p.data_envio || "" }); setShowForm(true); };
+  const filtered = parcelamentos.filter(
+    (p) =>
+      p.nome_pessoa_fisica?.toLowerCase().includes(search.toLowerCase()) ||
+      p.cpf_pessoa_fisica?.includes(search)
+  );
 
-  const handleSave = async () => {
-    if (!form.nome_pessoa_fisica.trim()) { toast.error("Nome obrigatório"); return; }
-    const qtd = parseInt(form.qtd_parcelas) || 0;
-    const payload = { tipo_pessoa: form.tipo_pessoa, nome_pessoa_fisica: form.nome_pessoa_fisica, cpf_pessoa_fisica: form.cpf_pessoa_fisica || null, tipo_parcelamento: form.tipo_parcelamento, data_inicio: form.data_inicio || null, qtd_parcelas: qtd, previsao_termino: calcPrevisao(form.data_inicio, qtd) || null, forma_envio: form.forma_envio || null, data_envio: form.data_envio || null };
-    try {
-      if (editing) { await supabase.from("parcelamentos").update(payload).eq("id", editing.id); toast.success("Atualizado!"); }
-      else { await supabase.from("parcelamentos").insert(payload); toast.success("Cadastrado!"); }
-      setShowForm(false); load();
-    } catch (err: any) { toast.error(err.message); }
+  const toggleExpand = (id: string) => {
+    if (expanded === id) {
+      setExpanded(null);
+      return;
+    }
+    setExpanded(id);
+    const existing = mensalData[id] || {};
+
+    setEditForm((prev) => ({
+      ...prev,
+      [id]: {
+        status: existing.status || "pendente",
+        data_envio: existing.data_envio || "",
+        observacoes: existing.observacoes || "",
+      },
+    }));
   };
 
-  const handleDelete = async (id: string) => { if (!window.confirm("Excluir parcelamento?")) return; await supabase.from("parcelamentos").delete().eq("id", id); toast.success("Excluído!"); load(); };
+  const handleSaveMensal = async (parcelamentoId: string) => {
+    const form = editForm[parcelamentoId];
+    const existing = mensalData[parcelamentoId];
+    try {
+      const payload = {
+        parcelamento_id: parcelamentoId,
+        competencia,
+        status: form.status || "pendente",
+        data_envio: form.data_envio || null,
+        observacoes: form.observacoes || null,
+      };
 
-  const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
+      if (existing?.id) {
+        await supabase
+          .from("parcelamentos_mensal")
+          .update(payload)
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("parcelamentos_mensal").insert(payload);
+      }
+      toast.success("Mês atualizado com sucesso!");
+
+      // Refresh just the month data
+      const { data } = await supabase
+        .from("parcelamentos_mensal")
+        .select("*")
+        .eq("competencia", competencia);
+      const map: Record<string, any> = {};
+      data?.forEach((f) => {
+        map[f.parcelamento_id] = f;
+      });
+      setMensalData(map);
+      setExpanded(null);
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleDeleteParcelamento = async (id: string) => {
+    if (!window.confirm("Deseja realmente excluir este parcelamento? Isso removerá o histórico também.")) return;
+    try {
+      await supabase.from("parcelamentos").delete().eq("id", id);
+      toast.success("Parcelamento excluído!");
+      setParcelamentos(parcelamentos.filter((p) => p.id !== id));
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const updateForm = (id: string, field: string, value: any) => {
+    setEditForm((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value },
+    }));
+  };
+
+  const inputCls =
+    "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
+  const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
+
+  const completedCount = parcelamentos.filter(
+    (p) =>
+      mensalData[p.id]?.status === "enviada" ||
+      mensalData[p.id]?.status === "gerada"
+  ).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div><h1 className="text-2xl font-bold text-card-foreground">Parcelamentos</h1><p className="text-sm text-muted-foreground mt-1">Controle de parcelamentos (Empresa e Pessoa Física)</p></div>
-        <button onClick={openNew} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Plus size={18} /> Novo Parcelamento</button>
-      </div>
-      <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-      <div className="module-card overflow-x-auto p-0">
-        <table className="data-table">
-          <thead><tr><th>Nome</th><th>CPF/CNPJ</th><th>Tipo</th><th>Parcelas</th><th>Previsão Fim</th><th className="text-right">Ações</th></tr></thead>
-          <tbody>
-            {filtered.length === 0 ? <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum parcelamento</td></tr> : filtered.map(p => (
-              <tr key={p.id}>
-                <td className="font-medium text-card-foreground">{p.nome_pessoa_fisica}</td>
-                <td className="text-muted-foreground font-mono text-xs">{p.cpf_pessoa_fisica || "—"}</td>
-                <td><span className="badge-status badge-info">{p.tipo_parcelamento}</span></td>
-                <td className="text-muted-foreground">{p.qtd_parcelas || 0}</td>
-                <td className="text-muted-foreground">{p.previsao_termino ? new Date(p.previsao_termino).toLocaleDateString("pt-BR") : "—"}</td>
-                <td className="text-right"><div className="flex items-center justify-end gap-1"><button onClick={() => openEdit(p)} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary"><Edit2 size={15} /></button><button onClick={() => handleDelete(p.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={15} /></button></div></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {showForm && (
-        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-card rounded-xl shadow-2xl w-full max-w-lg border border-border" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b border-border"><h3 className="text-lg font-bold text-card-foreground">{editing ? "Editar" : "Novo"} Parcelamento</h3><button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button></div>
-            <div className="p-5 space-y-4">
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Tipo</label><select value={form.tipo_pessoa} onChange={e => setForm({ ...form, tipo_pessoa: e.target.value })} className={inputCls}><option value="empresa">Empresa (PJ)</option><option value="pessoa_fisica">Pessoa Física (PF)</option></select></div>
-              <div className="grid grid-cols-2 gap-3"><div><label className="block text-sm font-medium text-card-foreground mb-1">Nome</label><input value={form.nome_pessoa_fisica} onChange={e => setForm({ ...form, nome_pessoa_fisica: e.target.value })} className={inputCls} /></div><div><label className="block text-sm font-medium text-card-foreground mb-1">{form.tipo_pessoa === "empresa" ? "CNPJ" : "CPF"}</label><input value={form.cpf_pessoa_fisica} onChange={e => setForm({ ...form, cpf_pessoa_fisica: e.target.value })} className={inputCls} /></div></div>
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Tipo de Parcelamento</label><select value={form.tipo_parcelamento} onChange={e => setForm({ ...form, tipo_parcelamento: e.target.value })} className={inputCls}>{tiposParcelamento.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-              <div className="grid grid-cols-2 gap-3"><div><label className="block text-sm font-medium text-card-foreground mb-1">Data Início</label><input type="date" value={form.data_inicio} onChange={e => setForm({ ...form, data_inicio: e.target.value })} className={inputCls} /></div><div><label className="block text-sm font-medium text-card-foreground mb-1">Qtd Parcelas</label><input type="number" value={form.qtd_parcelas} onChange={e => setForm({ ...form, qtd_parcelas: e.target.value })} className={inputCls} /></div></div>
-              <div className="grid grid-cols-2 gap-3"><div><label className="block text-sm font-medium text-card-foreground mb-1">Forma de Envio</label><input value={form.forma_envio} onChange={e => setForm({ ...form, forma_envio: e.target.value })} className={inputCls} /></div><div><label className="block text-sm font-medium text-card-foreground mb-1">Data de Envio</label><input type="date" value={form.data_envio} onChange={e => setForm({ ...form, data_envio: e.target.value })} className={inputCls} /></div></div>
-            </div>
-            <div className="flex justify-end gap-2 p-5 border-t border-border"><button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:bg-muted">Cancelar</button><button onClick={handleSave} className="px-4 py-2 text-sm font-semibold text-primary-foreground rounded-lg shadow-md" style={{ background: "var(--gradient-primary)" }}>Salvar</button></div>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-card-foreground">
+            Controle de Parcelamentos
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Acompanhamento mensal de parcelamentos por competência
+          </p>
         </div>
-      )}
+        <div className="flex gap-3">
+          <input
+            type="month"
+            value={competencia}
+            onChange={(e) => setCompetencia(e.target.value)}
+            className="px-4 py-2 border border-border rounded-xl bg-background text-foreground font-semibold outline-none focus:ring-2 focus:ring-primary"
+          />
+          <button
+            onClick={() => navigate("/parcelamentos/novo")}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground shadow-md transition-all hover:opacity-90 active:scale-95"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            <Plus size={18} /> Novo Parcelamento
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="stat-card">
+          <p className="text-xs text-muted-foreground font-medium uppercase">
+            Total Cadastrados
+          </p>
+          <p className="text-2xl font-bold text-primary mt-1">
+            {parcelamentos.length}
+          </p>
+        </div>
+        <div className="stat-card">
+          <p className="text-xs text-muted-foreground font-medium uppercase">
+            Mês Concluído
+          </p>
+          <p className="text-2xl font-bold text-success mt-1">
+            {completedCount}
+          </p>
+        </div>
+        <div className="stat-card">
+          <p className="text-xs text-muted-foreground font-medium uppercase">
+            Pendentes
+          </p>
+          <p className="text-2xl font-bold text-warning mt-1">
+            {parcelamentos.length - completedCount}
+          </p>
+        </div>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search
+          size={16}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          type="text"
+          placeholder="Buscar por nome ou CPF/CNPJ..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none"
+        />
+      </div>
+
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 bg-card border border-border rounded-xl text-muted-foreground">
+            {search
+              ? "Nenhum parcelamento encontrado na busca."
+              : "Nenhum parcelamento cadastrado. Clique em Novo Parcelamento para começar."}
+          </div>
+        ) : (
+          filtered.map((p) => {
+            const isOpen = expanded === p.id;
+            const form = editForm[p.id] || {};
+            const done =
+              mensalData[p.id]?.status === "enviada" ||
+              mensalData[p.id]?.status === "gerada";
+
+            return (
+              <div key={p.id} className="module-card !p-0 overflow-hidden">
+                <div
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors gap-4"
+                  onClick={() => toggleExpand(p.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    {done ? (
+                      <CheckCircle size={18} className="text-success" />
+                    ) : (
+                      <Circle size={18} className="text-muted-foreground" />
+                    )}
+                    <div>
+                      <p className="font-semibold text-card-foreground">
+                        {p.nome_pessoa_fisica}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {p.cpf_pessoa_fisica || "S/N"} • {p.tipo_parcelamento} •{" "}
+                        {p.qtd_parcelas} Parcelas
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                    <span
+                      className={`badge-status ${done ? "badge-success" : "badge-warning"
+                        }`}
+                    >
+                      {mensalData[p.id]?.status === "enviada"
+                        ? "Enviada"
+                        : mensalData[p.id]?.status === "gerada"
+                          ? "Gerada"
+                          : "Pendente"}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteParcelamento(p.id);
+                      }}
+                      className="p-1.5 text-muted-foreground hover:text-destructive transition-colors ml-2"
+                      title="Excluir este parcelamento de todos os meses"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    {isOpen ? (
+                      <ChevronUp size={16} className="text-muted-foreground" />
+                    ) : (
+                      <ChevronDown
+                        size={16}
+                        className="text-muted-foreground"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {isOpen && (
+                  <div className="border-t border-border bg-muted/20">
+                    <div className="p-5 border-b border-border/50 grid grid-cols-2 md:grid-cols-4 gap-4 bg-muted/10 text-xs">
+                      <div>
+                        <span className="text-muted-foreground block mb-1">
+                          Início
+                        </span>
+                        <span className="font-medium text-foreground">
+                          {p.data_inicio
+                            ? new Date(p.data_inicio).toLocaleDateString(
+                              "pt-BR"
+                            )
+                            : "—"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block mb-1">
+                          Envio Fixo
+                        </span>
+                        <span className="font-medium text-foreground">
+                          {p.forma_envio || "—"}
+                        </span>
+                      </div>
+                      <div className="md:col-span-2">
+                        <span className="text-muted-foreground block mb-1">
+                          Acesso:{" "}
+                          <strong className="text-primary font-medium">
+                            {p.metodo_login === "gov_br"
+                              ? "Gov.br"
+                              : p.metodo_login === "codigo_sn"
+                                ? "Cód. AC. Simples Nacional"
+                                : "Procuração"}
+                          </strong>
+                        </span>
+                        <span className="font-mono text-foreground tracking-tight">
+                          {p.metodo_login === "gov_br" &&
+                            `L: ${p.login_gov_br || "-"} | S: ${p.senha_gov_br || "-"
+                            }`}
+                          {p.metodo_login === "codigo_sn" &&
+                            `Cód: ${p.codigo_sn || "-"}`}
+                          {p.metodo_login === "procuracao" && "Acesso Padrão"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className={labelCls}>Status no Mês</label>
+                          <select
+                            value={form.status || "pendente"}
+                            onChange={(e) =>
+                              updateForm(p.id, "status", e.target.value)
+                            }
+                            className={inputCls}
+                          >
+                            <option value="pendente">Pendente para Envio</option>
+                            <option value="gerada">Em Andamento</option>
+                            <option value="enviada">Concluída / Enviada</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className={labelCls}>Data do Envio (Opcional)</label>
+                          <input
+                            type="date"
+                            value={form.data_envio || ""}
+                            onChange={(e) =>
+                              updateForm(p.id, "data_envio", e.target.value)
+                            }
+                            className={inputCls}
+                          />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Anotação Breve</label>
+                          <input
+                            value={form.observacoes || ""}
+                            onChange={(e) =>
+                              updateForm(p.id, "observacoes", e.target.value)
+                            }
+                            className={inputCls}
+                            placeholder="Ex: Falta emitir boleto atualizado"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end pt-2">
+                        <button
+                          onClick={() => handleSaveMensal(p.id)}
+                          className="flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md transition-all hover:opacity-90 active:scale-95"
+                          style={{ background: "var(--gradient-primary)" }}
+                        >
+                          <Save size={16} /> Salvar Mês de{" "}
+                          {competencia.split("-").reverse().join("/")}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };

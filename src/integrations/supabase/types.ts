@@ -281,6 +281,10 @@ export type Database = {
           tipo_parcelamento: string | null
           tipo_pessoa: string
           updated_at: string | null
+          metodo_login: string | null
+          login_gov_br: string | null
+          senha_gov_br: string | null
+          codigo_sn: string | null
         }
         Insert: {
           cpf_pessoa_fisica?: string | null
@@ -296,6 +300,10 @@ export type Database = {
           tipo_parcelamento?: string | null
           tipo_pessoa: string
           updated_at?: string | null
+          metodo_login?: string | null
+          login_gov_br?: string | null
+          senha_gov_br?: string | null
+          codigo_sn?: string | null
         }
         Update: {
           cpf_pessoa_fisica?: string | null
@@ -311,6 +319,10 @@ export type Database = {
           tipo_parcelamento?: string | null
           tipo_pessoa?: string
           updated_at?: string | null
+          metodo_login?: string | null
+          login_gov_br?: string | null
+          senha_gov_br?: string | null
+          codigo_sn?: string | null
         }
         Relationships: [
           {
@@ -318,6 +330,47 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parcelamentos_mensal: {
+        Row: {
+          id: string
+          parcelamento_id: string
+          competencia: string
+          status: Database["public"]["Enums"]["guia_status"] | null
+          data_envio: string | null
+          observacoes: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          parcelamento_id: string
+          competencia: string
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          data_envio?: string | null
+          observacoes?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          parcelamento_id?: string
+          competencia?: string
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          data_envio?: string | null
+          observacoes?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcelamentos_mensal_parcelamento_id_fkey"
+            columns: ["parcelamento_id"]
+            isOneToOne: false
+            referencedRelation: "parcelamentos"
             referencedColumns: ["id"]
           },
         ]
