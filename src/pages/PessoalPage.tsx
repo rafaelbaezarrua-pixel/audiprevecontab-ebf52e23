@@ -39,11 +39,12 @@ const PessoalPage: React.FC = () => {
       ...prev, [id]: {
         forma_envio: existing.forma_envio || "", qtd_funcionarios: existing.qtd_funcionarios || 0,
         qtd_pro_labore: existing.qtd_pro_labore || 0, possui_vt: existing.possui_vt || false,
-        possui_va: existing.possui_va || false, vt_status: existing.vt_status || "pendente",
+        possui_va: existing.possui_va || false, possui_recibos: existing.possui_recibos || false, vt_status: existing.vt_status || "pendente",
         vt_data_envio: existing.vt_data_envio || "", va_status: existing.va_status || "pendente",
         va_data_envio: existing.va_data_envio || "", inss_status: existing.inss_status || "pendente",
         inss_data_envio: existing.inss_data_envio || "", fgts_status: existing.fgts_status || "pendente",
-        fgts_data_envio: existing.fgts_data_envio || "", dctf_web_gerada: existing.dctf_web_gerada || false,
+        fgts_data_envio: existing.fgts_data_envio || "", recibos_status: existing.recibos_status || "pendente",
+        recibos_data_envio: existing.recibos_data_envio || "", dctf_web_gerada: existing.dctf_web_gerada || false,
       }
     }));
   };
