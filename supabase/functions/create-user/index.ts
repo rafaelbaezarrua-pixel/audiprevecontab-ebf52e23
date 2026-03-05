@@ -1,23 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const allowedOrigins = [
-  "https://audiprevecontab.lovable.app",
-  "https://id-preview--420f3c5a-1dd8-481b-a931-6ca79485e462.lovable.app",
-  "https://420f3c5a-1dd8-481b-a931-6ca79485e462.lovableproject.com",
-  "http://localhost:5173",
-  "http://localhost:8080",
-];
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("origin") || "";
-  return {
-    "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  };
-}
+const allowedModules = ["societario", "fiscal", "pessoal", "certidoes", "certificados", "licencas", "procuracoes", "honorarios", "obrigacoes", "parcelamentos", "recalculos", "vencimentos"];
 
 Deno.serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req);
+  const origin = req.headers.get("origin");
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
 
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -26,7 +17,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Not authenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Não autenticado" }), { status: 401, headers: corsHeaders });
     }
 
     const supabaseAdmin = createClient(
@@ -34,97 +25,77 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify caller is admin
+    // Verificar se quem chama é admin
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
-    const { data: { user: caller } } = await supabaseUser.auth.getUser();
-    if (!caller) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const { data: { user: caller }, error: authError } = await supabaseUser.auth.getUser();
+
+    if (authError || !caller) {
+      return new Response(JSON.stringify({ error: "Token inválido ou expirado" }), { status: 401, headers: corsHeaders });
     }
 
     const { data: callerRoles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", caller.id);
     const isAdmin = callerRoles?.some((r: any) => r.role === "admin");
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // Permitir se for o primeiro usuário (admin inicial) ou se o chamador for admin
+    if (!isAdmin && callerRoles && callerRoles.length > 0) {
+      return new Response(JSON.stringify({ error: "Acesso negado: Apenas administradores podem criar usuários" }), { status: 403, headers: corsHeaders });
     }
 
     const { email, password, nome, isAdmin: makeAdmin, modules } = await req.json();
 
     if (!email || !password) {
-      return new Response(JSON.stringify({ error: "Email and password required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Email e senha são obrigatórios" }), { status: 400, headers: corsHeaders });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (typeof email !== "string" || !emailRegex.test(email) || email.length > 255) {
-      return new Response(JSON.stringify({ error: "Invalid email format" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // Validate password strength
-    if (typeof password !== "string" || password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      return new Response(JSON.stringify({ error: "Password must be at least 8 characters with an uppercase letter and a number" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // Sanitize nome
-    const sanitizedNome = typeof nome === "string" ? nome.trim().slice(0, 200) : "";
-
-    // Validate module names against allowed list
-    const allowedModules = ["societario", "fiscal", "pessoal", "certidoes", "certificados", "licencas", "procuracoes", "honorarios", "obrigacoes", "parcelamentos", "recalculos", "vencimentos"];
-    if (modules && typeof modules === "object") {
-      for (const key of Object.keys(modules)) {
-        if (!allowedModules.includes(key)) {
-          return new Response(JSON.stringify({ error: `Invalid module: ${key}` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-      }
-    }
-
-    // Create user with auto-confirm so they can login immediately
+    // Criar usuário no Auth
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { nome_completo: sanitizedNome },
+      user_metadata: { full_name: nome, nome_completo: nome },
     });
 
-    if (createError) {
-      return new Response(JSON.stringify({ error: createError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
+    if (createError) throw createError;
     const userId = userData.user.id;
 
-    // Ensure profile exists (trigger may not fire immediately)
-    const { data: existingProfile } = await supabaseAdmin.from("profiles").select("id").eq("user_id", userId).maybeSingle();
-    if (existingProfile) {
-      await supabaseAdmin.from("profiles").update({ nome_completo: sanitizedNome }).eq("user_id", userId);
-    } else {
-      await supabaseAdmin.from("profiles").insert({ user_id: userId, nome_completo: sanitizedNome });
-    }
+    // Garantir Perfil
+    const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
+      user_id: userId,
+      full_name: nome,
+      nome_completo: nome,
+      profile_completed: true,
+      terms_accepted_at: new Date().toISOString()
+    });
 
-    // Assign admin role if requested
+    // Papel de Admin
     if (makeAdmin) {
       await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "admin" });
     }
 
-    // Assign module permissions
+    // Permissões de Módulo
     if (modules && typeof modules === "object") {
-      const moduleInserts = Object.entries(modules)
-        .filter(([, v]) => v)
+      const inserts = Object.entries(modules)
+        .filter(([k, v]) => v && allowedModules.includes(k))
         .map(([k]) => ({ user_id: userId, module_name: k }));
-      if (moduleInserts.length > 0) {
-        await supabaseAdmin.from("user_module_permissions").insert(moduleInserts);
+
+      if (inserts.length > 0) {
+        await supabaseAdmin.from("user_module_permissions").insert(inserts);
       }
     }
 
     return new Response(JSON.stringify({ success: true, user_id: userId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: "An internal error occurred" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+
+  } catch (err: any) {
+    console.error("Erro na função:", err.message);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 400,
+      headers: corsHeaders,
     });
   }
 });
