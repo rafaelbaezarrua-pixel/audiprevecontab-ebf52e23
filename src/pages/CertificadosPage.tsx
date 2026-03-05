@@ -110,8 +110,8 @@ const CertificadosPage: React.FC = () => {
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "ativas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("ativas")}
         >
@@ -119,8 +119,8 @@ const CertificadosPage: React.FC = () => {
         </button>
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "paralisadas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("paralisadas")}
         >
@@ -128,8 +128,8 @@ const CertificadosPage: React.FC = () => {
         </button>
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "baixadas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("baixadas")}
         >
