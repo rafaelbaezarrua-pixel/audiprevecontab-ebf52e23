@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { format, isBefore, isSameDay } from "date-fns";
 
 const ParcelamentosPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const ParcelamentosPage: React.FC = () => {
   );
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [activeTab, setActiveTab] = useState<"andamento" | "encerrados">("andamento");
 
   useEffect(() => {
     const loadParcelamentos = async () => {
@@ -50,11 +52,27 @@ const ParcelamentosPage: React.FC = () => {
     loadMensal();
   }, [competencia]);
 
-  const filtered = parcelamentos.filter(
-    (p) =>
+  const calcIsEncerrado = (p: any) => {
+    if (p.encerrado) return true;
+    if (p.previsao_termino) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const previsao = new Date(p.previsao_termino);
+      // Extra hour adjustment for timezone if needed, but simple comparison suffices for dates
+      previsao.setHours(0, 0, 0, 0);
+      if (isBefore(previsao, hoje) || isSameDay(previsao, hoje)) return true;
+    }
+    return false;
+  };
+
+  const filtered = parcelamentos.filter((p) => {
+    const isEncerrado = calcIsEncerrado(p);
+    const matchesTab = activeTab === "encerrados" ? isEncerrado : !isEncerrado;
+    const matchesSearch =
       p.nome_pessoa_fisica?.toLowerCase().includes(search.toLowerCase()) ||
-      p.cpf_pessoa_fisica?.includes(search)
-  );
+      p.cpf_pessoa_fisica?.includes(search);
+    return matchesTab && matchesSearch;
+  });
 
   const toggleExpand = (id: string) => {
     if (expanded === id) {
@@ -118,6 +136,51 @@ const ParcelamentosPage: React.FC = () => {
       await supabase.from("parcelamentos").delete().eq("id", id);
       toast.success("Parcelamento excluído!");
       setParcelamentos(parcelamentos.filter((p) => p.id !== id));
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleToggleEncerrado = async (p: any) => {
+    const isAtualmenteEncerrado = calcIsEncerrado(p);
+    // Para reabrir, forçamos 'encerrado' para false E removemos a 'previsao_termino'
+    // se ela já tiver passado, para não fechar automaticamente de novo.
+    // Mas o mais seguro para "reabrir" é apenas setar a flag `encerrado` e
+    // deixar a data original. Na lógica, `previsao_termino` ainda forçaria encerrado.
+    // Como a instrução era ter um controle manual da aba, vamos usar a flag `encerrado`
+    // e para forçar reabrir podemos precisar limpar a data. Para o escopo pedido,
+    // o foco é encerrar manualmente.
+
+    // Simplificando o pedido: Mudar a flag `encerrado` inverte a situação?
+    // Se "Em Andamento (isEncerrado = false)", marcamos encerrado = true.
+    // Se "Encerrado (isEncerrado = true)", marcamos encerrado = false E podemos ter que adiar a previsão 
+    // ou apenas dar prioridade a flag false se quisermos um override? 
+    // Vamos apenas rodar a flag `encerrado` boolean pra simular ação manual
+    try {
+      const newVal = !p.encerrado;
+      // Se tentou re-abrir mas a data já passou, alertar? Ou limpar a data?
+      // Vamos apagar a data de encerramento se ele explicitamente reabrir para não dar conflito 
+      let payload: any = { encerrado: newVal };
+
+      if (!newVal && p.previsao_termino) {
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const prev = new Date(p.previsao_termino);
+        prev.setHours(0, 0, 0, 0);
+        if (isBefore(prev, hoje) || isSameDay(prev, hoje)) {
+          if (window.confirm("A previsão de término deste parcelamento já passou. Para reabri-lo, a previsão será limpa. Deseja continuar?")) {
+            payload.previsao_termino = null;
+          } else {
+            return;
+          }
+        }
+      }
+
+      const { error } = await supabase.from("parcelamentos").update(payload).eq("id", p.id);
+      if (error) throw error;
+
+      toast.success(newVal ? "Parcelamento encerrado." : "Parcelamento reaberto.");
+      setParcelamentos(parcelamentos.map(item => item.id === p.id ? { ...item, ...payload } : item));
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -209,6 +272,27 @@ const ParcelamentosPage: React.FC = () => {
         />
       </div>
 
+      <div className="flex border-b border-border overflow-x-auto no-scrollbar">
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "andamento"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("andamento")}
+        >
+          Em Andamento
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "encerrados"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("encerrados")}
+        >
+          Parcelamentos Encerrados
+        </button>
+      </div>
+
       <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="text-center py-12 bg-card border border-border rounded-xl text-muted-foreground">
@@ -260,6 +344,15 @@ const ParcelamentosPage: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleToggleEncerrado(p);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${calcIsEncerrado(p) ? 'border-border text-foreground bg-muted/50 hover:bg-muted' : 'border-destructive text-destructive bg-destructive/10 hover:bg-destructive/20'}`}
+                    >
+                      {calcIsEncerrado(p) ? 'Reabrir' : 'Encerrar'}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleDeleteParcelamento(p.id);
                       }}
                       className="p-1.5 text-muted-foreground hover:text-destructive transition-colors ml-2"
@@ -294,6 +387,12 @@ const ParcelamentosPage: React.FC = () => {
                         </span>
                       </div>
                       <div>
+                        <span className="text-muted-foreground block mb-1">Previsão Término</span>
+                        <span className={`font-medium ${calcIsEncerrado(p) ? 'text-destructive' : 'text-foreground'}`}>
+                          {p.previsao_termino ? format(new Date(p.previsao_termino), 'dd/MM/yyyy') : "—"}
+                        </span>
+                      </div>
+                      <div>
                         <span className="text-muted-foreground block mb-1">
                           Envio Fixo
                         </span>
@@ -301,7 +400,7 @@ const ParcelamentosPage: React.FC = () => {
                           {p.forma_envio || "—"}
                         </span>
                       </div>
-                      <div className="md:col-span-2">
+                      <div className="md:col-span-1">
                         <span className="text-muted-foreground block mb-1">
                           Acesso:{" "}
                           <strong className="text-primary font-medium">

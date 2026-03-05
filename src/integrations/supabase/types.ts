@@ -470,6 +470,7 @@ export type Database = {
           login_gov_br: string | null
           senha_gov_br: string | null
           codigo_sn: string | null
+          encerrado: boolean | null
         }
         Insert: {
           cpf_pessoa_fisica?: string | null
@@ -489,6 +490,7 @@ export type Database = {
           login_gov_br?: string | null
           senha_gov_br?: string | null
           codigo_sn?: string | null
+          encerrado?: boolean | null
         }
         Update: {
           cpf_pessoa_fisica?: string | null
@@ -508,6 +510,7 @@ export type Database = {
           login_gov_br?: string | null
           senha_gov_br?: string | null
           codigo_sn?: string | null
+          encerrado?: boolean | null
         }
         Relationships: [
           {
