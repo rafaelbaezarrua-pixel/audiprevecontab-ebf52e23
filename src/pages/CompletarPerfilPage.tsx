@@ -16,7 +16,7 @@ interface Endereco {
 }
 
 const CompletarPerfilPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshUserData } = useAuth();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -61,6 +61,7 @@ const CompletarPerfilPage: React.FC = () => {
       }).eq("user_id", user!.id);
 
       if (error) throw error;
+      await refreshUserData();
       toast.success("Perfil completado com sucesso!");
       navigate("/termos", { replace: true });
     } catch (err: any) {
@@ -74,7 +75,7 @@ const CompletarPerfilPage: React.FC = () => {
     setForm(prev => ({ ...prev, endereco: { ...prev.endereco, [key]: value } }));
   };
 
-  const estados = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
+  const estados = ["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"];
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4" style={{ background: "var(--gradient-bg)" }}>

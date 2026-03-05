@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 
 const TermosPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshUserData } = useAuth();
   const navigate = useNavigate();
   const [accepted, setAccepted] = useState(false);
   const [acceptedLgpd, setAcceptedLgpd] = useState(false);
@@ -23,9 +23,9 @@ const TermosPage: React.FC = () => {
         terms_accepted_at: new Date().toISOString(),
       }).eq("user_id", user!.id);
       if (error) throw error;
+      await refreshUserData();
       toast.success("Termos aceitos com sucesso!");
       navigate("/dashboard", { replace: true });
-      window.location.reload();
     } catch (err: any) {
       toast.error("Erro: " + err.message);
     } finally {
