@@ -18,6 +18,7 @@ const HonorariosPage: React.FC = () => {
   // View: Empresas States
   const [expanded, setExpanded] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Record<string, TabType>>({});
+  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
 
   // Data States for View: Empresas
   const [configs, setConfigs] = useState<Record<string, any>>({});
@@ -170,7 +171,20 @@ const HonorariosPage: React.FC = () => {
     setMensalForm(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
   };
 
-  const filtered = empresas.filter(e => e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search));
+  const filtered = empresas.filter(e => {
+    const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
+
+    let matchTab = false;
+    if (activeStatusTab === "ativas") {
+      matchTab = !e.situacao || e.situacao === "ativa";
+    } else if (activeStatusTab === "paralisadas") {
+      matchTab = e.situacao === "paralisada";
+    } else if (activeStatusTab === "baixadas") {
+      matchTab = e.situacao === "baixada";
+    }
+
+    return matchSearch && matchTab;
+  });
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
   const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -322,6 +336,37 @@ const HonorariosPage: React.FC = () => {
       {/* VIEW: EMPRESAS (Existing content) */}
       {mainTab === "empresas" && (
         <div className="space-y-4 animate-fade-in">
+
+          <div className="flex border-b border-border overflow-x-auto no-scrollbar">
+            <button
+              className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "ativas"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              onClick={() => setActiveStatusTab("ativas")}
+            >
+              Empresas Ativas
+            </button>
+            <button
+              className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "paralisadas"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              onClick={() => setActiveStatusTab("paralisadas")}
+            >
+              Empresas Paralisadas
+            </button>
+            <button
+              className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "baixadas"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              onClick={() => setActiveStatusTab("baixadas")}
+            >
+              Empresas Baixadas
+            </button>
+          </div>
+
           <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className={inputCls + " pl-9"} /></div>
           <div className="space-y-3">
             {filtered.map(emp => {

@@ -13,6 +13,7 @@ const FiscalPage: React.FC = () => {
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
 
   useEffect(() => {
     const load = async () => {
@@ -24,7 +25,20 @@ const FiscalPage: React.FC = () => {
     load();
   }, [competencia]);
 
-  const filtered = empresas.filter(e => e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search));
+  const filtered = empresas.filter(e => {
+    const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
+
+    let matchTab = false;
+    if (activeTab === "ativas") {
+      matchTab = !e.situacao || e.situacao === "ativa";
+    } else if (activeTab === "paralisadas") {
+      matchTab = e.situacao === "paralisada";
+    } else if (activeTab === "baixadas") {
+      matchTab = e.situacao === "baixada";
+    }
+
+    return matchSearch && matchTab;
+  });
 
   const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
@@ -79,7 +93,7 @@ const FiscalPage: React.FC = () => {
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
-  const completedCount = empresas.filter(e => fiscalData[e.id]?.status_guia === "enviada" || fiscalData[e.id]?.status_guia === "gerada").length;
+  const completedCount = filtered.filter(e => fiscalData[e.id]?.status_guia === "enviada" || fiscalData[e.id]?.status_guia === "gerada").length;
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -92,11 +106,42 @@ const FiscalPage: React.FC = () => {
         <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold" />
       </div>
       <div className="grid grid-cols-3 gap-4">
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Empresas</p><p className="text-2xl font-bold text-primary mt-1">{empresas.length}</p></div>
+        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Empresas</p><p className="text-2xl font-bold text-primary mt-1">{filtered.length}</p></div>
         <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Concluídas</p><p className="text-2xl font-bold text-success mt-1">{completedCount}</p></div>
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Pendentes</p><p className="text-2xl font-bold text-warning mt-1">{empresas.length - completedCount}</p></div>
+        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Pendentes</p><p className="text-2xl font-bold text-warning mt-1">{filtered.length - completedCount}</p></div>
       </div>
       <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
+
+      <div className="flex border-b border-border overflow-x-auto no-scrollbar">
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "ativas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("ativas")}
+        >
+          Empresas Ativas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "paralisadas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("paralisadas")}
+        >
+          Empresas Paralisadas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "baixadas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("baixadas")}
+        >
+          Empresas Baixadas
+        </button>
+      </div>
+
       <div className="space-y-3">
         {filtered.map(emp => {
           const isOpen = expanded === emp.id;
