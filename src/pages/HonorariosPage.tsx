@@ -18,7 +18,7 @@ const HonorariosPage: React.FC = () => {
   // View: Empresas States
   const [expanded, setExpanded] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Record<string, TabType>>({});
-  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
+  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
 
   // Data States for View: Empresas
   const [configs, setConfigs] = useState<Record<string, any>>({});
@@ -176,7 +176,9 @@ const HonorariosPage: React.FC = () => {
 
     let matchTab = false;
     if (activeStatusTab === "ativas") {
-      matchTab = !e.situacao || e.situacao === "ativa";
+      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa !== "mei";
+    } else if (activeStatusTab === "mei") {
+      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
     } else if (activeStatusTab === "paralisadas") {
       matchTab = e.situacao === "paralisada";
     } else if (activeStatusTab === "baixadas") {
@@ -340,17 +342,26 @@ const HonorariosPage: React.FC = () => {
           <div className="flex border-b border-border overflow-x-auto no-scrollbar">
             <button
               className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "ativas"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               onClick={() => setActiveStatusTab("ativas")}
             >
               Empresas Ativas
             </button>
             <button
+              className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "mei"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              onClick={() => setActiveStatusTab("mei")}
+            >
+              Empresas MEI
+            </button>
+            <button
               className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "paralisadas"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               onClick={() => setActiveStatusTab("paralisadas")}
             >
@@ -358,8 +369,8 @@ const HonorariosPage: React.FC = () => {
             </button>
             <button
               className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "baixadas"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               onClick={() => setActiveStatusTab("baixadas")}
             >

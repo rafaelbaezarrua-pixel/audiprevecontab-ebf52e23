@@ -38,7 +38,7 @@ const LicencasPage: React.FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabType>("licencas");
-  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
+  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [taxasForm, setTaxasForm] = useState<Record<string, Record<string, any>>>({});
 
@@ -77,7 +77,9 @@ const LicencasPage: React.FC = () => {
 
     let matchTab = false;
     if (activeStatusTab === "ativas") {
-      matchTab = !e.situacao || e.situacao === "ativa";
+      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa !== "mei";
+    } else if (activeStatusTab === "mei") {
+      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
     } else if (activeStatusTab === "paralisadas") {
       matchTab = e.situacao === "paralisada";
     } else if (activeStatusTab === "baixadas") {
@@ -94,7 +96,9 @@ const LicencasPage: React.FC = () => {
 
     let matchTab = false;
     if (activeStatusTab === "ativas") {
-      matchTab = !e.situacao || e.situacao === "ativa";
+      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa !== "mei";
+    } else if (activeStatusTab === "mei") {
+      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
     } else if (activeStatusTab === "paralisadas") {
       matchTab = e.situacao === "paralisada";
     } else if (activeStatusTab === "baixadas") {
@@ -195,17 +199,26 @@ const LicencasPage: React.FC = () => {
       <div className="flex border-b border-border overflow-x-auto no-scrollbar pt-2">
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "ativas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveStatusTab("ativas")}
         >
           Empresas Ativas
         </button>
         <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "mei"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("mei")}
+        >
+          Empresas MEI
+        </button>
+        <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "paralisadas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveStatusTab("paralisadas")}
         >
@@ -213,8 +226,8 @@ const LicencasPage: React.FC = () => {
         </button>
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "baixadas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveStatusTab("baixadas")}
         >

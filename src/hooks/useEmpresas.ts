@@ -19,7 +19,6 @@ export const useEmpresas = (moduloId: string) => {
                 const { data: emps, error: empsError } = await supabase
                     .from("empresas")
                     .select("*")
-                    .neq("situacao", "baixada")
                     .contains("modulos_ativos", [moduloId])
                     .order("nome_empresa");
 

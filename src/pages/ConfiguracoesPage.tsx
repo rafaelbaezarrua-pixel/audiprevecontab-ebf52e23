@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, X, Shield, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 interface Usuario {
   id: string;
@@ -28,9 +28,8 @@ const moduleLabels: Record<string, string> = {
 
 const ConfiguracoesPage: React.FC = () => {
   const { userData } = useAuth();
+  const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ nome: "", email: "", password: "", departamento: "", isAdmin: false, modules: {} as Record<string, boolean> });
 
   const loadUsers = async () => {
     const { data: profiles } = await supabase.from("profiles").select("*");
@@ -57,30 +56,6 @@ const ConfiguracoesPage: React.FC = () => {
   useEffect(() => { loadUsers(); }, []);
 
   if (!userData?.isAdmin) return <Navigate to="/dashboard" replace />;
-
-  const handleCreateUser = async () => {
-    if (!form.nome.trim() || !form.email.trim() || !form.password.trim()) {
-      toast.error("Nome, email e senha são obrigatórios");
-      return;
-    }
-    if (form.password.length < 8 || !/[A-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
-      toast.error("Senha deve ter pelo menos 8 caracteres, com letra maiúscula e número");
-      return;
-    }
-    try {
-      const { data, error } = await supabase.functions.invoke("create-user", {
-        body: { email: form.email, password: form.password, nome: form.nome, isAdmin: form.isAdmin, modules: form.modules },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success("Usuário criado com sucesso! O usuário poderá fazer login com as credenciais fornecidas.");
-      setShowForm(false);
-      setForm({ nome: "", email: "", password: "", departamento: "", isAdmin: false, modules: {} });
-      loadUsers();
-    } catch (err: any) {
-      toast.error("Erro: " + err.message);
-    }
-  };
 
   const toggleModule = async (userId: string, module: string, current: boolean) => {
     if (current) {
@@ -113,7 +88,7 @@ const ConfiguracoesPage: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-bold text-card-foreground">Gerenciamento de Usuários</h3>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}>
+        <button onClick={() => navigate("/configuracoes/usuarios/novo")} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}>
           <Plus size={16} /> Novo Usuário
         </button>
       </div>
@@ -143,11 +118,10 @@ const ConfiguracoesPage: React.FC = () => {
                 <button
                   key={key}
                   onClick={() => toggleModule(u.id, key, u.modules?.[key] || false)}
-                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                    u.isAdmin || u.modules?.[key]
-                      ? "border-success/30 bg-success/5 text-success"
-                      : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30"
-                  }`}
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${u.isAdmin || u.modules?.[key]
+                    ? "border-success/30 bg-success/5 text-success"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30"
+                    }`}
                 >
                   {label}
                 </button>
@@ -161,38 +135,6 @@ const ConfiguracoesPage: React.FC = () => {
           </div>
         )}
       </div>
-
-      {showForm && (
-        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-card rounded-xl shadow-2xl w-full max-w-lg border border-border" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b border-border"><h3 className="text-lg font-bold text-card-foreground">Novo Usuário</h3><button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button></div>
-            <div className="p-5 space-y-4">
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Nome</label><input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Email</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-              <div><label className="block text-sm font-medium text-card-foreground mb-1">Senha</label><input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Mín. 8 caracteres, maiúscula e número" /></div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="isAdmin" checked={form.isAdmin} onChange={e => setForm({ ...form, isAdmin: e.target.checked })} className="rounded" />
-                <label htmlFor="isAdmin" className="text-sm font-medium text-card-foreground">Administrador</label>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">Módulos</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(moduleLabels).map(([key, label]) => (
-                    <label key={key} className="flex items-center gap-2 text-sm text-card-foreground">
-                      <input type="checkbox" checked={form.modules[key] || false} onChange={e => setForm({ ...form, modules: { ...form.modules, [key]: e.target.checked } })} className="rounded" />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 p-5 border-t border-border">
-              <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:bg-muted">Cancelar</button>
-              <button onClick={handleCreateUser} className="px-4 py-2 text-sm font-semibold text-primary-foreground rounded-lg shadow-md" style={{ background: "var(--gradient-primary)" }}>Criar Usuário</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
