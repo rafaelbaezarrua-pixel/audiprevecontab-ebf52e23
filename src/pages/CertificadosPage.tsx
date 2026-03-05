@@ -15,7 +15,7 @@ const CertificadosPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState("todos");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
-  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
+  const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
 
   useEffect(() => {
     const load = async () => {
@@ -46,7 +46,9 @@ const CertificadosPage: React.FC = () => {
 
     let matchTab = false;
     if (activeTab === "ativas") {
-      matchTab = !e.situacao || e.situacao === "ativa";
+      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa !== "mei";
+    } else if (activeTab === "mei") {
+      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
     } else if (activeTab === "paralisadas") {
       matchTab = e.situacao === "paralisada";
     } else if (activeTab === "baixadas") {
@@ -116,6 +118,15 @@ const CertificadosPage: React.FC = () => {
           onClick={() => setActiveTab("ativas")}
         >
           Empresas Ativas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "mei"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("mei")}
+        >
+          Empresas MEI
         </button>
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "paralisadas"

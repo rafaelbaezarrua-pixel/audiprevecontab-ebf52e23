@@ -20,6 +20,11 @@ import ParcelamentosPage from "@/pages/ParcelamentosPage";
 import ParcelamentoFormPage from "@/pages/ParcelamentoFormPage";
 import RecalculosPage from "@/pages/RecalculosPage";
 import HonorariosPage from "@/pages/HonorariosPage";
+import DeclaracoesAnuaisPage from "@/pages/DeclaracoesAnuaisPage";
+import AgendamentosPage from "@/pages/AgendamentosPage";
+import AgendamentoFormPage from "@/pages/AgendamentoFormPage";
+import UsuarioFormPage from "@/pages/UsuarioFormPage";
+// Comentário para forçar atualização do IDE
 
 import ConfiguracoesPage from "@/pages/ConfiguracoesPage";
 import CompletarPerfilPage from "@/pages/CompletarPerfilPage";
@@ -84,6 +89,10 @@ const App = () => (
                 <Route path="/parcelamentos/novo" element={<ParcelamentoFormPage />} />
                 <Route path="/recalculos" element={<RecalculosPage />} />
                 <Route path="/honorarios" element={<HonorariosPage />} />
+                <Route path="/declaracoes-anuais" element={<DeclaracoesAnuaisPage />} />
+                <Route path="/agendamentos" element={<AgendamentosPage />} />
+                <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />
+                <Route path="/configuracoes/usuarios/novo" element={<UsuarioFormPage />} />
 
                 <Route path="/perfil" element={<PerfilPage />} />
                 <Route path="/configuracoes" element={<ConfiguracoesPage />} />

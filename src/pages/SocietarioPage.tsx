@@ -32,7 +32,7 @@ const SocietarioPage: React.FC = () => {
   const [filterSituacao, setFilterSituacao] = useState("todas");
   const [filterRegime, setFilterRegime] = useState("todos");
   const [showFilters, setShowFilters] = useState(false);
-  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
+  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas" | "mei">("ativas");
   const navigate = useNavigate();
 
   const fetchEmpresas = async () => {
@@ -71,6 +71,8 @@ const SocietarioPage: React.FC = () => {
       matchTab = e.situacao === "paralisada";
     } else if (activeTab === "baixadas") {
       matchTab = e.situacao === "baixada";
+    } else if (activeTab === "mei") {
+      matchTab = e.porte_empresa === "mei" && (!e.situacao || e.situacao === "ativa");
     }
 
     return matchSearch && matchSituacao && matchRegime && matchTab;
@@ -88,6 +90,7 @@ const SocietarioPage: React.FC = () => {
     ativas: empresas.filter(e => !e.situacao || e.situacao === "ativa").length,
     paralisadas: empresas.filter(e => e.situacao === "paralisada").length,
     baixadas: empresas.filter(e => e.situacao === "baixada").length,
+    mei: empresas.filter(e => e.porte_empresa === "mei" && (!e.situacao || e.situacao === "ativa")).length,
   };
 
   return (
@@ -105,9 +108,10 @@ const SocietarioPage: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total", value: stats.total, icon: <Building2 size={20} />, color: "text-primary" },
-          { label: "Ativas", value: stats.ativas, cls: "badge-success" },
-          { label: "Paralisadas", value: stats.paralisadas, cls: "badge-warning" },
-          { label: "Baixadas", value: stats.baixadas, cls: "badge-danger" },
+          { label: "Ativas", value: stats.ativas, cls: "badge-status badge-success" },
+          { label: "MEI", value: stats.mei, cls: "badge-status bg-info/10 text-info border-info/20" },
+          { label: "Paralisadas", value: stats.paralisadas, cls: "badge-status badge-warning" },
+          { label: "Baixadas", value: stats.baixadas, cls: "badge-status badge-danger" },
         ].map((s) => (
           <div key={s.label} className="stat-card flex items-center justify-between">
             <div>
@@ -158,17 +162,26 @@ const SocietarioPage: React.FC = () => {
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "ativas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("ativas")}
         >
           Empresas Ativas
         </button>
         <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "mei"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("mei")}
+        >
+          MEI
+        </button>
+        <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "paralisadas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("paralisadas")}
         >
@@ -176,8 +189,8 @@ const SocietarioPage: React.FC = () => {
         </button>
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "baixadas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("baixadas")}
         >

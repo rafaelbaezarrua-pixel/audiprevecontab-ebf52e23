@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock, AlertTriangle, CheckCircle, Search } from "lucide-react";
 import { useEmpresas } from "@/hooks/useEmpresas";
 
-interface Vencimento { empresa: string; tipo: string; data: string; diasRestantes: number; status: string; }
+interface Vencimento { empresa: string; tipo: string; data: string; diasRestantes: number; status: string; empresa_situacao?: string; empresa_porte?: string; }
 
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
 const calcStatus = (dias: number) => dias < 0 ? "vencido" : dias <= 30 ? "próximo" : "em dia";
@@ -15,28 +15,83 @@ const VencimentosPage: React.FC = () => {
   const [vencimentos, setVencimentos] = useState<Vencimento[]>([]);
   const [filter, setFilter] = useState("todos");
   const [search, setSearch] = useState("");
+  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
 
   useEffect(() => {
     const load = async () => {
       const list: Vencimento[] = [];
-      const empMap: Record<string, string> = {};
-      empresas.forEach(e => { empMap[e.id] = e.nome_empresa; });
+      const empMap: Record<string, { nome: string; situacao: string; porte: string }> = {};
+      empresas.forEach(e => {
+        empMap[e.id] = {
+          nome: e.nome_empresa,
+          situacao: e.situacao || "ativa",
+          porte: e.porte_empresa || ""
+        };
+      });
 
       // Licencas com vencimento
       const { data: lics } = await supabase.from("licencas").select("*").eq("status", "com_vencimento").not("vencimento", "is", null);
-      lics?.forEach(l => { const dias = calcDias(l.vencimento); list.push({ empresa: empMap[l.empresa_id] || "—", tipo: `Licença: ${licencaLabels[l.tipo_licenca] || l.tipo_licenca}`, data: l.vencimento!, diasRestantes: dias, status: calcStatus(dias) }); });
+      lics?.forEach(l => {
+        const dias = calcDias(l.vencimento);
+        const empInfo = empMap[l.empresa_id] || { nome: "—", situacao: "", porte: "" };
+        list.push({
+          empresa: empInfo.nome,
+          tipo: `Licença: ${licencaLabels[l.tipo_licenca] || l.tipo_licenca}`,
+          data: l.vencimento!,
+          diasRestantes: dias,
+          status: calcStatus(dias),
+          empresa_situacao: empInfo.situacao,
+          empresa_porte: empInfo.porte
+        });
+      });
 
       // Certificados
       const { data: certs } = await supabase.from("certificados_digitais").select("*").not("data_vencimento", "is", null);
-      certs?.forEach(c => { const dias = calcDias(c.data_vencimento); list.push({ empresa: empMap[c.empresa_id] || "—", tipo: "Certificado Digital", data: c.data_vencimento!, diasRestantes: dias, status: calcStatus(dias) }); });
+      certs?.forEach(c => {
+        const dias = calcDias(c.data_vencimento);
+        const empInfo = empMap[c.empresa_id] || { nome: "—", situacao: "", porte: "" };
+        list.push({
+          empresa: empInfo.nome,
+          tipo: "Certificado Digital",
+          data: c.data_vencimento!,
+          diasRestantes: dias,
+          status: calcStatus(dias),
+          empresa_situacao: empInfo.situacao,
+          empresa_porte: empInfo.porte
+        });
+      });
 
       // Procuracoes
       const { data: procs } = await supabase.from("procuracoes").select("*").not("data_vencimento", "is", null);
-      procs?.forEach(p => { const dias = calcDias(p.data_vencimento); list.push({ empresa: empMap[p.empresa_id] || "—", tipo: "Procuração", data: p.data_vencimento!, diasRestantes: dias, status: calcStatus(dias) }); });
+      procs?.forEach(p => {
+        const dias = calcDias(p.data_vencimento);
+        const empInfo = empMap[p.empresa_id] || { nome: "—", situacao: "", porte: "" };
+        list.push({
+          empresa: empInfo.nome,
+          tipo: "Procuração",
+          data: p.data_vencimento!,
+          diasRestantes: dias,
+          status: calcStatus(dias),
+          empresa_situacao: empInfo.situacao,
+          empresa_porte: empInfo.porte
+        });
+      });
 
       // Certidoes
       const { data: certidoes } = await supabase.from("certidoes").select("*").not("vencimento", "is", null);
-      certidoes?.forEach(c => { const dias = calcDias(c.vencimento); list.push({ empresa: empMap[c.empresa_id] || "—", tipo: `Certidão: ${c.tipo_certidao}`, data: c.vencimento!, diasRestantes: dias, status: calcStatus(dias) }); });
+      certidoes?.forEach(c => {
+        const dias = calcDias(c.vencimento);
+        const empInfo = empMap[c.empresa_id] || { nome: "—", situacao: "", porte: "" };
+        list.push({
+          empresa: empInfo.nome,
+          tipo: `Certidão: ${c.tipo_certidao}`,
+          data: c.vencimento!,
+          diasRestantes: dias,
+          status: calcStatus(dias),
+          empresa_situacao: empInfo.situacao,
+          empresa_porte: empInfo.porte
+        });
+      });
 
       list.sort((a, b) => a.diasRestantes - b.diasRestantes);
       setVencimentos(list);
@@ -46,7 +101,20 @@ const VencimentosPage: React.FC = () => {
 
   const searchFiltered = vencimentos.filter(v => {
     const matchSearch = !search || v.empresa.toLowerCase().includes(search.toLowerCase()) || v.tipo.toLowerCase().includes(search.toLowerCase());
-    return matchSearch && (filter === "todos" || v.status === filter);
+    const matchStatusFilter = filter === "todos" || v.status === filter;
+
+    let matchTab = false;
+    if (activeStatusTab === "ativas") {
+      matchTab = (v.empresa_situacao === "ativa") && v.empresa_porte !== "mei";
+    } else if (activeStatusTab === "mei") {
+      matchTab = (v.empresa_situacao === "ativa") && v.empresa_porte === "mei";
+    } else if (activeStatusTab === "paralisadas") {
+      matchTab = v.empresa_situacao === "paralisada";
+    } else if (activeStatusTab === "baixadas") {
+      matchTab = v.empresa_situacao === "baixada";
+    }
+
+    return matchSearch && matchStatusFilter && matchTab;
   });
 
   const counts = { vencido: vencimentos.filter(v => v.status === "vencido").length, proximo: vencimentos.filter(v => v.status === "próximo").length, emDia: vencimentos.filter(v => v.status === "em dia").length };
@@ -58,6 +126,46 @@ const VencimentosPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div><h1 className="text-2xl font-bold text-card-foreground">Vencimentos</h1><p className="text-sm text-muted-foreground mt-1">Visão consolidada de todos os vencimentos</p></div>
+
+      <div className="flex border-b border-border overflow-x-auto no-scrollbar">
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "ativas"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("ativas")}
+        >
+          Empresas Ativas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "mei"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("mei")}
+        >
+          Empresas MEI
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "paralisadas"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("paralisadas")}
+        >
+          Empresas Paralisadas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "baixadas"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("baixadas")}
+        >
+          Empresas Baixadas
+        </button>
+      </div>
+
       <div className="grid grid-cols-3 gap-4">
         <div className="stat-card flex items-center justify-between cursor-pointer" onClick={() => setFilter("vencido")}><div><p className="text-xs text-muted-foreground uppercase">Vencidos</p><p className="text-2xl font-bold text-destructive mt-1">{counts.vencido}</p></div><AlertTriangle className="text-destructive" size={22} /></div>
         <div className="stat-card flex items-center justify-between cursor-pointer" onClick={() => setFilter("próximo")}><div><p className="text-xs text-muted-foreground uppercase">Próximos</p><p className="text-2xl font-bold text-warning mt-1">{counts.proximo}</p></div><Clock className="text-warning" size={22} /></div>
