@@ -124,6 +124,41 @@ export type Database = {
           },
         ]
       }
+      empresa_acessos: {
+        Row: {
+          created_at: string | null
+          empresa_id: string
+          id: string
+          modulos_permitidos: string[]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id: string
+          id?: string
+          modulos_permitidos?: string[]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string
+          id?: string
+          modulos_permitidos?: string[]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_acessos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empresas: {
         Row: {
           cnpj: string | null
@@ -131,6 +166,7 @@ export type Database = {
           data_abertura: string | null
           endereco: Json | null
           id: string
+          modulos_ativos: string[] | null
           natureza_juridica: string | null
           nome_empresa: string
           porte_empresa: string | null
@@ -146,6 +182,7 @@ export type Database = {
           data_abertura?: string | null
           endereco?: Json | null
           id?: string
+          modulos_ativos?: string[] | null
           natureza_juridica?: string | null
           nome_empresa: string
           porte_empresa?: string | null
@@ -161,6 +198,7 @@ export type Database = {
           data_abertura?: string | null
           endereco?: Json | null
           id?: string
+          modulos_ativos?: string[] | null
           natureza_juridica?: string | null
           nome_empresa?: string
           porte_empresa?: string | null
@@ -228,6 +266,109 @@ export type Database = {
           },
         ]
       }
+      honorarios_config: {
+        Row: {
+          created_at: string | null
+          empresa_id: string
+          id: string
+          updated_at: string | null
+          valor_honorario: number | null
+          valor_por_funcionario: number | null
+          valor_por_recalculo: number | null
+          valor_trabalhista: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id: string
+          id?: string
+          updated_at?: string | null
+          valor_honorario?: number | null
+          valor_por_funcionario?: number | null
+          valor_por_recalculo?: number | null
+          valor_trabalhista?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string
+          id?: string
+          updated_at?: string | null
+          valor_honorario?: number | null
+          valor_por_funcionario?: number | null
+          valor_por_recalculo?: number | null
+          valor_trabalhista?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "honorarios_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: true
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      honorarios_mensal: {
+        Row: {
+          competencia: string
+          created_at: string | null
+          data_envio: string | null
+          data_vencimento: string | null
+          empresa_id: string
+          forma_envio: string | null
+          id: string
+          observacoes: Json | null
+          pago: boolean | null
+          qtd_funcionarios: number | null
+          qtd_recalculos: number | null
+          status: Database["public"]["Enums"]["guia_status"] | null
+          teve_encargo_trabalhista: boolean | null
+          updated_at: string | null
+          valor_total: number | null
+        }
+        Insert: {
+          competencia: string
+          created_at?: string | null
+          data_envio?: string | null
+          data_vencimento?: string | null
+          empresa_id: string
+          forma_envio?: string | null
+          id?: string
+          observacoes?: Json | null
+          pago?: boolean | null
+          qtd_funcionarios?: number | null
+          qtd_recalculos?: number | null
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          teve_encargo_trabalhista?: boolean | null
+          updated_at?: string | null
+          valor_total?: number | null
+        }
+        Update: {
+          competencia?: string
+          created_at?: string | null
+          data_envio?: string | null
+          data_vencimento?: string | null
+          empresa_id?: string
+          forma_envio?: string | null
+          id?: string
+          observacoes?: Json | null
+          pago?: boolean | null
+          qtd_funcionarios?: number | null
+          qtd_recalculos?: number | null
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          teve_encargo_trabalhista?: boolean | null
+          updated_at?: string | null
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "honorarios_mensal_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       licencas: {
         Row: {
           empresa_id: string
@@ -268,6 +409,7 @@ export type Database = {
       }
       parcelamentos: {
         Row: {
+          codigo_sn: string | null
           cpf_pessoa_fisica: string | null
           created_at: string | null
           data_envio: string | null
@@ -275,14 +417,18 @@ export type Database = {
           empresa_id: string | null
           forma_envio: string | null
           id: string
+          login_gov_br: string | null
+          metodo_login: string | null
           nome_pessoa_fisica: string | null
           previsao_termino: string | null
           qtd_parcelas: number | null
+          senha_gov_br: string | null
           tipo_parcelamento: string | null
           tipo_pessoa: string
           updated_at: string | null
         }
         Insert: {
+          codigo_sn?: string | null
           cpf_pessoa_fisica?: string | null
           created_at?: string | null
           data_envio?: string | null
@@ -290,14 +436,18 @@ export type Database = {
           empresa_id?: string | null
           forma_envio?: string | null
           id?: string
+          login_gov_br?: string | null
+          metodo_login?: string | null
           nome_pessoa_fisica?: string | null
           previsao_termino?: string | null
           qtd_parcelas?: number | null
+          senha_gov_br?: string | null
           tipo_parcelamento?: string | null
           tipo_pessoa: string
           updated_at?: string | null
         }
         Update: {
+          codigo_sn?: string | null
           cpf_pessoa_fisica?: string | null
           created_at?: string | null
           data_envio?: string | null
@@ -305,9 +455,12 @@ export type Database = {
           empresa_id?: string | null
           forma_envio?: string | null
           id?: string
+          login_gov_br?: string | null
+          metodo_login?: string | null
           nome_pessoa_fisica?: string | null
           previsao_termino?: string | null
           qtd_parcelas?: number | null
+          senha_gov_br?: string | null
           tipo_parcelamento?: string | null
           tipo_pessoa?: string
           updated_at?: string | null
@@ -496,6 +649,66 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recalculos: {
+        Row: {
+          competencia: string
+          created_at: string | null
+          data_envio: string | null
+          data_recalculo: string | null
+          empresa_id: string | null
+          forma_envio: string | null
+          guia: string
+          id: string
+          modulo_origem: string
+          parcelamento_id: string | null
+          status: Database["public"]["Enums"]["guia_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          competencia: string
+          created_at?: string | null
+          data_envio?: string | null
+          data_recalculo?: string | null
+          empresa_id?: string | null
+          forma_envio?: string | null
+          guia: string
+          id?: string
+          modulo_origem: string
+          parcelamento_id?: string | null
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          competencia?: string
+          created_at?: string | null
+          data_envio?: string | null
+          data_recalculo?: string | null
+          empresa_id?: string | null
+          forma_envio?: string | null
+          guia?: string
+          id?: string
+          modulo_origem?: string
+          parcelamento_id?: string | null
+          status?: Database["public"]["Enums"]["guia_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recalculos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recalculos_parcelamento_id_fkey"
+            columns: ["parcelamento_id"]
+            isOneToOne: false
+            referencedRelation: "parcelamentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       socios: {
         Row: {
