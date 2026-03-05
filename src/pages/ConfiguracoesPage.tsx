@@ -135,6 +135,86 @@ const ConfiguracoesPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <div className="space-y-6 pt-6 border-t border-border">
+        <h3 className="text-lg font-bold text-card-foreground">Configurações de Notificações</h3>
+        <NotificationConfig />
+      </div>
+    </div>
+  );
+};
+
+const NotificationConfig: React.FC = () => {
+  const [types, setTypes] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([]);
+
+  const loadData = async () => {
+    const { data: nTypes } = await (supabase as any).from("notification_types").select("*");
+    setTypes(nTypes || []);
+
+    const { data: nStats } = await (supabase as any)
+      .from("notification_recipients")
+      .select(`
+        is_read,
+        user_id,
+        created_at,
+        profiles (nome_completo),
+        notifications (title)
+      `)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setStats(nStats || []);
+  };
+
+  useEffect(() => { loadData(); }, []);
+
+  const toggleType = async (id: string, current: boolean) => {
+    await (supabase as any).from("notification_types").update({ is_enabled: !current }).eq("id", id);
+    toast.success("Configuração atualizada");
+    loadData();
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="module-card">
+        <h4 className="font-semibold text-sm mb-4">Gatilhos de Notificação</h4>
+        <div className="space-y-3">
+          {types.map(t => (
+            <div key={t.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
+              <div>
+                <p className="text-sm font-medium">{t.label}</p>
+                <p className="text-xs text-muted-foreground">{t.description}</p>
+              </div>
+              <button
+                onClick={() => toggleType(t.id, t.is_enabled)}
+                className={`w-12 h-6 rounded-full transition-colors relative ${t.is_enabled ? "bg-primary" : "bg-muted-foreground/30"}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${t.is_enabled ? "left-7" : "left-1"}`} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="module-card">
+        <h4 className="font-semibold text-sm mb-4">Últimas Visualizações</h4>
+        <div className="space-y-3">
+          {stats.map((s, i) => (
+            <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
+              <div>
+                <p className="text-sm font-medium">{s.notifications?.title}</p>
+                <p className="text-xs text-muted-foreground">Por: {s.profiles?.nome_completo || "Sistema"}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`badge-status ${s.is_read ? "badge-success" : "badge-warning"}`}>
+                  {s.is_read ? "Lida" : "Pendente"}
+                </span>
+              </div>
+            </div>
+          ))}
+          {stats.length === 0 && <p className="text-center py-4 text-xs text-muted-foreground">Nenhuma atividade recente</p>}
+        </div>
+      </div>
     </div>
   );
 };

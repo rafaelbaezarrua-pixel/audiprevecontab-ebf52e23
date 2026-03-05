@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 import { useTheme } from "@/components/theme-provider";
+import NotificationHeader from "./NotificationHeader";
 
 interface NavItemConfig {
   id: string;
@@ -183,9 +184,7 @@ const AppLayout: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors relative">
-              <Bell size={18} className="text-muted-foreground" />
-            </button>
+            <NotificationHeader />
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors relative"
