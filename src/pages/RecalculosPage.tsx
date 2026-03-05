@@ -15,6 +15,7 @@ const RecalculosPage: React.FC = () => {
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
 
   // Inline Form State
   const [showNovoForm, setShowNovoForm] = useState(false);
@@ -38,7 +39,7 @@ const RecalculosPage: React.FC = () => {
       .from("recalculos")
       .select(`
         *, 
-        empresas(nome_empresa, cnpj, regime_tributario),
+        empresas(nome_empresa, cnpj, regime_tributario, situacao),
         parcelamentos(nome_pessoa_fisica, cpf_pessoa_fisica, tipo_parcelamento)
       `)
       .eq("competencia", competencia)
@@ -55,10 +56,23 @@ const RecalculosPage: React.FC = () => {
     const nomePessoa = r.parcelamentos?.nome_pessoa_fisica || "";
     const termoBusca = search.toLowerCase();
 
-    return nomeEmpresa.toLowerCase().includes(termoBusca) ||
+    const matchSearch = nomeEmpresa.toLowerCase().includes(termoBusca) ||
       nomePessoa.toLowerCase().includes(termoBusca) ||
       r.guia?.toLowerCase().includes(termoBusca) ||
       r.modulo_origem?.toLowerCase().includes(termoBusca);
+
+    let matchTab = false;
+    // Se for parcelamento, mostra em "Ativas" por padrão, já que não tem a "situação" da empresa diretamente atrelada ao PF
+    const situacao = r.empresas?.situacao;
+    if (activeTab === "ativas") {
+      matchTab = !situacao || situacao === "ativa";
+    } else if (activeTab === "paralisadas") {
+      matchTab = situacao === "paralisada";
+    } else if (activeTab === "baixadas") {
+      matchTab = situacao === "baixada";
+    }
+
+    return matchSearch && matchTab;
   });
 
   const toggleExpand = (id: string, recalculo: any) => {
@@ -138,7 +152,7 @@ const RecalculosPage: React.FC = () => {
 
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none transition-all";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
-  const completedCount = recalculos.filter(r => r.status === "enviada" || r.status === "gerada").length;
+  const completedCount = filtered.filter(r => r.status === "enviada" || r.status === "gerada").length;
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -243,14 +257,44 @@ const RecalculosPage: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase font-medium">Total de Guias</p><p className="text-2xl font-bold text-primary mt-1">{recalculos.length}</p></div>
+        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase font-medium">Total de Guias</p><p className="text-2xl font-bold text-primary mt-1">{filtered.length}</p></div>
         <div className="stat-card"><p className="text-xs text-muted-foreground uppercase font-medium">Concluídas</p><p className="text-2xl font-bold text-success mt-1">{completedCount}</p></div>
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase font-medium">Pendentes</p><p className="text-2xl font-bold text-warning mt-1">{recalculos.length - completedCount}</p></div>
+        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase font-medium">Pendentes</p><p className="text-2xl font-bold text-warning mt-1">{filtered.length - completedCount}</p></div>
       </div>
 
       <div className="relative max-w-md">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <input type="text" placeholder="Buscar por cliente, empresa, guia ou módulo..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm transition-all" />
+      </div>
+
+      <div className="flex border-b border-border overflow-x-auto no-scrollbar">
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "ativas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("ativas")}
+        >
+          Empresas Ativas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "paralisadas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("paralisadas")}
+        >
+          Empresas Paralisadas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "baixadas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("baixadas")}
+        >
+          Empresas Baixadas
+        </button>
       </div>
 
       <div className="space-y-3">

@@ -38,6 +38,7 @@ const LicencasPage: React.FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabType>("licencas");
+  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [taxasForm, setTaxasForm] = useState<Record<string, Record<string, any>>>({});
 
@@ -72,15 +73,35 @@ const LicencasPage: React.FC = () => {
   // Filters for Licencas Tab
   const filteredLicencas = empresas.filter(e => {
     const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
-    if (filterStatus === "todos") return matchSearch;
-    return matchSearch && licByEmpresa(e.id).some((l: any) => l.status === filterStatus);
+    const matchStatus = filterStatus === "todos" || licByEmpresa(e.id).some((l: any) => l.status === filterStatus);
+
+    let matchTab = false;
+    if (activeStatusTab === "ativas") {
+      matchTab = !e.situacao || e.situacao === "ativa";
+    } else if (activeStatusTab === "paralisadas") {
+      matchTab = e.situacao === "paralisada";
+    } else if (activeStatusTab === "baixadas") {
+      matchTab = e.situacao === "baixada";
+    }
+
+    return matchSearch && matchStatus && matchTab;
   });
 
   // Filters for Taxas Tab (Shows only companies that have at least one valid license)
   const filteredTaxas = empresas.filter(e => {
     const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
     const hasAnyLicence = licByEmpresa(e.id).length > 0;
-    return matchSearch && hasAnyLicence;
+
+    let matchTab = false;
+    if (activeStatusTab === "ativas") {
+      matchTab = !e.situacao || e.situacao === "ativa";
+    } else if (activeStatusTab === "paralisadas") {
+      matchTab = e.situacao === "paralisada";
+    } else if (activeStatusTab === "baixadas") {
+      matchTab = e.situacao === "baixada";
+    }
+
+    return matchSearch && hasAnyLicence && matchTab;
   });
 
   const counts = {
@@ -167,6 +188,37 @@ const LicencasPage: React.FC = () => {
           className={`pb-3 px-4 text-sm font-semibold transition-colors border-b-2 ${activeTab === "taxas" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
         >
           Taxas das Licenças
+        </button>
+      </div>
+
+      {/* Status Tabs */}
+      <div className="flex border-b border-border overflow-x-auto no-scrollbar pt-2">
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "ativas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("ativas")}
+        >
+          Empresas Ativas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "paralisadas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("paralisadas")}
+        >
+          Empresas Paralisadas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "baixadas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("baixadas")}
+        >
+          Empresas Baixadas
         </button>
       </div>
 

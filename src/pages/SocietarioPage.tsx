@@ -32,6 +32,7 @@ const SocietarioPage: React.FC = () => {
   const [filterSituacao, setFilterSituacao] = useState("todas");
   const [filterRegime, setFilterRegime] = useState("todos");
   const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
   const navigate = useNavigate();
 
   const fetchEmpresas = async () => {
@@ -57,10 +58,22 @@ const SocietarioPage: React.FC = () => {
   }, []);
 
   const filtered = empresas.filter((e) => {
+    // Basic text search and dropdown filters
     const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
     const matchSituacao = filterSituacao === "todas" || e.situacao === filterSituacao;
     const matchRegime = filterRegime === "todos" || e.regime_tributario === filterRegime;
-    return matchSearch && matchSituacao && matchRegime;
+
+    // Tab filter
+    let matchTab = false;
+    if (activeTab === "ativas") {
+      matchTab = !e.situacao || e.situacao === "ativa";
+    } else if (activeTab === "paralisadas") {
+      matchTab = e.situacao === "paralisada";
+    } else if (activeTab === "baixadas") {
+      matchTab = e.situacao === "baixada";
+    }
+
+    return matchSearch && matchSituacao && matchRegime && matchTab;
   });
 
   const handleDelete = async (id: string, nome: string) => {
@@ -140,6 +153,36 @@ const SocietarioPage: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="flex border-b border-border overflow-x-auto no-scrollbar">
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "ativas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("ativas")}
+        >
+          Empresas Ativas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "paralisadas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("paralisadas")}
+        >
+          Empresas Paralisadas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "baixadas"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("baixadas")}
+        >
+          Empresas Baixadas
+        </button>
       </div>
 
       <div className="module-card overflow-x-auto p-0">
