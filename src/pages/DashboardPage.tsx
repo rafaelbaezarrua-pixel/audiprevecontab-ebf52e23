@@ -9,17 +9,30 @@ const DashboardPage: React.FC = () => {
   const [empresas, setEmpresas] = useState<any[]>([]);
 
   useEffect(() => {
+    let mounted = true;
+
     const load = async () => {
-      const { data } = await supabase.from("empresas").select("id, nome_empresa, cnpj, situacao").order("created_at", { ascending: false }).limit(10);
-      const list = data || [];
-      setEmpresas(list);
-      const { count: total } = await supabase.from("empresas").select("*", { count: "exact", head: true });
-      const { count: ativas } = await supabase.from("empresas").select("*", { count: "exact", head: true }).eq("situacao", "ativa");
-      const { count: paralisadas } = await supabase.from("empresas").select("*", { count: "exact", head: true }).eq("situacao", "paralisada");
-      const { count: baixadas } = await supabase.from("empresas").select("*", { count: "exact", head: true }).eq("situacao", "baixada");
-      setStats({ total: total || 0, ativas: ativas || 0, paralisadas: paralisadas || 0, baixadas: baixadas || 0 });
+      // 1. Get recent companies
+      const { data: recents } = await supabase.from("empresas").select("id, nome_empresa, cnpj, situacao").order("created_at", { ascending: false }).limit(10);
+      if (mounted) setEmpresas(recents || []);
+
+      // 2. Get all statuses in a single request and aggregate locally
+      const { data: allStatuses } = await supabase.from("empresas").select("situacao");
+      if (allStatuses && mounted) {
+        let ativas = 0;
+        let paralisadas = 0;
+        let baixadas = 0;
+        allStatuses.forEach(emp => {
+          if (!emp.situacao || emp.situacao === 'ativa') ativas++;
+          else if (emp.situacao === 'paralisada') paralisadas++;
+          else if (emp.situacao === 'baixada') baixadas++;
+        });
+        setStats({ total: allStatuses.length, ativas, paralisadas, baixadas });
+      }
     };
     load();
+
+    return () => { mounted = false; };
   }, []);
 
   const statCards = [

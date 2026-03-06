@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
                     "Authorization": `Bearer ${RESEND_API_KEY}`,
                 },
                 body: JSON.stringify({
-                    from: "Audipreve <societario@audiprevecontabilidade.com.br>",
+                    from: "Audipreve <gestor@audiprevecontabilidade.com.br>",
                     to: [user.email],
                     subject: `${code} é seu código de verificação Audipreve`,
                     html: `
@@ -102,18 +102,7 @@ Deno.serve(async (req) => {
                 const errorData = await res.json();
                 console.error("send-verification-code: [ERRO Resend]", errorData);
 
-                // Se for erro de destinatário não verificado (Resend Free Tier)
-                if (res.status === 403 && errorData.message?.includes("You can only send testing emails to your own email address")) {
-                    console.warn(`send-verification-code: [BYPASS] Resend bloqueou envio para ${user.email}. CÓDIGO GERADO: ${code}`);
-                    return new Response(JSON.stringify({
-                        success: true,
-                        message: "Código gerado (Bypass: Email não enviado devido a restrição comercial)",
-                        dev_note: "O domínio não está validado no Resend. O código foi logado no console do Supabase para teste.",
-                        bypass: true
-                    }), {
-                        headers: { ...corsHeaders, "Content-Type": "application/json" },
-                    });
-                }
+                // Bypass condition removed to surface actual Resend errors
 
                 throw new Error("Falha ao enviar e-mail: " + (errorData.message || JSON.stringify(errorData)));
             }
