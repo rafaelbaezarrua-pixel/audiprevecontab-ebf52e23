@@ -33,6 +33,7 @@ const AVAILABLE_MODULES = [
   { id: 'parcelamentos', label: 'Parcelamentos' },
   { id: 'recalculos', label: 'Recálculos' },
   { id: 'honorarios', label: 'Honorários' },
+  { id: 'declaracoes_anuais', label: 'Declarações Anuais' },
 ];
 
 const SocietarioEmpresaPage: React.FC = () => {
@@ -213,10 +214,6 @@ const SocietarioEmpresaPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/societario")} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft size={20} /></button>
-          <div>
-            <h1 className="text-2xl font-bold text-card-foreground">{isNew ? "Nova Empresa" : nomeEmpresa || "Empresa"}</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{isNew ? "Preencha os dados para cadastrar" : "Editar informações da empresa"}</p>
-          </div>
         </div>
         <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground shadow-md hover:shadow-lg transition-all disabled:opacity-50" style={{ background: "var(--gradient-primary)" }}>
           <Save size={16} /> {saving ? "Salvando..." : "Salvar"}

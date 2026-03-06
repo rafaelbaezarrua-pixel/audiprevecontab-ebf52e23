@@ -125,7 +125,7 @@ const VencimentosPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div><h1 className="text-2xl font-bold text-card-foreground">Vencimentos</h1><p className="text-sm text-muted-foreground mt-1">Visão consolidada de todos os vencimentos</p></div>
+
 
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
         <button

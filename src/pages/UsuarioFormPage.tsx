@@ -9,13 +9,15 @@ const moduleLabels: Record<string, string> = {
     fiscal: "Fiscal",
     pessoal: "Pessoal",
     certificados: "Certificados",
+    certidoes: "Certidões",
+    licencas: "Licenças",
     procuracoes: "Procurações",
     vencimentos: "Vencimentos",
     parcelamentos: "Parcelamentos",
     recalculos: "Recálculos",
     honorarios: "Honorários",
-    licencas: "Licenças",
-    certidoes: "Certidões",
+    agendamentos: "Agendamentos",
+    declaracoes_anuais: "Declarações Anuais",
 };
 
 const UsuarioFormPage: React.FC = () => {
@@ -86,10 +88,6 @@ const UsuarioFormPage: React.FC = () => {
                 >
                     <ArrowLeft size={20} />
                 </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-card-foreground">Novo Usuário</h1>
-                    <p className="text-sm text-muted-foreground">Cadastre um novo colaborador e defina seus acessos</p>
-                </div>
             </div>
 
             <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden p-6 md:p-8 space-y-8">
@@ -166,8 +164,8 @@ const UsuarioFormPage: React.FC = () => {
                                 <label
                                     key={key}
                                     className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${form.modules[key] || form.isAdmin
-                                            ? "bg-primary/5 border-primary/30 text-primary"
-                                            : "bg-card border-border text-muted-foreground hover:border-primary/20"
+                                        ? "bg-primary/5 border-primary/30 text-primary"
+                                        : "bg-card border-border text-muted-foreground hover:border-primary/20"
                                         } ${form.isAdmin ? "opacity-60 cursor-not-allowed" : ""}`}
                                 >
                                     <div className="flex items-center gap-3">

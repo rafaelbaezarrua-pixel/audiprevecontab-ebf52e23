@@ -105,8 +105,7 @@ const PessoalPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div><h1 className="text-2xl font-bold text-card-foreground">Departamento Pessoal</h1><p className="text-sm text-muted-foreground mt-1">Controle mensal de folha, encargos e obrigações</p></div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
         <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold" />
       </div>
       <div className="grid grid-cols-3 gap-4">

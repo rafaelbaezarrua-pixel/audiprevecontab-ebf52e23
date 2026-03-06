@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Save, Building2, Plus, Calendar, DollarSign, Clock, CheckCircle } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Save, Building2, Plus, Calendar, DollarSign, Clock, CheckCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useEmpresas } from "@/hooks/useEmpresas";
@@ -75,7 +75,8 @@ const HonorariosPage: React.FC = () => {
 
   const loadConfig = async (empresaId: string) => {
     const { data } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
-    const config = data || { valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0 };
+    const config = data || { valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
+    if (config && !config.outros_servicos) config.outros_servicos = [];
     setConfigs(prev => ({ ...prev, [empresaId]: config }));
     setConfigForm(prev => ({ ...prev, [empresaId]: { ...config } }));
   };
@@ -93,7 +94,8 @@ const HonorariosPage: React.FC = () => {
         valor_honorario: parseFloat(form.valor_honorario) || 0,
         valor_por_funcionario: parseFloat(form.valor_por_funcionario) || 0,
         valor_por_recalculo: parseFloat(form.valor_por_recalculo) || 0,
-        valor_trabalhista: parseFloat(form.valor_trabalhista) || 0
+        valor_trabalhista: parseFloat(form.valor_trabalhista) || 0,
+        outros_servicos: form.outros_servicos || []
       };
       if (configs[empresaId]?.id) await supabase.from("honorarios_config").update(payload).eq("id", configs[empresaId].id);
       else await supabase.from("honorarios_config").insert(payload);
@@ -107,7 +109,17 @@ const HonorariosPage: React.FC = () => {
     const funcVlr = Number(config?.valor_por_funcionario || 0) * qtdFunc;
     const recVlr = Number(config?.valor_por_recalculo || 0) * qtdRecalculos;
     const trabVlr = teveTrabalhista ? Number(config?.valor_trabalhista || 0) : 0;
-    return honorario + funcVlr + recVlr + trabVlr;
+    const outrosVlr = (config?.outros_servicos || []).reduce((sum: number, item: any) => sum + Number(item.valor || 0), 0);
+
+    const detalhes = [
+      { rotulo: "Honorário Base", qtd: 1, vlrUnit: honorario, vlrTotal: honorario },
+      ...(qtdFunc > 0 ? [{ rotulo: "Funcionários/Pró-labore", qtd: qtdFunc, vlrUnit: Number(config?.valor_por_funcionario || 0), vlrTotal: funcVlr }] : []),
+      ...(qtdRecalculos > 0 ? [{ rotulo: "Recálculos", qtd: qtdRecalculos, vlrUnit: Number(config?.valor_por_recalculo || 0), vlrTotal: recVlr }] : []),
+      ...(teveTrabalhista ? [{ rotulo: "Encargos Trabalhistas", qtd: 1, vlrUnit: Number(config?.valor_trabalhista || 0), vlrTotal: trabVlr }] : []),
+      ...(config?.outros_servicos || []).map((s: any) => ({ rotulo: s.descricao || "Serviço Adicional", qtd: 1, vlrUnit: Number(s.valor || 0), vlrTotal: Number(s.valor || 0) }))
+    ];
+
+    return { total: honorario + funcVlr + recVlr + trabVlr + outrosVlr, detalhes };
   };
 
   const handleGenerateMonth = async (empresaId: string) => {
@@ -124,12 +136,13 @@ const HonorariosPage: React.FC = () => {
       const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
       const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", comp);
 
-      const valorTotal = calculateTotal(config, qtdFunc, qtdRecalculos || 0, teveTrabalhista || false);
+      const { total: valorTotal, detalhes } = calculateTotal(config, qtdFunc, qtdRecalculos || 0, teveTrabalhista || false);
 
       setMensalForm(prev => ({
         ...prev, [empresaId]: {
           competencia: comp, qtd_funcionarios: qtdFunc, qtd_recalculos: qtdRecalculos || 0,
           teve_encargo_trabalhista: teveTrabalhista || false, valor_total: valorTotal,
+          detalhes_calculo: detalhes,
           data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: ""
         }
       }));
@@ -145,6 +158,7 @@ const HonorariosPage: React.FC = () => {
         qtd_recalculos: form.qtd_recalculos, teve_encargo_trabalhista: form.teve_encargo_trabalhista,
         valor_total: form.valor_total, data_vencimento: form.data_vencimento || null, data_envio: form.data_envio || null,
         forma_envio: form.forma_envio || null, status: form.status, pago: form.pago,
+        detalhes_calculo: form.detalhes_calculo || [],
         observacoes: form.observacoes ? { texto: form.observacoes } : null
       };
 
@@ -160,7 +174,7 @@ const HonorariosPage: React.FC = () => {
 
   const startEditMensal = (empresaId: string, record: any) => {
     setCompetenciaSelecionada(prev => ({ ...prev, [empresaId]: record.competencia }));
-    setMensalForm(prev => ({ ...prev, [empresaId]: { ...record, observacoes: record.observacoes?.texto || "" } }));
+    setMensalForm(prev => ({ ...prev, [empresaId]: { ...record, observacoes: record.observacoes?.texto || "", detalhes_calculo: record.detalhes_calculo || [] } }));
   };
 
   const updateConfigForm = (id: string, field: string, value: any) => {
@@ -169,6 +183,32 @@ const HonorariosPage: React.FC = () => {
 
   const updateMensalForm = (id: string, field: string, value: any) => {
     setMensalForm(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+  };
+
+  const addOutroServico = (empresaId: string) => {
+    setConfigForm(prev => {
+      const form = prev[empresaId] || {};
+      const outros = form.outros_servicos || [];
+      return { ...prev, [empresaId]: { ...form, outros_servicos: [...outros, { descricao: "", valor: 0 }] } };
+    });
+  };
+
+  const updateOutroServico = (empresaId: string, index: number, field: string, value: any) => {
+    setConfigForm(prev => {
+      const form = prev[empresaId];
+      const outros = [...(form.outros_servicos || [])];
+      outros[index] = { ...outros[index], [field]: value };
+      return { ...prev, [empresaId]: { ...form, outros_servicos: outros } };
+    });
+  };
+
+  const removeOutroServico = (empresaId: string, index: number) => {
+    setConfigForm(prev => {
+      const form = prev[empresaId];
+      const outros = [...(form.outros_servicos || [])];
+      outros.splice(index, 1);
+      return { ...prev, [empresaId]: { ...form, outros_servicos: outros } };
+    });
   };
 
   const filtered = empresas.filter(e => {
@@ -202,12 +242,7 @@ const HonorariosPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-card-foreground">Honorários</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gestão, configuração e relatórios de honorários</p>
-        </div>
-      </div>
+
 
       {/* Main Tab Switcher */}
       <div className="flex bg-muted/30 p-1 rounded-xl w-full sm:w-fit">
@@ -410,6 +445,39 @@ const HonorariosPage: React.FC = () => {
                               <div><label className={labelCls}>Valor Adicion. por Recálculo</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span><input type="number" step="0.01" value={cForm.valor_por_recalculo || ""} onChange={e => updateConfigForm(emp.id, "valor_por_recalculo", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" /></div></div>
                               <div><label className={labelCls}>Valor Adicion. Trabalhista (Fixo)</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span><input type="number" step="0.01" value={cForm.valor_trabalhista || ""} onChange={e => updateConfigForm(emp.id, "valor_trabalhista", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" /></div></div>
                             </div>
+
+                            <div className="mt-6 pt-6 border-t border-border">
+                              <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-sm font-bold text-card-foreground">Serviços Adicionais (Extra)</h4>
+                                <button onClick={() => addOutroServico(emp.id)} className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80">
+                                  <Plus size={14} /> Adicionar Serviço
+                                </button>
+                              </div>
+                              <div className="space-y-3">
+                                {cForm.outros_servicos?.map((servico: any, idx: number) => (
+                                  <div key={idx} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-background p-3 rounded-lg border border-border">
+                                    <div className="flex-1 w-full text-left">
+                                      <label className={labelCls}>Descrição</label>
+                                      <input type="text" value={servico.descricao || ""} onChange={e => updateOutroServico(emp.id, idx, "descricao", e.target.value)} className={inputCls} placeholder="Ex: Imposto Sindical, Taxa Extra..." />
+                                    </div>
+                                    <div className="w-full sm:w-1/3 text-left">
+                                      <label className={labelCls}>Valor</label>
+                                      <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                                        <input type="number" step="0.01" value={servico.valor || ""} onChange={e => updateOutroServico(emp.id, idx, "valor", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" />
+                                      </div>
+                                    </div>
+                                    <button onClick={() => removeOutroServico(emp.id, idx)} className="p-2 sm:mb-[2px] rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors" title="Excluir Serviço">
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </div>
+                                ))}
+                                {(!cForm.outros_servicos || cForm.outros_servicos.length === 0) && (
+                                  <p className="text-xs text-muted-foreground italic">Nenhum serviço adicional configurado.</p>
+                                )}
+                              </div>
+                            </div>
+
                             <div className="flex justify-end pt-4"><button onClick={() => handleSaveConfig(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Save size={16} /> Salvar Configuração</button></div>
                           </div>
                         )}
@@ -435,6 +503,33 @@ const HonorariosPage: React.FC = () => {
                                   <div><label className="block text-[10px] uppercase text-muted-foreground font-semibold mb-1">Encargos Trab.</label><p className="text-sm text-card-foreground font-medium">{mForm.teve_encargo_trabalhista ? "Sim" : "Não"}</p></div>
                                   <div><label className="block text-[10px] uppercase text-primary font-bold mb-1">Valor Total Calculado</label><p className="text-lg text-primary font-bold">{formatCurrency(mForm.valor_total)}</p></div>
                                 </div>
+
+                                {mForm.detalhes_calculo && mForm.detalhes_calculo.length > 0 && (
+                                  <div className="bg-muted/10 border border-border rounded-lg p-4">
+                                    <h4 className="text-xs font-bold uppercase text-muted-foreground mb-3 flex items-center gap-2">
+                                      <DollarSign size={14} /> Detalhamento do Cálculo
+                                    </h4>
+                                    <div className="space-y-2">
+                                      <div className="grid grid-cols-4 text-[10px] font-bold text-muted-foreground uppercase border-b border-border pb-1">
+                                        <div className="col-span-2">Descrição</div>
+                                        <div className="text-right">Qtd x Valor</div>
+                                        <div className="text-right">Total</div>
+                                      </div>
+                                      {mForm.detalhes_calculo.map((det: any, idx: number) => (
+                                        <div key={idx} className="grid grid-cols-4 text-xs items-center py-1">
+                                          <div className="col-span-2 font-medium text-card-foreground line-clamp-1" title={det.rotulo}>{det.rotulo}</div>
+                                          <div className="text-right text-muted-foreground">
+                                            {det.qtd} x {formatCurrency(det.vlrUnit)}
+                                          </div>
+                                          <div className="text-right font-bold text-card-foreground">
+                                            {formatCurrency(det.vlrTotal)}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                   <div><label className={labelCls}>Data Vencimento</label><input type="date" value={mForm.data_vencimento || ""} onChange={e => updateMensalForm(emp.id, "data_vencimento", e.target.value)} className={inputCls} /></div>
                                   <div><label className={labelCls}>Data Envio</label><input type="date" value={mForm.data_envio || ""} onChange={e => updateMensalForm(emp.id, "data_envio", e.target.value)} className={inputCls} /></div>

@@ -160,11 +160,7 @@ const RecalculosPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-card-foreground">Módulo de Recálculos</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gerencie guias recalculadas</p>
-        </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <label className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Mês:</label>
           <input
@@ -270,8 +266,8 @@ const RecalculosPage: React.FC = () => {
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "ativas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("ativas")}
         >
@@ -279,8 +275,8 @@ const RecalculosPage: React.FC = () => {
         </button>
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "paralisadas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("paralisadas")}
         >
@@ -288,8 +284,8 @@ const RecalculosPage: React.FC = () => {
         </button>
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "baixadas"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("baixadas")}
         >
