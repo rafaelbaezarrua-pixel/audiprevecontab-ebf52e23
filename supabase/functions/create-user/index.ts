@@ -86,6 +86,20 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Acesso negado: Apenas administradores podem criar usuários" }), { status: 403, headers: corsHeaders });
     }
 
+    // Verificar se o usuário já existe para dar um erro mais claro
+    console.log("create-user: Verificando se usuário já existe:", email);
+    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    if (listError) console.error("create-user: Erro ao listar usuários:", listError.message);
+
+    const userAlreadyExists = existingUsers?.users.some((u: any) => u.email === email);
+    if (userAlreadyExists) {
+      console.warn("create-user: Usuário já cadastrado:", email);
+      return new Response(JSON.stringify({
+        error: "Este e-mail já está cadastrado no sistema.",
+        code: "user_already_exists"
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     console.log("create-user: Criando usuário direto (bypass SMTP)...", email);
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
@@ -142,10 +156,11 @@ Deno.serve(async (req) => {
     console.error("create-user: Erro FATAL capturado:", err.message);
     return new Response(JSON.stringify({
       error: "Erro interno na função",
-      details: err.message
+      details: err.message,
+      stack: err.stack
     }), {
       status: 400,
-      headers: corsHeaders,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
