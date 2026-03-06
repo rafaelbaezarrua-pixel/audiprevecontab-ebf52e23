@@ -91,7 +91,7 @@ const ProcuracoesPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div><h1 className="text-2xl font-bold text-card-foreground">Procurações</h1><p className="text-sm text-muted-foreground mt-1">Controle de procurações de todas as empresas</p></div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[{ label: "Ativas", count: counts.ativas, cls: "text-success", bg: "bg-success/10", icon: <CheckCircle size={20} /> }, { label: "Próximas", count: counts.proximas, cls: "text-warning", bg: "bg-warning/10", icon: <Clock size={20} /> }, { label: "Vencidas", count: counts.vencidas, cls: "text-destructive", bg: "bg-destructive/10", icon: <AlertTriangle size={20} /> }, { label: "Sem Dados", count: counts.semDados, cls: "text-muted-foreground", bg: "bg-muted", icon: <AlertTriangle size={20} /> }].map(s => (
           <div key={s.label} className="stat-card flex items-center justify-between"><div><p className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</p><p className={`text-2xl font-bold mt-1 ${s.cls}`}>{s.count}</p></div><div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.bg} ${s.cls}`}>{s.icon}</div></div>

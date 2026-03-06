@@ -95,11 +95,7 @@ const SocietarioPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-card-foreground">Departamento Societário</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gerencie as empresas do escritório contábil</p>
-        </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
         <button onClick={() => navigate("/societario/nova")} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground shadow-md hover:shadow-lg transition-all" style={{ background: "var(--gradient-primary)" }}>
           <Plus size={18} /> Nova Empresa
         </button>

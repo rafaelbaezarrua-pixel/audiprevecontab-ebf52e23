@@ -19,11 +19,15 @@ const moduleLabels: Record<string, string> = {
   fiscal: "Fiscal",
   pessoal: "Pessoal",
   certificados: "Certificados",
+  certidoes: "Certidões",
+  licencas: "Licenças",
   procuracoes: "Procurações",
   vencimentos: "Vencimentos",
   parcelamentos: "Parcelamentos",
   recalculos: "Recálculos",
   honorarios: "Honorários",
+  agendamentos: "Agendamentos",
+  declaracoes_anuais: "Declarações Anuais",
 };
 
 const ConfiguracoesPage: React.FC = () => {

@@ -74,10 +74,6 @@ const AgendamentoFormPage: React.FC = () => {
                 >
                     <ArrowLeft size={20} />
                 </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-card-foreground">Novo Agendamento</h1>
-                    <p className="text-sm text-muted-foreground">Preencha os detalhes do compromisso</p>
-                </div>
             </div>
 
             <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden p-6 md:p-8 space-y-6">

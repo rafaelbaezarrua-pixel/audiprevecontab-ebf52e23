@@ -205,15 +205,7 @@ const ParcelamentosPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-card-foreground">
-            Controle de Parcelamentos
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Acompanhamento mensal de parcelamentos por competência
-          </p>
-        </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
         <div className="flex gap-3">
           <input
             type="month"
@@ -275,8 +267,8 @@ const ParcelamentosPage: React.FC = () => {
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "andamento"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("andamento")}
         >
@@ -284,8 +276,8 @@ const ParcelamentosPage: React.FC = () => {
         </button>
         <button
           className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "encerrados"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           onClick={() => setActiveTab("encerrados")}
         >

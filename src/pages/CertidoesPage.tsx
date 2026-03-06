@@ -97,7 +97,6 @@ const CertidoesPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <input type="file" ref={fileInputRef} accept=".pdf" className="hidden" />
-      <div><h1 className="text-2xl font-bold text-card-foreground">Certidões Negativas</h1><p className="text-sm text-muted-foreground mt-1">Controle de certidões por empresa com vencimento</p></div>
       <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
       <div className="space-y-3">
         {filtered.map(emp => {

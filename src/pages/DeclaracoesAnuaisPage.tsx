@@ -267,16 +267,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
 
     return (
         <div className="space-y-6 animate-fade-in">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                        <ClipboardList size={24} />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-card-foreground">Declarações Anuais</h1>
-                        <p className="text-sm text-muted-foreground mt-0.5">Controle de obrigações anuais e IRPF</p>
-                    </div>
-                </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
                 <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-muted-foreground uppercase">Ano Base:</span>
                     <select
@@ -326,13 +317,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
                 <div className="bg-info/10 border border-info/20 rounded-xl p-4 mb-6 flex gap-3 items-start">
                     <Info size={18} className="text-info mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-info">
-                        <p className="font-semibold">Obrigação para {prazos[activeTab]}:</p>
-                        {activeTab === "defis" && <p>Automatizado para empresas do Simples Nacional.</p>}
-                        {activeTab === "ecd_ecf" && <p>Automatizado para empresas de Lucro Real ou Presumido.</p>}
-                        {activeTab === "dasn_simei" && <p>Automatizado para empresas MEI.</p>}
-                        {activeTab === "dirf" && <p>Todas as empresas, exceto MEI.</p>}
-                        {activeTab === "irpf" && <p>Lista de sócios ativos no Societário.</p>}
-                        <p className="text-xs opacity-80 mt-1">Você pode marcar/desmarcar a obrigatoriedade manualmente para cada empresa.</p>
+                        <p className="font-semibold">Obrigação para {prazos[activeTab]}</p>
                     </div>
                 </div>
 

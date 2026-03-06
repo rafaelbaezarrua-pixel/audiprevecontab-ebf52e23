@@ -87,14 +87,6 @@ const ParcelamentoFormPage: React.FC = () => {
                 >
                     <ArrowLeft size={18} />
                 </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-card-foreground">
-                        Novo Parcelamento
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Cadastre os dados fixos e o método de acesso
-                    </p>
-                </div>
             </div>
 
             <div className="module-card p-6 md:p-8">
