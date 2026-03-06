@@ -16,138 +16,107 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("authorization");
-    console.log("create-user: Início da execução");
-    console.log("create-user: Header Authorization presente:", !!authHeader);
-
     if (!authHeader) {
       return new Response(JSON.stringify({
         error: "Não autenticado (Header Authorization ausente)",
         code: "no_auth_header"
-      }), { status: 401, headers: corsHeaders });
+      }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    console.log("create-user: SUPABASE_URL presente:", !!supabaseUrl);
-    console.log("create-user: SUPABASE_SERVICE_ROLE_KEY presente:", !!supabaseServiceKey);
-
     if (!supabaseUrl || !supabaseServiceKey) {
       return new Response(JSON.stringify({
-        error: "Configuração do servidor incompleta (Env vars missing)",
-        url_present: !!supabaseUrl,
-        key_present: !!supabaseServiceKey
-      }), { status: 500, headers: corsHeaders });
+        error: "Configuração do servidor incompleta",
+        code: "env_vars_missing"
+      }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "");
 
-    console.log("create-user: Validando token do usuário chamador...");
     const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !caller) {
-      console.error("create-user: Erro na validação do token:", authError?.message);
       return new Response(JSON.stringify({
         error: "Sessão inválida ou expirada",
         details: authError?.message,
         code: "auth_token_invalid"
-      }), { status: 401, headers: corsHeaders });
+      }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
-    console.log("create-user: Chamador validado ID:", caller.id);
 
     // Ler corpo da requisição
     let body;
     try {
       body = await req.json();
-      console.log("create-user: Corpo recebido:", JSON.stringify(body));
     } catch (e: any) {
-      console.error("create-user: Erro ao ler JSON do corpo:", e.message);
-      return new Response(JSON.stringify({ error: "Corpo da requisição inválido (JSON malformado)" }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "Corpo da requisição inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { email, nome, isAdmin: makeAdmin, modules } = body;
 
     if (!email) {
-      console.error("create-user: Email não fornecido");
-      return new Response(JSON.stringify({ error: "Email é obrigatório" }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "Email é obrigatório" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Verificar permissão
     const { data: callerRoles, error: rolesError } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", caller.id);
-    if (rolesError) console.error("create-user: Erro ao buscar roles do chamador:", rolesError.message);
-
     const isAdmin = callerRoles?.some((r: any) => r.role === "admin");
-    console.log("create-user: Chamador é admin?", isAdmin);
 
-    if (!isAdmin && callerRoles && callerRoles.length > 0) {
-      console.warn("create-user: Acesso negado para não-admin");
-      return new Response(JSON.stringify({ error: "Acesso negado: Apenas administradores podem criar usuários" }), { status: 403, headers: corsHeaders });
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Acesso negado: Apenas administradores podem criar usuários" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Verificar se o usuário já existe para dar um erro mais claro
-    console.log("create-user: Verificando se usuário já existe:", email);
-    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-    if (listError) console.error("create-user: Erro ao listar usuários:", listError.message);
-
+    // Verificar se o usuário já existe
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     const userAlreadyExists = existingUsers?.users.some((u: any) => u.email === email);
+
     if (userAlreadyExists) {
-      console.warn("create-user: Usuário já cadastrado:", email);
       return new Response(JSON.stringify({
         error: "Este e-mail já está cadastrado no sistema.",
         code: "user_already_exists"
       }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    console.log("create-user: Criando usuário direto (bypass SMTP)...", email);
+    // Criar usuário no Auth
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       email_confirm: true,
       user_metadata: { full_name: nome, nome_completo: nome },
-      password: "Mudar@Audipreve123" // Senha temporária padrão
+      password: "Mudar@Audipreve123"
     });
 
-    if (createError) {
-      console.error("create-user: Erro na criação direta:", createError.message);
-      throw createError;
-    }
+    if (createError) throw createError;
 
     const userId = userData.user.id;
-    console.log("create-user: Usuário criado ID:", userId);
 
-    console.log("create-user: Criando perfil...");
+    // Atualizar perfil (handling potential trigger conflict)
     const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
       user_id: userId,
       full_name: nome,
       nome_completo: nome,
       profile_completed: false,
       first_access_done: false
-    });
+    }, { onConflict: 'user_id' });
 
-    if (profileError) {
-      console.error("create-user: Erro ao criar perfil:", profileError.message);
-      throw profileError;
-    }
+    if (profileError) throw profileError;
 
     if (makeAdmin) {
-      console.log("create-user: Atribuindo papel de admin...");
-      await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "admin" });
+      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "admin" }, { onConflict: 'user_id,role' });
     }
 
     if (modules && typeof modules === "object") {
-      console.log("create-user: Atribuindo permissões de módulos...");
       const inserts = Object.entries(modules)
         .filter(([k, v]) => v && allowedModules.includes(k))
         .map(([k]) => ({ user_id: userId, module_name: k }));
 
       if (inserts.length > 0) {
-        const { error: modError } = await supabaseAdmin.from("user_module_permissions").insert(inserts);
-        if (modError) console.error("create-user: Erro nas permissões de módulo:", modError.message);
+        await supabaseAdmin.from("user_module_permissions").upsert(inserts, { onConflict: 'user_id,module_name' });
       }
     }
 
-    console.log("create-user: Sucesso total!");
+    console.log(`Usuário ${email} criado com sucesso.`);
     return new Response(JSON.stringify({ success: true, user_id: userId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

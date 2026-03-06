@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw } from "lucide-react";
+import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -94,6 +94,25 @@ const AgendamentosPage: React.FC = () => {
             loadData();
         } catch (error: any) {
             toast.error("Erro ao atualizar: " + error.message);
+        }
+    };
+
+    const handleDeleteAgendamento = async (id: string) => {
+        if (!window.confirm("Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.")) {
+            return;
+        }
+
+        try {
+            const { error } = await (supabase
+                .from("agendamentos" as any)
+                .delete()
+                .eq("id", id) as any);
+
+            if (error) throw error;
+            toast.success("Agendamento excluído com sucesso!");
+            loadData();
+        } catch (error: any) {
+            toast.error("Erro ao excluir: " + error.message);
         }
     };
 
@@ -259,7 +278,7 @@ const AgendamentosPage: React.FC = () => {
                                 </div>
                             )}
 
-                            {a.usuario_id === user?.id && (
+                            {(a.usuario_id === user?.id || userData?.isAdmin) && (
                                 <div className="flex items-center gap-2 pt-2 border-t border-border">
                                     {!a.arquivado ? (
                                         <>
@@ -295,6 +314,14 @@ const AgendamentosPage: React.FC = () => {
                                             <RefreshCw size={14} /> Desarquivar
                                         </button>
                                     )}
+
+                                    <button
+                                        onClick={() => handleDeleteAgendamento(a.id)}
+                                        className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive hover:text-white transition-all flex items-center gap-1.5"
+                                        title="Excluir"
+                                    >
+                                        <Trash2 size={14} /> Excluir
+                                    </button>
                                 </div>
                             )}
                         </div>

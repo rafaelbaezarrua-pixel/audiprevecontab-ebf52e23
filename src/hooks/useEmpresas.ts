@@ -28,13 +28,11 @@ export const useEmpresas = (moduloId: string) => {
                     return;
                 }
 
-                // 2. Fetch specific access records for the current user for all these companies
-                const empresaIds = emps.map((e) => e.id);
+                // 2. Fetch specific access records for the current user
                 const { data: acessos } = await supabase
                     .from("empresa_acessos")
                     .select("empresa_id, modulos_permitidos")
-                    .eq("user_id", user.id)
-                    .in("empresa_id", empresaIds);
+                    .eq("user_id", user.id);
 
                 const acessosMap = new Map<string, string[]>();
                 if (acessos) {

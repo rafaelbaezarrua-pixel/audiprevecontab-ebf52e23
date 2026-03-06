@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings } from "lucide-react";
@@ -39,6 +39,8 @@ const AVAILABLE_MODULES = [
 const SocietarioEmpresaPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { nome?: string; processoId?: string } | null;
   const isNew = id === "nova";
   const [activeTab, setActiveTab] = useState("dados");
   const [loading, setLoading] = useState(!isNew);
@@ -71,6 +73,9 @@ const SocietarioEmpresaPage: React.FC = () => {
     fetchProfiles();
 
     if (isNew) {
+      if (state?.nome) {
+        setNomeEmpresa(state.nome);
+      }
       // Initialize default licencas
       setLicencas(Object.keys(licencaLabels).map(tipo => ({ tipo_licenca: tipo, status: null, vencimento: null, numero_processo: null })));
       return;
@@ -174,8 +179,13 @@ const SocietarioEmpresaPage: React.FC = () => {
         if (accError) throw accError;
       }
 
+      if (isNew && state?.processoId) {
+        await supabase.from("processos_societarios" as any).update({ status: 'concluido' }).eq("id", state.processoId);
+      }
+
       toast.success(isNew ? "Empresa cadastrada com sucesso!" : "Empresa atualizada com sucesso!");
-      if (isNew) navigate(`/societario/${empresaId}`);
+      if (isNew) navigate(`/societario`);
+      else navigate(`/societario`);
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
     }

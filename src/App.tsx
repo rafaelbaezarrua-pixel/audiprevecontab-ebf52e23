@@ -24,6 +24,8 @@ import DeclaracoesAnuaisPage from "@/pages/DeclaracoesAnuaisPage";
 import AgendamentosPage from "@/pages/AgendamentosPage";
 import AgendamentoFormPage from "@/pages/AgendamentoFormPage";
 import UsuarioFormPage from "@/pages/UsuarioFormPage";
+import OcorrenciasPage from "@/pages/OcorrenciasPage";
+
 // Comentário para forçar atualização do IDE
 
 import ConfiguracoesPage from "@/pages/ConfiguracoesPage";
@@ -103,6 +105,7 @@ const App = () => (
                 <Route path="/declaracoes-anuais" element={<DeclaracoesAnuaisPage />} />
                 <Route path="/agendamentos" element={<AgendamentosPage />} />
                 <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />
+                <Route path="/ocorrencias" element={<OcorrenciasPage />} />
                 <Route path="/configuracoes/usuarios/novo" element={<UsuarioFormPage />} />
 
                 <Route path="/perfil" element={<PerfilPage />} />
