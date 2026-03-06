@@ -14,7 +14,6 @@ export interface UserPermissions {
     parcelamentos: boolean;
     recalculos: boolean;
     honorarios: boolean;
-    
     licencas: boolean;
     certidoes: boolean;
   };
@@ -23,6 +22,7 @@ export interface UserPermissions {
   departamento?: string;
   profileCompleted?: boolean;
   termsAccepted?: boolean;
+  firstAccessDone?: boolean;
 }
 
 interface AuthContextType {
@@ -56,47 +56,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const loadUserData = async (currentUser: User) => {
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id);
-    const isAdmin = roles?.some(r => r.role === "admin") || false;
+    console.log("AuthProvider: Loading data for user", currentUser.id);
+    try {
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id);
+      const isAdmin = roles?.some(r => r.role === "admin") || false;
 
-    const { data: profile } = await supabase.from("profiles").select("nome_completo, profile_completed, terms_accepted_at").eq("user_id", currentUser.id).maybeSingle();
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("nome_completo, profile_completed, terms_accepted_at, first_access_done")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
 
-    const profileCompleted = profile?.profile_completed || false;
-    const termsAccepted = !!profile?.terms_accepted_at;
+      if (profileError) console.error("AuthProvider: Error fetching profile for user", currentUser.id, profileError);
+      console.log("AuthProvider: Profile raw data", profile);
 
-    if (isAdmin) {
-      setUserData({
-        isAdmin: true,
-        modules: allModulesTrue,
-        nome: profile?.nome_completo || currentUser.email || "Admin",
-        email: currentUser.email || "",
+      // Robust state derivation
+      // If profile is missing or fields are null, we decide based on 'trustING' existing users
+      const profileCompleted = profile ? (profile.profile_completed ?? true) : true;
+      const termsAccepted = profile ? !!profile.terms_accepted_at : true;
+      const firstAccessDone = profile ? (profile.first_access_done ?? true) : true;
+
+      console.log("AuthProvider: Derived Onboarding State", {
+        userId: currentUser.id,
         profileCompleted,
         termsAccepted,
+        firstAccessDone,
+        rawCompleted: profile?.profile_completed,
+        rawFirstAccess: profile?.first_access_done
       });
-    } else {
-      const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", currentUser.id);
-      const moduleSet = new Set(perms?.map(p => p.module_name) || []);
-      setUserData({
-        isAdmin: false,
-        modules: {
-          societario: moduleSet.has("societario"),
-          fiscal: moduleSet.has("fiscal"),
-          pessoal: moduleSet.has("pessoal"),
-          certificados: moduleSet.has("certificados"),
-          procuracoes: moduleSet.has("procuracoes"),
-          vencimentos: moduleSet.has("vencimentos"),
-          parcelamentos: moduleSet.has("parcelamentos"),
-          recalculos: moduleSet.has("recalculos"),
-          honorarios: moduleSet.has("honorarios"),
-          
-          licencas: moduleSet.has("licencas"),
-          certidoes: moduleSet.has("certidoes"),
-        },
-        nome: profile?.nome_completo || currentUser.email || "Usuário",
-        email: currentUser.email || "",
-        profileCompleted,
-        termsAccepted,
-      });
+
+      if (isAdmin) {
+        setUserData({
+          isAdmin: true,
+          modules: allModulesTrue,
+          nome: profile?.nome_completo || currentUser.email || "Admin",
+          email: currentUser.email || "",
+          profileCompleted,
+          termsAccepted,
+          firstAccessDone,
+        });
+      } else {
+        const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", currentUser.id);
+        const moduleSet = new Set(perms?.map(p => p.module_name) || []);
+        setUserData({
+          isAdmin: false,
+          modules: {
+            societario: moduleSet.has("societario"),
+            fiscal: moduleSet.has("fiscal"),
+            pessoal: moduleSet.has("pessoal"),
+            certificados: moduleSet.has("certificados"),
+            procuracoes: moduleSet.has("procuracoes"),
+            vencimentos: moduleSet.has("vencimentos"),
+            parcelamentos: moduleSet.has("parcelamentos"),
+            recalculos: moduleSet.has("recalculos"),
+            honorarios: moduleSet.has("honorarios"),
+            licencas: moduleSet.has("licencas"),
+            certidoes: moduleSet.has("certidoes"),
+          },
+          nome: profile?.nome_completo || currentUser.email || "Usuário",
+          email: currentUser.email || "",
+          profileCompleted,
+          termsAccepted,
+          firstAccessDone,
+        });
+      }
+    } catch (err) {
+      console.error("AuthProvider: Critical error loading user data", err);
     }
   };
 
@@ -106,10 +131,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log("AuthProvider: Auth state change", event);
       setSession(newSession);
-      setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        setTimeout(() => loadUserData(newSession.user), 0);
+      const newUser = newSession?.user ?? null;
+      setUser(newUser);
+      if (newUser) {
+        await loadUserData(newUser);
       } else {
         setUserData(null);
       }

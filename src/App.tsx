@@ -30,6 +30,9 @@ import ConfiguracoesPage from "@/pages/ConfiguracoesPage";
 import CompletarPerfilPage from "@/pages/CompletarPerfilPage";
 import TermosPage from "@/pages/TermosPage";
 import PerfilPage from "@/pages/PerfilPage";
+import VerificationPage from "@/pages/VerificationPage";
+import EsqueciSenhaPage from "@/pages/EsqueciSenhaPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "@/pages/NotFound";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -48,6 +51,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   // Redirect to terms if profile completed but terms not accepted
   if (userData && userData.profileCompleted && !userData.termsAccepted) {
     return <Navigate to="/termos" replace />;
+  }
+
+  // Redirect to verification if terms accepted but first access not done
+  if (userData && userData.termsAccepted && !userData.firstAccessDone) {
+    return <Navigate to="/verificacao" replace />;
   }
 
   return <>{children}</>;
@@ -70,8 +78,11 @@ const App = () => (
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/completar-perfil" element={<OnboardingRoute><CompletarPerfilPage /></OnboardingRoute>} />
               <Route path="/termos" element={<OnboardingRoute><TermosPage /></OnboardingRoute>} />
+              <Route path="/verificacao" element={<OnboardingRoute><VerificationPage /></OnboardingRoute>} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<DashboardPage />} />

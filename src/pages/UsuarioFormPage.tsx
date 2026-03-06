@@ -26,37 +26,52 @@ const UsuarioFormPage: React.FC = () => {
     const [form, setForm] = useState({
         nome: "",
         email: "",
-        password: "",
         isAdmin: false,
         modules: {} as Record<string, boolean>
     });
 
     const handleCreateUser = async () => {
-        if (!form.nome.trim() || !form.email.trim() || !form.password.trim()) {
-            toast.error("Nome, email e senha são obrigatórios");
-            return;
-        }
-
-        if (form.password.length < 8 || !/[A-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
-            toast.error("Senha deve ter pelo menos 8 caracteres, com letra maiúscula e número");
+        if (!form.nome.trim() || !form.email.trim()) {
+            toast.error("Nome e e-mail são obrigatórios");
             return;
         }
 
         setLoading(true);
         try {
             console.log("Chamando Edge Function create-user...");
+
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            if (!token) {
+                console.error("Token não encontrado na sessão");
+                toast.error("Sessão expirada. Por favor, faça login novamente.");
+                setLoading(false);
+                return;
+            }
+
+            console.log("Token presente (primeiros 10 chars):", token.substring(0, 10) + "...");
+
             const { data, error } = await supabase.functions.invoke("create-user", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
                 body: {
                     email: form.email,
-                    password: form.password,
                     nome: form.nome,
                     isAdmin: form.isAdmin,
                     modules: form.modules
-                },
+                }
             });
 
             if (error) {
-                console.error("Erro no invoke da função:", error);
+                console.error("Erro no invoke da função (objeto completo):", JSON.stringify(error, null, 2));
+
+                // Verificar se o erro contém o corpo da resposta (Edge Function context)
+                if (error instanceof Error && (error as any).context?.json?.error) {
+                    throw new Error((error as any).context.json.error);
+                }
+
                 if (error.message?.includes("Failed to send a request")) {
                     throw new Error("Não foi possível conectar à Edge Function. Verifique se a função 'create-user' foi implantada no Supabase.");
                 }
@@ -65,11 +80,23 @@ const UsuarioFormPage: React.FC = () => {
 
             if (data?.error) throw new Error(data.error);
 
-            toast.success("Usuário criado com sucesso!");
+            toast.success("Usuário criado com sucesso! Senha temporária: Mudar@Audipreve123");
             navigate("/configuracoes");
         } catch (err: any) {
-            console.error("Erro detalhado:", err);
-            toast.error("Erro: " + err.message);
+            console.error("Erro capturado no catch:", err);
+
+            let errorMessage = err.message || "Erro desconhecido";
+
+            // Tentar extrair erro de contexto se for FunctionsHttpError
+            if (err.context?.json?.error) {
+                errorMessage = err.context.json.error;
+            } else if (err.context?.json?.message) {
+                errorMessage = err.context.json.message;
+            } else if (typeof err === 'object' && err !== null && 'error' in err) {
+                errorMessage = (err as any).error;
+            }
+
+            toast.error("Erro no Cadastro: " + errorMessage);
         } finally {
             setLoading(false);
         }
@@ -124,18 +151,10 @@ const UsuarioFormPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <div>
-                            <label className={labelCls}>Senha de Acesso *</label>
-                            <div className="relative">
-                                <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                <input
-                                    type="password"
-                                    placeholder="Mín. 8 caracteres, maiúscula e número"
-                                    value={form.password}
-                                    onChange={e => setForm({ ...form, password: e.target.value })}
-                                    className={inputCls + " pl-11"}
-                                />
-                            </div>
+                        <div className="p-4 bg-info/10 border border-info/20 rounded-xl">
+                            <p className="text-sm text-info flex items-center gap-2">
+                                <Mail size={16} /> Um convite será enviado para este e-mail para definição de senha.
+                            </p>
                         </div>
 
                         <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-xl border border-border">
@@ -211,7 +230,7 @@ const UsuarioFormPage: React.FC = () => {
             <div className="bg-info/5 border border-info/20 rounded-2xl p-4 flex gap-3">
                 <Shield size={20} className="text-info shrink-0 mt-0.5" />
                 <p className="text-xs text-info/80 leading-relaxed">
-                    <strong>Lembrete:</strong> Ao criar um usuário, ele receberá acesso imediato ao sistema com o e-mail e senha configurados. Certifique-se de que a Edge Function do Supabase foi implantada corretamente para processar este cadastro.
+                    <strong>Lembrete:</strong> Ao criar um usuário, ele receberá um convite por e-mail para definir sua senha e acessar o sistema. Certifique-se de que a Edge Function do Supabase foi implantada corretamente para processar este cadastro.
                 </p>
             </div>
         </div>

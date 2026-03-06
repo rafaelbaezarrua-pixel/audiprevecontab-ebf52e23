@@ -705,6 +705,9 @@ export type Database = {
           terms_accepted_at: string | null
           updated_at: string | null
           user_id: string
+          first_access_done: boolean | null
+          verification_code: string | null
+          verification_code_expires_at: string | null
         }
         Insert: {
           ativo?: boolean | null
@@ -720,6 +723,9 @@ export type Database = {
           terms_accepted_at?: string | null
           updated_at?: string | null
           user_id: string
+          first_access_done?: boolean | null
+          verification_code?: string | null
+          verification_code_expires_at?: string | null
         }
         Update: {
           ativo?: boolean | null
@@ -735,6 +741,9 @@ export type Database = {
           terms_accepted_at?: string | null
           updated_at?: string | null
           user_id?: string
+          first_access_done?: boolean | null
+          verification_code?: string | null
+          verification_code_expires_at?: string | null
         }
         Relationships: []
       }
