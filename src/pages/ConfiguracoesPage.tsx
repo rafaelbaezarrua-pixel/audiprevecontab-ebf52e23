@@ -156,18 +156,48 @@ const NotificationConfig: React.FC = () => {
     const { data: nTypes } = await (supabase as any).from("notification_types").select("*");
     setTypes(nTypes || []);
 
-    const { data: nStats } = await (supabase as any)
+    // 1. Buscar os destinatários
+    const { data: nStats, error: statsError } = await (supabase as any)
       .from("notification_recipients")
-      .select(`
-        is_read,
-        user_id,
-        created_at,
-        profiles (nome_completo),
-        notifications (title)
-      `)
+      .select(`is_read, user_id, created_at, notification_id`)
       .order("created_at", { ascending: false })
       .limit(20);
-    setStats(nStats || []);
+
+    if (statsError) {
+      console.error("ConfiguracoesPage: Error loading notification recipients", statsError);
+      setStats([]);
+      return;
+    }
+
+    if (nStats && nStats.length > 0) {
+      // 2. Buscar detalhes das notificações
+      const notifIds = Array.from(new Set(nStats.map((s: any) => s.notification_id).filter(Boolean))) as string[];
+      const { data: notifDetails } = await (supabase as any)
+        .from("notifications")
+        .select("id, title")
+        .in("id", notifIds);
+
+      const notifMap = Object.fromEntries(notifDetails?.map((n: any) => [n.id, n.title]) || []);
+
+      // 3. Buscar nomes dos perfis
+      const userIds = Array.from(new Set(nStats.map((s: any) => s.user_id)));
+      const { data: profileNames } = await supabase
+        .from("profiles")
+        .select("user_id, nome_completo")
+        .in("user_id", userIds);
+
+      const profileMap = Object.fromEntries(profileNames?.map(p => [p.user_id, p.nome_completo]) || []);
+
+      // 4. Montar o objeto final
+      const formatted = nStats.map((s: any) => ({
+        ...s,
+        notifications: { title: notifMap[s.notification_id] || "Notificação" },
+        profiles: { nome_completo: profileMap[s.user_id] || "Sistema" }
+      }));
+      setStats(formatted);
+    } else {
+      setStats([]);
+    }
   };
 
   useEffect(() => { loadData(); }, []);

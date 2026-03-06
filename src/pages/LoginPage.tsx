@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 
@@ -61,15 +61,22 @@ const LoginPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-card-foreground mb-1.5">Senha</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                placeholder="••••••••"
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-muted-foreground ml-1">Senha</label>
+                <input
+                  type="password"
+                  placeholder="Sua senha"
+                  className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary outline-none transition-all"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <div className="flex justify-end pr-1">
+                  <Link to="/esqueci-senha" title="Esqueci minha senha" className="text-xs font-medium text-primary hover:underline">
+                    Esqueci minha senha
+                  </Link>
+                </div>
+              </div>
             </div>
             {error && (
               <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
