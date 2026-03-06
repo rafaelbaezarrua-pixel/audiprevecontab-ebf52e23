@@ -59,7 +59,8 @@ const LicencasPage: React.FC = () => {
         id: t.id,
         status: t.status,
         data_envio: t.data_envio,
-        forma_envio: t.forma_envio
+        forma_envio: t.forma_envio,
+        data_vencimento: t.data_vencimento
       };
     });
     setTaxasForm(map);
@@ -145,7 +146,8 @@ const LicencasPage: React.FC = () => {
           competencia,
           status: data.status || 'pendente',
           data_envio: data.data_envio || null,
-          forma_envio: data.forma_envio || null
+          forma_envio: data.forma_envio || null,
+          data_vencimento: data.data_vencimento || null
         };
 
         if (data.id) {
@@ -327,7 +329,7 @@ const LicencasPage: React.FC = () => {
                                 <Shield size={14} /> {label}
                               </h4>
 
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                 <div>
                                   <label className={labelCls}>Status Atual</label>
                                   <select
@@ -341,6 +343,15 @@ const LicencasPage: React.FC = () => {
                                   </select>
                                 </div>
                                 <div>
+                                  <label className={labelCls}>Vencimento</label>
+                                  <input
+                                    type="date"
+                                    className={inputCls}
+                                    value={taxaData.data_vencimento || ''}
+                                    onChange={(e) => handleTaxaChange(emp.id, key, 'data_vencimento', e.target.value)}
+                                  />
+                                </div>
+                                <div>
                                   <label className={labelCls}>Data do Envio</label>
                                   <input
                                     type="date"
@@ -350,7 +361,7 @@ const LicencasPage: React.FC = () => {
                                   />
                                 </div>
                                 <div>
-                                  <label className={labelCls}>Forma de Envio</label>
+                                  <label className={labelCls}>Envio</label>
                                   <input
                                     type="text"
                                     placeholder="Ex: WhatsApp"

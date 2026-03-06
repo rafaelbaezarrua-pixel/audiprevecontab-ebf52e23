@@ -50,8 +50,6 @@ const UsuarioFormPage: React.FC = () => {
                 return;
             }
 
-            console.log("Token presente (primeiros 10 chars):", token.substring(0, 10) + "...");
-
             const { data, error } = await supabase.functions.invoke("create-user", {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -65,15 +63,19 @@ const UsuarioFormPage: React.FC = () => {
             });
 
             if (error) {
-                console.error("Erro no invoke da função (objeto completo):", JSON.stringify(error, null, 2));
-
-                // Verificar se o erro contém o corpo da resposta (Edge Function context)
-                if (error instanceof Error && (error as any).context?.json?.error) {
-                    throw new Error((error as any).context.json.error);
+                // Em caso de FunctionsHttpError, o context pode ser o objeto Response original
+                const errorContext = (error as any).context;
+                if (errorContext instanceof Response) {
+                    try {
+                        const body = await errorContext.json();
+                        if (body.error) throw new Error(body.error);
+                    } catch (e: any) {
+                        if (e.message && e.message !== "Unexpected end of JSON input") throw e;
+                    }
                 }
 
                 if (error.message?.includes("Failed to send a request")) {
-                    throw new Error("Não foi possível conectar à Edge Function. Verifique se a função 'create-user' foi implantada no Supabase.");
+                    throw new Error("Não foi possível conectar à Edge Function.");
                 }
                 throw error;
             }
@@ -83,17 +85,14 @@ const UsuarioFormPage: React.FC = () => {
             toast.success("Usuário criado com sucesso! Senha temporária: Mudar@Audipreve123");
             navigate("/configuracoes");
         } catch (err: any) {
-            console.error("Erro capturado no catch:", err);
+            console.error("Erro no cadastro:", err);
 
             let errorMessage = err.message || "Erro desconhecido";
 
-            // Tentar extrair erro de contexto se for FunctionsHttpError
             if (err.context?.json?.error) {
                 errorMessage = err.context.json.error;
-            } else if (err.context?.json?.message) {
-                errorMessage = err.context.json.message;
-            } else if (typeof err === 'object' && err !== null && 'error' in err) {
-                errorMessage = (err as any).error;
+            } else if (err.context?.error) {
+                errorMessage = err.context.error;
             }
 
             toast.error("Erro no Cadastro: " + errorMessage);

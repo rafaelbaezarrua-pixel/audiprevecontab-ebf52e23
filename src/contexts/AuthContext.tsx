@@ -4,6 +4,7 @@ import type { User, Session } from "@supabase/supabase-js";
 
 export interface UserPermissions {
   isAdmin: boolean;
+  userId?: string;
   modules: {
     societario: boolean;
     fiscal: boolean;
@@ -19,6 +20,7 @@ export interface UserPermissions {
   };
   nome?: string;
   email?: string;
+  cpf?: string;
   departamento?: string;
   profileCompleted?: boolean;
   termsAccepted?: boolean;
@@ -56,19 +58,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const loadUserData = async (currentUser: User) => {
-    console.log("AuthProvider: Loading data for user", currentUser.id);
     try {
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id);
       const isAdmin = roles?.some(r => r.role === "admin") || false;
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("nome_completo, profile_completed, terms_accepted_at, first_access_done")
+        .select("nome_completo, profile_completed, terms_accepted_at, first_access_done, cpf, departamento")
         .eq("user_id", currentUser.id)
         .maybeSingle();
 
       if (profileError) console.error("AuthProvider: Error fetching profile for user", currentUser.id, profileError);
-      console.log("AuthProvider: Profile raw data", profile);
 
       // Robust state derivation
       // If profile is missing or fields are null, we decide based on 'trustING' existing users
@@ -76,21 +76,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const termsAccepted = profile ? !!profile.terms_accepted_at : true;
       const firstAccessDone = profile ? (profile.first_access_done ?? true) : true;
 
-      console.log("AuthProvider: Derived Onboarding State", {
-        userId: currentUser.id,
-        profileCompleted,
-        termsAccepted,
-        firstAccessDone,
-        rawCompleted: profile?.profile_completed,
-        rawFirstAccess: profile?.first_access_done
-      });
-
       if (isAdmin) {
         setUserData({
           isAdmin: true,
+          userId: currentUser.id,
           modules: allModulesTrue,
-          nome: profile?.nome_completo || currentUser.email || "Admin",
+          nome: profile?.nome_completo || currentUser.user_metadata?.full_name || currentUser.email || "Admin",
           email: currentUser.email || "",
+          cpf: profile?.cpf || "",
+          departamento: profile?.departamento || "Administração",
           profileCompleted,
           termsAccepted,
           firstAccessDone,
@@ -100,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const moduleSet = new Set(perms?.map(p => p.module_name) || []);
         setUserData({
           isAdmin: false,
+          userId: currentUser.id,
           modules: {
             societario: moduleSet.has("societario"),
             fiscal: moduleSet.has("fiscal"),
@@ -113,8 +108,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             licencas: moduleSet.has("licencas"),
             certidoes: moduleSet.has("certidoes"),
           },
-          nome: profile?.nome_completo || currentUser.email || "Usuário",
+          nome: profile?.nome_completo || currentUser.user_metadata?.full_name || currentUser.email || "Usuário",
           email: currentUser.email || "",
+          cpf: profile?.cpf || "",
+          departamento: profile?.departamento || "",
           profileCompleted,
           termsAccepted,
           firstAccessDone,
@@ -131,7 +128,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log("AuthProvider: Auth state change", event);
       setSession(newSession);
       const newUser = newSession?.user ?? null;
       setUser(newUser);

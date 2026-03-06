@@ -93,6 +93,22 @@ const VencimentosPage: React.FC = () => {
         });
       });
 
+      // Taxas de Licenças
+      const { data: taxas } = await (supabase.from("licencas_taxas").select("*").not("data_vencimento", "is", null) as any);
+      taxas?.forEach((t: any) => {
+        const dias = calcDias(t.data_vencimento);
+        const empInfo = empMap[t.empresa_id] || { nome: "—", situacao: "", porte: "" };
+        list.push({
+          empresa: empInfo.nome,
+          tipo: `Taxa: ${licencaLabels[t.tipo_licenca] || t.tipo_licenca}`,
+          data: t.data_vencimento!,
+          diasRestantes: dias,
+          status: calcStatus(dias),
+          empresa_situacao: empInfo.situacao,
+          empresa_porte: empInfo.porte
+        });
+      });
+
       list.sort((a, b) => a.diasRestantes - b.diasRestantes);
       setVencimentos(list);
     };
