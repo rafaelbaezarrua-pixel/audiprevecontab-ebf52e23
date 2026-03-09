@@ -67,6 +67,7 @@ const SocietarioPage: React.FC = () => {
   const [showNovoProcesso, setShowNovoProcesso] = useState(false);
   const [novoProcessoData, setNovoProcessoData] = useState({ tipo: 'abertura', nome_empresa: '', numero_processo: '', data_inicio: new Date().toISOString().split('T')[0] });
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
+  const [processoToDelete, setProcessoToDelete] = useState<{ id: string, nome: string } | null>(null);
 
   const navigate = useNavigate();
 
@@ -80,7 +81,7 @@ const SocietarioPage: React.FC = () => {
 
   const fetchProcessos = async () => {
     const { data } = await supabase.from("processos_societarios" as any).select("*").order("created_at", { ascending: false });
-    setProcessos(data || []);
+    setProcessos((data as unknown as Processo[]) || []);
   };
 
   useEffect(() => {
@@ -104,8 +105,15 @@ const SocietarioPage: React.FC = () => {
     else { toast.success("Processo iniciado!"); setShowNovoProcesso(false); fetchProcessos(); }
   };
 
-  const handleDeleteProcesso = async (id: string, nome: string) => {
-    if (!window.confirm(`Tem certeza que deseja excluir o processo da empresa "${nome}"?`)) return;
+  const openDeleteConfirm = (id: string, nome: string) => {
+    setProcessoToDelete({ id, nome });
+  };
+
+  const executeDeleteProcesso = async () => {
+    if (!processoToDelete) return;
+    const { id } = processoToDelete;
+    setProcessoToDelete(null); // Fecha o modal imediatamente para não bloquear UI
+
     const { error } = await supabase.from("processos_societarios" as any).delete().eq("id", id);
     if (error) toast.error("Erro ao excluir: " + error.message);
     else { toast.success("Processo excluído!"); fetchProcessos(); }
@@ -282,8 +290,8 @@ const SocietarioPage: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteProcesso(p.id, p.nome_empresa || "Sem Nome"); }}
-                        className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); openDeleteConfirm(p.id, p.nome_empresa || "Sem Nome"); }}
+                        className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -433,6 +441,37 @@ const SocietarioPage: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão (Substitui window.confirm para resolver INP) */}
+      {processoToDelete && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-card w-full max-w-sm rounded-2xl shadow-xl border border-border overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mb-4">
+                <Trash2 size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-card-foreground">Excluir Processo</h2>
+              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                Tem certeza que deseja excluir o processo da empresa <strong className="text-foreground">{processoToDelete.nome}</strong>? Esta ação não pode ser desfeita.
+              </p>
+            </div>
+            <div className="p-4 border-t border-border bg-muted/30 flex justify-end gap-3">
+              <button
+                onClick={() => setProcessoToDelete(null)}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executeDeleteProcesso}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all shadow-sm active:scale-95"
+              >
+                Sim, Excluir
+              </button>
+            </div>
           </div>
         </div>
       )}
