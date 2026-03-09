@@ -15,6 +15,19 @@ export default {
     extend: {
       fontFamily: {
         montserrat: ["Montserrat", "sans-serif"],
+        title: ["'Open Sans'", "sans-serif"],
+        body: ["'Open Sans'", "sans-serif"],
+      },
+      transitionDuration: {
+        DEFAULT: '100ms',
+        75: '50ms',
+        100: '75ms',
+        150: '100ms',
+        200: '100ms',
+        300: '150ms',
+        500: '250ms',
+        700: '350ms',
+        1000: '500ms',
       },
       colors: {
         border: "hsl(var(--border))",
@@ -95,9 +108,9 @@ export default {
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.3s ease-out",
+        "accordion-down": "accordion-down 0.1s ease-out",
+        "accordion-up": "accordion-up 0.1s ease-out",
+        "fade-in": "fade-in 0.15s ease-out",
       },
     },
   },
