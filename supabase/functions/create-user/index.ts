@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Corpo da requisição inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { email, nome, isAdmin: makeAdmin, modules } = body;
+    const { email, nome, cpf, isAdmin: makeAdmin, modules } = body;
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Email é obrigatório" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
       user_id: userId,
       full_name: nome,
       nome_completo: nome,
+      cpf: cpf || null,
       profile_completed: false,
       first_access_done: false
     }, { onConflict: 'user_id' });
