@@ -79,14 +79,13 @@ Deno.serve(async (req) => {
       }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Gerar link de convite e enviar e-mail via SMTP do Supabase
-    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+    // Criar usuário diretamente com a senha temporária e e-mail já confirmado
+    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      {
-        data: { full_name: nome, nome_completo: nome },
-        redirectTo: `${origin}/reset-password`
-      }
-    );
+      password: "Mudar@Audipreve123",
+      email_confirm: true,
+      user_metadata: { full_name: nome, nome_completo: nome }
+    });
 
     if (createError) throw createError;
 
