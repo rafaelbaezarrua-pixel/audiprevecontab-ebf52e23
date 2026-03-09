@@ -46,19 +46,43 @@ const FiscalPage: React.FC = () => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
     const existing = fiscalData[id] || {};
-    let fixedFields = { tipo_nota: "", recebimento_arquivos: "", aliquota: "", ramo_empresarial: "" };
+    let fixedFields = {
+      tipo_nota: "", recebimento_arquivos: "", aliquota: "", ramo_empresarial: "",
+      aliquota_irpj: "", aliquota_csll: "", aliquota_pis: "", aliquota_cofins: "",
+      aliquota_icms: "", aliquota_iss: "", aliquota_cbs: "", aliquota_ibs: ""
+    };
+
     if (!existing.id) {
-      const { data: prev } = await supabase.from("fiscal").select("tipo_nota, recebimento_arquivos, aliquota, ramo_empresarial").eq("empresa_id", id).order("competencia", { ascending: false }).limit(1);
+      const { data: prev } = await supabase.from("fiscal").select("*").eq("empresa_id", id).order("competencia", { ascending: false }).limit(1);
       if (prev?.[0]) {
-        fixedFields = { tipo_nota: prev[0].tipo_nota || "", recebimento_arquivos: prev[0].recebimento_arquivos || "", aliquota: prev[0].aliquota?.toString() || "", ramo_empresarial: prev[0].ramo_empresarial || "" };
+        fixedFields = {
+          tipo_nota: prev[0].tipo_nota || "", recebimento_arquivos: prev[0].recebimento_arquivos || "", aliquota: prev[0].aliquota?.toString() || "", ramo_empresarial: prev[0].ramo_empresarial || "",
+          aliquota_irpj: prev[0].aliquota_irpj?.toString() || "", aliquota_csll: prev[0].aliquota_csll?.toString() || "",
+          aliquota_pis: prev[0].aliquota_pis?.toString() || "", aliquota_cofins: prev[0].aliquota_cofins?.toString() || "",
+          aliquota_icms: prev[0].aliquota_icms?.toString() || "", aliquota_iss: prev[0].aliquota_iss?.toString() || "",
+          aliquota_cbs: prev[0].aliquota_cbs?.toString() || "", aliquota_ibs: prev[0].aliquota_ibs?.toString() || ""
+        };
       }
     } else {
-      fixedFields = { tipo_nota: existing.tipo_nota || "", recebimento_arquivos: existing.recebimento_arquivos || "", aliquota: existing.aliquota?.toString() || "", ramo_empresarial: existing.ramo_empresarial || "" };
+      fixedFields = {
+        tipo_nota: existing.tipo_nota || "", recebimento_arquivos: existing.recebimento_arquivos || "", aliquota: existing.aliquota?.toString() || "", ramo_empresarial: existing.ramo_empresarial || "",
+        aliquota_irpj: existing.aliquota_irpj?.toString() || "", aliquota_csll: existing.aliquota_csll?.toString() || "",
+        aliquota_pis: existing.aliquota_pis?.toString() || "", aliquota_cofins: existing.aliquota_cofins?.toString() || "",
+        aliquota_icms: existing.aliquota_icms?.toString() || "", aliquota_iss: existing.aliquota_iss?.toString() || "",
+        aliquota_cbs: existing.aliquota_cbs?.toString() || "", aliquota_ibs: existing.aliquota_ibs?.toString() || ""
+      };
     }
+
     setEditForm(prev => ({
       ...prev, [id]: {
         ...fixedFields, forma_envio: existing.forma_envio || "",
         status_guia: existing.status_guia || "pendente", data_envio: existing.data_envio || "",
+        irpj_csll_status: existing.irpj_csll_status || "pendente", irpj_csll_data_envio: existing.irpj_csll_data_envio || "",
+        pis_cofins_status: existing.pis_cofins_status || "pendente", pis_cofins_data_envio: existing.pis_cofins_data_envio || "",
+        icms_status: existing.icms_status || "pendente", icms_data_envio: existing.icms_data_envio || "",
+        iss_status: existing.iss_status || "pendente", iss_data_envio: existing.iss_data_envio || "",
+        cbs_status: existing.cbs_status || "pendente", cbs_data_envio: existing.cbs_data_envio || "",
+        ibs_status: existing.ibs_status || "pendente", ibs_data_envio: existing.ibs_data_envio || "",
         observacoes: existing.observacoes || {},
       }
     }));
@@ -74,6 +98,32 @@ const FiscalPage: React.FC = () => {
         aliquota: form.aliquota ? parseFloat(form.aliquota) : null,
         status_guia: form.status_guia || "pendente", data_envio: form.data_envio || null,
         observacoes: form.observacoes || {}, ramo_empresarial: form.ramo_empresarial || null,
+
+        aliquota_irpj: form.aliquota_irpj ? parseFloat(form.aliquota_irpj) : null,
+        aliquota_csll: form.aliquota_csll ? parseFloat(form.aliquota_csll) : null,
+        irpj_csll_status: form.irpj_csll_status || "pendente",
+        irpj_csll_data_envio: form.irpj_csll_data_envio || null,
+
+        aliquota_pis: form.aliquota_pis ? parseFloat(form.aliquota_pis) : null,
+        aliquota_cofins: form.aliquota_cofins ? parseFloat(form.aliquota_cofins) : null,
+        pis_cofins_status: form.pis_cofins_status || "pendente",
+        pis_cofins_data_envio: form.pis_cofins_data_envio || null,
+
+        aliquota_icms: form.aliquota_icms ? parseFloat(form.aliquota_icms) : null,
+        icms_status: form.icms_status || "pendente",
+        icms_data_envio: form.icms_data_envio || null,
+
+        aliquota_iss: form.aliquota_iss ? parseFloat(form.aliquota_iss) : null,
+        iss_status: form.iss_status || "pendente",
+        iss_data_envio: form.iss_data_envio || null,
+
+        aliquota_cbs: form.aliquota_cbs ? parseFloat(form.aliquota_cbs) : null,
+        cbs_status: form.cbs_status || "pendente",
+        cbs_data_envio: form.cbs_data_envio || null,
+
+        aliquota_ibs: form.aliquota_ibs ? parseFloat(form.aliquota_ibs) : null,
+        ibs_status: form.ibs_status || "pendente",
+        ibs_data_envio: form.ibs_data_envio || null,
       };
       if (existing?.id) {
         await supabase.from("fiscal").update(payload).eq("id", existing.id);
@@ -156,7 +206,9 @@ const FiscalPage: React.FC = () => {
         {filtered.map(emp => {
           const isOpen = expanded === emp.id;
           const form = editForm[emp.id] || {};
-          const done = fiscalData[emp.id]?.status_guia === "enviada" || fiscalData[emp.id]?.status_guia === "gerada";
+          const done = emp.regime_tributario === "lucro_real"
+            ? (fiscalData[emp.id]?.irpj_csll_status === "enviada" || fiscalData[emp.id]?.irpj_csll_status === "gerada")
+            : (fiscalData[emp.id]?.status_guia === "enviada" || fiscalData[emp.id]?.status_guia === "gerada");
           return (
             <div key={emp.id} className="module-card !p-0 overflow-hidden">
               <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => toggleExpand(emp.id)}>
@@ -165,18 +217,94 @@ const FiscalPage: React.FC = () => {
               </div>
               {isOpen && (
                 <div className="border-t border-border p-5 space-y-5 bg-muted/10">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><label className={labelCls}>Tipo de Nota</label><input value={form.tipo_nota || ""} onChange={e => updateForm(emp.id, "tipo_nota", e.target.value)} className={inputCls} placeholder="NFE, NFCE, NFSE" /></div>
-                    <div><label className={labelCls}>Recebimento de Arquivos</label><input value={form.recebimento_arquivos || ""} onChange={e => updateForm(emp.id, "recebimento_arquivos", e.target.value)} className={inputCls} placeholder="Ex: Email, WhatsApp, ISS..." /></div>
-                    <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} placeholder="Ex: Email, WhatsApp..." /></div>
-                  </div>
+                  {/* Informações Iniciais Comuns */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div><label className={labelCls}>Alíquota da Guia</label><input value={form.aliquota || ""} onChange={e => updateForm(emp.id, "aliquota", e.target.value)} className={inputCls} placeholder="Ex: 6%" /></div>
+                    <div><label className={labelCls}>Tipo de Nota</label><input value={form.tipo_nota || ""} onChange={e => updateForm(emp.id, "tipo_nota", e.target.value)} className={inputCls} placeholder="NFE, NFCE, NFSE" /></div>
+                    <div><label className={labelCls}>Recebimento de Arquivos</label><input value={form.recebimento_arquivos || ""} onChange={e => updateForm(emp.id, "recebimento_arquivos", e.target.value)} className={inputCls} placeholder="Ex: Email, WhatsApp..." /></div>
+                    <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} placeholder="Ex: Email, WhatsApp..." /></div>
                     <div><label className={labelCls}>Ramo Empresarial</label><input value={form.ramo_empresarial || ""} onChange={e => updateForm(emp.id, "ramo_empresarial", e.target.value)} className={inputCls} placeholder="Ex: Comércio, Serviços..." /></div>
-                    <div><label className={labelCls}>Status da Guia</label><select value={form.status_guia || "pendente"} onChange={e => updateForm(emp.id, "status_guia", e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select></div>
-                    <div><label className={labelCls}>Data de Envio</label><input type="date" value={form.data_envio || ""} onChange={e => updateForm(emp.id, "data_envio", e.target.value)} className={inputCls} /></div>
                   </div>
-                  <div className="flex justify-end"><button onClick={() => handleSave(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Save size={14} /> Salvar</button></div>
+
+                  {emp.regime_tributario === "lucro_real" ? (
+                    <div className="space-y-6">
+                      {/* Impostos Federais */}
+                      <div className="bg-card p-4 rounded-xl border border-border shadow-sm space-y-4">
+                        <h4 className="text-sm font-bold text-foreground border-b border-border pb-2">Impostos Federais</h4>
+
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase">IRPJ / CSLL</p>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label className={labelCls}>Alíquota IRPJ (%)</label><input value={form.aliquota_irpj || ""} onChange={e => updateForm(emp.id, "aliquota_irpj", e.target.value)} className={inputCls} placeholder="Ex: 15" /></div>
+                            <div><label className={labelCls}>Alíquota CSLL (%)</label><input value={form.aliquota_csll || ""} onChange={e => updateForm(emp.id, "aliquota_csll", e.target.value)} className={inputCls} placeholder="Ex: 9" /></div>
+                            <div><label className={labelCls}>Status (IRPJ/CSLL)</label><select value={form.irpj_csll_status || "pendente"} onChange={e => updateForm(emp.id, "irpj_csll_status", e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select></div>
+                            <div><label className={labelCls}>Data de Envio</label><input type="date" value={form.irpj_csll_data_envio || ""} onChange={e => updateForm(emp.id, "irpj_csll_data_envio", e.target.value)} className={inputCls} /></div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 pt-2">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase">PIS / COFINS</p>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label className={labelCls}>Alíquota PIS (%)</label><input value={form.aliquota_pis || ""} onChange={e => updateForm(emp.id, "aliquota_pis", e.target.value)} className={inputCls} placeholder="Ex: 1.65" /></div>
+                            <div><label className={labelCls}>Alíquota COFINS (%)</label><input value={form.aliquota_cofins || ""} onChange={e => updateForm(emp.id, "aliquota_cofins", e.target.value)} className={inputCls} placeholder="Ex: 7.6" /></div>
+                            <div><label className={labelCls}>Status (PIS/COFINS)</label><select value={form.pis_cofins_status || "pendente"} onChange={e => updateForm(emp.id, "pis_cofins_status", e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select></div>
+                            <div><label className={labelCls}>Data de Envio</label><input type="date" value={form.pis_cofins_data_envio || ""} onChange={e => updateForm(emp.id, "pis_cofins_data_envio", e.target.value)} className={inputCls} /></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Impostos Estaduais */}
+                      <div className="bg-card p-4 rounded-xl border border-border shadow-sm space-y-4">
+                        <h4 className="text-sm font-bold text-foreground border-b border-border pb-2">Impostos Estaduais (ICMS)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div><label className={labelCls}>Alíquota ICMS (%)</label><input value={form.aliquota_icms || ""} onChange={e => updateForm(emp.id, "aliquota_icms", e.target.value)} className={inputCls} placeholder="Ex: 18" /></div>
+                          <div><label className={labelCls}>Status da Guia</label><select value={form.icms_status || "pendente"} onChange={e => updateForm(emp.id, "icms_status", e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select></div>
+                          <div><label className={labelCls}>Data de Envio</label><input type="date" value={form.icms_data_envio || ""} onChange={e => updateForm(emp.id, "icms_data_envio", e.target.value)} className={inputCls} /></div>
+                        </div>
+                      </div>
+
+                      {/* Impostos Municipais */}
+                      <div className="bg-card p-4 rounded-xl border border-border shadow-sm space-y-4">
+                        <h4 className="text-sm font-bold text-foreground border-b border-border pb-2">Impostos Municipais (ISS)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div><label className={labelCls}>Alíquota ISS (%)</label><input value={form.aliquota_iss || ""} onChange={e => updateForm(emp.id, "aliquota_iss", e.target.value)} className={inputCls} placeholder="Ex: 5" /></div>
+                          <div><label className={labelCls}>Status da Guia</label><select value={form.iss_status || "pendente"} onChange={e => updateForm(emp.id, "iss_status", e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select></div>
+                          <div><label className={labelCls}>Data de Envio</label><input type="date" value={form.iss_data_envio || ""} onChange={e => updateForm(emp.id, "iss_data_envio", e.target.value)} className={inputCls} /></div>
+                        </div>
+                      </div>
+
+                      {/* Reforma Tributária */}
+                      <div className="bg-card p-4 rounded-xl border border-border shadow-sm space-y-4">
+                        <h4 className="text-sm font-bold text-foreground border-b border-border pb-2">Reforma Tributária</h4>
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase">Federal (CBS)</p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><label className={labelCls}>Alíquota CBS (%)</label><input value={form.aliquota_cbs || ""} onChange={e => updateForm(emp.id, "aliquota_cbs", e.target.value)} className={inputCls} placeholder="Ex: 8.8" /></div>
+                            <div><label className={labelCls}>Status da Guia</label><select value={form.cbs_status || "pendente"} onChange={e => updateForm(emp.id, "cbs_status", e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select></div>
+                            <div><label className={labelCls}>Data de Envio</label><input type="date" value={form.cbs_data_envio || ""} onChange={e => updateForm(emp.id, "cbs_data_envio", e.target.value)} className={inputCls} /></div>
+                          </div>
+                        </div>
+                        <div className="space-y-2 pt-2">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase">Estadual/Municipal (IBS)</p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><label className={labelCls}>Alíquota IBS (%)</label><input value={form.aliquota_ibs || ""} onChange={e => updateForm(emp.id, "aliquota_ibs", e.target.value)} className={inputCls} placeholder="Ex: 17.7" /></div>
+                            <div><label className={labelCls}>Status da Guia</label><select value={form.ibs_status || "pendente"} onChange={e => updateForm(emp.id, "ibs_status", e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select></div>
+                            <div><label className={labelCls}>Data de Envio</label><input type="date" value={form.ibs_data_envio || ""} onChange={e => updateForm(emp.id, "ibs_data_envio", e.target.value)} className={inputCls} /></div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  ) : (
+                    <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label className={labelCls}>Alíquota Geral Única (%)</label><input value={form.aliquota || ""} onChange={e => updateForm(emp.id, "aliquota", e.target.value)} className={inputCls} placeholder="Ex: 6" /></div>
+                        <div><label className={labelCls}>Status da Guia Única</label><select value={form.status_guia || "pendente"} onChange={e => updateForm(emp.id, "status_guia", e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select></div>
+                        <div><label className={labelCls}>Data de Envio</label><input type="date" value={form.data_envio || ""} onChange={e => updateForm(emp.id, "data_envio", e.target.value)} className={inputCls} /></div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end pt-2"><button onClick={() => handleSave(emp.id)} className="flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md hover:brightness-110 transition-all" style={{ background: "var(--gradient-primary)" }}><Save size={16} /> Salvar Alterações</button></div>
                 </div>
               )}
             </div>

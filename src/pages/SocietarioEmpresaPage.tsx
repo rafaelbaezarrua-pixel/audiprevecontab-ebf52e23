@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings } from "lucide-react";
 
 interface Socio { id?: string; nome: string; cpf: string; administrador: boolean; }
@@ -60,6 +61,8 @@ const SocietarioEmpresaPage: React.FC = () => {
   const [newSocio, setNewSocio] = useState<Socio>({ nome: "", cpf: "", administrador: false });
 
   // Config params
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin || false;
   const [modulosAtivos, setModulosAtivos] = useState<string[]>(AVAILABLE_MODULES.map(m => m.id));
   const [profiles, setProfiles] = useState<any[]>([]);
   const [userAcessos, setUserAcessos] = useState<Record<string, string[]>>({});
@@ -67,6 +70,7 @@ const SocietarioEmpresaPage: React.FC = () => {
 
   useEffect(() => {
     const fetchProfiles = async () => {
+      if (!isAdmin) return;
       const { data } = await supabase.from("profiles").select("*").eq("ativo", true);
       if (data) setProfiles(data);
     };
@@ -95,13 +99,15 @@ const SocietarioEmpresaPage: React.FC = () => {
         setModulosAtivos(emp.modulos_ativos || AVAILABLE_MODULES.map(m => m.id));
       }
 
-      // Load acessos
-      const { data: acessos } = await supabase.from("empresa_acessos").select("*").eq("empresa_id", id);
-      const acessosMap: Record<string, string[]> = {};
-      if (acessos) {
-        acessos.forEach(a => { acessosMap[a.user_id] = a.modulos_permitidos; });
+      // Load acessos só se for admin
+      if (isAdmin) {
+        const { data: acessos } = await supabase.from("empresa_acessos").select("*").eq("empresa_id", id);
+        const acessosMap: Record<string, string[]> = {};
+        if (acessos) {
+          acessos.forEach(a => { acessosMap[a.user_id] = a.modulos_permitidos; });
+        }
+        setUserAcessos(acessosMap);
       }
-      setUserAcessos(acessosMap);
 
       const { data: sociosData } = await supabase.from("socios").select("*").eq("empresa_id", id);
       setSocios((sociosData || []).map(s => ({ id: s.id, nome: s.nome, cpf: s.cpf || "", administrador: s.administrador || false })));
@@ -166,17 +172,19 @@ const SocietarioEmpresaPage: React.FC = () => {
         if (licError) throw licError;
       }
 
-      // Save user acessos
-      if (!isNew && empresaId) {
-        await supabase.from("empresa_acessos").delete().eq("empresa_id", empresaId);
-      }
-      const acessosToInsert = Object.entries(userAcessos).map(([uid, mods]) => ({
-        empresa_id: empresaId!, user_id: uid, modulos_permitidos: mods
-      }));
+      // Save user acessos (Only Admins can do this)
+      if (isAdmin) {
+        if (!isNew && empresaId) {
+          await supabase.from("empresa_acessos").delete().eq("empresa_id", empresaId);
+        }
+        const acessosToInsert = Object.entries(userAcessos).map(([uid, mods]) => ({
+          empresa_id: empresaId!, user_id: uid, modulos_permitidos: mods
+        }));
 
-      if (acessosToInsert.length > 0) {
-        const { error: accError } = await supabase.from("empresa_acessos").insert(acessosToInsert);
-        if (accError) throw accError;
+        if (acessosToInsert.length > 0) {
+          const { error: accError } = await supabase.from("empresa_acessos").insert(acessosToInsert);
+          if (accError) throw accError;
+        }
       }
 
       if (isNew && state?.processoId) {
@@ -231,7 +239,7 @@ const SocietarioEmpresaPage: React.FC = () => {
       </div>
 
       <div className="flex gap-1 bg-muted/50 rounded-xl p-1 overflow-x-auto">
-        {tabs.map((tab) => (
+        {tabs.filter(t => isAdmin || t.id !== "configuracoes").map((tab) => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? "bg-card text-card-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
             {tab.icon}{tab.label}
           </button>

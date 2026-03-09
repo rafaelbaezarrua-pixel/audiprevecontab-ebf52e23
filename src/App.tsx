@@ -63,6 +63,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading, userData } = useAuth();
+  if (loading) return null;
+  if (!user || !userData?.isAdmin) return <Navigate to="/dashboard" replace />;
+
+  return <>{children}</>;
+};
+
 const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -106,10 +114,10 @@ const App = () => (
                 <Route path="/agendamentos" element={<AgendamentosPage />} />
                 <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />
                 <Route path="/ocorrencias" element={<OcorrenciasPage />} />
-                <Route path="/configuracoes/usuarios/novo" element={<UsuarioFormPage />} />
+                <Route path="/configuracoes/usuarios/novo" element={<AdminRoute><UsuarioFormPage /></AdminRoute>} />
 
                 <Route path="/perfil" element={<PerfilPage />} />
-                <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+                <Route path="/configuracoes" element={<AdminRoute><ConfiguracoesPage /></AdminRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
