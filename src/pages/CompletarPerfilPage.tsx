@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import logoAudipreve from "@/assets/logo-audipreve.png";
+import { maskCPF } from "@/lib/utils";
+
 
 interface Endereco {
   cep: string;
@@ -27,10 +29,7 @@ const CompletarPerfilPage: React.FC = () => {
     endereco: { cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "" } as Endereco,
   });
 
-  const formatCPF = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  };
+
 
   const formatCEP = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 8);
@@ -94,7 +93,8 @@ const CompletarPerfilPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-card-foreground mb-1">CPF *</label>
-              <input value={form.cpf} onChange={e => setForm({ ...form, cpf: formatCPF(e.target.value) })} className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="000.000.000-00" />
+              <input value={form.cpf} onChange={e => setForm({ ...form, cpf: maskCPF(e.target.value) })} className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="000.000.000-00" />
+
             </div>
             <div>
               <label className="block text-sm font-medium text-card-foreground mb-1">Telefone</label>

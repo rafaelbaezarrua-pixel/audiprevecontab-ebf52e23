@@ -4,6 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { Loader2, Fingerprint, Mail, ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import logoAudipreve from "@/assets/logo-audipreve.png";
+import { maskCPF } from "@/lib/utils";
+
 
 const EsqueciSenhaPage: React.FC = () => {
     const navigate = useNavigate();
@@ -13,10 +15,7 @@ const EsqueciSenhaPage: React.FC = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
 
-    const formatCPF = (value: string) => {
-        const digits = value.replace(/\D/g, "").slice(0, 11);
-        return digits.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -86,7 +85,8 @@ const EsqueciSenhaPage: React.FC = () => {
                                     type="text"
                                     placeholder="000.000.000-00"
                                     value={cpf}
-                                    onChange={e => setCpf(formatCPF(e.target.value))}
+                                    onChange={e => setCpf(maskCPF(e.target.value))}
+
                                     required
                                     className="w-full pl-11 pr-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary outline-none transition-all"
                                 />
