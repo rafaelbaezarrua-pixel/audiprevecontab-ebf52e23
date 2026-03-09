@@ -24,32 +24,14 @@ const EsqueciSenhaPage: React.FC = () => {
         setLoading(true);
 
         try {
-            // 1. Verificar se CPF e Email batem no cadastro
-            const { data: profile, error: profileError } = await supabase
-                .from("profiles")
-                .select("user_id")
-                .eq("cpf", cpf)
-                .single();
+            // 1. Verificar usando a função RPC segura que ignora RLS (lê perfis e auth anonimamente de forma controlada)
+            const { data: isMatch, error: matchError } = await supabase.rpc('check_cpf_email_match', {
+                p_cpf: cpf,
+                p_email: email
+            });
 
-            if (profileError || !profile) {
-                throw new Error("CPF não encontrado ou divergente do cadastro.");
-            }
-
-            // Buscar email do usuário no Auth via RPC ou apenas tentando reset
-            // Nota: No Supabase, resetPasswordForEmail não diz se o email existe por segurança.
-            // Mas o usuário pediu "se o email for divergente do CPF deve aparecer a mensagem".
-            // Então precisamos verificar se esse user_id do profile corresponde ao email informado.
-
-            // Como não podemos ver emails de outros usuários facilmente sem admin, 
-            // e o usuário está deslogado, usaremos uma abordagem onde o Profile tem o email ou 
-            // fazemos uma pequena Edge Function. 
-            // Mas para manter simples, vamos assumir que se o CPF existe, o email deve ser o que ele informou.
-
-            // O ideal seria:
-            const { data: userData } = await supabase.rpc('get_user_email_by_cpf', { p_cpf: cpf });
-
-            if (userData && userData.toLowerCase() !== email.toLowerCase()) {
-                throw new Error("E-mail informado é divergente do CPF cadastrado.");
+            if (matchError || !isMatch) {
+                throw new Error("CPF não encontrado ou e-mail divergente do cadastro.");
             }
 
             const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
