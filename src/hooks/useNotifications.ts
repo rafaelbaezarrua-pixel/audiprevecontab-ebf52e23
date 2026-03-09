@@ -20,50 +20,57 @@ export const useNotifications = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
+    const isFetchingRef = useRef(false);
+
     const fetchNotifications = async () => {
-        if (!user) return;
+        if (!user || isFetchingRef.current) return;
+        isFetchingRef.current = true;
 
-        const { data, error } = await (supabase as any)
-            .from("notification_recipients")
-            .select(`
-        id,
-        is_read,
-        created_at,
-        notifications (
-          id,
-          title,
-          message,
-          type,
-          link,
-          metadata
-        )
-      `)
-            .eq("user_id", user.id)
-            .eq("is_deleted", false)
-            .order("created_at", { ascending: false });
+        try {
+            const { data, error } = await (supabase as any)
+                .from("notification_recipients")
+                .select(`
+            id,
+            is_read,
+            created_at,
+            notifications (
+            id,
+            title,
+            message,
+            type,
+            link,
+            metadata
+            )
+        `)
+                .eq("user_id", user.id)
+                .eq("is_deleted", false)
+                .order("created_at", { ascending: false });
 
-        if (error) {
-            console.error("Error fetching notifications:", error);
-            return;
+            if (error && error.name !== 'AbortError') {
+                console.error("Error fetching notifications:", error);
+                return;
+            }
+
+            const formatted: Notification[] = (data || [])
+                .filter((item: any) => item.notifications !== null)
+                .map((item: any) => ({
+                    id: item.notifications.id,
+                    recipient_id: item.id,
+                    title: item.notifications.title,
+                    message: item.notifications.message,
+                    type: item.notifications.type,
+                    link: item.notifications.link,
+                    is_read: item.is_read,
+                    created_at: item.created_at,
+                    metadata: item.notifications.metadata,
+                }));
+
+            setNotifications(formatted);
+            setUnreadCount(formatted.filter((n) => !n.is_read).length);
+        } finally {
+            setLoading(false);
+            setTimeout(() => { isFetchingRef.current = false; }, 1000);
         }
-
-        const formatted: Notification[] = (data || [])
-            .filter((item: any) => item.notifications !== null)
-            .map((item: any) => ({
-                id: item.notifications.id,
-                recipient_id: item.id,
-                title: item.notifications.title,
-                message: item.notifications.message,
-                type: item.notifications.type,
-                link: item.notifications.link,
-                is_read: item.is_read,
-                created_at: item.created_at,
-                metadata: item.notifications.metadata,
-            }));
-
-        setNotifications(formatted);
-        setUnreadCount(formatted.filter((n) => !n.is_read).length);
-        setLoading(false);
     };
 
     useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -56,8 +56,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [userData, setUserData] = useState<UserPermissions | null>(null);
   const [loading, setLoading] = useState(true);
+  const loadingUserRef = useRef<string | null>(null);
 
   const loadUserData = async (currentUser: User) => {
+    if (loadingUserRef.current === currentUser.id) return;
+    loadingUserRef.current = currentUser.id;
+
     try {
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id);
       const isAdmin = roles?.some(r => r.role === "admin") || false;
@@ -68,7 +72,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq("user_id", currentUser.id)
         .maybeSingle();
 
-      if (profileError) console.error("AuthProvider: Error fetching profile for user", currentUser.id, profileError);
+      if (profileError && profileError.name !== 'AbortError') {
+        console.error("AuthProvider: Error fetching profile for user", currentUser.id, profileError);
+      }
 
       // Robust state derivation
       // If profile is missing or fields are null, we decide based on 'trustING' existing users
@@ -119,6 +125,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error("AuthProvider: Critical error loading user data", err);
+    } finally {
+      setTimeout(() => { loadingUserRef.current = null; }, 1000); // Allow refreshing after a second
     }
   };
 
