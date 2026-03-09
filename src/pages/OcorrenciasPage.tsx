@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { FileText, Download, Building2, User, Search, Plus, Trash2, Calendar, History as HistoryIcon, Settings2, Upload, Image as ImageIcon } from "lucide-react";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import logoAudipreve from "@/assets/logo-audipreve.png";
+import logoCaduceu from "@/assets/logo-caduceu.png";
 
 interface HeaderConfig {
     logoUrl: string;
@@ -178,7 +178,7 @@ const OcorrenciasPage: React.FC = () => {
 
         // Header - Logo and Text
         try {
-            const logoToUse = headerConfig.logoUrl || logoAudipreve;
+            const logoToUse = headerConfig.logoUrl || logoCaduceu;
 
             // Safe image loading via DOM Image
             const imgData = await new Promise<HTMLImageElement | string>((resolve, reject) => {
@@ -207,7 +207,7 @@ const OcorrenciasPage: React.FC = () => {
             // Fallback to default if custom url failed
             try {
                 if (headerConfig.logoUrl) {
-                    doc.addImage(logoAudipreve, 'PNG', headerConfig.logoX, headerConfig.logoY, headerConfig.logoWidth, headerConfig.logoHeight);
+                    doc.addImage(logoCaduceu, 'PNG', headerConfig.logoX, headerConfig.logoY, headerConfig.logoWidth, headerConfig.logoHeight);
                 }
             } catch (fallbackError) {
                 console.warn("Fallback logo failed", fallbackError);
@@ -241,18 +241,14 @@ const OcorrenciasPage: React.FC = () => {
         doc.text(`Empresa: ${oc.empresas.nome_empresa}`, 20, 70);
         doc.text(`CNPJ: ${oc.empresas.cnpj || "—"}`, 20, 76);
 
-        // Occurrence text with lines
-        doc.setFont("helvetica", "normal");
+        // Occurrence text
+        doc.setFont("helvetica", "normal"); // Fallback to helvetica as Tahoma requires embedding
         const splitDesc = doc.splitTextToSize(oc.descricao, pageWidth - 40);
         doc.text(splitDesc, 20, 90);
 
-        // Calculate lines under the text for aesthetic
         const descHeight = splitDesc.length * 7;
         let lineY = 90 + descHeight + 10;
-        for (let i = 0; i < 5; i++) {
-            doc.line(20, lineY, pageWidth - 20, lineY);
-            lineY += 8;
-        }
+
 
         // Date/Place
         const formattedDate = new Date(oc.data_ocorrencia).toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' });
