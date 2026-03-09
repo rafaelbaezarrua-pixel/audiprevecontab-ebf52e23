@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings } from "lucide-react";
+import { maskCNPJ, maskCPF } from "@/lib/utils";
 
 interface Socio { id?: string; nome: string; cpf: string; administrador: boolean; }
 interface LicencaRow { id?: string; tipo_licenca: string; status: string | null; vencimento: string | null; numero_processo: string | null; }
@@ -252,7 +253,7 @@ const SocietarioEmpresaPage: React.FC = () => {
             <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2"><Building2 size={20} className="text-primary" /> Dados Gerais</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="md:col-span-2"><label className={labelCls}>Nome da Empresa *</label><input value={nomeEmpresa} onChange={e => setNomeEmpresa(e.target.value)} className={inputCls} placeholder="Razão Social" /></div>
-              <div><label className={labelCls}>CNPJ</label><input value={cnpj} onChange={e => setCnpj(e.target.value)} className={inputCls} placeholder="00.000.000/0000-00" /></div>
+              <div><label className={labelCls}>CNPJ</label><input value={cnpj} onChange={e => setCnpj(maskCNPJ(e.target.value))} className={inputCls} placeholder="00.000.000/0000-00" /></div>
               <div><label className={labelCls}>Data de Abertura</label><input type="date" value={dataAbertura} onChange={e => setDataAbertura(e.target.value)} className={inputCls} /></div>
               <div><label className={labelCls}>Porte da Empresa</label><select value={porteEmpresa} onChange={e => setPorteEmpresa(e.target.value)} className={inputCls}><option value="">Selecione</option><option value="mei">MEI</option><option value="me">Microempresa (ME)</option><option value="epp">Empresa de Pequeno Porte (EPP)</option><option value="medio">Médio Porte</option><option value="grande">Grande Porte</option></select></div>
               <div><label className={labelCls}>Regime Tributário</label><select value={regimeTributario} onChange={e => setRegimeTributario(e.target.value)} className={inputCls}><option value="simples">Simples Nacional</option><option value="lucro_presumido">Lucro Presumido</option><option value="lucro_real">Lucro Real</option><option value="mei">MEI</option></select></div>
@@ -283,7 +284,8 @@ const SocietarioEmpresaPage: React.FC = () => {
               <p className="text-sm font-medium text-card-foreground">Adicionar Sócio</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                 <div><label className={labelCls}>Nome Completo *</label><input value={newSocio.nome} onChange={e => setNewSocio({ ...newSocio, nome: e.target.value })} className={inputCls} placeholder="Nome do sócio" /></div>
-                <div><label className={labelCls}>CPF</label><input value={newSocio.cpf} onChange={e => setNewSocio({ ...newSocio, cpf: e.target.value })} className={inputCls} placeholder="000.000.000-00" /></div>
+                <div><label className={labelCls}>CPF</label><input value={newSocio.cpf} onChange={e => setNewSocio({ ...newSocio, cpf: maskCPF(e.target.value) })} className={inputCls} placeholder="000.000.000-00" /></div>
+
                 <div className="flex items-center gap-3">
                   <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={newSocio.administrador} onChange={e => setNewSocio({ ...newSocio, administrador: e.target.checked })} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" /> Administrador</label>
                   <button onClick={addSocio} className="flex items-center gap-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-primary-foreground" style={{ background: "var(--gradient-primary)" }}><Plus size={14} /> Adicionar</button>

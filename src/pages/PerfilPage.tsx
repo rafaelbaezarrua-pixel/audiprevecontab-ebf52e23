@@ -3,6 +3,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Save, User, Lock } from "lucide-react";
+import { maskCPF } from "@/lib/utils";
+
 
 interface Endereco {
   cep: string;
@@ -48,10 +50,7 @@ const PerfilPage: React.FC = () => {
     load();
   }, [user]);
 
-  const formatCPF = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  };
+
 
   const formatCEP = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 8);
@@ -117,7 +116,8 @@ const PerfilPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-card-foreground mb-1">CPF</label>
-              <input value={form.cpf} onChange={e => setForm({ ...form, cpf: formatCPF(e.target.value) })} className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
+              <input value={form.cpf} onChange={e => setForm({ ...form, cpf: maskCPF(e.target.value) })} className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
+
             </div>
             <div>
               <label className="block text-sm font-medium text-card-foreground mb-1">Telefone</label>

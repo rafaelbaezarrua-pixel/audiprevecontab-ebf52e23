@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Lock, Shield, ArrowLeft, Save, ChevronRight, Fingerprint } from "lucide-react";
 import { toast } from "sonner";
+import { maskCPF } from "@/lib/utils";
+
 
 const moduleLabels: Record<string, string> = {
     societario: "Societário",
@@ -31,10 +33,7 @@ const UsuarioFormPage: React.FC = () => {
         modules: {} as Record<string, boolean>
     });
 
-    const formatCPF = (value: string) => {
-        const digits = value.replace(/\D/g, "").slice(0, 11);
-        return digits.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    };
+
 
     const handleCreateUser = async () => {
         if (!form.nome.trim() || !form.email.trim() || !form.cpf.trim()) {
@@ -150,7 +149,8 @@ const UsuarioFormPage: React.FC = () => {
                                 <input
                                     placeholder="000.000.000-00"
                                     value={form.cpf}
-                                    onChange={e => setForm({ ...form, cpf: formatCPF(e.target.value) })}
+                                    onChange={e => setForm({ ...form, cpf: maskCPF(e.target.value) })}
+
                                     className={inputCls + " pl-11"}
                                 />
                             </div>
