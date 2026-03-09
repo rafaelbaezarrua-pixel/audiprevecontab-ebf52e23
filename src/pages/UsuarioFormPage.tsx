@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Lock, Shield, ArrowLeft, Save, ChevronRight } from "lucide-react";
+import { User, Mail, Lock, Shield, ArrowLeft, Save, ChevronRight, Fingerprint } from "lucide-react";
 import { toast } from "sonner";
 
 const moduleLabels: Record<string, string> = {
@@ -25,14 +25,20 @@ const UsuarioFormPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
         nome: "",
+        cpf: "",
         email: "",
         isAdmin: false,
         modules: {} as Record<string, boolean>
     });
 
+    const formatCPF = (value: string) => {
+        const digits = value.replace(/\D/g, "").slice(0, 11);
+        return digits.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    };
+
     const handleCreateUser = async () => {
-        if (!form.nome.trim() || !form.email.trim()) {
-            toast.error("Nome e e-mail são obrigatórios");
+        if (!form.nome.trim() || !form.email.trim() || !form.cpf.trim()) {
+            toast.error("Nome, CPF e e-mail são obrigatórios");
             return;
         }
 
@@ -57,6 +63,7 @@ const UsuarioFormPage: React.FC = () => {
                 body: {
                     email: form.email,
                     nome: form.nome,
+                    cpf: form.cpf,
                     isAdmin: form.isAdmin,
                     modules: form.modules
                 }
@@ -131,6 +138,19 @@ const UsuarioFormPage: React.FC = () => {
                                     placeholder="Nome do colaborador"
                                     value={form.nome}
                                     onChange={e => setForm({ ...form, nome: e.target.value })}
+                                    className={inputCls + " pl-11"}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={labelCls}>CPF *</label>
+                            <div className="relative">
+                                <Fingerprint size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                <input
+                                    placeholder="000.000.000-00"
+                                    value={form.cpf}
+                                    onChange={e => setForm({ ...form, cpf: formatCPF(e.target.value) })}
                                     className={inputCls + " pl-11"}
                                 />
                             </div>
