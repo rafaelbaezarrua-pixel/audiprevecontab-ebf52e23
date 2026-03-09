@@ -14,15 +14,25 @@ const ResetPasswordPage: React.FC = () => {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
+        // Verificar se há erro na URL (ex: link expirado)
+        const hash = window.location.hash;
+        if (hash && hash.includes("error_description")) {
+            const params = new URLSearchParams(hash.substring(1));
+            const errorDesc = params.get("error_description");
+            if (errorDesc) {
+                setError(decodeURIComponent(errorDesc).replace(/\+/g, ' '));
+            }
+        }
+
         // Verificar se chegamos aqui via link de reset
-        supabase.auth.onAuthStateChange(async (event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event !== "PASSWORD_RECOVERY") {
-                // Se não for evento de recuperação, e não tiver sessão, redireciona
-                if (!session) {
-                    // navigate("/login");
-                }
+                // Se não for evento de recuperação, e não tiver sessão, testar o que fazer
+                // Não forçamos redirect pra mostrar o erro primeiro
             }
         });
+
+        return () => subscription.unsubscribe();
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
