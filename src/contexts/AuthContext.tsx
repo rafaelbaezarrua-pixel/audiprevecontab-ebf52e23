@@ -134,36 +134,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user) await loadUserData(user);
   };
 
+  // Decoupled effect to fetch user data whenever `user` state changes.
+  // This breaks the deadlock caused by fetching inside `onAuthStateChange` callback.
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    let mounted = true;
+
+    if (user && !userData) {
+      loadUserData(user).then(() => {
+        if (mounted) setLoading(false);
+      });
+    } else if (!user) {
+      if (mounted) {
+        setUserData(null);
+        setLoading(false);
+      }
+    }
+
+    return () => { mounted = false; };
+  }, [user]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (!mounted) return;
       setSession(newSession);
       const newUser = newSession?.user ?? null;
       setUser(newUser);
 
       // Trava de segurança para links de recuperação de senha enviados por e-mail
-      // O Supabase joga o hash e dispara esse evento. Se isso acontecer em qualquer tela que não a Reset, redirecionamos.
       if (event === "PASSWORD_RECOVERY" && window.location.pathname !== "/reset-password") {
         window.location.href = "/reset-password";
       }
-
-      if (newUser) {
-        await loadUserData(newUser);
-      } else {
-        setUserData(null);
-      }
-      setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data: { session: existing } }) => {
+      if (!mounted) return;
       setSession(existing);
       setUser(existing?.user ?? null);
-      if (existing?.user) {
-        loadUserData(existing.user);
+      if (!existing?.user) {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
