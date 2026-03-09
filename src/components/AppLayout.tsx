@@ -85,7 +85,7 @@ const AppLayout: React.FC = () => {
               <img src={logoAudipreve} alt="Audipreve" className="w-10 h-10 object-contain" />
               <div>
                 <h1 className="text-lg font-bold text-card-foreground">Audipreve</h1>
-                <p className="text-xs text-sidebar-muted">{userData?.departamento || "Contabilidade"}</p>
+                <p className="text-xs text-sidebar-muted">Contabilidade</p>
               </div>
             </div>
           )}
@@ -126,7 +126,7 @@ const AppLayout: React.FC = () => {
 
           {userData?.isAdmin && (
             <>
-              {!collapsed && <div className="menu-header">ADMINISTRAÇÃO</div>}
+              {!collapsed && <div className="menu-header">Contabilidade</div>}
               <button
                 onClick={() => handleNav("/configuracoes")}
                 className={`nav-item w-full ${location.pathname === "/configuracoes" ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
