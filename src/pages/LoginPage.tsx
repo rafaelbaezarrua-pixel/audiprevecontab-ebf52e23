@@ -97,7 +97,7 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
         <div className="bg-muted/50 px-8 py-3 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center">© 2024 Audipreve. Todos os direitos reservados.</p>
+          <p className="text-xs text-muted-foreground text-center">© 2026 Audipreve Contabilidade. Todos os direitos reservados.</p>
         </div>
       </div>
     </div>
