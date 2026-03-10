@@ -24,7 +24,7 @@
     --secondary-foreground: 0 0% 100%;
 
     --muted: 214 32% 91%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 16% 40%;
 
     --accent: 210 40% 96%;
     --accent-foreground: 215 25% 15%;
@@ -38,8 +38,8 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --info: 217 91% 60%;
-    --info-foreground: 217 91% 20%;
+    --info: 217 91% 45%;
+    --info-foreground: 217 91% 10%;
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
@@ -55,7 +55,7 @@
     --sidebar-accent-foreground: 217 91% 45%;
     --sidebar-border: 214 32% 91%;
     --sidebar-ring: 217 91% 60%;
-    --sidebar-muted: 215 16% 47%;
+    --sidebar-muted: 215 16% 40%;
 
     --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(221, 83%, 53%) 100%);
     --gradient-bg: linear-gradient(135deg, hsl(210, 20%, 98%) 0%, hsl(214, 32%, 91%) 100%);

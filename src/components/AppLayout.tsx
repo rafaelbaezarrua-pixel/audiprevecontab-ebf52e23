@@ -95,6 +95,8 @@ const AppLayout: React.FC = () => {
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hidden lg:flex w-8 h-8 items-center justify-center rounded-lg text-sidebar-muted hover:text-primary hover:bg-sidebar-accent transition-colors"
+            aria-label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
+            title={collapsed ? "Expandir" : "Recolher"}
           >
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
@@ -114,7 +116,7 @@ const AppLayout: React.FC = () => {
                 <button
                   onClick={() => accessible && handleNav(item.path)}
                   className={`nav-item w-full ${active ? "active" : ""} ${!accessible ? "opacity-40 cursor-not-allowed" : ""} ${collapsed ? "justify-center px-2" : ""}`}
-                  disabled={!accessible}
+                  aria-label={item.label}
                   title={collapsed ? item.label : undefined}
                 >
                   {item.icon}
@@ -173,7 +175,11 @@ const AppLayout: React.FC = () => {
         {/* Header */}
         <header className="bg-card border-b border-border px-4 lg:px-6 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => setMobileOpen(true)} className="lg:hidden text-muted-foreground hover:text-foreground">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden text-muted-foreground hover:text-foreground"
+              aria-label="Abrir menu lateral"
+            >
               <Menu size={22} />
             </button>
             <div>
