@@ -122,6 +122,22 @@ Deno.serve(async (req) => {
       }, { onConflict: 'user_id,empresa_id' });
 
       if (accessError) console.error("Access upsert error:", accessError);
+    } else if (modules && typeof modules === 'object') {
+      // User Module Permissions assignment (for internal users)
+      const moduleInserts = Object.entries(modules)
+        .filter(([_, isGranted]) => isGranted === true)
+        .map(([moduleName, _]) => ({
+          user_id: userId,
+          module_name: moduleName
+        }));
+
+      if (moduleInserts.length > 0) {
+        // Clear existing permissions just in case it's an update
+        await supabaseAdmin.from("user_module_permissions").delete().eq("user_id", userId);
+
+        const { error: modulesError } = await supabaseAdmin.from("user_module_permissions").insert(moduleInserts);
+        if (modulesError) console.error("Modules insert error:", modulesError);
+      }
     }
 
     return new Response(JSON.stringify({ success: true, user_id: userId }), {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, X, Shield, ShieldOff } from "lucide-react";
+import { Plus, Trash2, X, Shield, ShieldOff, Users, Building } from "lucide-react";
 import { toast } from "sonner";
 import { Navigate, useNavigate } from "react-router-dom";
 
@@ -10,6 +10,7 @@ interface Usuario {
   nome: string;
   email: string;
   isAdmin: boolean;
+  isClient: boolean;
   departamento?: string;
   modules: Record<string, boolean>;
 }
@@ -35,32 +36,69 @@ const ConfiguracoesPage: React.FC = () => {
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [activeTab, setActiveTab] = useState<'interna' | 'cliente'>('interna');
 
   const loadUsers = async () => {
     try {
       setLoadingUsers(true);
+      console.log("[ConfiguracoesPage] Iniciando carregamento de usuários...");
       const { data: profiles, error: profilesError } = await supabase.from("profiles").select("*");
+      console.log("[ConfiguracoesPage] Profiles retornados:", profiles?.length, "Erro:", profilesError);
       if (profilesError) {
         console.error("Erro ao carregar perfis:", profilesError);
         return;
       }
-      if (!profiles) return;
+      if (!profiles || profiles.length === 0) {
+        console.warn("[ConfiguracoesPage] Nenhum perfil encontrado na tabela profiles");
+        return;
+      }
+
+      const userIds = profiles.map(p => p.user_id);
+
+      const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("user_id", userIds);
+      const { data: perms } = await supabase.from("user_module_permissions").select("user_id, module_name").in("user_id", userIds);
+      const { data: access } = await supabase.from("empresa_acessos").select("user_id, empresa_id").in("user_id", userIds);
+
+      const rolesByUserId = roles?.reduce((acc: any, curr: any) => {
+        if (!acc[curr.user_id]) acc[curr.user_id] = [];
+        acc[curr.user_id].push(curr.role);
+        return acc;
+      }, {}) || {};
+
+      const permsByUserId = perms?.reduce((acc: any, curr: any) => {
+        if (!acc[curr.user_id]) acc[curr.user_id] = [];
+        acc[curr.user_id].push(curr.module_name);
+        return acc;
+      }, {}) || {};
+
+      const accessByUserId = access?.reduce((acc: any, curr: any) => {
+        acc[curr.user_id] = true;
+        return acc;
+      }, {}) || {};
 
       const users: Usuario[] = [];
       for (const p of profiles) {
-        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", p.user_id);
-        const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", p.user_id);
+        const userRoles = rolesByUserId[p.user_id] || [];
+        const userPerms = permsByUserId[p.user_id] || [];
+
         const modules: Record<string, boolean> = {};
-        perms?.forEach(pm => { modules[pm.module_name] = true; });
+        userPerms.forEach((m: string) => { modules[m] = true; });
+
+        // A user is a client if they have the 'client' role OR if they have enterprise accesses
+        const isClient = userRoles.includes('client') || accessByUserId[p.user_id] === true;
+        const isAdmin = userRoles.includes('admin');
+
         users.push({
           id: p.user_id,
           nome: p.nome_completo || "Sem nome",
           email: "",
-          isAdmin: roles?.some(r => r.role === "admin") || false,
+          isAdmin,
+          isClient,
           departamento: "",
           modules,
         });
       }
+      console.log("[ConfiguracoesPage] Usuários carregados:", users.length, users.map(u => u.nome));
       setUsuarios(users);
     } catch (err) {
       console.error("Erro ao carregar usuários:", err);
@@ -111,8 +149,23 @@ const ConfiguracoesPage: React.FC = () => {
         </button>
       </div>
 
+      <div className="flex border-b border-border mb-6">
+        <button
+          onClick={() => setActiveTab('interna')}
+          className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium transition-colors ${activeTab === 'interna' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+        >
+          <Users size={18} /> Equipe Interna
+        </button>
+        <button
+          onClick={() => setActiveTab('cliente')}
+          className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium transition-colors ${activeTab === 'cliente' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+        >
+          <Building size={18} /> Portal Cliente
+        </button>
+      </div>
+
       <div className="space-y-4">
-        {usuarios.map(u => (
+        {usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).map(u => (
           <div key={u.id} className="module-card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -131,27 +184,33 @@ const ConfiguracoesPage: React.FC = () => {
                 <button onClick={() => handleDelete(u.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={16} /></button>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-              {Object.entries(moduleLabels).map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => toggleModule(u.id, key, u.modules?.[key] || false)}
-                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${u.isAdmin || u.modules?.[key]
-                    ? "border-success/30 bg-success/5 text-success"
-                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30"
-                    }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            {activeTab === 'interna' && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mt-4 pt-4 border-t border-border">
+                {Object.entries(moduleLabels).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => toggleModule(u.id, key, u.modules?.[key] || false)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${u.isAdmin || u.modules?.[key]
+                      ? "border-success/30 bg-success/5 text-success"
+                      : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30"
+                      }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ))}
-        {usuarios.length === 0 && (
+        {loadingUsers ? (
+          <div className="module-card text-center py-8">
+            <p className="text-muted-foreground">Carregando usuários...</p>
+          </div>
+        ) : usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).length === 0 ? (
           <div className="module-card text-center py-8">
             <p className="text-muted-foreground">Nenhum usuário cadastrado</p>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="space-y-6 pt-6 border-t border-border">
