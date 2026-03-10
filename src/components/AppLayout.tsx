@@ -157,8 +157,8 @@ const AppLayout: React.FC = () => {
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-card-foreground truncate">{userData?.nome}</p>
-                <p className="text-xs text-sidebar-muted truncate">{userData?.isAdmin ? "Administrador" : "Usuário"}</p>
+                <p className="text-sm font-medium text-card-foreground truncate leading-tight">{userData?.nome || '\u00A0'}</p>
+                <p className="text-xs text-sidebar-muted truncate leading-tight">{userData?.isAdmin ? "Administrador" : "Usuário"}</p>
               </div>
             )}
             {!collapsed && (
