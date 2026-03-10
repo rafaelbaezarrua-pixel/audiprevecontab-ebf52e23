@@ -2,18 +2,43 @@ import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
     Building2, FileText, CheckCircle, AlertCircle,
-    ArrowRight, Download, MessageSquare
+    ArrowRight, Download, MessageSquare, Clock, Search
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const PortalDashboardPage: React.FC = () => {
     const { userData } = useAuth();
+    const [empresa, setEmpresa] = React.useState<any>(null);
+    const [counts, setCounts] = React.useState({ lics: 0, certs: 0, msgs: 0 });
+
+    React.useEffect(() => {
+        const load = async () => {
+            if (!userData?.empresaId) return;
+
+            // Get company name
+            const { data: emp } = await supabase.from("empresas").select("nome_empresa").eq("id", userData.empresaId).single();
+            if (emp) setEmpresa(emp);
+
+            // Get counts
+            const { count: licCount } = await supabase.from("licencas").select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId);
+            const { count: certCount } = await supabase.from("certidoes").select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId);
+            const { count: msgCount } = await supabase.from("internal_messages" as any).select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId).eq("lida", false).eq("direcao", "escritorio_para_cliente");
+
+            setCounts({
+                lics: licCount || 0,
+                certs: certCount || 0,
+                msgs: msgCount || 0
+            });
+        };
+        load();
+    }, [userData]);
 
     const stats = [
-        { label: "Documentos Pendentes", value: "3", icon: FileText, color: "text-amber-500", bg: "bg-amber-500/10" },
-        { label: "Processos em Andamento", value: "1", icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" },
-        { label: "Mensagens Não Lidas", value: "0", icon: MessageSquare, color: "text-blue-500", bg: "bg-blue-500/10" },
+        { label: "Licenças Ativas", value: counts.lics.toString(), icon: FileText, color: "text-amber-500", bg: "bg-amber-500/10" },
+        { label: "Certidões Disponíveis", value: counts.certs.toString(), icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" },
+        { label: "Mensagens Não Lidas", value: counts.msgs.toString(), icon: MessageSquare, color: "text-blue-500", bg: "bg-blue-500/10" },
     ];
 
     return (
@@ -31,7 +56,9 @@ const PortalDashboardPage: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Sua Empresa</p>
-                        <p className="font-bold text-card-foreground">Audipreve Contabilidade</p>
+                        <p className="font-bold text-card-foreground truncate max-w-[200px]">
+                            {empresa?.nome_empresa || "Carregando..."}
+                        </p>
                     </div>
                 </div>
             </div>

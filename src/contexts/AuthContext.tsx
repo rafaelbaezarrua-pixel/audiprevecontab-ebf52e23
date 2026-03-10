@@ -37,6 +37,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUserData: () => Promise<void>;
+  loginAsClient: (cnpj: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -73,6 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq("user_id", currentUser.id)
         .maybeSingle();
 
+      const { data: access } = await supabase
+        .from("empresa_acessos")
+        .select("empresa_id")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
       if (profileError && profileError.name !== 'AbortError') {
         console.error("AuthProvider: Error fetching profile for user", currentUser.id, profileError);
       }
@@ -83,10 +90,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const termsAccepted = profileData ? !!profileData.terms_accepted_at : true;
       const firstAccessDone = profileData ? (profileData.first_access_done ?? true) : true;
 
-      const isAdminProfile = profileData?.role === "admin";
-      const isClientProfile = profileData?.role === "client";
-      const isAdmin = (roles?.some(r => r.role === "admin") || isAdminProfile) || false;
-      const isClient = isClientProfile || false;
+      const metadata = currentUser.user_metadata || {};
+      const isAdmin = (roles?.some(r => r.role === "admin") || profileData?.role === "admin" || metadata.role === "admin") || false;
+      const isClient = (metadata.role === "client" || profileData?.role === "client" || !!access) || false;
+      const empresaId = access?.empresa_id || metadata.empresa_id || profileData?.empresa_id || undefined;
 
       if (isAdmin) {
         setUserData({
@@ -109,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserData({
           isAdmin: false,
           isClient: isClient,
-          empresaId: profileData?.empresa_id || undefined,
+          empresaId: empresaId,
           userId: currentUser.id,
           modules: {
             societario: moduleSet.has("societario"),
@@ -200,10 +207,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     await supabase.auth.signOut();
+    setUserData(null);
+  };
+
+  const loginAsClient = async (cnpj: string, password: string) => {
+    const cleanCNPJ = cnpj.replace(/\D/g, "");
+    if (!cleanCNPJ || cleanCNPJ.length !== 14) {
+      throw new Error("CNPJ inválido. Digite os 14 números.");
+    }
+
+    const email = `${cleanCNPJ}@audipreve.com`;
+    const cleanPassword = password.replace(/\D/g, "");
+
+    // Tenta primeiro com a senha como digitada
+    let { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // Se falhar e a senha parecer um CNPJ com máscara, tenta com a senha limpa
+    if (error && cleanPassword.length === 14 && password !== cleanPassword) {
+      const { error: error2 } = await supabase.auth.signInWithPassword({
+        email,
+        password: cleanPassword
+      });
+      if (!error2) error = null;
+    }
+
+    if (error) {
+      console.error("Login Error:", error);
+      if (error.message === "Invalid login credentials" || error.message === "Invalid credentials") {
+        throw new Error("CNPJ ou senha inválidos. Utilize o CNPJ (apenas números) como senha inicial.");
+      }
+      if (error.message.includes("Email not confirmed")) {
+        throw new Error("O e-mail deste acesso ainda não foi confirmado. Por favor, solicite ao administrador para sincronizar os acessos.");
+      }
+      throw error;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, userData, loading, login, logout, refreshUserData }}>
+    <AuthContext.Provider value={{ user, session, userData, loading, login, logout, refreshUserData, loginAsClient }}>
       {children}
     </AuthContext.Provider>
   );

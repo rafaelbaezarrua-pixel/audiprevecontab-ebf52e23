@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({
-        error: "Não autenticado (Header Authorization ausente)",
+        error: "Não autenticado",
         code: "no_auth_header"
       }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -40,94 +40,99 @@ Deno.serve(async (req) => {
 
     if (authError || !caller) {
       return new Response(JSON.stringify({
-        error: "Sessão inválida ou expirada",
-        details: authError?.message,
+        error: "Sessão inválida",
         code: "auth_token_invalid"
       }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Ler corpo da requisição
-    let body;
-    try {
-      body = await req.json();
-    } catch (e: any) {
-      return new Response(JSON.stringify({ error: "Corpo da requisição inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    const { email, nome, cpf, isAdmin: makeAdmin, modules } = body;
+    const body = await req.json();
+    const { email, nome, cpf, isAdmin: makeAdmin, modules, role, empresa_id, password } = body;
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Email é obrigatório" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Verificar permissão
-    const { data: callerRoles, error: rolesError } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", caller.id);
-    const isAdmin = callerRoles?.some((r: any) => r.role === "admin");
+    // Check if user already exists
+    const { data: userDataObj, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    if (listError) throw listError;
 
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Acesso negado: Apenas administradores podem criar usuários" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const existingUser = userDataObj.users.find((u: any) => u.email === email);
+    let userId;
+
+    if (existingUser) {
+      const { data: updated, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+        password: password || "Mudar@Audipreve123",
+        email_confirm: true,
+        user_metadata: {
+          full_name: nome,
+          nome_completo: nome,
+          role: role || (makeAdmin ? 'admin' : 'user'),
+          empresa_id: empresa_id
+        }
+      });
+      if (updateError) throw updateError;
+      userId = updated.user.id;
+    } else {
+      const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: password || "Mudar@Audipreve123",
+        email_confirm: true,
+        user_metadata: {
+          full_name: nome,
+          nome_completo: nome,
+          role: role || (makeAdmin ? 'admin' : 'user'),
+          empresa_id: empresa_id
+        }
+      });
+      if (createError) throw createError;
+      userId = userData.user.id;
     }
 
-    // Verificar se o usuário já existe
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const userAlreadyExists = existingUsers?.users.some((u: any) => u.email === email);
+    const isClientRole = role === 'client' || !!empresa_id;
 
-    if (userAlreadyExists) {
-      return new Response(JSON.stringify({
-        error: "Este e-mail já está cadastrado no sistema.",
-        code: "user_already_exists"
-      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // Criar usuário diretamente com a senha temporária e e-mail já confirmado
-    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: "Mudar@Audipreve123",
-      email_confirm: true,
-      user_metadata: { full_name: nome, nome_completo: nome }
-    });
-
-    if (createError) throw createError;
-
-    const userId = userData.user.id;
-
-    // Atualizar perfil (handling potential trigger conflict)
+    // Profiles upsert - Only safe columns
     const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
       user_id: userId,
       full_name: nome,
       nome_completo: nome,
       cpf: cpf || null,
-      profile_completed: false,
-      first_access_done: false
+      profile_completed: isClientRole,
+      first_access_done: isClientRole
     }, { onConflict: 'user_id' });
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error("Profile upsert error:", profileError);
+      // We continue anyway as the user is created
+    }
 
-    if (makeAdmin) {
+    // Role assignment
+    if (makeAdmin || role === 'admin') {
       await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "admin" }, { onConflict: 'user_id,role' });
+    } else {
+      // Ensure they have 'user' role at least
+      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "user" }, { onConflict: 'user_id,role' });
     }
 
-    if (modules && typeof modules === "object") {
-      const inserts = Object.entries(modules)
-        .filter(([k, v]) => v && allowedModules.includes(k))
-        .map(([k]) => ({ user_id: userId, module_name: k }));
+    // Client assignment (empresa_acessos)
+    if (role === 'client' || empresa_id) {
+      const { error: accessError } = await supabaseAdmin.from("empresa_acessos").upsert({
+        user_id: userId,
+        empresa_id: empresa_id,
+        modulos_permitidos: allowedModules // Default all for now or pass from body
+      }, { onConflict: 'user_id,empresa_id' });
 
-      if (inserts.length > 0) {
-        await supabaseAdmin.from("user_module_permissions").upsert(inserts, { onConflict: 'user_id,module_name' });
-      }
+      if (accessError) console.error("Access upsert error:", accessError);
     }
 
-    console.log(`Usuário ${email} criado com sucesso.`);
     return new Response(JSON.stringify({ success: true, user_id: userId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (err: any) {
-    console.error("create-user: Erro FATAL capturado:", err.message);
+    console.error("create-user error:", err);
     return new Response(JSON.stringify({
-      error: "Erro interno na função",
-      details: err.message,
-      stack: err.stack
+      error: "Erro interno",
+      details: err.message
     }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

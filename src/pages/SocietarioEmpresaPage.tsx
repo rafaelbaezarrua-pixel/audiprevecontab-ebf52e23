@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings } from "lucide-react";
+import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings, Shield, CheckCircle, Upload, Eye } from "lucide-react";
 import { maskCNPJ, maskCPF } from "@/lib/utils";
 
 interface Socio { id?: string; nome: string; cpf: string; administrador: boolean; }
@@ -234,9 +234,58 @@ const SocietarioEmpresaPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/societario")} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft size={20} /></button>
         </div>
-        <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground shadow-md hover:shadow-lg transition-all disabled:opacity-50" style={{ background: "var(--gradient-primary)" }}>
-          <Save size={16} /> {saving ? "Salvando..." : "Salvar"}
-        </button>
+        <div className="flex gap-2">
+          {!isNew && (
+            <button
+              onClick={async () => {
+                if (!cnpj) { toast.error("CNPJ é necessário para criar acesso."); return; }
+                const cleanCNPJ = cnpj.replace(/\D/g, "");
+                const email = `${cleanCNPJ}@audipreve.com`;
+
+                toast.loading("Criando acesso...", { id: "sync" });
+
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session?.access_token) throw new Error("Não autenticado");
+
+                  const { data, error } = await supabase.functions.invoke("create-user", {
+                    body: {
+                      email,
+                      nome: nomeEmpresa,
+                      password: cleanCNPJ,
+                      role: 'client',
+                      empresa_id: id
+                    }
+                  });
+
+                  if (error) {
+                    // Check if error is "already registered"
+                    let msg = error.message;
+                    try {
+                      const body = await (error as any).context?.json();
+                      if (body?.code === "user_already_exists") {
+                        toast.success("Acesso já existe para esta empresa.", { id: "sync" });
+                        return;
+                      }
+                      if (body?.error) msg = body.error;
+                    } catch (e) { }
+                    throw new Error(msg);
+                  }
+
+                  toast.success("Acesso criado com sucesso!", { id: "sync" });
+                } catch (err: any) {
+                  toast.error("Erro: " + err.message, { id: "sync" });
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-info/10 text-info hover:bg-info/20 transition-all shadow-sm"
+            >
+              <Shield size={16} /> Criar Acesso Portal
+            </button>
+          )}
+          <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground shadow-md hover:shadow-lg transition-all disabled:opacity-50" style={{ background: "var(--gradient-primary)" }}>
+            <Save size={16} /> {saving ? "Salvando..." : "Salvar"}
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-1 bg-muted/50 rounded-xl p-1 overflow-x-auto">
