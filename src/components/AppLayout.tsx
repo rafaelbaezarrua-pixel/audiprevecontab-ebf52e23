@@ -31,6 +31,7 @@ const navItems: NavItemConfig[] = [
   { id: "fiscal", label: "Fiscal", icon: <Receipt size={18} />, path: "/fiscal", moduleKey: "fiscal" },
   { id: "pessoal", label: "Pessoal", icon: <Users size={18} />, path: "/pessoal", moduleKey: "pessoal" },
   { id: "licencas", label: "Licenças", icon: <Shield size={18} />, path: "/licencas", moduleKey: "licencas", section: "CONTROLES" },
+  { id: "declaracoes-mensais", label: "Declarações Mensais", icon: <ClipboardList size={18} />, path: "/declaracoes-mensais", moduleKey: "declaracoes_mensais", section: "CONTROLES" },
   { id: "declaracoes-anuais", label: "Declarações Anuais", icon: <ClipboardList size={18} />, path: "/declaracoes-anuais", moduleKey: "declaracoes_anuais", section: "CONTROLES" },
   { id: "certificados", label: "Certificados", icon: <Award size={18} />, path: "/certificados", moduleKey: "certificados" },
   { id: "certidoes", label: "Certidões", icon: <FileText size={18} />, path: "/certidoes", moduleKey: "certidoes" },

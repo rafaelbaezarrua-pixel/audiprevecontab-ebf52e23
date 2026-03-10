@@ -6,6 +6,7 @@ import { FileText, Download, Building2, User, Search, Plus, Trash2, Calendar, Hi
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import logoCaduceu from "@/assets/logo-caduceu.png";
+import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
 
 interface HeaderConfig {
     logoUrl: string;
@@ -156,6 +157,12 @@ const OcorrenciasPage: React.FC = () => {
 
     const handleGeneratePdf = async (oc: Ocorrencia) => {
         const doc = new jsPDF();
+
+        doc.addFileToVFS("Ubuntu-Regular.ttf", UbuntuRegular);
+        doc.addFont("Ubuntu-Regular.ttf", "Ubuntu", "normal");
+        doc.addFileToVFS("Ubuntu-Bold.ttf", UbuntuBold);
+        doc.addFont("Ubuntu-Bold.ttf", "Ubuntu", "bold");
+
         const pageWidth = doc.internal.pageSize.getWidth();
 
         // Fetch Socio Administrador
@@ -214,12 +221,12 @@ const OcorrenciasPage: React.FC = () => {
             }
         }
 
-        doc.setFont("helvetica", "bold");
+        doc.setFont("Ubuntu", "bold");
         doc.setFontSize(headerConfig.titleFontSize);
         doc.text(headerConfig.title, pageWidth / 2 + 10, 20, { align: "center" });
 
         doc.setFontSize(headerConfig.subtitleFontSize);
-        doc.setFont("helvetica", "normal");
+        doc.setFont("Ubuntu", "normal");
         doc.text(headerConfig.subtitle, pageWidth / 2 + 10, 26, { align: "center" });
 
         doc.setFontSize(headerConfig.infoFontSize);
@@ -233,7 +240,7 @@ const OcorrenciasPage: React.FC = () => {
 
         // Title
         doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
+        doc.setFont("Ubuntu", "bold");
         doc.text("OCORRÊNCIA", pageWidth / 2, 55, { align: "center" });
 
         // Company Info
@@ -242,7 +249,7 @@ const OcorrenciasPage: React.FC = () => {
         doc.text(`CNPJ: ${oc.empresas.cnpj || "—"}`, 20, 76);
 
         // Occurrence text
-        doc.setFont("helvetica", "normal"); // Fallback to helvetica as Tahoma requires embedding
+        doc.setFont("Ubuntu", "normal"); // Utilizing custom Ubuntu font
         const splitDesc = doc.splitTextToSize(oc.descricao, pageWidth - 40);
         doc.text(splitDesc, 20, 90);
 
@@ -259,20 +266,20 @@ const OcorrenciasPage: React.FC = () => {
 
         // Left side: Company/Admin
         doc.line(20, sigY, 100, sigY);
-        doc.setFont("helvetica", "bold");
+        doc.setFont("Ubuntu", "bold");
         doc.setFontSize(9);
         doc.text(oc.empresas.nome_empresa, 20, sigY + 5);
         doc.text(`CNPJ: ${oc.empresas.cnpj || ""}`, 20, sigY + 10);
 
         doc.text("Socio(a) Administrador(a)", 20, sigY + 18);
-        doc.setFont("helvetica", "normal");
+        doc.setFont("Ubuntu", "normal");
         doc.text(manager?.nome || "____________________________", 20, sigY + 23);
         const managerCPF = manager?.cpf ? `CPF: ${manager.cpf}` : "CPF: ________________________";
         doc.text(managerCPF, 20, sigY + 28);
 
         // Right side: User/Dept
         doc.line(pageWidth - 100, sigY, pageWidth - 20, sigY);
-        doc.setFont("helvetica", "bold");
+        doc.setFont("Ubuntu", "bold");
         doc.text(usuarioNome.toUpperCase(), pageWidth - 100, sigY + 5);
         doc.text(`CPF: ${usuarioCPF}`, pageWidth - 100, sigY + 10);
         doc.text(`Departamento: ${oc.departamento}`, pageWidth - 100, sigY + 15);

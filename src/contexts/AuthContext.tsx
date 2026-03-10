@@ -19,6 +19,9 @@ export interface UserPermissions {
     honorarios: boolean;
     licencas: boolean;
     certidoes: boolean;
+    declaracoes_mensais: boolean;
+    declaracoes_anuais: boolean;
+    agendamentos: boolean;
   };
   nome?: string;
   email?: string;
@@ -51,7 +54,8 @@ export const useAuth = () => {
 const allModulesTrue = {
   societario: true, fiscal: true, pessoal: true, certificados: true,
   procuracoes: true, vencimentos: true, parcelamentos: true, recalculos: true,
-  honorarios: true, licencas: true, certidoes: true,
+  honorarios: true, licencas: true, certidoes: true, declaracoes_mensais: true,
+  declaracoes_anuais: true, agendamentos: true,
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -130,6 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             honorarios: moduleSet.has("honorarios"),
             licencas: moduleSet.has("licencas"),
             certidoes: moduleSet.has("certidoes"),
+            declaracoes_mensais: moduleSet.has("declaracoes_mensais"),
+            declaracoes_anuais: moduleSet.has("declaracoes_anuais"),
+            agendamentos: moduleSet.has("agendamentos"),
           },
           nome: profileData?.nome_completo || currentUser.user_metadata?.full_name || currentUser.email || "Usuário",
           email: currentUser.email || "",

@@ -21,11 +21,28 @@ const AgendamentoFormPage: React.FC = () => {
     useEffect(() => {
         const loadUsers = async () => {
             try {
-                const { data } = await (supabase.from("profiles").select("id, full_name, user_id") as any);
-                const mapped = (data || []).map((u: any) => ({
-                    id: u.user_id || u.id,
-                    nome: u.full_name || "Sem Nome"
-                }));
+                const { data: profiles } = await supabase.from("profiles").select("id, full_name, nome_completo, user_id").eq("ativo", true);
+                if (!profiles) return;
+
+                const userIds = profiles.map(p => p.user_id || p.id);
+
+                const [{ data: roles }, { data: access }] = await Promise.all([
+                    supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
+                    supabase.from("empresa_acessos").select("user_id").in("user_id", userIds)
+                ]);
+
+                const clientIds = new Set([
+                    ...(roles?.filter(r => (r.role as any) === 'client').map(r => r.user_id) || []),
+                    ...(access?.map(a => a.user_id) || [])
+                ]);
+
+                const mapped = profiles
+                    .filter(u => !clientIds.has(u.user_id || u.id))
+                    .map((u: any) => ({
+                        id: u.user_id || u.id,
+                        nome: u.nome_completo || u.full_name || "Sem Nome"
+                    }));
+
                 setUsuarios(mapped);
             } catch (err) {
                 console.error(err);

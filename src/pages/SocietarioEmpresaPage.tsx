@@ -25,6 +25,8 @@ const licencaTipoLabels: Record<string, string> = { definitiva: "Definitiva", di
 const estados = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
 
 const AVAILABLE_MODULES = [
+  { id: 'societario', label: 'Societário' },
+  { id: 'agendamentos', label: 'Agendamentos' },
   { id: 'fiscal', label: 'Fiscal' },
   { id: 'pessoal', label: 'Pessoal' },
   { id: 'licencas', label: 'Licenças' },
@@ -36,6 +38,7 @@ const AVAILABLE_MODULES = [
   { id: 'recalculos', label: 'Recálculos' },
   { id: 'honorarios', label: 'Honorários' },
   { id: 'declaracoes_anuais', label: 'Declarações Anuais' },
+  { id: 'declaracoes_mensais', label: 'Declarações Mensais' },
 ];
 
 const SocietarioEmpresaPage: React.FC = () => {
@@ -72,8 +75,23 @@ const SocietarioEmpresaPage: React.FC = () => {
   useEffect(() => {
     const fetchProfiles = async () => {
       if (!isAdmin) return;
-      const { data } = await supabase.from("profiles").select("*").eq("ativo", true);
-      if (data) setProfiles(data);
+
+      const { data: profiles } = await supabase.from("profiles").select("*").eq("ativo", true);
+      if (!profiles) return;
+
+      const userIds = profiles.map(p => p.user_id);
+      const [{ data: roles }, { data: access }] = await Promise.all([
+        supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
+        supabase.from("empresa_acessos").select("user_id").in("user_id", userIds)
+      ]);
+
+      const clientIds = new Set([
+        ...(roles?.filter(r => (r.role as any) === 'client').map(r => r.user_id) || []),
+        ...(access?.map(a => a.user_id) || [])
+      ]);
+
+      const internalProfiles = profiles.filter(p => !clientIds.has(p.user_id));
+      setProfiles(internalProfiles);
     };
     fetchProfiles();
 

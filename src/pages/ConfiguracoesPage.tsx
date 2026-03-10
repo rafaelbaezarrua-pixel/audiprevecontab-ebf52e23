@@ -29,6 +29,7 @@ const moduleLabels: Record<string, string> = {
   honorarios: "Honorários",
   agendamentos: "Agendamentos",
   declaracoes_anuais: "Declarações Anuais",
+  declaracoes_mensais: "Declarações Mensais",
 };
 
 const ConfiguracoesPage: React.FC = () => {
@@ -114,30 +115,46 @@ const ConfiguracoesPage: React.FC = () => {
   if (!userData.isAdmin) return <Navigate to="/dashboard" replace />;
 
   const toggleModule = async (userId: string, module: string, current: boolean) => {
-    if (current) {
-      await supabase.from("user_module_permissions").delete().eq("user_id", userId).eq("module_name", module);
-    } else {
-      await supabase.from("user_module_permissions").insert({ user_id: userId, module_name: module });
+    try {
+      const res = await supabase.functions.invoke("manage-user", {
+        body: { action: "toggleModule", target_user_id: userId, module, enable: !current }
+      });
+      if (res.error) throw res.error;
+      toast.success(`${moduleLabels[module]} ${!current ? "habilitado" : "desabilitado"}`);
+      loadUsers();
+    } catch (err: any) {
+      console.error("Erro no toggleModule:", err);
+      toast.error("Erro ao alterar módulo: " + (err.message || "Falha na requisição"));
     }
-    toast.success(`${moduleLabels[module]} ${!current ? "habilitado" : "desabilitado"}`);
-    loadUsers();
   };
 
   const toggleAdmin = async (userId: string, current: boolean) => {
-    if (current) {
-      await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin" as const);
-    } else {
-      await supabase.from("user_roles").insert({ user_id: userId, role: "admin" as const });
+    try {
+      const res = await supabase.functions.invoke("manage-user", {
+        body: { action: "toggleAdmin", target_user_id: userId, enable: !current }
+      });
+      if (res.error) throw res.error;
+      toast.success(!current ? "Promovido a admin" : "Removido de admin");
+      loadUsers();
+    } catch (err: any) {
+      console.error("Erro no toggleAdmin:", err);
+      toast.error("Erro ao alterar permissão de admin: " + (err.message || "Falha na requisição"));
     }
-    toast.success(!current ? "Promovido a admin" : "Removido de admin");
-    loadUsers();
   };
 
   const handleDelete = async (userId: string) => {
     if (!window.confirm("Excluir este usuário do sistema?")) return;
-    await supabase.from("profiles").delete().eq("user_id", userId);
-    toast.success("Usuário removido!");
-    loadUsers();
+    try {
+      const res = await supabase.functions.invoke("manage-user", {
+        body: { action: "deleteUser", target_user_id: userId }
+      });
+      if (res.error) throw res.error;
+      toast.success("Usuário removido!");
+      loadUsers();
+    } catch (err: any) {
+      console.error("Erro no handleDelete:", err);
+      toast.error("Erro ao excluir usuário: " + (err.message || "Falha na requisição"));
+    }
   };
 
   return (
