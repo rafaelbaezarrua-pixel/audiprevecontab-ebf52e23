@@ -4,6 +4,8 @@ import type { User, Session } from "@supabase/supabase-js";
 
 export interface UserPermissions {
   isAdmin: boolean;
+  isClient: boolean;
+  empresaId?: string;
   userId?: string;
   modules: {
     societario: boolean;
@@ -64,11 +66,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id);
-      const isAdmin = roles?.some(r => r.role === "admin") || false;
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("nome_completo, profile_completed, terms_accepted_at, first_access_done, cpf, departamento")
+        .select("*")
         .eq("user_id", currentUser.id)
         .maybeSingle();
 
@@ -77,20 +78,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Robust state derivation
-      // If profile is missing or fields are null, we decide based on 'trustING' existing users
-      const profileCompleted = profile ? (profile.profile_completed ?? true) : true;
-      const termsAccepted = profile ? !!profile.terms_accepted_at : true;
-      const firstAccessDone = profile ? (profile.first_access_done ?? true) : true;
+      const profileData = profile as any;
+      const profileCompleted = profileData ? (profileData.profile_completed ?? true) : true;
+      const termsAccepted = profileData ? !!profileData.terms_accepted_at : true;
+      const firstAccessDone = profileData ? (profileData.first_access_done ?? true) : true;
+
+      const isAdminProfile = profileData?.role === "admin";
+      const isClientProfile = profileData?.role === "client";
+      const isAdmin = (roles?.some(r => r.role === "admin") || isAdminProfile) || false;
+      const isClient = isClientProfile || false;
 
       if (isAdmin) {
         setUserData({
           isAdmin: true,
+          isClient: false,
+          empresaId: undefined,
           userId: currentUser.id,
           modules: allModulesTrue,
-          nome: profile?.nome_completo || currentUser.user_metadata?.full_name || currentUser.email || "Admin",
+          nome: profileData?.nome_completo || currentUser.user_metadata?.full_name || currentUser.email || "Admin",
           email: currentUser.email || "",
-          cpf: profile?.cpf || "",
-          departamento: profile?.departamento || "Administração",
+          cpf: profileData?.cpf || "",
+          departamento: profileData?.departamento || "Administração",
           profileCompleted,
           termsAccepted,
           firstAccessDone,
@@ -100,6 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const moduleSet = new Set(perms?.map(p => p.module_name) || []);
         setUserData({
           isAdmin: false,
+          isClient: isClient,
+          empresaId: profileData?.empresa_id || undefined,
           userId: currentUser.id,
           modules: {
             societario: moduleSet.has("societario"),
@@ -114,10 +124,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             licencas: moduleSet.has("licencas"),
             certidoes: moduleSet.has("certidoes"),
           },
-          nome: profile?.nome_completo || currentUser.user_metadata?.full_name || currentUser.email || "Usuário",
+          nome: profileData?.nome_completo || currentUser.user_metadata?.full_name || currentUser.email || "Usuário",
           email: currentUser.email || "",
-          cpf: profile?.cpf || "",
-          departamento: profile?.departamento || "",
+          cpf: profileData?.cpf || "",
+          departamento: profileData?.departamento || "",
           profileCompleted,
           termsAccepted,
           firstAccessDone,

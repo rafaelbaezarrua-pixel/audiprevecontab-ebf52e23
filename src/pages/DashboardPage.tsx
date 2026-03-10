@@ -2,21 +2,24 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, Clock, AlertTriangle, Award } from "lucide-react";
+import { TableSkeleton, PageHeaderSkeleton } from "@/components/PageSkeleton";
 
 const DashboardPage: React.FC = () => {
   const { userData } = useAuth();
   const [stats, setStats] = useState({ total: 0, ativas: 0, paralisadas: 0, baixadas: 0 });
   const [empresas, setEmpresas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
+      setLoading(true);
       // 1. Get recent companies
       const { data: recents } = await supabase.from("empresas").select("id, nome_empresa, cnpj, situacao").order("created_at", { ascending: false }).limit(10);
       if (mounted) setEmpresas(recents || []);
 
-      // 2. Get all statuses in a single request and aggregate locally
+      // 2. Get all statuses
       const { data: allStatuses } = await supabase.from("empresas").select("situacao");
       if (allStatuses && mounted) {
         let ativas = 0;
@@ -29,6 +32,7 @@ const DashboardPage: React.FC = () => {
         });
         setStats({ total: allStatuses.length, ativas, paralisadas, baixadas });
       }
+      if (mounted) setLoading(false);
     };
     load();
 
@@ -44,19 +48,30 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((card) => (
-          <div key={card.label} className="stat-card"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground font-medium">{card.label}</p><h3 className="text-2xl font-bold text-card-foreground mt-1">{card.value}</h3></div><div className={`w-12 h-12 rounded-xl flex items-center justify-center ${card.color}`}>{card.icon}</div></div></div>
-        ))}
-      </div>
-      <div className="module-card">
-        <h3 className="text-lg font-bold text-card-foreground mb-4">Empresas Recentes</h3>
-        {empresas.length === 0 ? <p className="text-muted-foreground text-sm py-8 text-center">Nenhuma empresa cadastrada</p> : (
-          <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Empresa</th><th>CNPJ</th><th>Status</th></tr></thead><tbody>{empresas.map((emp) => (
-            <tr key={emp.id}><td className="font-medium text-card-foreground">{emp.nome_empresa || "—"}</td><td className="text-muted-foreground">{emp.cnpj || "—"}</td><td><span className={`badge-status ${emp.situacao === "baixada" ? "badge-danger" : emp.situacao === "paralisada" ? "badge-warning" : "badge-success"}`}>{emp.situacao || "Ativa"}</span></td></tr>
-          ))}</tbody></table></div>
-        )}
-      </div>
+      {loading ? (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <div key={i} className="stat-card h-24 animate-pulse bg-muted" />)}
+          </div>
+          <TableSkeleton rows={5} />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {statCards.map((card) => (
+              <div key={card.label} className="stat-card"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground font-medium">{card.label}</p><h3 className="text-2xl font-bold text-card-foreground mt-1">{card.value}</h3></div><div className={`w-12 h-12 rounded-xl flex items-center justify-center ${card.color}`}>{card.icon}</div></div></div>
+            ))}
+          </div>
+          <div className="module-card">
+            <h3 className="text-lg font-bold text-card-foreground mb-4">Empresas Recentes</h3>
+            {empresas.length === 0 ? <p className="text-muted-foreground text-sm py-8 text-center">Nenhuma empresa cadastrada</p> : (
+              <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Empresa</th><th>CNPJ</th><th>Status</th></tr></thead><tbody>{empresas.map((emp) => (
+                <tr key={emp.id}><td className="font-medium text-card-foreground">{emp.nome_empresa || "—"}</td><td className="text-muted-foreground">{emp.cnpj || "—"}</td><td><span className={`badge-status ${emp.situacao === "baixada" ? "badge-danger" : emp.situacao === "paralisada" ? "badge-warning" : "badge-success"}`}>{emp.situacao || "Ativa"}</span></td></tr>
+              ))}</tbody></table></div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -4,61 +4,78 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import AppLayout from "@/components/AppLayout";
-import LoginPage from "@/pages/LoginPage";
-import DashboardPage from "@/pages/DashboardPage";
-import SocietarioPage from "@/pages/SocietarioPage";
-import SocietarioEmpresaPage from "@/pages/SocietarioEmpresaPage";
-import CertificadosPage from "@/pages/CertificadosPage";
-import CertidoesPage from "@/pages/CertidoesPage";
-import LicencasPage from "@/pages/LicencasPage";
-import ProcuracoesPage from "@/pages/ProcuracoesPage";
-import FiscalPage from "@/pages/FiscalPage";
-import PessoalPage from "@/pages/PessoalPage";
-import VencimentosPage from "@/pages/VencimentosPage";
-import ParcelamentosPage from "@/pages/ParcelamentosPage";
-import ParcelamentoFormPage from "@/pages/ParcelamentoFormPage";
-import RecalculosPage from "@/pages/RecalculosPage";
-import HonorariosPage from "@/pages/HonorariosPage";
-import DeclaracoesAnuaisPage from "@/pages/DeclaracoesAnuaisPage";
-import AgendamentosPage from "@/pages/AgendamentosPage";
-import AgendamentoFormPage from "@/pages/AgendamentoFormPage";
-import UsuarioFormPage from "@/pages/UsuarioFormPage";
-import OcorrenciasPage from "@/pages/OcorrenciasPage";
-
-// Comentário para forçar atualização do IDE
-
-import ConfiguracoesPage from "@/pages/ConfiguracoesPage";
-import CompletarPerfilPage from "@/pages/CompletarPerfilPage";
-import TermosPage from "@/pages/TermosPage";
-import PerfilPage from "@/pages/PerfilPage";
-import VerificationPage from "@/pages/VerificationPage";
-import EsqueciSenhaPage from "@/pages/EsqueciSenhaPage";
-import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import NotFound from "@/pages/NotFound";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import React, { Suspense, lazy } from "react";
+
+// Layouts
+import AppLayout from "@/components/AppLayout";
+const PortalLayout = lazy(() => import("@/components/PortalLayout"));
+
+// Lazy Loaded Pages
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const SocietarioPage = lazy(() => import("@/pages/SocietarioPage"));
+const SocietarioEmpresaPage = lazy(() => import("@/pages/SocietarioEmpresaPage"));
+const CertificadosPage = lazy(() => import("@/pages/CertificadosPage"));
+const CertidoesPage = lazy(() => import("@/pages/CertidoesPage"));
+const LicencasPage = lazy(() => import("@/pages/LicencasPage"));
+const ProcuracoesPage = lazy(() => import("@/pages/ProcuracoesPage"));
+const FiscalPage = lazy(() => import("@/pages/FiscalPage"));
+const PessoalPage = lazy(() => import("@/pages/PessoalPage"));
+const VencimentosPage = lazy(() => import("@/pages/VencimentosPage"));
+const ParcelamentosPage = lazy(() => import("@/pages/ParcelamentosPage"));
+const ParcelamentoFormPage = lazy(() => import("@/pages/ParcelamentoFormPage"));
+const RecalculosPage = lazy(() => import("@/pages/RecalculosPage"));
+const HonorariosPage = lazy(() => import("@/pages/HonorariosPage"));
+const DeclaracoesAnuaisPage = lazy(() => import("@/pages/DeclaracoesAnuaisPage"));
+const AgendamentosPage = lazy(() => import("@/pages/AgendamentosPage"));
+const AgendamentoFormPage = lazy(() => import("@/pages/AgendamentoFormPage"));
+const UsuarioFormPage = lazy(() => import("@/pages/UsuarioFormPage"));
+const OcorrenciasPage = lazy(() => import("@/pages/OcorrenciasPage"));
+const ConfiguracoesPage = lazy(() => import("@/pages/ConfiguracoesPage"));
+const CompletarPerfilPage = lazy(() => import("@/pages/CompletarPerfilPage"));
+const TermosPage = lazy(() => import("@/pages/TermosPage"));
+const PerfilPage = lazy(() => import("@/pages/PerfilPage"));
+const VerificationPage = lazy(() => import("@/pages/VerificationPage"));
+const EsqueciSenhaPage = lazy(() => import("@/pages/EsqueciSenhaPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const PortalDashboardPage = lazy(() => import("@/pages/PortalDashboardPage"));
+const MessagesPage = lazy(() => import("@/pages/MessagesPage"));
 
 const queryClient = new QueryClient();
+
+// Loading Component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <p className="text-sm font-medium text-muted-foreground animate-pulse">Carregando...</p>
+    </div>
+  </div>
+);
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading, userData } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
 
-  // Redirect to profile completion if not completed
   if (userData && !userData.profileCompleted) {
     return <Navigate to="/completar-perfil" replace />;
   }
 
-  // Redirect to terms if profile completed but terms not accepted
   if (userData && userData.profileCompleted && !userData.termsAccepted) {
     return <Navigate to="/termos" replace />;
   }
 
-  // Redirect to verification if terms accepted but first access not done
   if (userData && userData.termsAccepted && !userData.firstAccessDone) {
     return <Navigate to="/verificacao" replace />;
+  }
+
+  // Redirect clients to portal if they try to access internal app
+  if (userData?.isClient && !window.location.pathname.startsWith("/portal")) {
+    return <Navigate to="/portal" replace />;
   }
 
   return <>{children}</>;
@@ -68,6 +85,14 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading, userData } = useAuth();
   if (loading) return null;
   if (!user || !userData?.isAdmin) return <Navigate to="/dashboard" replace />;
+
+  return <>{children}</>;
+};
+
+const ClientRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading, userData } = useAuth();
+  if (loading) return null;
+  if (!user || (!userData?.isClient && !userData?.isAdmin)) return <Navigate to="/login" replace />;
 
   return <>{children}</>;
 };
@@ -88,41 +113,50 @@ const App = () => (
         <SpeedInsights />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/completar-perfil" element={<OnboardingRoute><CompletarPerfilPage /></OnboardingRoute>} />
-              <Route path="/termos" element={<OnboardingRoute><TermosPage /></OnboardingRoute>} />
-              <Route path="/verificacao" element={<OnboardingRoute><VerificationPage /></OnboardingRoute>} />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/societario" element={<SocietarioPage />} />
-                <Route path="/societario/:id" element={<SocietarioEmpresaPage />} />
-                <Route path="/societario/:id/editar" element={<SocietarioEmpresaPage />} />
-                <Route path="/licencas" element={<LicencasPage />} />
-                <Route path="/certificados" element={<CertificadosPage />} />
-                <Route path="/certidoes" element={<CertidoesPage />} />
-                <Route path="/procuracoes" element={<ProcuracoesPage />} />
-                <Route path="/fiscal" element={<FiscalPage />} />
-                <Route path="/pessoal" element={<PessoalPage />} />
-                <Route path="/vencimentos" element={<VencimentosPage />} />
-                <Route path="/parcelamentos" element={<ParcelamentosPage />} />
-                <Route path="/parcelamentos/novo" element={<ParcelamentoFormPage />} />
-                <Route path="/recalculos" element={<RecalculosPage />} />
-                <Route path="/honorarios" element={<HonorariosPage />} />
-                <Route path="/declaracoes-anuais" element={<DeclaracoesAnuaisPage />} />
-                <Route path="/agendamentos" element={<AgendamentosPage />} />
-                <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />
-                <Route path="/ocorrencias" element={<OcorrenciasPage />} />
-                <Route path="/configuracoes/usuarios/novo" element={<AdminRoute><UsuarioFormPage /></AdminRoute>} />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/completar-perfil" element={<OnboardingRoute><CompletarPerfilPage /></OnboardingRoute>} />
+                <Route path="/termos" element={<OnboardingRoute><TermosPage /></OnboardingRoute>} />
+                <Route path="/verificacao" element={<OnboardingRoute><VerificationPage /></OnboardingRoute>} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/societario" element={<SocietarioPage />} />
+                  <Route path="/societario/:id" element={<SocietarioEmpresaPage />} />
+                  <Route path="/societario/:id/editar" element={<SocietarioEmpresaPage />} />
+                  <Route path="/licencas" element={<LicencasPage />} />
+                  <Route path="/certificados" element={<CertificadosPage />} />
+                  <Route path="/certidoes" element={<CertidoesPage />} />
+                  <Route path="/procuracoes" element={<ProcuracoesPage />} />
+                  <Route path="/fiscal" element={<FiscalPage />} />
+                  <Route path="/pessoal" element={<PessoalPage />} />
+                  <Route path="/vencimentos" element={<VencimentosPage />} />
+                  <Route path="/parcelamentos" element={<ParcelamentosPage />} />
+                  <Route path="/parcelamentos/novo" element={<ParcelamentoFormPage />} />
+                  <Route path="/recalculos" element={<RecalculosPage />} />
+                  <Route path="/honorarios" element={<HonorariosPage />} />
+                  <Route path="/declaracoes-anuais" element={<DeclaracoesAnuaisPage />} />
+                  <Route path="/agendamentos" element={<AgendamentosPage />} />
+                  <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />
+                  <Route path="/ocorrencias" element={<OcorrenciasPage />} />
+                  <Route path="/configuracoes/usuarios/novo" element={<AdminRoute><UsuarioFormPage /></AdminRoute>} />
+                  <Route path="/perfil" element={<PerfilPage />} />
+                  <Route path="/configuracoes" element={<AdminRoute><ConfiguracoesPage /></AdminRoute>} />
+                </Route>
 
-                <Route path="/perfil" element={<PerfilPage />} />
-                <Route path="/configuracoes" element={<AdminRoute><ConfiguracoesPage /></AdminRoute>} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* Portal do Cliente Routes */}
+                <Route element={<ClientRoute><PortalLayout /></ClientRoute>}>
+                  <Route path="/portal" element={<PortalDashboardPage />} />
+                  <Route path="/portal/documentos" element={<div>Página de Documentos (Em breve)</div>} />
+                  <Route path="/portal/processos" element={<div>Página de Processos (Em breve)</div>} />
+                  <Route path="/portal/mensagens" element={<MessagesPage />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
