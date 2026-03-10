@@ -5,11 +5,14 @@ import {
   Building2, FileText, Award, Clock, Calculator,
   Users, Receipt, RefreshCw, DollarSign, ClipboardList,
   LayoutDashboard, Settings, LogOut, ChevronLeft, ChevronRight,
-  Bell, Menu, Shield, User, Sun, Moon, Calendar
+  Bell, Menu, Shield, User, Calendar
 } from "lucide-react";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 import { useTheme } from "@/components/theme-provider";
 import NotificationHeader from "./NotificationHeader";
+import { GlobalSearch } from "./GlobalSearch";
+import { ThemeToggle } from "./ThemeToggle";
+import { Star } from "lucide-react";
 
 interface NavItemConfig {
   id: string;
@@ -133,10 +136,18 @@ const AppLayout: React.FC = () => {
                 onClick={() => handleNav("/configuracoes")}
                 className={`nav-item w-full ${location.pathname === "/configuracoes" ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
                 title={collapsed ? "Configurações" : undefined}
+                aria-label="Configurações"
               >
                 <Settings size={18} />
                 {!collapsed && <span>Configurações</span>}
               </button>
+            </>
+          )}
+
+          {!collapsed && (
+            <>
+              <div className="menu-header">Favoritos</div>
+              <p className="px-4 py-2 text-[0.65rem] text-sidebar-muted/60 italic">Nenhum favorito ainda.</p>
             </>
           )}
         </nav>
@@ -182,26 +193,13 @@ const AppLayout: React.FC = () => {
             >
               <Menu size={22} />
             </button>
-            <div>
-              <h2 className="text-lg font-bold text-card-foreground capitalize">
-                {location.pathname === "/dashboard" ? "Dashboard" : location.pathname.slice(1).replace(/-/g, " ")}
-              </h2>
-              <p className="text-xs text-muted-foreground hidden sm:block">Sistema de Controle Contábil</p>
+            <div className="hidden md:block ml-4">
+              <GlobalSearch />
             </div>
           </div>
           <div className="flex items-center gap-3">
             <NotificationHeader />
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors relative"
-              title="Alternar Tema"
-            >
-              {theme === 'dark' ? (
-                <Sun size={18} className="text-muted-foreground" />
-              ) : (
-                <Moon size={18} className="text-muted-foreground" />
-              )}
-            </button>
+            <ThemeToggle />
             <div className="hidden sm:block px-3 py-1.5 bg-muted rounded-lg">
               <p className="text-xs font-medium text-muted-foreground capitalize">{currentDate}</p>
             </div>
