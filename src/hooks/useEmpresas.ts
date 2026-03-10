@@ -15,12 +15,13 @@ export const useEmpresas = (moduloId: string) => {
             try {
                 if (!user) return;
 
-                // 1. Fetch all companies that are not downloaded and have the moduloId in modulos_ativos
-                const { data: emps, error: empsError } = await supabase
-                    .from("empresas")
-                    .select("*")
-                    .contains("modulos_ativos", [moduloId])
-                    .order("nome_empresa");
+                let query = supabase.from("empresas").select("*").order("nome_empresa");
+
+                if (moduloId && moduloId !== "declaracoes_mensais") {
+                    query = query.contains("modulos_ativos", [moduloId]);
+                }
+
+                const { data: emps, error: empsError } = await query;
 
                 if (empsError) throw empsError;
                 if (!emps) {

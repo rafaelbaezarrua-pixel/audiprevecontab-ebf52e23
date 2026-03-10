@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        montserrat: ["Montserrat", "sans-serif"],
-        title: ["'Open Sans'", "sans-serif"],
-        body: ["'Open Sans'", "sans-serif"],
+        montserrat: ["Ubuntu", "sans-serif"],
+        title: ["'Ubuntu'", "sans-serif"],
+        body: ["'Ubuntu'", "sans-serif"],
       },
       transitionDuration: {
         DEFAULT: '100ms',

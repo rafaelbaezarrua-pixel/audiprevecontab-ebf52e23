@@ -56,7 +56,7 @@ const PessoalPage: React.FC = () => {
         vc_status: existing.vc_status || "pendente", vc_data_envio: existing.vc_data_envio || "",
         inss_status: existing.inss_status || "pendente", inss_data_envio: existing.inss_data_envio || "",
         fgts_status: existing.fgts_status || "pendente", fgts_data_envio: existing.fgts_data_envio || "",
-        dctf_web_gerada: existing.dctf_web_gerada || false,
+        dctf_web_gerada: existing.dctf_web_gerada || false, dctf_web_data_envio: existing.dctf_web_data_envio || "",
       }
     }));
   };
@@ -76,7 +76,7 @@ const PessoalPage: React.FC = () => {
         vc_status: form.vc_status as any, vc_data_envio: form.vc_data_envio || null,
         inss_status: form.inss_status as any, inss_data_envio: form.inss_data_envio || null,
         fgts_status: form.fgts_status as any, fgts_data_envio: form.fgts_data_envio || null,
-        dctf_web_gerada: form.dctf_web_gerada || false,
+        dctf_web_gerada: form.dctf_web_gerada || false, dctf_web_data_envio: form.dctf_web_data_envio || null,
       };
       if (existing?.id) {
         await supabase.from("pessoal").update(payload).eq("id", existing.id);
@@ -229,7 +229,9 @@ const PessoalPage: React.FC = () => {
                         <select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}>
                           <option value="nao">Não Gerada</option><option value="sim">Gerada</option>
                         </select>
-                        <div />
+                        {form.dctf_web_gerada ? (
+                          <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} />
+                        ) : <div />}
                       </div>
                     </div>
                   </div>

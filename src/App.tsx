@@ -28,6 +28,7 @@ const ParcelamentosPage = lazy(() => import("@/pages/ParcelamentosPage"));
 const ParcelamentoFormPage = lazy(() => import("@/pages/ParcelamentoFormPage"));
 const RecalculosPage = lazy(() => import("@/pages/RecalculosPage"));
 const HonorariosPage = lazy(() => import("@/pages/HonorariosPage"));
+const DeclaracoesMensaisPage = lazy(() => import("@/pages/DeclaracoesMensaisPage"));
 const DeclaracoesAnuaisPage = lazy(() => import("@/pages/DeclaracoesAnuaisPage"));
 const AgendamentosPage = lazy(() => import("@/pages/AgendamentosPage"));
 const AgendamentoFormPage = lazy(() => import("@/pages/AgendamentoFormPage"));
@@ -144,6 +145,7 @@ const App = () => (
                   <Route path="/parcelamentos/novo" element={<ParcelamentoFormPage />} />
                   <Route path="/recalculos" element={<RecalculosPage />} />
                   <Route path="/honorarios" element={<HonorariosPage />} />
+                  <Route path="/declaracoes-mensais" element={<DeclaracoesMensaisPage />} />
                   <Route path="/declaracoes-anuais" element={<DeclaracoesAnuaisPage />} />
                   <Route path="/agendamentos" element={<AgendamentosPage />} />
                   <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />

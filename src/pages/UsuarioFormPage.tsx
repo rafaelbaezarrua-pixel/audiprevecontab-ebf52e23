@@ -20,6 +20,7 @@ const moduleLabels: Record<string, string> = {
     honorarios: "Honorários",
     agendamentos: "Agendamentos",
     declaracoes_anuais: "Declarações Anuais",
+    declaracoes_mensais: "Declarações Mensais",
 };
 
 const UsuarioFormPage: React.FC = () => {
