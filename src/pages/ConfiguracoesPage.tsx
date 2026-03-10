@@ -34,32 +34,46 @@ const ConfiguracoesPage: React.FC = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
   const loadUsers = async () => {
-    const { data: profiles } = await supabase.from("profiles").select("*");
-    if (!profiles) return;
+    try {
+      setLoadingUsers(true);
+      const { data: profiles, error: profilesError } = await supabase.from("profiles").select("*");
+      if (profilesError) {
+        console.error("Erro ao carregar perfis:", profilesError);
+        return;
+      }
+      if (!profiles) return;
 
-    const users: Usuario[] = [];
-    for (const p of profiles) {
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", p.user_id);
-      const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", p.user_id);
-      const modules: Record<string, boolean> = {};
-      perms?.forEach(pm => { modules[pm.module_name] = true; });
-      users.push({
-        id: p.user_id,
-        nome: p.nome_completo || "Sem nome",
-        email: "",
-        isAdmin: roles?.some(r => r.role === "admin") || false,
-        departamento: "",
-        modules,
-      });
+      const users: Usuario[] = [];
+      for (const p of profiles) {
+        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", p.user_id);
+        const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", p.user_id);
+        const modules: Record<string, boolean> = {};
+        perms?.forEach(pm => { modules[pm.module_name] = true; });
+        users.push({
+          id: p.user_id,
+          nome: p.nome_completo || "Sem nome",
+          email: "",
+          isAdmin: roles?.some(r => r.role === "admin") || false,
+          departamento: "",
+          modules,
+        });
+      }
+      setUsuarios(users);
+    } catch (err) {
+      console.error("Erro ao carregar usuários:", err);
+    } finally {
+      setLoadingUsers(false);
     }
-    setUsuarios(users);
   };
 
   useEffect(() => { loadUsers(); }, []);
 
-  if (!userData?.isAdmin) return <Navigate to="/dashboard" replace />;
+  // Aguardar userData carregar antes de decidir redirect
+  if (!userData) return null;
+  if (!userData.isAdmin) return <Navigate to="/dashboard" replace />;
 
   const toggleModule = async (userId: string, module: string, current: boolean) => {
     if (current) {
