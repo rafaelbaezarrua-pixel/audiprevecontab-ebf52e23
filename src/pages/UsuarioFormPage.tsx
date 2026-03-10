@@ -115,7 +115,7 @@ const UsuarioFormPage: React.FC = () => {
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => navigate("/configuracoes")}
-                    className="p-2.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+                    aria-label="Voltar para configurações"
                     title="Voltar"
                 >
                     <ArrowLeft size={20} />
@@ -130,10 +130,11 @@ const UsuarioFormPage: React.FC = () => {
                         </h2>
 
                         <div>
-                            <label className={labelCls}>Nome Completo *</label>
+                            <label htmlFor="nome" className={labelCls}>Nome Completo *</label>
                             <div className="relative">
                                 <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                 <input
+                                    id="nome"
                                     placeholder="Nome do colaborador"
                                     value={form.nome}
                                     onChange={e => setForm({ ...form, nome: e.target.value })}
@@ -143,10 +144,11 @@ const UsuarioFormPage: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className={labelCls}>CPF *</label>
+                            <label htmlFor="cpf" className={labelCls}>CPF *</label>
                             <div className="relative">
                                 <Fingerprint size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                 <input
+                                    id="cpf"
                                     placeholder="000.000.000-00"
                                     value={form.cpf}
                                     onChange={e => setForm({ ...form, cpf: maskCPF(e.target.value) })}
@@ -157,10 +159,11 @@ const UsuarioFormPage: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className={labelCls}>E-mail *</label>
+                            <label htmlFor="email" className={labelCls}>E-mail *</label>
                             <div className="relative">
                                 <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                 <input
+                                    id="email"
                                     type="email"
                                     placeholder="exemplo@email.com"
                                     value={form.email}
