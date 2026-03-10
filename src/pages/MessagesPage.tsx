@@ -69,9 +69,11 @@ const MessagesPage: React.FC = () => {
         const { error } = await supabase.from("internal_messages" as any).insert([
             {
                 sender_id: user.id,
-                recipient_id: userData?.isAdmin ? "CLIENT_ID_PLACEHOLDER" : "ADMIN_ID_PLACEHOLDER",
+                recipient_id: userData?.isAdmin ? null : null, // Will be handled by admin response or fixed admin id
+                empresa_id: userData?.empresaId,
                 content: newMessage,
                 subject: "Suporte",
+                direcao: userData?.isAdmin ? "escritorio_para_cliente" : "cliente_para_escritorio"
             },
         ]);
 
@@ -144,8 +146,8 @@ const MessagesPage: React.FC = () => {
                                                 <User size={16} />
                                             </div>
                                             <div className={`p-4 rounded-2xl text-sm ${isMine
-                                                    ? "bg-primary text-primary-foreground rounded-br-none"
-                                                    : "bg-muted text-foreground rounded-bl-none"
+                                                ? "bg-primary text-primary-foreground rounded-br-none"
+                                                : "bg-muted text-foreground rounded-bl-none"
                                                 }`}>
                                                 <p>{msg.content}</p>
                                                 <div className={`flex items-center gap-1 mt-2 text-[10px] ${isMine ? "text-primary-foreground/70 justify-end" : "text-muted-foreground"}`}>

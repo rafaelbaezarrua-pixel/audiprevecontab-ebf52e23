@@ -43,6 +43,11 @@ const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PortalDashboardPage = lazy(() => import("@/pages/PortalDashboardPage"));
 const MessagesPage = lazy(() => import("@/pages/MessagesPage"));
+const ClientLoginPage = lazy(() => import("@/pages/ClientLoginPage"));
+const PortalLicencasPage = lazy(() => import("@/pages/PortalLicencasPage"));
+const PortalCertidoesPage = lazy(() => import("@/pages/PortalCertidoesPage"));
+const PortalVencimentosPage = lazy(() => import("@/pages/PortalVencimentosPage"));
+const PortalPerfilPage = lazy(() => import("@/pages/PortalPerfilPage"));
 
 const queryClient = new QueryClient();
 
@@ -61,15 +66,15 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
 
-  if (userData && !userData.profileCompleted) {
+  if (userData && !userData.isClient && !userData.profileCompleted) {
     return <Navigate to="/completar-perfil" replace />;
   }
 
-  if (userData && userData.profileCompleted && !userData.termsAccepted) {
+  if (userData && !userData.isClient && userData.profileCompleted && !userData.termsAccepted) {
     return <Navigate to="/termos" replace />;
   }
 
-  if (userData && userData.termsAccepted && !userData.firstAccessDone) {
+  if (userData && !userData.isClient && userData.termsAccepted && !userData.firstAccessDone) {
     return <Navigate to="/verificacao" replace />;
   }
 
@@ -116,6 +121,7 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/portal/login" element={<ClientLoginPage />} />
                 <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/completar-perfil" element={<OnboardingRoute><CompletarPerfilPage /></OnboardingRoute>} />
@@ -150,6 +156,10 @@ const App = () => (
                 {/* Portal do Cliente Routes */}
                 <Route element={<ClientRoute><PortalLayout /></ClientRoute>}>
                   <Route path="/portal" element={<PortalDashboardPage />} />
+                  <Route path="/portal/licencas" element={<PortalLicencasPage />} />
+                  <Route path="/portal/certidoes" element={<PortalCertidoesPage />} />
+                  <Route path="/portal/vencimentos" element={<PortalVencimentosPage />} />
+                  <Route path="/portal/perfil" element={<PortalPerfilPage />} />
                   <Route path="/portal/documentos" element={<div>Página de Documentos (Em breve)</div>} />
                   <Route path="/portal/processos" element={<div>Página de Processos (Em breve)</div>} />
                   <Route path="/portal/mensagens" element={<MessagesPage />} />

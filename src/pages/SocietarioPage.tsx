@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { TableSkeleton, PageHeaderSkeleton } from "@/components/PageSkeleton";
+import { syncCompanyClients } from "@/lib/sync-clients";
+import { RefreshCw } from "lucide-react";
 
 interface Empresa {
   id: string; nome_empresa: string; cnpj: string | null; regime_tributario: string | null;
@@ -198,6 +200,27 @@ const SocietarioPage: React.FC = () => {
                     title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
                   >
                     <Star size={20} fill={isFavorite ? "currentColor" : "none"} />
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const confirmed = window.confirm("Isso irá criar e confirmar o acesso de todas as empresas cadastradas que ainda não possuem login. Deseja continuar?");
+                      if (!confirmed) return;
+
+                      const id = toast.loading("Sincronizando acessos...", { duration: 0 });
+                      try {
+                        const result = await syncCompanyClients((curr, total) => {
+                          toast.loading(`Sincronizando: ${curr}/${total}...`, { id });
+                        });
+                        toast.success(`Sincronização concluída! ${result?.synced} acessos criados/corrigidos.`, { id });
+                      } catch (err: any) {
+                        toast.error("Erro na sincronização: " + err.message, { id });
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-muted text-muted-foreground hover:bg-muted/80 transition-all border border-border"
+                    title="Sincronizar todos os acessos do portal"
+                  >
+                    <RefreshCw size={18} />
+                    Sincronizar Acessos
                   </button>
                   <button onClick={() => navigate("/societario/nova")} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-primary-foreground shadow-md hover:shadow-lg transition-all" style={{ background: "var(--gradient-primary)" }}>
                     <Plus size={18} /> Nova Empresa

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, Building2, ChevronDown, ChevronUp,
-  Shield, CheckCircle, Clock, AlertTriangle, Save
+  Shield, CheckCircle, Clock, AlertTriangle, Save,
+  Upload, Eye, FileText
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
@@ -266,7 +267,65 @@ const LicencasPage: React.FC = () => {
                           const dias = lic?.status === "com_vencimento" ? calcDias(lic.vencimento) : null;
                           return (
                             <div key={key} className="p-4 rounded-xl border border-border bg-card">
-                              <div className="flex items-center justify-between mb-2"><h4 className="text-sm font-semibold text-card-foreground">{label}</h4><span className={`badge-status ${cfg.cls}`}>{cfg.label}</span></div>
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-semibold text-card-foreground">{label}</h4>
+                                <div className="flex items-center gap-2">
+                                  <span className={`badge-status ${cfg.cls}`}>{cfg.label}</span>
+                                  {lic?.file_url ? (
+                                    <button
+                                      onClick={() => window.open(lic.file_url, "_blank")}
+                                      className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+                                      title="Visualizar anexo"
+                                    >
+                                      <Eye size={14} />
+                                    </button>
+                                  ) : (
+                                    <div className="relative">
+                                      <input
+                                        type="file"
+                                        accept=".pdf"
+                                        className="hidden"
+                                        id={`upload-${emp.id}-${key}`}
+                                        onChange={async (e) => {
+                                          const file = e.target.files?.[0];
+                                          if (!file) return;
+
+                                          toast.loading("Enviando...", { id: "up-lic" });
+                                          const path = `licencas/${emp.id}/${key}_${Date.now()}.pdf`;
+
+                                          const { error: upErr } = await supabase.storage.from("documentos").upload(path, file);
+                                          if (upErr) {
+                                            toast.error("Erro: " + upErr.message, { id: "up-lic" });
+                                            return;
+                                          }
+
+                                          const { data: { publicUrl } } = supabase.storage.from("documentos").getPublicUrl(path);
+
+                                          // Update database
+                                          const { error: dbErr } = await supabase.from("licencas")
+                                            .update({ file_url: publicUrl })
+                                            .eq("empresa_id", emp.id)
+                                            .eq("tipo_licenca", key);
+
+                                          if (dbErr) {
+                                            toast.error("Erro DB: " + dbErr.message, { id: "up-lic" });
+                                          } else {
+                                            toast.success("Anexo salvo!", { id: "up-lic" });
+                                            loadBaseData();
+                                          }
+                                        }}
+                                      />
+                                      <label
+                                        htmlFor={`upload-${emp.id}-${key}`}
+                                        className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground cursor-pointer transition-all flex items-center justify-center"
+                                        title="Anexar PDF"
+                                      >
+                                        <Upload size={14} />
+                                      </label>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                               {lic?.status === "com_vencimento" && lic.vencimento && <div className="text-xs text-muted-foreground">Vencimento: {new Date(lic.vencimento).toLocaleDateString("pt-BR")}{dias !== null && <span className={`ml-2 font-medium ${dias < 0 ? "text-destructive" : dias <= 30 ? "text-warning" : "text-success"}`}>({dias}d)</span>}</div>}
                               {lic?.status === "em_processo" && lic.numero_processo && <div className="text-xs text-muted-foreground">Processo: {lic.numero_processo}</div>}
                             </div>

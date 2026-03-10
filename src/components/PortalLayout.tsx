@@ -1,144 +1,185 @@
-import React from "react";
+import React, { useState } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-    Building2, MessageSquare, LogOut, LayoutDashboard,
-    FileText, Clock, Bell, User, Menu, X
+    Building2, MessageSquare, LogOut, LayoutDashboard, FileText, Briefcase,
+    Menu, X, Bell, User, UserCircle,
+    ScrollText, FileBadge, CalendarClock, Search
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const PortalLayout: React.FC = () => {
-    const { userData, logout } = useAuth();
+    const { user, userData, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleLogout = async () => {
         await logout();
-        navigate("/login");
+        navigate("/portal/login");
     };
 
     const menuItems = [
-        { label: "Dashboard", icon: LayoutDashboard, path: "/portal" },
-        { label: "Documentos", icon: FileText, path: "/portal/documentos" },
-        { label: "Processos", icon: Clock, path: "/portal/processos" },
-        { label: "Mensagens", icon: MessageSquare, path: "/portal/mensagens" },
+        { title: "Dashboard", icon: LayoutDashboard, path: "/portal" },
+        { title: "Licenças", icon: ScrollText, path: "/portal/licencas" },
+        { title: "Certidões", icon: FileBadge, path: "/portal/certidoes" },
+        { title: "Processos", icon: Briefcase, path: "/portal/processos" },
+        { title: "Vencimentos", icon: CalendarClock, path: "/portal/vencimentos" },
+        { title: "Mensagens", icon: MessageSquare, path: "/portal/mensagens" },
+        { title: "Meu Perfil", icon: UserCircle, path: "/portal/perfil" },
     ];
 
     return (
-        <div className="flex h-screen bg-background overflow-hidden">
+        <div className="min-h-screen bg-background flex flex-col md:flex-row">
             {/* Sidebar Desktop */}
-            <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card">
-                <div className="p-6 border-b border-border">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground">
-                            <Building2 size={24} />
-                        </div>
-                        <span className="font-bold text-xl tracking-tight">Portal Audipreve</span>
+            <aside className="hidden md:flex w-64 flex-col bg-card border-r border-border sticky top-0 h-screen overflow-y-auto">
+                <div className="p-6 border-b border-border mb-2">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">A</div>
+                        <span className="font-bold text-xl tracking-tight">Audipreve</span>
                     </div>
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mt-1">Portal do Cliente</p>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                <nav className="flex-1 px-4 py-4 space-y-1">
                     {menuItems.map((item) => (
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${location.pathname === item.path
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${location.pathname === item.path
                                 ? "bg-primary text-primary-foreground shadow-md"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                 }`}
                         >
-                            <item.icon size={20} />
-                            {item.label}
+                            <item.icon size={18} />
+                            {item.title}
                         </Link>
                     ))}
                 </nav>
 
-                <div className="p-4 border-t border-border space-y-4">
-                    <div className="flex items-center gap-3 px-2">
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                            <User size={20} className="text-muted-foreground" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold truncate">{userData?.nome}</p>
-                            <p className="text-xs text-muted-foreground truncate">Cliente</p>
-                        </div>
-                    </div>
-                    <Button
-                        variant="ghost"
-                        className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                <div className="p-4 border-t border-border bg-muted/20">
+                    <button
                         onClick={handleLogout}
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
                     >
-                        <LogOut size={18} className="mr-2" /> Sair
-                    </Button>
+                        <LogOut size={18} />
+                        Sair
+                    </button>
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                {/* Header Mobile/Global */}
-                <header className="h-16 border-b border-border bg-card/50 backdrop-blur-md flex items-center justify-between px-4 md:px-8">
-                    <div className="flex items-center gap-4">
+            {/* Mobile Header */}
+            <header className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">A</div>
+                    <span className="font-bold">Audipreve</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </div>
+            </header>
+
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden fixed inset-0 top-[65px] z-40 bg-background/95 backdrop-blur-md animate-in fade-in slide-in-from-top-4">
+                    <nav className="p-6 space-y-2">
+                        {menuItems.map((item) => (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={`flex items-center gap-4 p-4 rounded-2xl text-base font-semibold transition-all ${location.pathname === item.path
+                                    ? "bg-primary text-primary-foreground shadow-lg"
+                                    : "bg-card border border-border text-muted-foreground"
+                                    }`}
+                            >
+                                <item.icon size={20} />
+                                {item.title}
+                            </Link>
+                        ))}
                         <button
-                            className="md:hidden p-2 text-muted-foreground"
-                            onClick={() => setIsMobileMenuOpen(true)}
+                            onClick={handleLogout}
+                            className="flex items-center gap-4 w-full p-4 rounded-2xl text-base font-semibold text-destructive bg-destructive/5 border border-destructive/10 mt-4"
                         >
-                            <Menu size={24} />
+                            <LogOut size={20} />
+                            Sair da Conta
                         </button>
-                        <h2 className="font-bold text-lg md:text-xl text-card-foreground">
-                            {menuItems.find(i => i.path === location.pathname)?.label || "Portal"}
-                        </h2>
+                    </nav>
+                </div>
+            )}
+
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col min-w-0">
+                <header className="hidden md:flex items-center justify-between px-8 py-4 bg-background border-b border-border/50 sticky top-0 z-30">
+                    <div className="flex items-center gap-4 flex-1">
+                        <div className="relative w-full max-w-md group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                            <input
+                                type="text"
+                                placeholder="Pesquisar no portal..."
+                                className="w-full pl-10 pr-4 py-2 rounded-xl bg-muted/50 border border-transparent focus:bg-background focus:border-primary/30 outline-none transition-all text-sm"
+                            />
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2 md:gap-4">
-                        <Button variant="ghost" size="icon" className="relative text-muted-foreground">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
-                        </Button>
+                    <div className="flex items-center gap-4">
                         <ThemeToggle />
+                        <button className="p-2 rounded-xl bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative">
+                            <Bell size={18} />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-background"></span>
+                        </button>
+
+                        <div className="h-6 w-px bg-border mx-2"></div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-3 p-1.5 pr-3 rounded-xl bg-muted/30 hover:bg-muted transition-all">
+                                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                        <User size={18} />
+                                    </div>
+                                    <div className="text-left hidden lg:block">
+                                        <p className="text-xs font-bold leading-tight truncate max-w-[120px]">{userData?.nome || "Empresa"}</p>
+                                        <p className="text-[10px] text-muted-foreground leading-tight truncate">Portal</p>
+                                    </div>
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 rounded-xl p-2 shadow-xl border-border/50">
+                                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => navigate("/portal/perfil")} className="rounded-lg gap-3 py-2 cursor-pointer">
+                                    <UserCircle size={16} /> Ver Perfil
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate("/portal/mensagens")} className="rounded-lg gap-3 py-2 cursor-pointer">
+                                    <MessageSquare size={16} /> Mensagens
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleLogout} className="rounded-lg gap-3 py-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+                                    <LogOut size={16} /> Sair
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-4 md:p-8">
-                    <div className="max-w-6xl mx-auto">
-                        <Outlet />
-                    </div>
-                </main>
-            </div>
-
-            {/* Mobile Menu Overlay */}
-            {isMobileMenuOpen && (
-                <div className="fixed inset-0 z-50 md:hidden bg-background/80 backdrop-blur-sm animate-in fade-in">
-                    <div className="fixed inset-y-0 left-0 w-72 bg-card shadow-2xl animate-in slide-in-from-left">
-                        <div className="p-6 border-b border-border flex items-center justify-between">
-                            <span className="font-bold text-lg">Menu</span>
-                            <button
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className="p-1 hover:bg-muted rounded-md"
-                            >
-                                <X size={24} />
-                            </button>
-                        </div>
-                        <nav className="p-4 space-y-2">
-                            {menuItems.map((item) => (
-                                <Link
-                                    key={item.path}
-                                    to={item.path}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${location.pathname === item.path
-                                        ? "bg-primary text-primary-foreground"
-                                        : "text-muted-foreground hover:bg-muted"
-                                        }`}
-                                >
-                                    <item.icon size={20} />
-                                    {item.label}
-                                </Link>
-                            ))}
-                        </nav>
-                    </div>
+                <div className="p-4 md:p-8 flex-1 overflow-x-hidden">
+                    <Outlet />
                 </div>
-            )}
+            </main>
         </div>
     );
 };
