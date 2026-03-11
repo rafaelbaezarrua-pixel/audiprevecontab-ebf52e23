@@ -32,7 +32,7 @@ const AuditoriaPage: React.FC = () => {
             .from("audit_logs")
             .select(`
         *,
-        profile:user_id(nome_completo, email)
+        profile:profiles(nome_completo, email)
       `)
             .order("created_at", { ascending: false })
             .limit(500);
