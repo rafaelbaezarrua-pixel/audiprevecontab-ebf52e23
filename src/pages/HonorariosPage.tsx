@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Save, Building2, Plus, Calendar, DollarSign, Clock, CheckCircle, Trash2 } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Save, Building2, Plus, Calendar, DollarSign, Clock, CheckCircle, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useEmpresas } from "@/hooks/useEmpresas";
@@ -16,6 +16,16 @@ const HonorariosPage: React.FC = () => {
   const [mainTab, setMainTab] = useState<MainTabType>("empresas");
   const [globalCompetencia, setGlobalCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [geralData, setGeralData] = useState<any[]>([]);
+  const [esporadicosData, setEsporadicosData] = useState<any[]>([]);
+  const [subTab, setSubTab] = useState<"mensal" | "esporadicos">("mensal");
+  const [isAddingEsporadico, setIsAddingEsporadico] = useState(false);
+  const [newEsporadico, setNewEsporadico] = useState<any>({
+    nome_cliente: "",
+    cpf_cnpj: "",
+    tipo_servico: "",
+    valor: 0,
+    pago: false
+  });
 
   // View: Empresas States
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -31,9 +41,10 @@ const HonorariosPage: React.FC = () => {
 
   useEffect(() => {
     if (mainTab === "geral") {
-      loadGeralData();
+      if (subTab === "mensal") loadGeralData();
+      else loadEsporadicosData();
     }
-  }, [mainTab, globalCompetencia]);
+  }, [mainTab, subTab, globalCompetencia]);
 
   const loadGeralData = async () => {
     const { data: records, error } = await supabase
@@ -50,6 +61,62 @@ const HonorariosPage: React.FC = () => {
     }
 
     setGeralData(records || []);
+  };
+
+  const loadEsporadicosData = async () => {
+    const { data: records, error } = await supabase
+      .from("servicos_esporadicos")
+      .select("*")
+      .eq("competencia", globalCompetencia);
+
+    if (error) {
+      toast.error("Erro ao carregar serviços esporádicos: " + error.message);
+      return;
+    }
+
+    setEsporadicosData(records || []);
+  };
+
+  const handleSaveEsporadico = async (record: any) => {
+    try {
+      const payload = {
+        ...record,
+        competencia: globalCompetencia
+      };
+
+      const { error } = record.id 
+        ? await supabase.from("servicos_esporadicos").update(payload).eq("id", record.id)
+        : await supabase.from("servicos_esporadicos").insert([payload]);
+
+      if (error) throw error;
+      toast.success(record.id ? "Serviço atualizado!" : "Serviço cadastrado!");
+      setIsAddingEsporadico(false);
+      setNewEsporadico({ nome_cliente: "", cpf_cnpj: "", tipo_servico: "", valor: 0, pago: false });
+      loadEsporadicosData();
+    } catch (err: any) {
+      toast.error("Erro ao salvar serviço: " + err.message);
+    }
+  };
+
+  const toggleEsporadicoPago = async (id: string, currentValue: boolean) => {
+    try {
+      await supabase.from("servicos_esporadicos").update({ pago: !currentValue }).eq("id", id);
+      toast.success("Status atualizado");
+      loadEsporadicosData();
+    } catch (err: any) {
+      toast.error("Erro ao atualizar: " + err.message);
+    }
+  };
+
+  const deleteEsporadico = async (id: string) => {
+    if (!confirm("Excluir este serviço?")) return;
+    try {
+      await supabase.from("servicos_esporadicos").delete().eq("id", id);
+      toast.success("Excluído");
+      loadEsporadicosData();
+    } catch (err: any) {
+      toast.error("Erro ao excluir");
+    }
   };
 
   const toggleGlobalPago = async (id: string, currentValue: boolean) => {
@@ -239,6 +306,9 @@ const HonorariosPage: React.FC = () => {
   const totalPendente = totalValorAgregado - totalPago;
   const eficienciaCobranca = totalValorAgregado > 0 ? Math.round((totalPago / totalValorAgregado) * 100) : 0;
 
+  const totalEsporadicos = esporadicosData.reduce((acc, curr) => acc + Number(curr.valor || 0), 0);
+  const totalEsporadicosPago = esporadicosData.filter(d => d.pago).reduce((acc, curr) => acc + Number(curr.valor || 0), 0);
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   }
@@ -267,7 +337,21 @@ const HonorariosPage: React.FC = () => {
       {mainTab === "geral" && (
         <div className="space-y-6 animate-fade-in">
           <div className="flex flex-col sm:flex-row items-center justify-between bg-card border border-border p-4 rounded-xl shadow-sm gap-4">
-            <h2 className="font-semibold text-card-foreground">Resumo de Honorários Mensais</h2>
+            <div className="flex bg-muted/50 p-1 rounded-lg">
+              <button 
+                onClick={() => setSubTab("mensal")}
+                className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${subTab === "mensal" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Honorários Mensais
+              </button>
+              <button 
+                onClick={() => setSubTab("esporadicos")}
+                className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${subTab === "esporadicos" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Serviços Esporádicos
+              </button>
+            </div>
+            
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">Competência:</label>
               <input
@@ -278,6 +362,9 @@ const HonorariosPage: React.FC = () => {
               />
             </div>
           </div>
+
+          {subTab === "mensal" ? (
+            <>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-indigo-500">
@@ -405,6 +492,102 @@ const HonorariosPage: React.FC = () => {
               </table>
             </div>
           </div>
+            </>
+          ) : (
+            <>
+              {/* VIEW: SERVIÇOS ESPORÁDICOS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-card border-2 border-primary/10 rounded-xl p-5 shadow-sm">
+                  <p className="text-xs font-bold text-muted-foreground uppercase mb-1 font-black">Total Esporádicos</p>
+                  <p className="text-2xl font-black text-primary">{formatCurrency(totalEsporadicos)}</p>
+                </div>
+                <div className="bg-card border-2 border-emerald-500/10 rounded-xl p-5 shadow-sm">
+                  <p className="text-xs font-bold text-muted-foreground uppercase mb-1 font-black">Total Recebido</p>
+                  <p className="text-2xl font-black text-emerald-500">{formatCurrency(totalEsporadicosPago)}</p>
+                </div>
+                <div className="flex items-center justify-end">
+                  <button 
+                    onClick={() => setIsAddingEsporadico(!isAddingEsporadico)}
+                    className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition-all text-xs uppercase tracking-widest"
+                  >
+                    {isAddingEsporadico ? <X size={18} /> : <Plus size={18} />}
+                    {isAddingEsporadico ? 'Cancelar' : 'Novo Serviço'}
+                  </button>
+                </div>
+              </div>
+
+              {isAddingEsporadico && (
+                <div className="bg-card border border-primary/20 rounded-xl p-6 shadow-md animate-in slide-in-from-top-2">
+                  <h3 className="font-bold text-primary mb-4 flex items-center gap-2 uppercase text-xs tracking-widest"><Plus size={16} /> Novo Serviço Esporádico</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div className="lg:col-span-2">
+                      <label className={labelCls}>Cliente</label>
+                      <input type="text" value={newEsporadico.nome_cliente} onChange={e => setNewEsporadico({...newEsporadico, nome_cliente: e.target.value})} className={inputCls} placeholder="Nome do cliente" />
+                    </div>
+                    <div>
+                      <label className={labelCls}>CPF/CNPJ</label>
+                      <input type="text" value={newEsporadico.cpf_cnpj} onChange={e => setNewEsporadico({...newEsporadico, cpf_cnpj: e.target.value})} className={inputCls} placeholder="000.000..." />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Tipo de Serviço</label>
+                      <input type="text" value={newEsporadico.tipo_servico} onChange={e => setNewEsporadico({...newEsporadico, tipo_servico: e.target.value})} className={inputCls} placeholder="Ex: Abertura, IRPF..." />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Valor (R$)</label>
+                      <input type="number" step="0.01" value={newEsporadico.valor} onChange={e => setNewEsporadico({...newEsporadico, valor: Number(e.target.value)})} className={inputCls} />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3 mt-6 border-t border-border pt-4">
+                    <button onClick={() => setIsAddingEsporadico(false)} className="text-xs font-bold text-muted-foreground px-4 py-2 hover:bg-muted rounded-lg font-black uppercase tracking-widest">Cancelar</button>
+                    <button onClick={() => handleSaveEsporadico(newEsporadico)} className="bg-primary text-white text-xs font-bold px-6 py-2 rounded-lg shadow-md uppercase tracking-widest">Salvar Serviço</button>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-muted/50 text-[10px] font-black uppercase tracking-tighter text-muted-foreground border-b border-border">
+                    <tr>
+                      <th className="px-5 py-4">Cliente / Documento</th>
+                      <th className="px-5 py-4">Serviço</th>
+                      <th className="px-5 py-4 text-right">Valor</th>
+                      <th className="px-5 py-4 text-center">Status</th>
+                      <th className="px-5 py-4 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {esporadicosData.length === 0 ? (
+                      <tr><td colSpan={5} className="px-5 py-12 text-center text-muted-foreground italic">Nenhum serviço esporádico para esta competência {globalCompetencia}.</td></tr>
+                    ) : (
+                      esporadicosData.map(item => (
+                        <tr key={item.id} className="hover:bg-muted/20 transition-colors">
+                          <td className="px-5 py-4">
+                            <p className="font-bold text-card-foreground">{item.nome_cliente}</p>
+                            <p className="text-[10px] text-muted-foreground">{item.cpf_cnpj || '—'}</p>
+                          </td>
+                          <td className="px-5 py-4 font-medium text-muted-foreground">{item.tipo_servico}</td>
+                          <td className="px-5 py-4 font-black text-primary text-right">{formatCurrency(item.valor)}</td>
+                          <td className="px-5 py-4 text-center">
+                            <button 
+                              onClick={() => toggleEsporadicoPago(item.id, item.pago)}
+                              className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest transition-all ${item.pago ? 'bg-emerald-500 text-white shadow-sm' : 'bg-muted text-muted-foreground border border-border'}`}
+                            >
+                              {item.pago ? 'PAGO' : 'PENDENTE'}
+                            </button>
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <button onClick={() => deleteEsporadico(item.id)} className="text-destructive p-2 hover:bg-destructive/10 rounded-lg transition-all" title="Excluir">
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       )}
 
