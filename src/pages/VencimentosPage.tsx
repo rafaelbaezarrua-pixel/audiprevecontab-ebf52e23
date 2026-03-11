@@ -14,6 +14,7 @@ const VencimentosPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("vencimentos");
   const [vencimentos, setVencimentos] = useState<Vencimento[]>([]);
   const [filter, setFilter] = useState("todos");
+  const [categoryFilter, setCategoryFilter] = useState("todos");
   const [search, setSearch] = useState("");
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
 
@@ -119,6 +120,9 @@ const VencimentosPage: React.FC = () => {
     const matchSearch = !search || v.empresa.toLowerCase().includes(search.toLowerCase()) || v.tipo.toLowerCase().includes(search.toLowerCase());
     const matchStatusFilter = filter === "todos" || v.status === filter;
 
+    // Check if category filter matches (e.g. "Certificado Digital" includes "Certificado" or "Licença")
+    const matchCategory = categoryFilter === "todos" || v.tipo.toLowerCase().includes(categoryFilter);
+
     let matchTab = false;
     if (activeStatusTab === "ativas") {
       matchTab = (v.empresa_situacao === "ativa") && v.empresa_porte !== "mei";
@@ -130,7 +134,7 @@ const VencimentosPage: React.FC = () => {
       matchTab = v.empresa_situacao === "baixada";
     }
 
-    return matchSearch && matchStatusFilter && matchTab;
+    return matchSearch && matchStatusFilter && matchCategory && matchTab;
   });
 
   const counts = { vencido: vencimentos.filter(v => v.status === "vencido").length, proximo: vencimentos.filter(v => v.status === "próximo").length, emDia: vencimentos.filter(v => v.status === "em dia").length };
@@ -189,6 +193,20 @@ const VencimentosPage: React.FC = () => {
       </div>
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
+        <div className="flex flex-wrap gap-2">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-foreground border border-border focus:ring-2 focus:ring-primary outline-none cursor-pointer"
+          >
+            <option value="todos">Todos os Tipos</option>
+            <option value="certificado">Certificados</option>
+            <option value="licença">Licenças</option>
+            <option value="taxa">Taxas</option>
+            <option value="certidão">Certidões</option>
+            <option value="procuração">Procurações</option>
+          </select>
+        </div>
         <div className="flex gap-2">{["todos", "vencido", "próximo", "em dia"].map(f => (<button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>))}</div>
       </div>
       <div className="module-card overflow-x-auto">
