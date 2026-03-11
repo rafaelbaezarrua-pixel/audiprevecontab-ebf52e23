@@ -15,6 +15,7 @@ const PortalLayout = lazy(() => import("@/components/PortalLayout"));
 // Lazy Loaded Pages
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const AuditoriaPage = lazy(() => import("@/pages/AuditoriaPage"));
 const SocietarioPage = lazy(() => import("@/pages/SocietarioPage"));
 const SocietarioEmpresaPage = lazy(() => import("@/pages/SocietarioEmpresaPage"));
 const CertificadosPage = lazy(() => import("@/pages/CertificadosPage"));
@@ -49,6 +50,8 @@ const PortalLicencasPage = lazy(() => import("@/pages/PortalLicencasPage"));
 const PortalCertidoesPage = lazy(() => import("@/pages/PortalCertidoesPage"));
 const PortalVencimentosPage = lazy(() => import("@/pages/PortalVencimentosPage"));
 const PortalPerfilPage = lazy(() => import("@/pages/PortalPerfilPage"));
+const PortalProcessosPage = lazy(() => import("@/pages/PortalProcessosPage"));
+const PortalDocumentosPage = lazy(() => import("@/pages/PortalDocumentosPage"));
 
 const queryClient = new QueryClient();
 
@@ -153,6 +156,7 @@ const App = () => (
                   <Route path="/configuracoes/usuarios/novo" element={<AdminRoute><UsuarioFormPage /></AdminRoute>} />
                   <Route path="/perfil" element={<PerfilPage />} />
                   <Route path="/configuracoes" element={<AdminRoute><ConfiguracoesPage /></AdminRoute>} />
+                  <Route path="/configuracoes/auditoria" element={<AdminRoute><AuditoriaPage /></AdminRoute>} />
                 </Route>
 
                 {/* Portal do Cliente Routes */}
@@ -162,8 +166,8 @@ const App = () => (
                   <Route path="/portal/certidoes" element={<PortalCertidoesPage />} />
                   <Route path="/portal/vencimentos" element={<PortalVencimentosPage />} />
                   <Route path="/portal/perfil" element={<PortalPerfilPage />} />
-                  <Route path="/portal/documentos" element={<div>Página de Documentos (Em breve)</div>} />
-                  <Route path="/portal/processos" element={<div>Página de Processos (Em breve)</div>} />
+                  <Route path="/portal/documentos" element={<PortalDocumentosPage />} />
+                  <Route path="/portal/processos" element={<PortalProcessosPage />} />
                   <Route path="/portal/mensagens" element={<MessagesPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />

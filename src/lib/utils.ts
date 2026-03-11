@@ -23,3 +23,11 @@ export function maskCPF(value: string) {
     .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4")
     .replace(/(-\d{2})\d+?$/, "$1");
 }
+
+export function formatCurrency(value: number | string) {
+  const numericValue = typeof value === "string" ? parseFloat(value) : value;
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(numericValue || 0);
+}

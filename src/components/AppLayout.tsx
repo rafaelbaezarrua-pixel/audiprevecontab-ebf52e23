@@ -5,7 +5,7 @@ import {
   Building2, FileText, Award, Clock, Calculator,
   Users, Receipt, RefreshCw, DollarSign, ClipboardList,
   LayoutDashboard, Settings, LogOut, ChevronLeft, ChevronRight,
-  Bell, Menu, Shield, User, Calendar
+  Bell, Menu, Shield, User, Calendar, Database
 } from "lucide-react";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 import { useTheme } from "@/components/theme-provider";
@@ -142,6 +142,15 @@ const AppLayout: React.FC = () => {
               >
                 <Settings size={18} />
                 {!collapsed && <span>Configurações</span>}
+              </button>
+              <button
+                onClick={() => handleNav("/configuracoes/auditoria")}
+                className={`nav-item w-full ${location.pathname === "/configuracoes/auditoria" ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
+                title={collapsed ? "Auditoria do Sistema" : undefined}
+                aria-label="Auditoria do Sistema"
+              >
+                <Database size={18} />
+                {!collapsed && <span>Auditoria do Sistema</span>}
               </button>
             </>
           )}
