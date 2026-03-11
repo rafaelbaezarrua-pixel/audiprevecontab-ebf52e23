@@ -24,10 +24,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
     const checkAlerts = async () => {
         // Only run for authenticated users
         if (!user) return;
-        if (isCheckingRef.current) {
-            console.log("Sistema de Alertas: Já existe uma verificação em curso.");
-            return;
-        }
+        if (isCheckingRef.current) return;
 
         console.log("Sistema de Alertas: Iniciando verificação geral...");
         isCheckingRef.current = true;
@@ -62,7 +59,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                     .select("id, empresa_id, data_vencimento")
                     .lte("data_vencimento", limitDateStr);
 
-                console.log(`Sistema de Alertas: Encontrados ${certificados?.length || 0} certificados em alerta.`);
+
                 if (certificados && certificados.length > 0) {
                     for (const cert of certificados) {
                         const vencimento = new Date(cert.data_vencimento);
@@ -78,7 +75,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                             ? `O certificado digital venceu em ${cert.data_vencimento.split('-').reverse().join('/')}.`
                             : `O certificado digital vencerá em ${diasRestantes} dias (${cert.data_vencimento.split('-').reverse().join('/')}).`;
 
-                        console.log(`Sistema de Alertas: Emitindo alerta para Certificado ${cert.id}`);
+
 
                         // Generate unique signature for this alert to prevent SPAM (e.g., today + certID)
                         const signature = `alert_cert_${cert.id}_${todayStr}`;
@@ -155,7 +152,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
     // Helper function to emit atomic notifications safely without duplicates
     const emitSystemAlert = async (userId: string, title: string, message: string, link: string, signature: string) => {
         try {
-            console.log(`Sistema de Alertas: Processando alerta para assinatura ${signature}`);
+
             
             // 1. Try to find the existing notification first
             // We avoid 'upsert' here because onConflict with JSONB expressions is prone to picky syntax errors in the client
@@ -200,10 +197,10 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                     }
                 } else {
                     notificationId = created?.id;
-                    console.log(`Sistema de Alertas: Notificação base ${notificationId} criada.`);
+
                 }
             } else {
-                console.log(`Sistema de Alertas: Notificação base ${notificationId} já existe.`);
+
             }
 
             // 3. Link the user to the notification
@@ -226,12 +223,11 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
             .maybeSingle();
 
         if (existingLink) {
-            console.log(`Sistema de Alertas: Usuário já possui vínculo com a notificação ${notificationId}.`);
             return;
         }
 
         // Link the user to the notification
-        console.log(`Sistema de Alertas: Vinculando notificação ${notificationId} ao usuário ${userId}...`);
+
         const { error: errLink } = await (supabase as any)
             .from("notification_recipients")
             .insert({
