@@ -42,6 +42,7 @@ const navItems: NavItemConfig[] = [
   { id: "parcelamentos", label: "Parcelamentos", icon: <Calculator size={18} />, path: "/parcelamentos", moduleKey: "parcelamentos" },
   { id: "recalculos", label: "Recálculos", icon: <RefreshCw size={18} />, path: "/recalculos", moduleKey: "recalculos" },
   { id: "honorarios", label: "Honorários", icon: <DollarSign size={18} />, path: "/honorarios", moduleKey: "honorarios", section: "FINANCEIRO" },
+  { id: "relatorios", label: "Relatórios", icon: <FileText size={18} />, path: "/relatorios" },
 ];
 
 const AppLayout: React.FC = () => {
