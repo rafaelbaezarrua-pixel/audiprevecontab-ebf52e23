@@ -1,5 +1,5 @@
 import React from "react";
-import { Bell, Check, Trash2, ExternalLink, Inbox } from "lucide-react";
+import { Bell, Check, Trash2, ExternalLink, Inbox, ShieldAlert } from "lucide-react";
 import { useNotifications, Notification } from "@/hooks/useNotifications";
 import {
     Popover,
@@ -73,56 +73,63 @@ const NotificationHeader: React.FC = () => {
                         </div>
                     ) : (
                         <div className="flex flex-col">
-                            {notifications.map((n) => (
-                                <div
-                                    key={n.recipient_id}
-                                    className={`group relative p-4 border-b border-border last:border-0 transition-colors cursor-pointer hover:bg-muted/50 ${!n.is_read ? "bg-primary/5" : ""
-                                        }`}
-                                    onClick={() => handleNotificationClick(n)}
-                                >
-                                    <div className="pr-12">
-                                        <p className={`text-sm ${!n.is_read ? "font-bold text-foreground" : "font-medium text-foreground/80"}`}>
-                                            {n.title}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                                            {n.message}
-                                        </p>
-                                        <p className="text-[10px] text-muted-foreground mt-2 font-medium">
-                                            {formatDistanceToNow(new Date(n.created_at), {
-                                                addSuffix: true,
-                                                locale: ptBR,
-                                            })}
-                                        </p>
-                                    </div>
-                                    <div className="absolute top-4 right-4 flex flex-col gap-2 scale-0 group-hover:scale-100 transition-transform">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                deleteNotification(n.recipient_id);
-                                            }}
-                                            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                                            title="Excluir"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                        {!n.is_read && (
+                            {notifications.map((n) => {
+                                const isSystemAlert = n.type === "alerta_sistema";
+                                return (
+                                    <div
+                                        key={n.recipient_id}
+                                        className={`group relative p-4 border-b border-border last:border-0 transition-colors cursor-pointer hover:bg-muted/50 ${isSystemAlert && !n.is_read ? "bg-destructive/10 border-l-4 border-l-destructive" :
+                                            !n.is_read ? "bg-primary/5 border-l-4 border-l-primary" : "border-l-4 border-l-transparent"
+                                            }`}
+                                        onClick={() => handleNotificationClick(n)}
+                                    >
+                                        <div className="pr-12">
+                                            <div className="flex items-start gap-2">
+                                                {isSystemAlert && <ShieldAlert size={16} className="text-destructive shrink-0 mt-0.5" />}
+                                                <p className={`text-sm ${!n.is_read ? "font-bold text-foreground" : "font-medium text-foreground/80"} ${isSystemAlert ? "text-destructive" : ""}`}>
+                                                    {n.title}
+                                                </p>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                                                {n.message}
+                                            </p>
+                                            <p className="text-[10px] text-muted-foreground mt-2 font-medium">
+                                                {formatDistanceToNow(new Date(n.created_at), {
+                                                    addSuffix: true,
+                                                    locale: ptBR,
+                                                })}
+                                            </p>
+                                        </div>
+                                        <div className="absolute top-4 right-4 flex flex-col gap-2 scale-0 group-hover:scale-100 transition-transform">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    markAsRead(n.recipient_id);
+                                                    deleteNotification(n.recipient_id);
                                                 }}
-                                                className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                                                title="Marcar como lida"
+                                                className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                                title="Excluir"
                                             >
-                                                <Check size={14} />
+                                                <Trash2 size={14} />
                                             </button>
+                                            {!n.is_read && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        markAsRead(n.recipient_id);
+                                                    }}
+                                                    className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                                                    title="Marcar como lida"
+                                                >
+                                                    <Check size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {!n.is_read && (
+                                            <div className={`absolute top-4 right-2 w-2 h-2 rounded-full ${isSystemAlert ? "bg-destructive" : "bg-primary"}`} />
                                         )}
                                     </div>
-                                    {!n.is_read && (
-                                        <div className="absolute top-4 right-2 w-2 h-2 rounded-full bg-primary" />
-                                    )}
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </ScrollArea>

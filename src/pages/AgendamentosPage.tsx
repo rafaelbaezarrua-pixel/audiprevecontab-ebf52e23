@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2 } from "lucide-react";
+import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import KanbanBoard, { KanbanColumn, KanbanItem } from "@/components/KanbanBoard";
 
 interface Agendamento {
     id: string;
@@ -30,6 +31,7 @@ const AgendamentosPage: React.FC = () => {
     const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
     const [activeTab, setActiveTab] = useState<"geral" | "meus">("geral");
     const [activeSubTab, setActiveSubTab] = useState<"em_aberto" | "concluido" | "pendente" | "arquivados">("em_aberto");
+    const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
 
     const loadData = async () => {
         setLoading(true);
@@ -48,12 +50,36 @@ const AgendamentosPage: React.FC = () => {
                 .eq("competencia", competencia)
                 .order("horario", { ascending: true }) as any);
 
-            const enrichedData = (agendaData || []).map((a: any) => ({
-                ...a,
-                status: a.status || "em_aberto",
-                arquivado: !!a.arquivado,
-                usuario_nome: mappedUsers.find(u => u.id === a.usuario_id)?.nome || "Não encontrado"
-            }));
+            const now = new Date();
+
+            const enrichedData = (agendaData || []).map((a: any) => {
+                let currentStatus = a.status || "em_aberto";
+                let isOverdue = false;
+
+                if (currentStatus === "em_aberto" && a.data && a.horario) {
+                    const scheduledDateTime = new Date(`${a.data}T${a.horario}`);
+                    if (scheduledDateTime < now) {
+                        currentStatus = "pendente";
+                        isOverdue = true;
+                    }
+                }
+
+                return {
+                    ...a,
+                    status: currentStatus,
+                    arquivado: !!a.arquivado,
+                    usuario_nome: mappedUsers.find(u => u.id === a.usuario_id)?.nome || "Não encontrado",
+                    _isOverdueDbUpdateNeeded: isOverdue // Flag to update DB later
+                };
+            });
+
+            // Fire and forget DB updates for newly identified overdue appointments
+            const overdueItems = enrichedData.filter(item => item._isOverdueDbUpdateNeeded);
+            if (overdueItems.length > 0) {
+                Promise.all(overdueItems.map(item =>
+                    supabase.from("agendamentos" as any).update({ status: "pendente" } as any).eq("id", item.id) as any
+                )).catch(e => console.error("Failed to auto-update overdue appointments", e));
+            }
 
             setAgendamentos(enrichedData);
         } catch (err: any) {
@@ -66,6 +92,32 @@ const AgendamentosPage: React.FC = () => {
     useEffect(() => {
         loadData();
     }, [competencia]);
+
+    // Background job to check for overdue items every minute
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = new Date();
+            let hasChanges = false;
+
+            setAgendamentos(prev => {
+                const updated = prev.map(a => {
+                    if (a.status === "em_aberto" && a.data && a.horario) {
+                        const scheduledDateTime = new Date(`${a.data}T${a.horario}`);
+                        if (scheduledDateTime < now) {
+                            hasChanges = true;
+                            // Optionally push the update to Supabase
+                            supabase.from("agendamentos" as any).update({ status: "pendente" } as any).eq("id", a.id).then();
+                            return { ...a, status: "pendente" };
+                        }
+                    }
+                    return a;
+                });
+                return hasChanges ? updated : prev;
+            });
+        }, 60000); // Check every minute
+
+        return () => clearInterval(interval);
+    }, []);
 
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
@@ -159,9 +211,110 @@ const AgendamentosPage: React.FC = () => {
         }
     };
 
+    const kanbanColumns: KanbanColumn[] = [
+        { id: 'em_aberto', title: 'A Fazer', colorClass: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+        { id: 'pendente', title: 'Pendente', colorClass: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
+        { id: 'concluido', title: 'Concluído', colorClass: 'bg-green-500/10 text-green-500 border-green-500/20' }
+    ];
+
+    const kanbanItems: KanbanItem[] = filtered.map(a => ({
+        id: a.id,
+        status: a.status,
+        renderContent: () => (
+            <div className={`
+                p-4 space-y-3 transition-all h-full bg-card group relative
+                border-l-4 ${a.status === 'concluido' ? 'border-l-green-500 opacity-90' : a.status === 'pendente' ? 'border-l-amber-500' : 'border-l-primary'}
+            `}>
+                <div className="flex items-start justify-between">
+                    <div className="space-y-1 w-full">
+                        <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-bold text-card-foreground leading-tight text-sm flex-1">{a.assunto}</h3>
+                            <button
+                                onClick={() => handleDeleteAgendamento(a.id)}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                                title="Excluir"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
+                            <User size={12} className="text-primary/70" /> Para: <span className="text-foreground font-medium">{a.usuario_nome}</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar size={14} className="text-primary" />
+                        {format(new Date(a.data + 'T00:00:00'), "dd 'de' MMM", { locale: ptBR })}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock size={14} className="text-primary" />
+                        {a.horario.slice(0, 5)}
+                    </div>
+                </div>
+
+                {a.informacoes_adicionais && (
+                    <div className="bg-muted/40 p-2.5 rounded-lg text-xs tracking-tight text-foreground/80 border border-border italic line-clamp-3">
+                        {a.informacoes_adicionais}
+                    </div>
+                )}
+
+                {(a.usuario_id === user?.id || userData?.isAdmin) && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border mt-auto">
+                        {!a.arquivado && (
+                            <>
+                                {a.status !== 'concluido' ? (
+                                    <button
+                                        onClick={() => handleUpdateStatus(a.id, 'concluido')}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-green-500/10 text-green-500 text-xs font-bold hover:bg-green-500 hover:text-white transition-all"
+                                    >
+                                        <CheckCircle size={14} /> Concluir
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleUpdateStatus(a.id, 'em_aberto')}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-muted-foreground text-xs font-bold hover:bg-muted-foreground hover:text-white transition-all"
+                                    >
+                                        <Circle size={14} /> Reabrir
+                                    </button>
+                                )}
+                            </>
+                        )}
+
+                        {!a.arquivado ? (
+                            <button
+                                onClick={() => handleUpdateArquivado(a.id, true)}
+                                className="flex-1 px-3 py-1.5 rounded-md bg-muted/50 text-muted-foreground text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center justify-center gap-1.5"
+                                title="Arquivar"
+                            >
+                                <X size={13} /> Arquivar
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => handleUpdateArquivado(a.id, false)}
+                                className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary hover:text-white transition-all"
+                            >
+                                <RefreshCw size={13} /> Desarquivar
+                            </button>
+                        )}
+
+                        <button
+                            onClick={() => handleDeleteAgendamento(a.id)}
+                            className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center gap-1.5"
+                            title="Excluir"
+                        >
+                            <Trash2 size={13} /> Excluir
+                        </button>
+                    </div>
+                )}
+            </div>
+        )
+    }));
+
     return (
-        <div className="space-y-6 animate-fade-in">
-            <div className="flex items-center gap-3 justify-end">
+        <div className="space-y-6 animate-fade-in flex flex-col min-h-[calc(100vh-100px)]">
+            <div className="flex items-center gap-3 justify-end shrink-0">
                 <input
                     type="month"
                     value={competencia}
@@ -177,8 +330,8 @@ const AgendamentosPage: React.FC = () => {
                 </button>
             </div>
 
-            <div className="space-y-4">
-                <div className="flex border-b border-border">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+                <div className="flex border-b border-border w-full sm:w-auto overflow-x-auto no-scrollbar">
                     <button
                         className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === "geral" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                         onClick={() => {
@@ -206,10 +359,6 @@ const AgendamentosPage: React.FC = () => {
                         { id: "pendente", label: "Pendente", hideOnGeral: true },
                         { id: "arquivados", label: "Arquivados", hideOnGeral: false }
                     ].map(sub => {
-                        // Na aba Geral, as sub-abas de status não fazem sentido se o Geral já mostra tudo,
-                        // mas vamos manter a de Arquivados. Se o usuário quiser filtrar Geral por status, 
-                        // poderíamos implementar, mas o pedido foca em "arquivados".
-                        // Para simplificar e atender o pedido: Geral tem "Todos" (em_aberto) e "Arquivados".
                         if (activeTab === "geral" && sub.hideOnGeral && sub.id !== "em_aberto") return null;
 
                         const label = activeTab === "geral" && sub.id === "em_aberto" ? "Ativos" : sub.label;
@@ -225,9 +374,26 @@ const AgendamentosPage: React.FC = () => {
                         );
                     })}
                 </div>
+
+                <div className="flex bg-muted p-1 rounded-lg shrink-0">
+                    <button
+                        onClick={() => setViewMode("list")}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                        title="Ver como Lista"
+                    >
+                        <List size={16} /> <span className="hidden sm:inline">Lista</span>
+                    </button>
+                    <button
+                        onClick={() => setViewMode("kanban")}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === "kanban" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                        title="Ver como Quadro (Kanban)"
+                    >
+                        <LayoutDashboard size={16} /> <span className="hidden sm:inline">Quadro</span>
+                    </button>
+                </div>
             </div>
 
-            <div className="relative max-w-sm">
+            <div className="relative max-w-sm shrink-0">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                     type="text"
@@ -238,96 +404,26 @@ const AgendamentosPage: React.FC = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filtered.length === 0 ? (
-                    <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
-                        Nenhum agendamento encontrado para este período.
-                    </div>
-                ) : (
-                    filtered.map(a => (
-                        <div key={a.id} className={`module-card p-5 space-y-4 hover:shadow-lg transition-all border-l-4 ${a.status === 'concluido' ? 'border-l-green-500 opacity-80' : 'border-l-primary'}`}>
-                            <div className="flex items-start justify-between">
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-bold text-card-foreground leading-tight">{a.assunto}</h3>
-                                        {getStatusBadge(a.status)}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                        <User size={12} /> Para: <span className="text-foreground font-medium">{a.usuario_nome}</span>
-                                    </p>
-                                </div>
-                                <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                                    <Calendar size={18} />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 pt-2">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Calendar size={14} className="text-primary" />
-                                    {format(new Date(a.data + 'T00:00:00'), "dd 'de' MMM", { locale: ptBR })}
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Clock size={14} className="text-primary" />
-                                    {a.horario.slice(0, 5)}
-                                </div>
-                            </div>
-
-                            {a.informacoes_adicionais && (
-                                <div className="bg-muted/30 p-3 rounded-lg text-xs text-muted-foreground border border-border italic">
-                                    {a.informacoes_adicionais}
-                                </div>
-                            )}
-
-                            {(a.usuario_id === user?.id || userData?.isAdmin) && (
-                                <div className="flex items-center gap-2 pt-2 border-t border-border">
-                                    {!a.arquivado ? (
-                                        <>
-                                            {a.status !== 'concluido' ? (
-                                                <button
-                                                    onClick={() => handleUpdateStatus(a.id, 'concluido')}
-                                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/10 text-green-500 text-xs font-bold hover:bg-green-500 hover:text-white transition-all"
-                                                >
-                                                    <CheckCircle size={14} /> Concluir
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleUpdateStatus(a.id, 'em_aberto')}
-                                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted-foreground hover:text-white transition-all"
-                                                >
-                                                    <Circle size={14} /> Reabrir
-                                                </button>
-                                            )}
-
-                                            <button
-                                                onClick={() => handleUpdateArquivado(a.id, true)}
-                                                className="px-3 py-2 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-destructive hover:text-white transition-all flex items-center gap-1.5"
-                                                title="Arquivar"
-                                            >
-                                                <X size={14} /> Arquivar
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleUpdateArquivado(a.id, false)}
-                                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-white transition-all"
-                                        >
-                                            <RefreshCw size={14} /> Desarquivar
-                                        </button>
-                                    )}
-
-                                    <button
-                                        onClick={() => handleDeleteAgendamento(a.id)}
-                                        className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive hover:text-white transition-all flex items-center gap-1.5"
-                                        title="Excluir"
-                                    >
-                                        <Trash2 size={14} /> Excluir
-                                    </button>
-                                </div>
-                            )}
+            {/* View Mode Switching */}
+            {viewMode === 'kanban' && activeSubTab !== 'arquivados' ? (
+                <div className="flex-1 overflow-hidden min-h-[500px]">
+                    <KanbanBoard
+                        columns={kanbanColumns}
+                        items={kanbanItems}
+                        onDragEnd={handleUpdateStatus}
+                    />
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
+                    {filtered.length === 0 ? (
+                        <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
+                            Nenhum agendamento encontrado para este período.
                         </div>
-                    ))
-                )}
-            </div>
+                    ) : (
+                        filtered.map(a => <React.Fragment key={a.id}>{kanbanItems.find(i => i.id === a.id)?.renderContent()}</React.Fragment>)
+                    )}
+                </div>
+            )}
         </div>
     );
 };

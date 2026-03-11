@@ -19,6 +19,7 @@ const VerificationPage: React.FC = () => {
         } else {
             sendCode();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userData]);
 
     const sendCode = async () => {

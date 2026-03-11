@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { TableSkeleton, PageHeaderSkeleton } from "@/components/PageSkeleton";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { syncCompanyClients } from "@/lib/sync-clients";
 import { RefreshCw } from "lucide-react";
 
@@ -60,10 +61,8 @@ const passosConfig = [
 ];
 
 const SocietarioPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const [activeMainTab, setActiveMainTab] = useState<"empresas" | "processos">("empresas");
-  const [empresas, setEmpresas] = useState<Empresa[]>([]);
-  const [processos, setProcessos] = useState<Processo[]>([]);
-  const [loadingInitial, setLoadingInitial] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [search, setSearch] = useState("");
   const [filterSituacao, setFilterSituacao] = useState("todas");
@@ -77,42 +76,41 @@ const SocietarioPage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const fetchEmpresas = async () => {
-    const { data } = await supabase.from("empresas").select("*").order("nome_empresa");
-    const { data: sociosData } = await supabase.from("socios").select("empresa_id");
-    const sociosCounts: Record<string, number> = {};
-    sociosData?.forEach(s => { sociosCounts[s.empresa_id] = (sociosCounts[s.empresa_id] || 0) + 1; });
-    setEmpresas((data || []).map(e => ({ ...e, socios_count: sociosCounts[e.id] || 0 })));
-  };
+  const { data: empresas = [], isLoading: loadingEmpresas } = useQuery({
+    queryKey: ["empresas"],
+    queryFn: async () => {
+      const { data } = await supabase.from("empresas").select("*").order("nome_empresa");
+      const { data: sociosData } = await supabase.from("socios").select("empresa_id");
+      const sociosCounts: Record<string, number> = {};
+      sociosData?.forEach(s => { sociosCounts[s.empresa_id] = (sociosCounts[s.empresa_id] || 0) + 1; });
+      return (data || []).map(e => ({ ...e, socios_count: sociosCounts[e.id] || 0 })) as Empresa[];
+    }
+  });
 
-  const fetchProcessos = async () => {
-    const { data } = await supabase.from("processos_societarios" as any).select("*").order("created_at", { ascending: false });
-    setProcessos((data as unknown as Processo[]) || []);
-  };
+  const { data: processos = [], isLoading: loadingProcessos } = useQuery({
+    queryKey: ["processos_societarios"],
+    queryFn: async () => {
+      const { data } = await supabase.from("processos_societarios" as any).select("*").order("created_at", { ascending: false });
+      return (data as unknown as Processo[]) || [];
+    }
+  });
 
-  useEffect(() => {
-    const init = async () => {
-      setLoadingInitial(true);
-      await Promise.all([fetchEmpresas(), fetchProcessos()]);
-      setLoadingInitial(false);
-    };
-    init();
-  }, []);
+  const loadingInitial = loadingEmpresas || loadingProcessos;
 
   // Realtime subscriptions
   useEffect(() => {
     const channel = supabase.channel("societario_changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "empresas" }, () => fetchEmpresas())
-      .on("postgres_changes", { event: "*", schema: "public", table: "processos_societarios" as any }, () => fetchProcessos())
+      .on("postgres_changes", { event: "*", schema: "public", table: "empresas" }, () => queryClient.invalidateQueries({ queryKey: ["empresas"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "processos_societarios" as any }, () => queryClient.invalidateQueries({ queryKey: ["processos_societarios"] }))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [queryClient]);
 
   const handleCreateProcesso = async () => {
     if (!novoProcessoData.nome_empresa) { toast.error("Preencha o nome da empresa"); return; }
     const { error } = await supabase.from("processos_societarios" as any).insert([novoProcessoData]);
     if (error) toast.error("Erro ao criar: " + error.message);
-    else { toast.success("Processo iniciado!"); setShowNovoProcesso(false); fetchProcessos(); }
+    else { toast.success("Processo iniciado!"); setShowNovoProcesso(false); queryClient.invalidateQueries({ queryKey: ["processos_societarios"] }); }
   };
 
   const openDeleteConfirm = (id: string, nome: string) => {
@@ -126,13 +124,13 @@ const SocietarioPage: React.FC = () => {
 
     const { error } = await supabase.from("processos_societarios" as any).delete().eq("id", id);
     if (error) toast.error("Erro ao excluir: " + error.message);
-    else { toast.success("Processo excluído!"); fetchProcessos(); }
+    else { toast.success("Processo excluído!"); queryClient.invalidateQueries({ queryKey: ["processos_societarios"] }); }
   };
 
   const updatePasso = async (id: string, campo: string, value: any) => {
     const { error } = await supabase.from("processos_societarios" as any).update({ [campo]: value }).eq("id", id);
     if (error) toast.error("Erro: " + error.message);
-    else fetchProcessos();
+    else queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
   };
 
   const updateDetalhePasso = async (id: string, stepId: string, field: string, value: string) => {
@@ -142,7 +140,7 @@ const SocietarioPage: React.FC = () => {
     novosDetalhes[stepId] = { ...novosDetalhes[stepId], [field]: value };
     const { error } = await supabase.from("processos_societarios" as any).update({ detalhes_passos: novosDetalhes }).eq("id", id);
     if (error) toast.error("Erro ao salvar detalhes: " + error.message);
-    else fetchProcessos();
+    else queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
   };
 
   const filteredEmpresas = empresas.filter((e) => {

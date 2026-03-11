@@ -13,6 +13,7 @@ import NotificationHeader from "./NotificationHeader";
 import { GlobalSearch } from "./GlobalSearch";
 import { ThemeToggle } from "./ThemeToggle";
 import { Star } from "lucide-react";
+import { AlertasInteligentesProvider } from "@/contexts/AlertasInteligentesProvider";
 
 interface NavItemConfig {
   id: string;
@@ -209,7 +210,9 @@ const AppLayout: React.FC = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 lg:p-6">
-          <Outlet />
+          <AlertasInteligentesProvider>
+            <Outlet />
+          </AlertasInteligentesProvider>
         </div>
       </main>
     </div>
