@@ -211,6 +211,9 @@ const OcorrenciasPage: React.FC = () => {
             doc.addImage(imgData, format, headerConfig.logoX, headerConfig.logoY, headerConfig.logoWidth, headerConfig.logoHeight);
         } catch (e) {
             console.warn("Logo blocked by CORS or invalid. Generating PDF without custom logo.", e);
+            if (headerConfig.logoUrl && headerConfig.logoUrl.startsWith('http')) {
+                toast.error("O link da logo foi bloqueado por segurança (CORS). Por favor, baixe a imagem para o seu computador e faça o upload dela nas configurações.");
+            }
             // Fallback to default if custom url failed
             try {
                 if (headerConfig.logoUrl) {

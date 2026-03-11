@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, X, Shield, ShieldOff, Users, Building } from "lucide-react";
 import { toast } from "sonner";
 import { Navigate, useNavigate } from "react-router-dom";
+import AuditoriaPage from "./AuditoriaPage";
 
 interface Usuario {
   id: string;
@@ -37,7 +38,7 @@ const ConfiguracoesPage: React.FC = () => {
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [activeTab, setActiveTab] = useState<'interna' | 'cliente'>('interna');
+  const [activeTab, setActiveTab] = useState<'interna' | 'cliente' | 'auditoria'>('interna');
 
   const loadUsers = async () => {
     try {
@@ -179,61 +180,73 @@ const ConfiguracoesPage: React.FC = () => {
         >
           <Building size={18} /> Portal Cliente
         </button>
+        <button
+          onClick={() => setActiveTab('auditoria')}
+          className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium transition-colors ${activeTab === 'auditoria' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+        >
+          <Shield size={18} /> Auditoria do Sistema
+        </button>
       </div>
 
-      <div className="space-y-4">
-        {usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).map(u => (
-          <div key={u.id} className="module-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                  <span className="text-primary-foreground text-sm font-bold">{(u.nome || "U").slice(0, 2).toUpperCase()}</span>
+      {activeTab === 'auditoria' ? (
+        <AuditoriaPage />
+      ) : (
+        <>
+          <div className="space-y-4">
+            {usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).map(u => (
+              <div key={u.id} className="module-card">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                      <span className="text-primary-foreground text-sm font-bold">{(u.nome || "U").slice(0, 2).toUpperCase()}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-card-foreground">{u.nome || "Sem nome"}</p>
+                      <p className="text-xs text-muted-foreground">{u.email} {u.departamento ? `• ${u.departamento}` : ""}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => toggleAdmin(u.id, u.isAdmin)} className={`p-2 rounded-lg transition-colors ${u.isAdmin ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:text-primary"}`} title={u.isAdmin ? "Remover admin" : "Tornar admin"}>
+                      {u.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
+                    </button>
+                    <button onClick={() => handleDelete(u.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={16} /></button>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-card-foreground">{u.nome || "Sem nome"}</p>
-                  <p className="text-xs text-muted-foreground">{u.email} {u.departamento ? `• ${u.departamento}` : ""}</p>
-                </div>
+                {activeTab === 'interna' && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mt-4 pt-4 border-t border-border">
+                    {Object.entries(moduleLabels).map(([key, label]) => (
+                      <button
+                        key={key}
+                        onClick={() => toggleModule(u.id, key, u.modules?.[key] || false)}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${u.isAdmin || u.modules?.[key]
+                          ? "border-success/30 bg-success/5 text-success"
+                          : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30"
+                          }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => toggleAdmin(u.id, u.isAdmin)} className={`p-2 rounded-lg transition-colors ${u.isAdmin ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:text-primary"}`} title={u.isAdmin ? "Remover admin" : "Tornar admin"}>
-                  {u.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
-                </button>
-                <button onClick={() => handleDelete(u.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={16} /></button>
+            ))}
+            {loadingUsers ? (
+              <div className="module-card text-center py-8">
+                <p className="text-muted-foreground">Carregando usuários...</p>
               </div>
-            </div>
-            {activeTab === 'interna' && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mt-4 pt-4 border-t border-border">
-                {Object.entries(moduleLabels).map(([key, label]) => (
-                  <button
-                    key={key}
-                    onClick={() => toggleModule(u.id, key, u.modules?.[key] || false)}
-                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${u.isAdmin || u.modules?.[key]
-                      ? "border-success/30 bg-success/5 text-success"
-                      : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30"
-                      }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+            ) : usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).length === 0 ? (
+              <div className="module-card text-center py-8">
+                <p className="text-muted-foreground">Nenhum usuário cadastrado</p>
               </div>
-            )}
+            ) : null}
           </div>
-        ))}
-        {loadingUsers ? (
-          <div className="module-card text-center py-8">
-            <p className="text-muted-foreground">Carregando usuários...</p>
-          </div>
-        ) : usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).length === 0 ? (
-          <div className="module-card text-center py-8">
-            <p className="text-muted-foreground">Nenhum usuário cadastrado</p>
-          </div>
-        ) : null}
-      </div>
 
-      <div className="space-y-6 pt-6 border-t border-border">
-        <h3 className="text-lg font-bold text-card-foreground">Configurações de Notificações</h3>
-        <NotificationConfig />
-      </div>
+          <div className="space-y-6 pt-6 border-t border-border">
+            <h3 className="text-lg font-bold text-card-foreground">Configurações de Notificações</h3>
+            <NotificationConfig />
+          </div>
+        </>
+      )}
     </div>
   );
 };
