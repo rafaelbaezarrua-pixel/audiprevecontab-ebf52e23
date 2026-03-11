@@ -3,12 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Save, User } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { useAlertasInteligentes } from "@/contexts/AlertasInteligentesProvider";
 
 const tipoLabels: Record<string, string> = { a1: "A1 (Arquivo)", a3: "A3 (Token)", "e-cpf": "e-CPF", "e-cnpj": "e-CNPJ", nfe: "NF-e" };
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
 
 const CertificadosPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("certificados");
+  const { checkAlerts } = useAlertasInteligentes();
   const [certData, setCertData] = useState<Record<string, any>>({});
   const [sociosMap, setSociosMap] = useState<Record<string, any>>({});
   const [search, setSearch] = useState("");
@@ -78,11 +80,30 @@ const CertificadosPage: React.FC = () => {
     const admin = sociosMap[empresaId];
     try {
       if (existing?.id) {
-        await supabase.from("certificados_digitais").update({ data_vencimento: form.data_vencimento || null, tipo_emissao: form.tipo_emissao || null, observacao: form.observacao || null, socio_responsavel_id: admin?.id || null }).eq("id", existing.id);
+        const { error } = await supabase.from("certificados_digitais").update({
+          data_vencimento: form.data_vencimento || null,
+          tipo_emissao: form.tipo_emissao || null,
+          observacao: form.observacao || null,
+          socio_responsavel_id: admin?.id || null
+        }).eq("id", existing.id);
+
+        if (error) throw error;
       } else {
-        await supabase.from("certificados_digitais").insert({ empresa_id: empresaId, data_vencimento: form.data_vencimento || null, tipo_emissao: form.tipo_emissao || null, observacao: form.observacao || null, socio_responsavel_id: admin?.id || null });
+        const { error } = await supabase.from("certificados_digitais").insert({
+          empresa_id: empresaId,
+          data_vencimento: form.data_vencimento || null,
+          tipo_emissao: form.tipo_emissao || null,
+          observacao: form.observacao || null,
+          socio_responsavel_id: admin?.id || null
+        });
+
+        if (error) throw error;
       }
       toast.success("Certificado atualizado!");
+
+      // Trigger instant check for alerts
+      checkAlerts();
+
       const { data: certs } = await supabase.from("certificados_digitais").select("*");
       const map: Record<string, any> = {};
       certs?.forEach(c => { map[c.empresa_id] = c; });

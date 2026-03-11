@@ -24,14 +24,42 @@ interface DetalhesPasso {
   observacoes?: string;
 }
 
+interface HistoricoProcesso {
+  id: string;
+  processo_id: string;
+  usuario_id: string;
+  acao: string;
+  detalhes: string | null;
+  created_at: string;
+}
+
 interface Processo {
-  id: string; tipo: string; nome_empresa: string | null; empresa_id: string | null;
-  numero_processo: string | null; data_inicio: string; status: string;
-  envio_dbe_at: string | null; envio_fcn_at: string | null; envio_contrato_at: string | null;
-  envio_taxa_at: string | null; assinatura_contrato_at: string | null;
-  arquivamento_junta_at: string | null; foi_deferido: boolean; foi_arquivado: boolean;
-  em_exigencia: boolean; exigencia_motivo: string | null; exigencia_respondida: boolean;
+  id: string; 
+  tipo: string; 
+  nome_empresa: string | null; 
+  empresa_id: string | null;
+  numero_processo: string | null; 
+  data_inicio: string; 
+  status: string;
+  envio_dbe_at: string | null; 
+  envio_fcn_at: string | null; 
+  envio_contrato_at: string | null;
+  envio_taxa_at: string | null; 
+  assinatura_contrato_at: string | null;
+  arquivamento_junta_at: string | null; 
+  foi_deferido: boolean; 
+  foi_arquivado: boolean;
+  em_exigencia: boolean; 
+  exigencia_motivo: string | null; 
+  exigencia_respondida: boolean;
   detalhes_passos: Record<string, DetalhesPasso>;
+  eventos?: string[];
+  current_step?: string;
+  dbe_deferido?: boolean;
+  assinatura_deferida?: boolean;
+  indeferimento_motivo?: string;
+  voltar_para?: string;
+  historico?: HistoricoProcesso[];
 }
 
 const regimeLabels: Record<string, string> = {
@@ -50,6 +78,20 @@ const tipoProcessoLabels: Record<string, string> = {
   abertura_mei: "Abertura de MEI",
   baixa_mei: "Baixa de MEI",
 };
+
+const eventosAlteracao = [
+  "Alteração da forma de atuação",
+  "Alteração da natureza jurídica",
+  "Alteração de atividades econômicas (principal e secundárias)",
+  "Alteração de capital social e/ou Quadro Societário",
+  "Alteração de dados cadastrais",
+  "Alteração de endereço entre municípios no mesmo estado",
+  "Alteração de endereço no mesmo município",
+  "Alteração de exercício das atividades econômicas",
+  "Alteração de nome empresarial (firma ou denominação)",
+  "Alteração do tipo de unidade",
+  "Enquadramento / Reenquadramento / Desenquadramento de Porte de Empresa"
+];
 
 const passosConfig = [
   { id: 'envio_dbe_at', label: 'Envio do DBE' },
@@ -70,8 +112,16 @@ const SocietarioPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas" | "mei">("ativas");
   const [showNovoProcesso, setShowNovoProcesso] = useState(false);
-  const [novoProcessoData, setNovoProcessoData] = useState({ tipo: 'abertura', nome_empresa: '', numero_processo: '', data_inicio: new Date().toISOString().split('T')[0] });
+  const [novoProcessoData, setNovoProcessoData] = useState({ 
+    tipo: 'abertura', 
+    nome_empresa: '', 
+    empresa_id: null as string | null,
+    numero_processo: '', 
+    data_inicio: new Date().toISOString().split('T')[0],
+    eventos: [] as string[]
+  });
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
+  const [processTab, setProcessTab] = useState<Record<string, 'timeline' | 'historico'>>({});
   const [processoToDelete, setProcessoToDelete] = useState<{ id: string, nome: string } | null>(null);
 
   const navigate = useNavigate();
@@ -90,7 +140,15 @@ const SocietarioPage: React.FC = () => {
   const { data: processos = [], isLoading: loadingProcessos } = useQuery({
     queryKey: ["processos_societarios"],
     queryFn: async () => {
-      const { data } = await supabase.from("processos_societarios" as any).select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("processos_societarios" as any)
+        .select(`
+          *,
+          historico:processos_societarios_historico(*)
+        `)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
       return (data as unknown as Processo[]) || [];
     }
   });
@@ -106,11 +164,58 @@ const SocietarioPage: React.FC = () => {
     return () => { supabase.removeChannel(channel); };
   }, [queryClient]);
 
+  const addHistorico = async (processoId: string, acao: string, detalhes?: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase.from("processos_societarios_historico" as any).insert({
+      processo_id: processoId,
+      usuario_id: user.id,
+      acao,
+      detalhes
+    });
+  };
+
   const handleCreateProcesso = async () => {
-    if (!novoProcessoData.nome_empresa) { toast.error("Preencha o nome da empresa"); return; }
-    const { error } = await supabase.from("processos_societarios" as any).insert([novoProcessoData]);
-    if (error) toast.error("Erro ao criar: " + error.message);
-    else { toast.success("Processo iniciado!"); setShowNovoProcesso(false); queryClient.invalidateQueries({ queryKey: ["processos_societarios"] }); }
+    if (novoProcessoData.tipo === 'alteracao' && !novoProcessoData.empresa_id) {
+      toast.error("Selecione a empresa para alteração"); return;
+    }
+    if (novoProcessoData.tipo !== 'alteracao' && !novoProcessoData.nome_empresa) {
+      toast.error("Preencha o nome da empresa"); return;
+    }
+    if (novoProcessoData.tipo === 'alteracao' && novoProcessoData.eventos.length === 0) {
+      toast.error("Selecione ao menos um evento de alteração"); return;
+    }
+
+    let finalNome = novoProcessoData.nome_empresa;
+    if (novoProcessoData.tipo === 'alteracao' && novoProcessoData.empresa_id) {
+      const emp = empresas.find(e => e.id === novoProcessoData.empresa_id);
+      finalNome = emp?.nome_empresa || '';
+    }
+
+    const { data, error } = await supabase.from("processos_societarios" as any).insert([{
+      ...novoProcessoData,
+      empresa_id: novoProcessoData.empresa_id || null,
+      nome_empresa: finalNome,
+      current_step: 'envio_dbe_at'
+    }]).select().single();
+
+    if (error) {
+      toast.error("Erro ao criar: " + error.message);
+    } else {
+      await addHistorico(data.id, 'PROCESSO_INICIADO', `Tipo: ${tipoProcessoLabels[novoProcessoData.tipo]}`);
+      toast.success("Processo iniciado!");
+      setShowNovoProcesso(false);
+      setNovoProcessoData({ 
+        tipo: 'abertura', 
+        nome_empresa: '', 
+        empresa_id: null, 
+        numero_processo: '', 
+        data_inicio: new Date().toISOString().split('T')[0],
+        eventos: []
+      });
+      queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
+    }
   };
 
   const openDeleteConfirm = (id: string, nome: string) => {
@@ -128,9 +233,32 @@ const SocietarioPage: React.FC = () => {
   };
 
   const updatePasso = async (id: string, campo: string, value: any) => {
-    const { error } = await supabase.from("processos_societarios" as any).update({ [campo]: value }).eq("id", id);
+    // Determine the action for history
+    let acao = 'ETAPA_ATUALIZADA';
+    let detalhes = `${campo}: ${value}`;
+
+    if (campo === 'dbe_deferido') {
+      acao = value ? 'DBE_DEFERIDO' : 'DBE_INDEFERIDO';
+      detalhes = value ? 'DBE marcado como deferido' : 'DBE marcado como indeferido - Processo reiniciado';
+    } else if (campo === 'assinatura_deferida') {
+      acao = value ? 'ASSINATURA_DEFERIDA' : 'ASSINATURA_INDEFERIDA';
+      detalhes = value ? 'Assinatura validada' : 'Assinatura rejeitada';
+    }
+
+    const updateObj: any = { [campo]: value };
+    
+    // Logic for "Reiniciar" or "Voltar"
+    if (campo === 'dbe_deferido' && value === false) {
+      updateObj.envio_dbe_at = null;
+      updateObj.current_step = 'envio_dbe_at';
+    }
+
+    const { error } = await supabase.from("processos_societarios" as any).update(updateObj).eq("id", id);
     if (error) toast.error("Erro: " + error.message);
-    else queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
+    else {
+      await addHistorico(id, acao, detalhes);
+      queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
+    }
   };
 
   const updateDetalhePasso = async (id: string, stepId: string, field: string, value: string) => {
@@ -140,7 +268,9 @@ const SocietarioPage: React.FC = () => {
     novosDetalhes[stepId] = { ...novosDetalhes[stepId], [field]: value };
     const { error } = await supabase.from("processos_societarios" as any).update({ detalhes_passos: novosDetalhes }).eq("id", id);
     if (error) toast.error("Erro ao salvar detalhes: " + error.message);
-    else queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
+    else {
+      queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
+    }
   };
 
   const filteredEmpresas = empresas.filter((e) => {
@@ -321,11 +451,87 @@ const SocietarioPage: React.FC = () => {
               {showNovoProcesso && (
                 <div className="module-card bg-muted/20 border-primary/30 animate-in zoom-in-95 duration-200">
                   <div className="flex items-center justify-between mb-4"><h4 className="font-bold text-primary flex items-center gap-2"><Plus size={16} /> Iniciar Novo Processo</h4><button onClick={() => setShowNovoProcesso(false)} className="p-1 hover:bg-muted rounded-md"><X size={18} /></button></div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div><label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">TIPO DE PROCESSO</label><select value={novoProcessoData.tipo} onChange={e => setNovoProcessoData({ ...novoProcessoData, tipo: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-primary">{Object.entries(tipoProcessoLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
-                    <div className="md:col-span-1"><label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">NOME DA EMPRESA</label><input value={novoProcessoData.nome_empresa} onChange={e => setNovoProcessoData({ ...novoProcessoData, nome_empresa: e.target.value })} placeholder="Ex: Nova LTDA" className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none" /></div>
-                    <div><label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">Nº PROCESSO</label><input value={novoProcessoData.numero_processo} onChange={e => setNovoProcessoData({ ...novoProcessoData, numero_processo: e.target.value })} placeholder="Número se houver" className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none" /></div>
-                    <button onClick={handleCreateProcesso} className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:opacity-90">Iniciar</button>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">TIPO DE PROCESSO</label>
+                        <select 
+                          value={novoProcessoData.tipo} 
+                          onChange={e => setNovoProcessoData({ ...novoProcessoData, tipo: e.target.value, empresa_id: null, nome_empresa: '', eventos: [] })} 
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          {Object.entries(tipoProcessoLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
+                      </div>
+                      
+                      {novoProcessoData.tipo === 'alteracao' ? (
+                        <div>
+                          <label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">SELECIONAR EMPRESA</label>
+                          <select 
+                            value={novoProcessoData.empresa_id || ''} 
+                            onChange={e => setNovoProcessoData({ ...novoProcessoData, empresa_id: e.target.value })} 
+                            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="">Selecione...</option>
+                            {empresas.map(emp => <option key={emp.id} value={emp.id}>{emp.nome_empresa}</option>)}
+                          </select>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">NOME DA EMPRESA</label>
+                          <input 
+                            value={novoProcessoData.nome_empresa} 
+                            onChange={e => setNovoProcessoData({ ...novoProcessoData, nome_empresa: e.target.value })} 
+                            placeholder="Ex: Nova LTDA" 
+                            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none" 
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">Nº PROCESSO</label>
+                        <input 
+                          value={novoProcessoData.numero_processo} 
+                          onChange={e => setNovoProcessoData({ ...novoProcessoData, numero_processo: e.target.value })} 
+                          placeholder="Número se houver" 
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none" 
+                        />
+                      </div>
+                    </div>
+
+                    {novoProcessoData.tipo === 'alteracao' && (
+                      <div className="bg-card p-4 rounded-xl border border-border">
+                        <label className="text-xs font-bold text-muted-foreground block mb-3 uppercase tracking-tight">TIPOS DE ALTERAÇÃO (Eventos)</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {eventosAlteracao.map(evento => (
+                            <label key={evento} className="flex items-start gap-2 cursor-pointer group">
+                              <input 
+                                type="checkbox" 
+                                className="mt-1"
+                                checked={novoProcessoData.eventos.includes(evento)}
+                                onChange={e => {
+                                  if (e.target.checked) {
+                                    setNovoProcessoData({ ...novoProcessoData, eventos: [...novoProcessoData.eventos, evento] });
+                                  } else {
+                                    setNovoProcessoData({ ...novoProcessoData, eventos: novoProcessoData.eventos.filter(ev => ev !== evento) });
+                                  }
+                                }}
+                              />
+                              <span className="text-xs group-hover:text-primary transition-colors">{evento}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end">
+                      <button 
+                        onClick={handleCreateProcesso} 
+                        className="px-8 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:opacity-90 shadow-lg shadow-primary/20"
+                      >
+                        Iniciar Processo
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -376,123 +582,289 @@ const SocietarioPage: React.FC = () => {
                       {/* Accordion Body (Details - Vertical Timeline) */}
                       {isExpanded && (
                         <div className="mt-8 pt-6 border-t border-border animate-in slide-in-from-top-2 duration-300 space-y-8">
-                          <div className="space-y-6">
-                            {passosConfig.map((step, idx) => {
-                              const isDone = !!(p as any)[step.id];
-                              const prevStepId = idx > 0 ? passosConfig[idx - 1].id : null;
-                              const isPrevDone = prevStepId ? !!(p as any)[prevStepId] : true;
-                              const isBlockedByExigencia = step.id === 'arquivamento_junta_at' && !p.foi_deferido && !p.exigencia_respondida;
-                              const canComplete = !isDone && isPrevDone && !isBlockedByExigencia;
-
-                              const detalhes = (p.detalhes_passos && p.detalhes_passos[step.id]) || {};
-
-                              return (
-                                <div key={step.id} className="relative pl-10">
-                                  {/* Line Connector */}
-                                  {idx < passosConfig.length - 1 && (
-                                    <div className={`absolute left-4 top-8 bottom-0 w-0.5 -ml-px ${isDone ? "bg-primary" : "bg-muted"}`} />
-                                  )}
-
-                                  {/* Icon Circle */}
-                                  <div className={`absolute left-0 top-0 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? "bg-primary border-primary text-primary-foreground" : isPrevDone ? "border-primary/50 text-primary" : "border-muted text-muted-foreground"}`}>
-                                    {isDone ? <Check size={16} strokeWidth={3} /> : <span className="text-xs font-bold">{idx + 1}</span>}
-                                  </div>
-
-                                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-                                    {/* Title & Status */}
-                                    <div className="md:col-span-4">
-                                      <h5 className={`font-bold transition-colors ${isDone ? "text-primary" : "text-card-foreground"}`}>{step.label}</h5>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        <button
-                                          onClick={() => {
-                                            if (isDone) return;
-                                            if (!isPrevDone) { toast.error("Conclua a etapa anterior"); return; }
-                                            if (isBlockedByExigencia) { toast.error("Aguardando Deferimento ou Resposta de Exigência"); return; }
-                                            updatePasso(p.id, step.id, new Date().toISOString());
-                                          }}
-                                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase transition-all ${isDone ? "bg-green-500 text-white" : canComplete ? "bg-primary text-white hover:scale-105 cursor-pointer" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
-                                        >
-                                          {isDone ? "Concluído" : "Marcar Concluído"}
-                                        </button>
-                                        {isDone && <span className="text-[10px] font-mono text-muted-foreground">{new Date((p as any)[step.id]).toLocaleString()}</span>}
-                                      </div>
-                                    </div>
-
-                                    {/* Form Details */}
-                                    <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                      <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 uppercase tracking-tighter">
-                                          <User size={10} /> Enviado por
-                                        </label>
-                                        <input
-                                          type="text"
-                                          value={detalhes.enviado_por || ''}
-                                          onChange={e => updateDetalhePasso(p.id, step.id, 'enviado_por', e.target.value)}
-                                          placeholder="Quem enviou?"
-                                          className="w-full px-3 py-1.5 border border-border rounded-lg bg-background text-sm focus:ring-1 focus:ring-primary outline-none"
-                                        />
-                                      </div>
-                                      <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 uppercase tracking-tighter">
-                                          <MessageSquare size={10} /> Observações
-                                        </label>
-                                        <textarea
-                                          value={detalhes.observacoes || ''}
-                                          onChange={e => updateDetalhePasso(p.id, step.id, 'observacoes', e.target.value)}
-                                          placeholder="Ocorrências..."
-                                          rows={1}
-                                          className="w-full px-3 py-1.5 border border-border rounded-lg bg-background text-sm focus:ring-1 focus:ring-primary outline-none resize-none"
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          {/* Tabs for Timeline / History */}
+                          <div className="flex gap-4 border-b border-border mb-6">
+                            <button 
+                              onClick={() => setProcessTab({ ...processTab, [p.id]: 'timeline' })}
+                              className={`pb-2 px-4 text-xs font-bold transition-all border-b-2 ${(!processTab[p.id] || processTab[p.id] === 'timeline') ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+                            >
+                              LINHA DO TEMPO
+                            </button>
+                            <button 
+                              onClick={() => setProcessTab({ ...processTab, [p.id]: 'historico' })}
+                              className={`pb-2 px-4 text-xs font-bold transition-all border-b-2 ${processTab[p.id] === 'historico' ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+                            >
+                              HISTÓRICO DO PROCESSO
+                            </button>
                           </div>
 
-                          {/* Assinatura Gate Controls */}
-                          {p.assinatura_contrato_at && !p.arquivamento_junta_at && (
-                            <div className="p-5 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
-                              <div className="flex items-center justify-between">
-                                <h5 className="text-xs font-bold text-primary uppercase tracking-widest">Controle Pós-Assinatura</h5>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => updatePasso(p.id, 'foi_deferido', !p.foi_deferido)}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${p.foi_deferido ? "bg-green-500 text-white shadow-md shadow-green-500/20" : "bg-card border border-border text-muted-foreground hover:bg-green-50"}`}
-                                  >
-                                    {p.foi_deferido ? <CheckCircle size={14} /> : <div className="w-3 h-3 rounded-full border-2 border-current" />} DEFERIDO
-                                  </button>
-                                  <button
-                                    onClick={() => updatePasso(p.id, 'em_exigencia', !p.em_exigencia)}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${p.em_exigencia ? "bg-warning text-white shadow-md shadow-warning/20" : "bg-card border border-border text-muted-foreground hover:bg-warning/5"}`}
-                                  >
-                                    <AlertCircle size={14} /> EM EXIGÊNCIA
-                                  </button>
-                                </div>
-                              </div>
-
-                              {p.em_exigencia && (
-                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                                  <div>
-                                    <label className="text-[10px] font-bold text-muted-foreground block mb-1 uppercase tracking-tighter">Motivo da Exigência</label>
-                                    <textarea
-                                      value={p.exigencia_motivo || ''}
-                                      onChange={e => updatePasso(p.id, 'exigencia_motivo', e.target.value)}
-                                      placeholder="Descreva detalhadamente..."
-                                      className="w-full px-4 py-2 border border-warning/30 rounded-xl bg-background text-sm focus:ring-1 focus:ring-warning outline-none shadow-inner"
-                                    />
-                                  </div>
-                                  <div className="flex justify-end">
-                                    <button
-                                      onClick={() => { updatePasso(p.id, 'exigencia_respondida', true); updatePasso(p.id, 'em_exigencia', false); }}
-                                      className="px-6 py-2 bg-warning text-white rounded-xl text-xs font-bold hover:shadow-lg transition-all"
-                                    >
-                                      EXIGÊNCIA RESPONDIDA
-                                    </button>
+                          {(!processTab[p.id] || processTab[p.id] === 'timeline') ? (
+                            <div className="space-y-8">
+                              {p.tipo === 'alteracao' && p.eventos && p.eventos.length > 0 && (
+                                <div className="bg-muted/30 p-4 rounded-xl border border-dashed border-border mb-6">
+                                  <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1"><Filter size={10} /> Eventos de Alteração</h5>
+                                  <div className="flex flex-wrap gap-2">
+                                    {p.eventos.map(ev => <span key={ev} className="px-2 py-1 bg-background border border-border rounded text-[10px] font-medium">{ev}</span>)}
                                   </div>
                                 </div>
                               )}
+
+                              <div className="space-y-6">
+                                {passosConfig.map((step, idx) => {
+                                  const isDone = !!(p as any)[step.id];
+                                  const prevStepId = idx > 0 ? passosConfig[idx - 1].id : null;
+                                  const isPrevDone = prevStepId ? !!(p as any)[prevStepId] : true;
+                                  
+                                  // Special logic for Alteracao/Abertura steps
+                                  const isDBE = step.id === 'envio_dbe_at';
+                                  const isSignature = step.id === 'assinatura_contrato_at';
+                                  const hasApprovalGate = p.tipo === 'alteracao' || p.tipo === 'abertura' || p.tipo === 'abertura_mei';
+                                  
+                                  const isBlockedByExigencia = step.id === 'arquivamento_junta_at' && (p.tipo === 'abertura' || p.tipo === 'abertura_mei') && !p.foi_deferido && !p.exigencia_respondida;
+                                  
+                                  // DBE Deferido Logic
+                                  const canComplete = !isDone && isPrevDone && !isBlockedByExigencia;
+
+                                  const detalhes = (p.detalhes_passos && p.detalhes_passos[step.id]) || {};
+
+                                  return (
+                                    <div key={step.id} className="relative pl-10">
+                                      {/* Line Connector */}
+                                      {idx < passosConfig.length - 1 && (
+                                        <div className={`absolute left-4 top-8 bottom-0 w-0.5 -ml-px ${isDone ? "bg-primary" : "bg-muted"}`} />
+                                      )}
+
+                                      {/* Icon Circle */}
+                                      <div className={`absolute left-0 top-0 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? "bg-primary border-primary text-primary-foreground" : isPrevDone ? "border-primary/50 text-primary" : "border-muted text-muted-foreground"}`}>
+                                        {isDone ? <Check size={16} strokeWidth={3} /> : <span className="text-xs font-bold">{idx + 1}</span>}
+                                      </div>
+
+                                      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                                        {/* Title & Status */}
+                                        <div className="md:col-span-4">
+                                          <h5 className={`font-bold transition-colors ${isDone ? "text-primary" : "text-card-foreground"}`}>{step.label}</h5>
+                                          <div className="flex flex-col gap-2 mt-1">
+                                            <div className="flex items-center gap-2">
+                                              <button
+                                                onClick={() => {
+                                                  if (isDone) return;
+                                                  if (!isPrevDone) { toast.error("Conclua a etapa anterior"); return; }
+                                                  if (isBlockedByExigencia) { toast.error("Aguardando Deferimento ou Resposta de Exigência"); return; }
+                                                  
+                                                  if (hasApprovalGate && isDBE && p.dbe_deferido === undefined) {
+                                                    toast.error("Marque se o DBE foi deferido ou não"); return;
+                                                  }
+                                                  
+                                                  updatePasso(p.id, step.id, new Date().toISOString());
+                                                }}
+                                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase transition-all ${isDone ? "bg-green-500 text-white" : canComplete ? "bg-primary text-white hover:scale-105 cursor-pointer" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
+                                              >
+                                                {isDone ? "Concluído" : "Marcar Concluído"}
+                                              </button>
+                                              {isDone && <span className="text-[10px] font-mono text-muted-foreground">{new Date((p as any)[step.id]).toLocaleString()}</span>}
+                                            </div>
+
+                                            {/* Approval Step Specifics: DBE Approval */}
+                                            {hasApprovalGate && isDBE && !isDone && isPrevDone && (
+                                              <div className="flex gap-2 p-2 bg-muted/50 rounded-lg border border-border">
+                                                <button 
+                                                  onClick={() => updatePasso(p.id, 'dbe_deferido', true)}
+                                                  className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${p.dbe_deferido === true ? "bg-green-500 text-white" : "bg-background text-muted-foreground"}`}
+                                                >
+                                                  DEFERIDO
+                                                </button>
+                                                <button 
+                                                  onClick={() => {
+                                                    if (window.confirm("Reiniciar todo o processo?")) {
+                                                      updatePasso(p.id, 'dbe_deferido', false);
+                                                    }
+                                                  }}
+                                                  className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${p.dbe_deferido === false ? "bg-destructive text-white" : "bg-background text-muted-foreground"}`}
+                                                >
+                                                  NÃO DEFERIDO
+                                                </button>
+                                              </div>
+                                            )}
+
+                                            {/* Approval Step Specifics: Signature Approval */}
+                                            {hasApprovalGate && isSignature && isDone && (
+                                              <div className="space-y-3 p-3 bg-muted/30 rounded-xl border border-border">
+                                                <div className="flex items-center justify-between">
+                                                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Resultado Assinatura</span>
+                                                  <div className="flex gap-2">
+                                                    <button 
+                                                      onClick={() => updatePasso(p.id, 'assinatura_deferida', true)}
+                                                      className={`px-2 py-1 rounded text-[9px] font-bold ${p.assinatura_deferida === true ? "bg-green-500 text-white" : "bg-background text-muted-foreground"}`}
+                                                    >
+                                                      DEFERIDA
+                                                    </button>
+                                                    <button 
+                                                      onClick={() => updatePasso(p.id, 'assinatura_deferida', false)}
+                                                      className={`px-2 py-1 rounded text-[9px] font-bold ${p.assinatura_deferida === false ? "bg-destructive text-white" : "bg-background text-muted-foreground"}`}
+                                                    >
+                                                      NÃO DEFERIDA
+                                                    </button>
+                                                  </div>
+                                                </div>
+
+                                                {p.assinatura_deferida === false && (
+                                                  <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+                                                    <textarea 
+                                                      value={p.indeferimento_motivo || ''} 
+                                                      onChange={e => updatePasso(p.id, 'indeferimento_motivo', e.target.value)}
+                                                      placeholder="Motivo do indeferimento..."
+                                                      className="w-full text-xs p-2 border border-destructive/20 rounded bg-background outline-none focus:ring-1 focus:ring-destructive"
+                                                      rows={2}
+                                                    />
+                                                    <div className="flex flex-wrap gap-1">
+                                                      <span className="text-[9px] font-bold text-muted-foreground w-full mb-1">VOLTAR PARA:</span>
+                                                      <button 
+                                                        onClick={() => {
+                                                          const up: any = { 
+                                                            envio_contrato_at: null, 
+                                                            envio_taxa_at: null, 
+                                                            assinatura_contrato_at: null,
+                                                            assinatura_deferida: null,
+                                                            current_step: 'envio_contrato_at'
+                                                          };
+                                                          supabase.from("processos_societarios" as any).update(up).eq("id", p.id).then(() => {
+                                                            addHistorico(p.id, 'RETORNO_ETAPA', 'Voltado para Envio do Contrato');
+                                                            queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
+                                                          });
+                                                        }}
+                                                        className="px-2 py-1 bg-background border border-border rounded text-[9px] font-bold hover:bg-muted"
+                                                      >
+                                                        CONTRATO
+                                                      </button>
+                                                      <button 
+                                                        onClick={() => {
+                                                          const up: any = { 
+                                                            envio_fcn_at: null, 
+                                                            envio_contrato_at: null, 
+                                                            envio_taxa_at: null, 
+                                                            assinatura_contrato_at: null,
+                                                            assinatura_deferida: null,
+                                                            current_step: 'envio_fcn_at'
+                                                          };
+                                                          supabase.from("processos_societarios" as any).update(up).eq("id", p.id).then(() => {
+                                                            addHistorico(p.id, 'RETORNO_ETAPA', 'Voltado para Envio da FCN');
+                                                            queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
+                                                          });
+                                                        }}
+                                                        className="px-2 py-1 bg-background border border-border rounded text-[9px] font-bold hover:bg-muted"
+                                                      >
+                                                        FCN
+                                                      </button>
+                                                      <button 
+                                                        onClick={() => {
+                                                          if (window.confirm("Reiniciar todo o processo?")) {
+                                                            const up: any = { 
+                                                              envio_dbe_at: null,
+                                                              envio_fcn_at: null, 
+                                                              envio_contrato_at: null, 
+                                                              envio_taxa_at: null, 
+                                                              assinatura_contrato_at: null,
+                                                              assinatura_deferida: null,
+                                                              dbe_deferido: null,
+                                                              current_step: 'envio_dbe_at'
+                                                            };
+                                                            supabase.from("processos_societarios" as any).update(up).eq("id", p.id).then(() => {
+                                                              addHistorico(p.id, 'REINICIADO', 'Processo reiniciado completamente');
+                                                              queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
+                                                            });
+                                                          }
+                                                        }}
+                                                        className="px-2 py-1 bg-destructive/10 text-destructive border border-destructive/20 rounded text-[9px] font-bold hover:bg-destructive hover:text-white"
+                                                      >
+                                                        REINICIAR TUDO
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* Form Details */}
+                                        <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                          <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 uppercase tracking-tighter">
+                                              <User size={10} /> Enviado por
+                                            </label>
+                                            <input
+                                              type="text"
+                                              value={detalhes.enviado_por || ''}
+                                              onChange={e => updateDetalhePasso(p.id, step.id, 'enviado_por', e.target.value)}
+                                              placeholder="Quem enviou?"
+                                              className="w-full px-3 py-1.5 border border-border rounded-lg bg-background text-sm focus:ring-1 focus:ring-primary outline-none"
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 uppercase tracking-tighter">
+                                              <MessageSquare size={10} /> Observações
+                                            </label>
+                                            <textarea
+                                              value={detalhes.observacoes || ''}
+                                              onChange={e => updateDetalhePasso(p.id, step.id, 'observacoes', e.target.value)}
+                                              placeholder="Ocorrências..."
+                                              rows={1}
+                                              className="w-full px-3 py-1.5 border border-border rounded-lg bg-background text-sm focus:ring-1 focus:ring-primary outline-none resize-none"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-6 animate-in fade-in duration-300 px-2 pb-6">
+                              <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
+                                <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                                  <History size={14} className="text-primary" /> Cronologia Completa do Processo
+                                </h5>
+                                <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
+                                  {p.historico?.length || 0} Registros
+                                </span>
+                              </div>
+                              
+                              <div className="space-y-4">
+                                {(!p.historico || p.historico.length === 0) ? (
+                                  <div className="text-center py-12 bg-muted/20 rounded-2xl border border-dashed border-border text-muted-foreground">
+                                    <Clock size={32} className="mx-auto mb-2 opacity-20" />
+                                    <p className="text-sm font-medium">Nenhum histórico registrado ainda</p>
+                                    <p className="text-[10px] opacity-70">As ações realizadas aparecerão aqui</p>
+                                  </div>
+                                ) : (
+                                  [...p.historico].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((h, hIdx) => (
+                                    <div key={h.id} className="relative pl-8 pb-6 last:pb-0">
+                                      {hIdx < p.historico!.length - 1 && (
+                                        <div className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-muted/50" />
+                                      )}
+                                      <div className="absolute left-0 top-1.5 w-6 h-6 rounded-lg bg-background border border-border shadow-sm flex items-center justify-center z-10 transition-transform hover:scale-110">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                      </div>
+                                      <div className="bg-card/50 p-3 rounded-xl border border-border/50 hover:border-primary/30 transition-all hover:bg-card">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className="text-xs font-bold text-primary tracking-tight">
+                                            {h.acao.replace(/_/g, ' ')}
+                                          </span>
+                                          <span className="text-[9px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                            {new Date(h.created_at).toLocaleString()}
+                                          </span>
+                                        </div>
+                                        {h.detalhes && (
+                                          <p className="text-xs text-muted-foreground leading-relaxed">
+                                            {h.detalhes}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
                             </div>
                           )}
 
@@ -500,10 +872,17 @@ const SocietarioPage: React.FC = () => {
                           {p.arquivamento_junta_at && p.status !== 'concluido' && (
                             <div className="flex justify-center pt-4">
                               <button
-                                onClick={() => navigate("/societario/nova", { state: { nome: p.nome_empresa, processoId: p.id } })}
+                                onClick={() => {
+                                  if (p.tipo === 'alteracao' && p.empresa_id) {
+                                    navigate(`/societario/${p.empresa_id}`, { state: { nome: p.nome_empresa, processoId: p.id } });
+                                  } else {
+                                    navigate("/societario/nova", { state: { nome: p.nome_empresa, processoId: p.id } });
+                                  }
+                                }}
                                 className="group flex items-center gap-3 px-10 py-4 rounded-2xl bg-green-500 text-white font-bold text-base shadow-xl hover:shadow-green-500/30 transition-all hover:-translate-y-1 active:scale-95"
                               >
-                                <CheckCircle size={22} className="group-hover:scale-110 transition-transform" /> FINALIZAR PROCESSO E CADASTRAR EMPRESA
+                                <CheckCircle size={22} className="group-hover:scale-110 transition-transform" /> 
+                                {p.tipo === 'alteracao' ? "FINALIZAR PROCESSO E ATUALIZAR EMPRESA" : "FINALIZAR PROCESSO E CADASTRAR EMPRESA"}
                                 <ArrowRight size={18} />
                               </button>
                             </div>

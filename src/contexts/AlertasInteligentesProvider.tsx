@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
+import { toast } from "sonner";
 
 type AlertasContextType = {
     checkAlerts: () => Promise<void>;
@@ -22,12 +23,25 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
 
     const checkAlerts = async () => {
         // Only run for authenticated users
-        if (!user || isCheckingRef.current) return;
+        if (!user) return;
+        if (isCheckingRef.current) {
+            console.log("Sistema de Alertas: Já existe uma verificação em curso.");
+            return;
+        }
+
+        console.log("Sistema de Alertas: Iniciando verificação geral...");
         isCheckingRef.current = true;
 
         try {
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
+
+            // Fetch empresas for in-memory mapping to avoid complex JOINs that fail (400)
+            const { data: emps } = await (supabase as any).from("empresas").select("id, nome_empresa");
+            const empMap = new Map();
+            if (emps) {
+                emps.forEach((e: any) => empMap.set(e.id, e.nome_empresa));
+            }
 
             // --- 1. CERTIFICADOS EXPIRANDO ---
             // Only admins or people with "certificados" module should probably receive this, 
@@ -41,9 +55,10 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
 
                 const { data: certificados } = await (supabase as any)
                     .from("certificados_digitais")
-                    .select("id, empresa_id, empresas(razao_social), data_vencimento")
+                    .select("id, empresa_id, data_vencimento")
                     .lte("data_vencimento", limitDateStr);
 
+                console.log(`Sistema de Alertas: Encontrados ${certificados?.length || 0} certificados em alerta.`);
                 if (certificados && certificados.length > 0) {
                     for (const cert of certificados) {
                         const vencimento = new Date(cert.data_vencimento);
@@ -51,12 +66,14 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                         const diasRestantes = Math.ceil((vencimento.getTime() - today.getTime()) / (1000 * 3600 * 24));
 
                         const title = isExpired
-                            ? `⚠️ Certificado Expirado: ${cert.empresas?.razao_social || 'Empresa'}`
-                            : `⏳ Certificado Expirando: ${cert.empresas?.razao_social || 'Empresa'}`;
+                            ? `⚠️ Certificado Expirado: ${empMap.get(cert.empresa_id) || 'Empresa'}`
+                            : `⏳ Certificado Expirando: ${empMap.get(cert.empresa_id) || 'Empresa'}`;
 
                         const message = isExpired
                             ? `O certificado digital venceu em ${cert.data_vencimento.split('-').reverse().join('/')}.`
                             : `O certificado digital vencerá em ${diasRestantes} dias (${cert.data_vencimento.split('-').reverse().join('/')}).`;
+
+                        console.log(`Sistema de Alertas: Emitindo alerta para Certificado ${cert.id}`);
 
                         // Generate unique signature for this alert to prevent SPAM (e.g., today + certID)
                         const signature = `alert_cert_${cert.id}_${todayStr}`;
@@ -97,24 +114,25 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                 const limitDateStr = thirtyDaysFromNow.toISOString().split('T')[0];
 
                 const { data: licencas } = await (supabase as any)
-                    .from("licencas_alvaras")
-                    .select("id, numero_licenca, orgao_emissor, data_vencimento, empresa_id, empresas(razao_social)")
-                    .lte("data_vencimento", limitDateStr)
-                    .eq("status", "ativa");
+                    .from("licencas")
+                    .select("id, tipo_licenca, vencimento, empresa_id")
+                    .lte("vencimento", limitDateStr)
+                    .eq("status", "com_vencimento");
 
                 if (licencas && licencas.length > 0) {
                     for (const licenca of licencas) {
-                        const vencimento = new Date(licenca.data_vencimento);
-                        const isExpired = vencimento < today;
-                        const diasRestantes = Math.ceil((vencimento.getTime() - today.getTime()) / (1000 * 3600 * 24));
+                        const vData = new Date(licenca.vencimento);
+                        const isExpired = vData < today;
+                        const diasRestantes = Math.ceil((vData.getTime() - today.getTime()) / (1000 * 3600 * 24));
 
+                        const razaoSocial = empMap.get(licenca.empresa_id) || 'Desconhecida';
                         const title = isExpired
-                            ? `⚠️ Licença Vencida: ${licenca.orgao_emissor}`
-                            : `⏳ Licença Expirando: ${licenca.orgao_emissor}`;
+                            ? `⚠️ Licença Vencida: ${licenca.tipo_licenca}`
+                            : `⏳ Licença Expirando: ${licenca.tipo_licenca}`;
 
                         const message = isExpired
-                            ? `A licença nº ${licenca.numero_licenca} da empresa ${licenca.empresas?.razao_social || 'Desconhecida'} venceu.`
-                            : `A licença da empresa ${licenca.empresas?.razao_social || 'Desconhecida'} vencerá em ${diasRestantes} dias.`;
+                            ? `A licença de ${licenca.tipo_licenca} da empresa ${razaoSocial} venceu.`
+                            : `A licença de ${licenca.tipo_licenca} da empresa ${razaoSocial} vencerá em ${diasRestantes} dias.`;
 
                         const signature = `alert_licenca_${licenca.id}_${todayStr}`;
                         await emitSystemAlert(user.id, title, message, "/licencas", signature);
@@ -132,49 +150,97 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
     // Helper function to emit atomic notifications safely without duplicates
     const emitSystemAlert = async (userId: string, title: string, message: string, link: string, signature: string) => {
         try {
-            // 1. Check if an alert with this exact signature already exists today
-            const { data: existing, error: errExist } = await (supabase as any)
+            console.log(`Sistema de Alertas: Processando alerta para assinatura ${signature}`);
+            
+            // 1. Try to find the existing notification first
+            // We avoid 'upsert' here because onConflict with JSONB expressions is prone to picky syntax errors in the client
+            const { data: existing } = await (supabase as any)
                 .from("notifications")
-                .select("id, metadata")
-                .eq("type", "alerta_sistema")
-                .limit(50); // Get recent system alerts to filter in JS
-
-            if (existing && existing.length > 0) {
-                const alreadySent = existing.find((n: any) => n.metadata?.signature === signature);
-                if (alreadySent) {
-                    return; // Alert already sent today
-                }
-            }
-
-            // 2. Create the raw Notification
-            const { data: newNotif, error: errCreated } = await (supabase as any)
-                .from("notifications")
-                .insert({
-                    title,
-                    message,
-                    type: "alerta_sistema",
-                    link,
-                    metadata: { signature }
-                })
                 .select("id")
-                .single();
+                .eq("type", "alerta_sistema")
+                .contains("metadata", { signature })
+                .maybeSingle();
+            
+            let notificationId = existing?.id;
 
-            if (errCreated || !newNotif) {
-                console.error("Erro ao gerar alerta base:", errCreated);
-                return;
+            if (!notificationId) {
+                // 2. Not found, try to create it
+                const { data: created, error: errCreate } = await (supabase as any)
+                    .from("notifications")
+                    .insert({ 
+                        title, 
+                        message, 
+                        type: "alerta_sistema", 
+                        link, 
+                        metadata: { signature } 
+                    })
+                    .select("id")
+                    .single();
+                
+                if (errCreate) {
+                    // If insert fails (e.g., race condition where another user created it just now)
+                    // we try one last time to fetch it
+                    const { data: retry } = await (supabase as any)
+                        .from("notifications")
+                        .select("id")
+                        .eq("type", "alerta_sistema")
+                        .contains("metadata", { signature })
+                        .maybeSingle();
+                    
+                    if (retry) {
+                        notificationId = retry.id;
+                    } else {
+                        console.error("Erro ao gerar alerta base:", errCreate);
+                        return;
+                    }
+                } else {
+                    notificationId = created?.id;
+                    console.log(`Sistema de Alertas: Notificação base ${notificationId} criada.`);
+                }
+            } else {
+                console.log(`Sistema de Alertas: Notificação base ${notificationId} já existe.`);
             }
 
-            // 3. Link it to the recipient
-            await (supabase as any)
-                .from("notification_recipients")
-                .insert({
-                    notification_id: newNotif.id,
-                    user_id: userId,
-                    is_read: false
-                });
+            // 3. Link the user to the notification
+            if (notificationId) {
+                await linkUserToNotification(userId, notificationId, title, message, link);
+            }
 
         } catch (e) {
             console.error("Error emitting system alert:", e);
+        }
+    };
+
+    const linkUserToNotification = async (userId: string, notificationId: string, title: string, message: string, link: string) => {
+        // Check if current user is already linked to this notification
+        const { data: existingLink } = await (supabase as any)
+            .from("notification_recipients")
+            .select("id")
+            .eq("notification_id", notificationId)
+            .eq("user_id", userId)
+            .maybeSingle();
+
+        if (existingLink) {
+            console.log(`Sistema de Alertas: Usuário já possui vínculo com a notificação ${notificationId}.`);
+            return;
+        }
+
+        // Link the user to the notification
+        console.log(`Sistema de Alertas: Vinculando notificação ${notificationId} ao usuário ${userId}...`);
+        const { error: errLink } = await (supabase as any)
+            .from("notification_recipients")
+            .insert({
+                notification_id: notificationId,
+                user_id: userId,
+                is_read: false
+            });
+
+        if (!errLink) {
+            toast.info(title, {
+                description: message
+            });
+        } else {
+            console.error("Erro ao vincular destinatário:", errLink);
         }
     };
 
