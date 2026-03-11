@@ -102,6 +102,36 @@ const passosConfig = [
   { id: 'arquivamento_junta_at', label: 'Arquivamento' },
 ];
 
+const ControlledInput = ({ value, onBlur, placeholder, className, type = "text" }: { value: string, onBlur: (v: string) => void, placeholder?: string, className?: string, type?: string }) => {
+  const [localValue, setLocalValue] = useState(value);
+  useEffect(() => { setLocalValue(value); }, [value]);
+  return (
+    <input
+      type={type}
+      value={localValue || ''}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={() => { if (localValue !== value) onBlur(localValue); }}
+      placeholder={placeholder}
+      className={className}
+    />
+  );
+};
+
+const ControlledTextarea = ({ value, onBlur, placeholder, className, rows }: { value: string, onBlur: (v: string) => void, placeholder?: string, className?: string, rows?: number }) => {
+  const [localValue, setLocalValue] = useState(value);
+  useEffect(() => { setLocalValue(value); }, [value]);
+  return (
+    <textarea
+      value={localValue || ''}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={() => { if (localValue !== value) onBlur(localValue); }}
+      placeholder={placeholder}
+      className={className}
+      rows={rows}
+    />
+  );
+};
+
 const SocietarioPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [activeMainTab, setActiveMainTab] = useState<"empresas" | "processos">("empresas");
@@ -709,9 +739,9 @@ const SocietarioPage: React.FC = () => {
 
                                                 {p.assinatura_deferida === false && (
                                                   <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
-                                                    <textarea 
+                                                    <ControlledTextarea 
                                                       value={p.indeferimento_motivo || ''} 
-                                                      onChange={e => updatePasso(p.id, 'indeferimento_motivo', e.target.value)}
+                                                      onBlur={val => updatePasso(p.id, 'indeferimento_motivo', val)}
                                                       placeholder="Motivo do indeferimento..."
                                                       className="w-full text-xs p-2 border border-destructive/20 rounded bg-background outline-none focus:ring-1 focus:ring-destructive"
                                                       rows={2}
@@ -792,10 +822,9 @@ const SocietarioPage: React.FC = () => {
                                             <label className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 uppercase tracking-tighter">
                                               <User size={10} /> Enviado por
                                             </label>
-                                            <input
-                                              type="text"
+                                            <ControlledInput
                                               value={detalhes.enviado_por || ''}
-                                              onChange={e => updateDetalhePasso(p.id, step.id, 'enviado_por', e.target.value)}
+                                              onBlur={val => updateDetalhePasso(p.id, step.id, 'enviado_por', val)}
                                               placeholder="Quem enviou?"
                                               className="w-full px-3 py-1.5 border border-border rounded-lg bg-background text-sm focus:ring-1 focus:ring-primary outline-none"
                                             />
@@ -804,9 +833,9 @@ const SocietarioPage: React.FC = () => {
                                             <label className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 uppercase tracking-tighter">
                                               <MessageSquare size={10} /> Observações
                                             </label>
-                                            <textarea
+                                            <ControlledTextarea
                                               value={detalhes.observacoes || ''}
-                                              onChange={e => updateDetalhePasso(p.id, step.id, 'observacoes', e.target.value)}
+                                              onBlur={val => updateDetalhePasso(p.id, step.id, 'observacoes', val)}
                                               placeholder="Ocorrências..."
                                               rows={1}
                                               className="w-full px-3 py-1.5 border border-border rounded-lg bg-background text-sm focus:ring-1 focus:ring-primary outline-none resize-none"
