@@ -40,6 +40,7 @@ const CompletarPerfilPage = lazy(() => import("@/pages/CompletarPerfilPage"));
 const TermosPage = lazy(() => import("@/pages/TermosPage"));
 const PerfilPage = lazy(() => import("@/pages/PerfilPage"));
 const IRPFPage = lazy(() => import("@/pages/IRPFPage"));
+const RelatoriosPage = lazy(() => import("@/pages/RelatoriosPage"));
 const VerificationPage = lazy(() => import("@/pages/VerificationPage"));
 const EsqueciSenhaPage = lazy(() => import("@/pages/EsqueciSenhaPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
@@ -152,6 +153,7 @@ const App = () => (
                   <Route path="/declaracoes-mensais" element={<DeclaracoesMensaisPage />} />
                   <Route path="/declaracoes-anuais" element={<DeclaracoesAnuaisPage />} />
                   <Route path="/irpf" element={<IRPFPage />} />
+                  <Route path="/relatorios" element={<RelatoriosPage />} />
                   <Route path="/agendamentos" element={<AgendamentosPage />} />
                   <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />
                   <Route path="/ocorrencias" element={<OcorrenciasPage />} />
