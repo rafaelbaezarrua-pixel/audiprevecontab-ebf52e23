@@ -36,12 +36,16 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
 
-            // Fetch empresas for in-memory mapping to avoid complex JOINs that fail (400)
-            const { data: emps } = await (supabase as any).from("empresas").select("id, nome_empresa");
-            const empMap = new Map();
-            if (emps) {
-                emps.forEach((e: any) => empMap.set(e.id, e.nome_empresa));
-            }
+            // Optimized: We'll collect IDs of companies with alerts and fetch names on-demand
+            // to avoid loading thousands of companies in memory at start.
+            const empNamesCache = new Map<string, string>();
+            const getEmpName = async (id: string) => {
+                if (empNamesCache.has(id)) return empNamesCache.get(id);
+                const { data } = await (supabase as any).from("empresas").select("nome_empresa").eq("id", id).maybeSingle();
+                const name = data?.nome_empresa || 'Empresa';
+                empNamesCache.set(id, name);
+                return name;
+            };
 
             // --- 1. CERTIFICADOS EXPIRANDO ---
             // Only admins or people with "certificados" module should probably receive this, 
@@ -65,9 +69,10 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                         const isExpired = vencimento < today;
                         const diasRestantes = Math.ceil((vencimento.getTime() - today.getTime()) / (1000 * 3600 * 24));
 
+                        const empName = await getEmpName(cert.empresa_id);
                         const title = isExpired
-                            ? `⚠️ Certificado Expirado: ${empMap.get(cert.empresa_id) || 'Empresa'}`
-                            : `⏳ Certificado Expirando: ${empMap.get(cert.empresa_id) || 'Empresa'}`;
+                            ? `⚠️ Certificado Expirado: ${empName}`
+                            : `⏳ Certificado Expirando: ${empName}`;
 
                         const message = isExpired
                             ? `O certificado digital venceu em ${cert.data_vencimento.split('-').reverse().join('/')}.`
@@ -125,7 +130,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                         const isExpired = vData < today;
                         const diasRestantes = Math.ceil((vData.getTime() - today.getTime()) / (1000 * 3600 * 24));
 
-                        const razaoSocial = empMap.get(licenca.empresa_id) || 'Desconhecida';
+                        const razaoSocial = await getEmpName(licenca.empresa_id);
                         const title = isExpired
                             ? `⚠️ Licença Vencida: ${licenca.tipo_licenca}`
                             : `⏳ Licença Expirando: ${licenca.tipo_licenca}`;

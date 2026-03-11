@@ -4,6 +4,8 @@ import { Search, ChevronDown, ChevronUp, Save, Building2, Plus, Calendar, Dollar
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from "recharts";
+import { TrendingUp } from "lucide-react";
 
 type TabType = "configuracao" | "mensal";
 type MainTabType = "empresas" | "geral";
@@ -235,6 +237,7 @@ const HonorariosPage: React.FC = () => {
   const totalValorAgregado = geralData.reduce((acc, curr) => acc + Number(curr.valor_total || 0), 0);
   const totalPago = geralData.filter(d => d.pago).reduce((acc, curr) => acc + Number(curr.valor_total || 0), 0);
   const totalPendente = totalValorAgregado - totalPago;
+  const eficienciaCobranca = totalValorAgregado > 0 ? Math.round((totalPago / totalValorAgregado) * 100) : 0;
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -276,38 +279,73 @@ const HonorariosPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-indigo-500">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-muted-foreground uppercase">Total Calculado</p>
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <DollarSign size={16} className="text-primary" />
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Faturamento Mensal</p>
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                  <DollarSign size={16} className="text-indigo-500" />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-card-foreground">{formatCurrency(totalValorAgregado)}</p>
-              <p className="text-xs text-muted-foreground mt-1">De todos os honorários gerados no mês</p>
+              <p className="text-2xl font-black text-card-foreground">{formatCurrency(totalValorAgregado)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1 font-medium italic">Total gerado em {globalCompetencia}</p>
             </div>
 
-            <div className="bg-success/10 border border-success/20 rounded-xl p-5 shadow-sm">
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-emerald-500">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-success uppercase">Total Recebido (Pago)</p>
-                <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center">
-                  <CheckCircle size={16} className="text-success" />
+                <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Total Recebido</p>
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <CheckCircle size={16} className="text-emerald-500" />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-success">{formatCurrency(totalPago)}</p>
-              <p className="text-xs text-success/80 mt-1">Valores marcados como pagos</p>
+              <p className="text-2xl font-black text-emerald-600">{formatCurrency(totalPago)}</p>
+              <p className="text-[10px] text-emerald-600/70 mt-1 font-medium italic">Valores confirmados</p>
             </div>
 
-            <div className="bg-warning/10 border border-warning/20 rounded-xl p-5 shadow-sm">
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-amber-500">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-warning uppercase">Pendente / Em Aberto</p>
-                <div className="w-8 h-8 rounded-full bg-warning/20 flex items-center justify-center">
-                  <Clock size={16} className="text-warning" />
+                <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Previsão Pendente</p>
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Clock size={16} className="text-amber-500" />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-warning">{formatCurrency(totalPendente)}</p>
-              <p className="text-xs text-warning/80 mt-1">Aguardando recebimento</p>
+              <p className="text-2xl font-black text-amber-600">{formatCurrency(totalPendente)}</p>
+              <p className="text-[10px] text-amber-600/70 mt-1 font-medium italic">Aguardando pagamento</p>
+            </div>
+
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-primary">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Eficiência de Cobrança</p>
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <TrendingUp size={16} className="text-primary" />
+                </div>
+              </div>
+              <p className="text-2xl font-black text-primary">{eficienciaCobranca}%</p>
+              <p className="text-[10px] text-primary/70 mt-1 font-medium italic">Taxa de recebimento mensal</p>
+            </div>
+          </div>
+
+          <div className="module-card border border-border/50 bg-card/30 backdrop-blur-md">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-black text-card-foreground flex items-center gap-2">
+                <TrendingUp size={20} className="text-primary" /> Desempenho Financeiro - {globalCompetencia}
+              </h3>
+            </div>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[{ name: "Honorários", total: totalValorAgregado, pago: totalPago, pendente: totalPendente }]}>
+                  <XAxis dataKey="name" hide />
+                  <YAxis />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px' }}
+                    itemStyle={{ fontWeight: 'bold' }}
+                  />
+                  <Legend />
+                  <Bar dataKey="total" name="Total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="pago" name="Pago" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="pendente" name="Pendente" fill="#F59E0B" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
