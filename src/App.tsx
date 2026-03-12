@@ -40,6 +40,7 @@ const CompletarPerfilPage = lazy(() => import("@/pages/CompletarPerfilPage"));
 const TermosPage = lazy(() => import("@/pages/TermosPage"));
 const PerfilPage = lazy(() => import("@/pages/PerfilPage"));
 const IRPFPage = lazy(() => import("@/pages/IRPFPage"));
+const NotificacoesPage = lazy(() => import("@/pages/NotificacoesPage"));
 const RelatoriosPage = lazy(() => import("@/pages/RelatoriosPage"));
 const VerificationPage = lazy(() => import("@/pages/VerificationPage"));
 const EsqueciSenhaPage = lazy(() => import("@/pages/EsqueciSenhaPage"));
@@ -159,6 +160,7 @@ const App = () => (
                   <Route path="/ocorrencias" element={<OcorrenciasPage />} />
                   <Route path="/configuracoes/usuarios/novo" element={<AdminRoute><UsuarioFormPage /></AdminRoute>} />
                   <Route path="/perfil" element={<PerfilPage />} />
+                  <Route path="/notificacoes" element={<NotificacoesPage />} />
                   <Route path="/configuracoes" element={<AdminRoute><ConfiguracoesPage /></AdminRoute>} />
                   <Route path="/configuracoes/auditoria" element={<AdminRoute><AuditoriaPage /></AdminRoute>} />
                 </Route>

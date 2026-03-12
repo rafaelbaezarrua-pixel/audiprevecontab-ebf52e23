@@ -110,6 +110,16 @@ export const useNotifications = () => {
         else fetchNotifications();
     };
 
+    const markAsUnread = async (recipientId: string) => {
+        const { error } = await (supabase as any)
+            .from("notification_recipients")
+            .update({ is_read: false, read_at: null })
+            .eq("id", recipientId);
+
+        if (error) console.error("Error marking notification as unread:", error);
+        else fetchNotifications();
+    };
+
     const markAllAsRead = async () => {
         if (!user) return;
         const { error } = await (supabase as any)
@@ -132,13 +142,26 @@ export const useNotifications = () => {
         else fetchNotifications();
     };
 
+    const deleteAllNotifications = async () => {
+        if (!user) return;
+        const { error } = await (supabase as any)
+            .from("notification_recipients")
+            .update({ is_deleted: true })
+            .eq("user_id", user.id);
+
+        if (error) console.error("Error deleting all notifications:", error);
+        else fetchNotifications();
+    };
+
     return {
         notifications,
         unreadCount,
         loading,
         markAsRead,
+        markAsUnread,
         markAllAsRead,
         deleteNotification,
+        deleteAllNotifications,
         refresh: fetchNotifications,
     };
 };
