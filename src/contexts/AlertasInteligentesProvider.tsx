@@ -20,10 +20,12 @@ export const useAlertasInteligentes = () => {
 export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, userData } = useAuth();
     const isCheckingRef = useRef(false);
+    const hasCheckedThisSession = useRef(false);
+    const emitInProcessRef = useRef<Set<string>>(new Set());
 
     const checkAlerts = async () => {
         // Only run for authenticated users
-        if (!user) return;
+        if (!user || hasCheckedThisSession.current) return;
         if (isCheckingRef.current) return;
 
         console.log("Sistema de Alertas: Iniciando verificação geral...");
@@ -31,7 +33,6 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
 
         try {
             const today = new Date();
-            const todayStr = today.toISOString().split('T')[0];
 
             // Optimized: We'll collect IDs of companies with alerts and fetch names on-demand
             // to avoid loading thousands of companies in memory at start.
@@ -77,8 +78,8 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
 
 
 
-                        // Generate unique signature for this alert to prevent SPAM (e.g., today + certID)
-                        const signature = `alert_cert_${cert.id}_${todayStr}`;
+                        // Generate unique signature for this alert
+                        const signature = `alert_cert_${cert.id}`;
                         await emitSystemAlert(user.id, title, message, "/certificados", signature);
                     }
                 }
@@ -101,8 +102,8 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                             const title = `🚨 Agendamento Atrasado: ${agenda.assunto}`;
                             const message = `O agendamento marcado para ${agenda.data.split('-').reverse().join('/')} às ${agenda.horario.slice(0, 5)} está pendente.`;
 
-                            // Unique signature per appointment per day
-                            const signature = `alert_agenda_${agenda.id}_${todayStr}`;
+                            // Unique signature per appointment
+                            const signature = `alert_agenda_${agenda.id}`;
                             await emitSystemAlert(user.id, title, message, "/agendamentos", signature);
                         }
                     }
@@ -136,12 +137,13 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                             ? `A licença de ${licenca.tipo_licenca} da empresa ${razaoSocial} venceu.`
                             : `A licença de ${licenca.tipo_licenca} da empresa ${razaoSocial} vencerá em ${diasRestantes} dias.`;
 
-                        const signature = `alert_licenca_${licenca.id}_${todayStr}`;
+                        const signature = `alert_licenca_${licenca.id}`;
                         await emitSystemAlert(user.id, title, message, "/licencas", signature);
                     }
                 }
             }
 
+            hasCheckedThisSession.current = true;
         } catch (error) {
             console.error("Erro ao verificar Alertas Inteligentes:", error);
         } finally {
@@ -151,6 +153,9 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
 
     // Helper function to emit atomic notifications safely without duplicates
     const emitSystemAlert = async (userId: string, title: string, message: string, link: string, signature: string) => {
+        if (emitInProcessRef.current.has(signature)) return;
+        emitInProcessRef.current.add(signature);
+
         try {
 
             
@@ -193,6 +198,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                         notificationId = retry.id;
                     } else {
                         console.error("Erro ao gerar alerta base:", errCreate);
+                        emitInProcessRef.current.delete(signature);
                         return;
                     }
                 } else {
@@ -208,6 +214,11 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
 
         } catch (e) {
             console.error("Error emitting system alert:", e);
+        } finally {
+            // Keep in memory for a while to prevent very fast re-runs from breaking the atomicity
+            setTimeout(() => {
+                emitInProcessRef.current.delete(signature);
+            }, 10000);
         }
     };
 
@@ -245,7 +256,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
 
     // Run automatically exactly ONCE after Authentication
     useEffect(() => {
-        if (user && userData !== undefined) {
+        if (user && userData !== undefined && !hasCheckedThisSession.current) {
             // Small delay to prevent blocking the main UI thread during login render
             const timer = setTimeout(() => {
                 checkAlerts();

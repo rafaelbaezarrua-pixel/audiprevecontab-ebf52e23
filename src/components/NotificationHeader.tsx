@@ -133,6 +133,16 @@ const NotificationHeader: React.FC = () => {
                         </div>
                     )}
                 </ScrollArea>
+                <div className="p-2 border-t border-border">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary"
+                        onClick={() => navigate("/notificacoes")}
+                    >
+                        Ver todas as notificações
+                    </Button>
+                </div>
             </PopoverContent>
         </Popover>
     );

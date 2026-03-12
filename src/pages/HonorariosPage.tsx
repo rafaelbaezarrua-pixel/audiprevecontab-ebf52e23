@@ -1,189 +1,62 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Save, Building2, Plus, Calendar, DollarSign, Clock, CheckCircle, Trash2, X } from "lucide-react";
+import { Search } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { useEmpresas } from "@/hooks/useEmpresas";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from "recharts";
-import { TrendingUp } from "lucide-react";
-
-type TabType = "configuracao" | "mensal";
-type MainTabType = "empresas" | "geral";
+import { useHonorarios } from "@/hooks/useHonorarios";
+import { HonorariosGeralView } from "@/components/honorarios/HonorariosGeralView";
+import { HonorariosEmpresasView } from "@/components/honorarios/HonorariosEmpresasView";
+import { HonorarioConfig, HonorarioMensal } from "@/types/honorarios";
 
 const HonorariosPage: React.FC = () => {
-  const { empresas, loading } = useEmpresas("honorarios");
+  const { empresas, loading: loadingEmpresas } = useEmpresas("honorarios");
   const [search, setSearch] = useState("");
-  const [mainTab, setMainTab] = useState<MainTabType>("empresas");
+  const [mainTab, setMainTab] = useState<"empresas" | "geral">("empresas");
   const [globalCompetencia, setGlobalCompetencia] = useState(new Date().toISOString().slice(0, 7));
-  const [geralData, setGeralData] = useState<any[]>([]);
-  const [esporadicosData, setEsporadicosData] = useState<any[]>([]);
-  const [subTab, setSubTab] = useState<"mensal" | "esporadicos">("mensal");
-  const [isAddingEsporadico, setIsAddingEsporadico] = useState(false);
-  const [newEsporadico, setNewEsporadico] = useState<any>({
-    nome_cliente: "",
-    cpf_cnpj: "",
-    tipo_servico: "",
-    valor: 0,
-    pago: false
-  });
+  
+  const { 
+    listGeral, listEsporadicos, revenueTrend, loading: loadingHonorarios,
+    saveConfig, saveMensal, saveEsporadico, deleteEsporadico 
+  } = useHonorarios(globalCompetencia);
 
-  // View: Empresas States
+  const { empresas: todasEmpresas } = useEmpresas("honorarios");
+
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Record<string, TabType>>({});
+  const [activeTabs, setActiveTabs] = useState<Record<string, "mensal" | "configuracao">>({});
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
 
-  // Data States for View: Empresas
-  const [configs, setConfigs] = useState<Record<string, any>>({});
-  const [mensalData, setMensalData] = useState<Record<string, any[]>>({});
-  const [configForm, setConfigForm] = useState<Record<string, any>>({});
-  const [mensalForm, setMensalForm] = useState<Record<string, any>>({});
+  const [configs, setConfigs] = useState<Record<string, Partial<HonorarioConfig>>>({});
+  const [mensalData, setMensalData] = useState<Record<string, HonorarioMensal[]>>({});
+  const [configForms, setConfigForms] = useState<Record<string, Partial<HonorarioConfig>>>({});
+  const [mensalForms, setMensalForms] = useState<Record<string, any>>({});
   const [competenciaSelecionada, setCompetenciaSelecionada] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (mainTab === "geral") {
-      if (subTab === "mensal") loadGeralData();
-      else loadEsporadicosData();
-    }
-  }, [mainTab, subTab, globalCompetencia]);
-
-  const loadGeralData = async () => {
-    const { data: records, error } = await supabase
-      .from("honorarios_mensal")
-      .select(`
-        *,
-        empresas (nome_empresa)
-      `)
-      .eq("competencia", globalCompetencia);
-
-    if (error) {
-      toast.error("Erro ao carregar dados do mês: " + error.message);
-      return;
-    }
-
-    setGeralData(records || []);
-  };
-
-  const loadEsporadicosData = async () => {
-    const { data: records, error } = await supabase
-      .from("servicos_esporadicos")
-      .select("*")
-      .eq("competencia", globalCompetencia);
-
-    if (error) {
-      toast.error("Erro ao carregar serviços esporádicos: " + error.message);
-      return;
-    }
-
-    setEsporadicosData(records || []);
-  };
-
-  const handleSaveEsporadico = async (record: any) => {
-    try {
-      const payload = {
-        ...record,
-        competencia: globalCompetencia
-      };
-
-      const { error } = record.id 
-        ? await supabase.from("servicos_esporadicos").update(payload).eq("id", record.id)
-        : await supabase.from("servicos_esporadicos").insert([payload]);
-
-      if (error) throw error;
-      toast.success(record.id ? "Serviço atualizado!" : "Serviço cadastrado!");
-      setIsAddingEsporadico(false);
-      setNewEsporadico({ nome_cliente: "", cpf_cnpj: "", tipo_servico: "", valor: 0, pago: false });
-      loadEsporadicosData();
-    } catch (err: any) {
-      toast.error("Erro ao salvar serviço: " + err.message);
-    }
-  };
-
-  const toggleEsporadicoPago = async (id: string, currentValue: boolean) => {
-    try {
-      await supabase.from("servicos_esporadicos").update({ pago: !currentValue }).eq("id", id);
-      toast.success("Status atualizado");
-      loadEsporadicosData();
-    } catch (err: any) {
-      toast.error("Erro ao atualizar: " + err.message);
-    }
-  };
-
-  const deleteEsporadico = async (id: string) => {
-    if (!confirm("Excluir este serviço?")) return;
-    try {
-      await supabase.from("servicos_esporadicos").delete().eq("id", id);
-      toast.success("Excluído");
-      loadEsporadicosData();
-    } catch (err: any) {
-      toast.error("Erro ao excluir");
-    }
-  };
-
-  const toggleGlobalPago = async (id: string, currentValue: boolean) => {
-    try {
-      await supabase.from("honorarios_mensal").update({ pago: !currentValue }).eq("id", id);
-      toast.success(`Status de pagamento atualizado.`);
-      loadGeralData();
-    } catch (err: any) {
-      toast.error("Erro ao atualizar status: " + err.message);
-    }
-  };
-
-  // ------------------ Existing Logic for View: Empresas ------------------ //
   const toggleExpand = async (empresaId: string) => {
     if (expanded === empresaId) {
       setExpanded(null);
       return;
     }
     setExpanded(empresaId);
-    if (!activeTab[empresaId]) setActiveTab(prev => ({ ...prev, [empresaId]: "mensal" }));
+    if (!activeTabs[empresaId]) setActiveTabs(prev => ({ ...prev, [empresaId]: "mensal" }));
     if (!competenciaSelecionada[empresaId]) setCompetenciaSelecionada(prev => ({ ...prev, [empresaId]: new Date().toISOString().slice(0, 7) }));
-    await loadConfig(empresaId);
-    await loadMensal(empresaId);
-  };
+    
+    // Load local data for the company
+    const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
+    const finalConfig = (config as any) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
+    setConfigs(prev => ({ ...prev, [empresaId]: finalConfig }));
+    setConfigForms(prev => ({ ...prev, [empresaId]: { ...finalConfig } }));
 
-  const loadConfig = async (empresaId: string) => {
-    const { data } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
-    const config = data || { valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
-    if (config && !config.outros_servicos) config.outros_servicos = [];
-    setConfigs(prev => ({ ...prev, [empresaId]: config }));
-    setConfigForm(prev => ({ ...prev, [empresaId]: { ...config } }));
-  };
-
-  const loadMensal = async (empresaId: string) => {
-    const { data } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empresaId).order('competencia', { ascending: false });
-    setMensalData(prev => ({ ...prev, [empresaId]: data || [] }));
+    const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empresaId).order('competencia', { ascending: false });
+    setMensalData(prev => ({ ...prev, [empresaId]: (mensal as any) || [] }));
   };
 
   const parseCurrency = (val: any) => {
     if (typeof val === 'number') return val;
     if (!val) return 0;
     const str = String(val);
-    if (str.includes(',')) {
-      return parseFloat(str.replace(/\./g, "").replace(",", ".")) || 0;
-    }
+    if (str.includes(',')) return parseFloat(str.replace(/\./g, "").replace(",", ".")) || 0;
     return parseFloat(str) || 0;
-  };
-
-  const handleSaveConfig = async (empresaId: string) => {
-    const form = configForm[empresaId];
-    try {
-      const payload = {
-        empresa_id: empresaId,
-        valor_honorario: parseCurrency(form.valor_honorario),
-        valor_por_funcionario: parseCurrency(form.valor_por_funcionario),
-        valor_por_recalculo: parseCurrency(form.valor_por_recalculo),
-        valor_trabalhista: parseCurrency(form.valor_trabalhista),
-        outros_servicos: (form.outros_servicos || []).map((s: any) => ({
-          ...s,
-          valor: parseCurrency(s.valor)
-        }))
-      };
-      if (configs[empresaId]?.id) await supabase.from("honorarios_config").update(payload).eq("id", configs[empresaId].id);
-      else await supabase.from("honorarios_config").insert(payload);
-      toast.success("Configuração de honorários salva!");
-      loadConfig(empresaId);
-    } catch (err: any) { toast.error("Erro ao salvar: " + err.message); }
   };
 
   const calculateTotal = (config: any, qtdFunc: number, qtdRecalculos: number, teveTrabalhista: boolean) => {
@@ -204,8 +77,8 @@ const HonorariosPage: React.FC = () => {
     return { total: honorario + funcVlr + recVlr + trabVlr + outrosVlr, detalhes };
   };
 
-  const handleGenerateMonth = async (empresaId: string) => {
-    const comp = competenciaSelecionada[empresaId];
+  const handleGenerateMonth = async (empresaId: string, compOverride?: string) => {
+    const comp = compOverride || competenciaSelecionada[empresaId];
     if (!comp) return;
     try {
       const config = configs[empresaId];
@@ -220,117 +93,35 @@ const HonorariosPage: React.FC = () => {
 
       const { total: valorTotal, detalhes } = calculateTotal(config, qtdFunc, qtdRecalculos || 0, teveTrabalhista || false);
 
-      setMensalForm(prev => ({
+      setMensalForms(prev => ({
         ...prev, [empresaId]: {
           competencia: comp, qtd_funcionarios: qtdFunc, qtd_recalculos: qtdRecalculos || 0,
           teve_encargo_trabalhista: teveTrabalhista || false, valor_total: valorTotal,
-          detalhes_calculo: detalhes,
+          detalhes_calculo: detalhes, empresa_id: empresaId,
           data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: ""
         }
       }));
     } catch (err: any) { toast.error("Erro ao gerar mês: " + err.message); }
   };
 
-  const handleSaveMensal = async (empresaId: string) => {
-    const form = mensalForm[empresaId];
-    if (!form) return;
-    try {
-      const payload = {
-        empresa_id: empresaId, competencia: form.competencia, qtd_funcionarios: form.qtd_funcionarios,
-        qtd_recalculos: form.qtd_recalculos, teve_encargo_trabalhista: form.teve_encargo_trabalhista,
-        valor_total: form.valor_total, data_vencimento: form.data_vencimento || null, data_envio: form.data_envio || null,
-        forma_envio: form.forma_envio || null, status: form.status, pago: form.pago,
-        detalhes_calculo: form.detalhes_calculo || [],
-        observacoes: form.observacoes ? { texto: form.observacoes } : null
-      };
-
-      const existingRecord = mensalData[empresaId]?.find((m: any) => m.competencia === form.competencia);
-      if (existingRecord) await supabase.from("honorarios_mensal").update(payload).eq("id", existingRecord.id);
-      else await supabase.from("honorarios_mensal").insert(payload);
-
-      toast.success("Controle mensal salvo!");
-      setMensalForm(prev => { const newForm = { ...prev }; delete newForm[empresaId]; return newForm; });
-      loadMensal(empresaId);
-    } catch (err: any) { toast.error("Erro ao salvar controle: " + err.message); }
-  };
-
-  const startEditMensal = (empresaId: string, record: any) => {
-    setCompetenciaSelecionada(prev => ({ ...prev, [empresaId]: record.competencia }));
-    setMensalForm(prev => ({ ...prev, [empresaId]: { ...record, observacoes: record.observacoes?.texto || "", detalhes_calculo: record.detalhes_calculo || [] } }));
-  };
-
-  const updateConfigForm = (id: string, field: string, value: any) => {
-    setConfigForm(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
-  };
-
-  const updateMensalForm = (id: string, field: string, value: any) => {
-    setMensalForm(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
-  };
-
-  const addOutroServico = (empresaId: string) => {
-    setConfigForm(prev => {
-      const form = prev[empresaId] || {};
-      const outros = form.outros_servicos || [];
-      return { ...prev, [empresaId]: { ...form, outros_servicos: [...outros, { descricao: "", valor: 0 }] } };
-    });
-  };
-
-  const updateOutroServico = (empresaId: string, index: number, field: string, value: any) => {
-    setConfigForm(prev => {
-      const form = prev[empresaId];
-      const outros = [...(form.outros_servicos || [])];
-      outros[index] = { ...outros[index], [field]: value };
-      return { ...prev, [empresaId]: { ...form, outros_servicos: outros } };
-    });
-  };
-
-  const removeOutroServico = (empresaId: string, index: number) => {
-    setConfigForm(prev => {
-      const form = prev[empresaId];
-      const outros = [...(form.outros_servicos || [])];
-      outros.splice(index, 1);
-      return { ...prev, [empresaId]: { ...form, outros_servicos: outros } };
-    });
-  };
-
-  const filtered = empresas.filter(e => {
+  const filteredEmpresas = empresas.filter(e => {
     const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
-
     let matchTab = false;
-    if (activeStatusTab === "ativas") {
-      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa !== "mei";
-    } else if (activeStatusTab === "mei") {
-      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
-    } else if (activeStatusTab === "paralisadas") {
-      matchTab = e.situacao === "paralisada";
-    } else if (activeStatusTab === "baixadas") {
-      matchTab = e.situacao === "baixada";
-    }
-
+    if (activeStatusTab === "ativas") matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa !== "mei";
+    else if (activeStatusTab === "mei") matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
+    else if (activeStatusTab === "paralisadas") matchTab = e.situacao === "paralisada";
+    else if (activeStatusTab === "baixadas") matchTab = e.situacao === "baixada";
     return matchSearch && matchTab;
   });
+
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
-  const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
-  const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
-  // Derived calculations for Geral View
-  const totalValorAgregado = geralData.reduce((acc, curr) => acc + Number(curr.valor_total || 0), 0);
-  const totalPago = geralData.filter(d => d.pago).reduce((acc, curr) => acc + Number(curr.valor_total || 0), 0);
-  const totalPendente = totalValorAgregado - totalPago;
-  const eficienciaCobranca = totalValorAgregado > 0 ? Math.round((totalPago / totalValorAgregado) * 100) : 0;
-
-  const totalEsporadicos = esporadicosData.reduce((acc, curr) => acc + Number(curr.valor || 0), 0);
-  const totalEsporadicosPago = esporadicosData.filter(d => d.pago).reduce((acc, curr) => acc + Number(curr.valor || 0), 0);
-
-  if (loading) {
+  if (loadingEmpresas) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-
-
-      {/* Main Tab Switcher */}
       <div className="flex bg-muted/30 p-1 rounded-xl w-full sm:w-fit">
         <button
           className={`flex-1 sm:flex-none uppercase tracking-wider text-xs font-bold px-6 py-2.5 rounded-lg transition-all duration-200 ${mainTab === "empresas" ? "bg-background text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
@@ -346,472 +137,143 @@ const HonorariosPage: React.FC = () => {
         </button>
       </div>
 
-      {/* VIEW: CONTROLE GERAL */}
-      {mainTab === "geral" && (
-        <div className="space-y-6 animate-fade-in">
-          <div className="flex flex-col sm:flex-row items-center justify-between bg-card border border-border p-4 rounded-xl shadow-sm gap-4">
-            <div className="flex bg-muted/50 p-1 rounded-lg">
-              <button 
-                onClick={() => setSubTab("mensal")}
-                className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${subTab === "mensal" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Honorários Mensais
-              </button>
-              <button 
-                onClick={() => setSubTab("esporadicos")}
-                className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${subTab === "esporadicos" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Serviços Esporádicos
-              </button>
-            </div>
+      {mainTab === "geral" ? (
+        <HonorariosGeralView 
+          geralData={listGeral}
+          esporadicosData={listEsporadicos}
+          revenueTrend={revenueTrend}
+          todasEmpresas={todasEmpresas}
+          globalCompetencia={globalCompetencia}
+          setGlobalCompetencia={setGlobalCompetencia}
+          onToggleMensalPago={(id, current) => saveMensal.mutate({ id, pago: !current } as any)}
+          onToggleMensalStatus={(id, current) => saveMensal.mutate({ id, status: current === "enviada" ? "gerada" : "enviada" } as any)}
+          onToggleEsporadicoPago={(id, current) => saveEsporadico.mutate({ id, pago: !current } as any)}
+          onDeleteEsporadico={(id) => deleteEsporadico.mutate(id)}
+          onSaveEsporadico={(data) => saveEsporadico.mutate({ ...data, competencia: globalCompetencia })}
+          onActionGerar={async (empresaId) => {
+            // 1. Identify correct sub-tab for the company
+            const empresa = todasEmpresas.find(e => e.id === empresaId);
+            if (empresa) {
+              if (empresa.situacao === "paralisada") setActiveStatusTab("paralisadas");
+              else if (empresa.situacao === "baixada") setActiveStatusTab("baixadas");
+              else if (empresa.porte_empresa === "mei") setActiveStatusTab("mei");
+              else setActiveStatusTab("ativas");
+            }
+
+            // 2. Switch tab and expand
+            setMainTab("empresas");
+            setExpanded(empresaId);
+            setActiveTabs(prev => ({ ...prev, [empresaId]: "mensal" }));
+            setCompetenciaSelecionada(prev => ({ ...prev, [empresaId]: globalCompetencia }));
             
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">Competência:</label>
-              <input
-                type="month"
-                value={globalCompetencia}
-                onChange={(e) => setGlobalCompetencia(e.target.value)}
-                className="px-4 py-2 border border-border rounded-lg bg-background text-sm font-semibold text-foreground focus:ring-2 focus:ring-primary w-full sm:w-auto"
-              />
-            </div>
-          </div>
+            // 3. Load config and generate (mimic toggleExpand + handleGenerateMonth)
+            const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
+            const finalConfig = (config as any) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
+            
+            setConfigs(prev => ({ ...prev, [empresaId]: finalConfig }));
+            setConfigForms(prev => ({ ...prev, [empresaId]: { ...finalConfig } }));
 
-          {subTab === "mensal" ? (
-            <>
+            const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empresaId).order('competencia', { ascending: false });
+            setMensalData(prev => ({ ...prev, [empresaId]: (mensal as any) || [] }));
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-indigo-500">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Faturamento Mensal</p>
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                  <DollarSign size={16} className="text-indigo-500" />
-                </div>
-              </div>
-              <p className="text-2xl font-black text-card-foreground">{formatCurrency(totalValorAgregado)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1 font-medium italic">Total gerado em {globalCompetencia}</p>
-            </div>
+            // 4. Trigger generation with the loaded config
+            const { data: pessoalData } = await supabase.from("pessoal").select("*").eq("empresa_id", empresaId).eq("competencia", globalCompetencia).maybeSingle();
+            const qtdFunc = pessoalData?.qtd_funcionarios || 0;
+            const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
+            const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", globalCompetencia);
 
-            <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-emerald-500">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Total Recebido</p>
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <CheckCircle size={16} className="text-emerald-500" />
-                </div>
-              </div>
-              <p className="text-2xl font-black text-emerald-600">{formatCurrency(totalPago)}</p>
-              <p className="text-[10px] text-emerald-600/70 mt-1 font-medium italic">Valores confirmados</p>
-            </div>
+            const { total: valorTotal, detalhes } = calculateTotal(finalConfig, qtdFunc, qtdRecalculos || 0, teveTrabalhista || false);
 
-            <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-amber-500">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Previsão Pendente</p>
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <Clock size={16} className="text-amber-500" />
-                </div>
-              </div>
-              <p className="text-2xl font-black text-amber-600">{formatCurrency(totalPendente)}</p>
-              <p className="text-[10px] text-amber-600/70 mt-1 font-medium italic">Aguardando pagamento</p>
-            </div>
+            setMensalForms(prev => ({
+              ...prev, [empresaId]: {
+                competencia: globalCompetencia,
+                qtd_funcionarios: qtdFunc,
+                qtd_recalculos: qtdRecalculos || 0,
+                teve_encargo_trabalhista: teveTrabalhista || false,
+                valor_total: valorTotal,
+                detalhes_calculo: detalhes,
+                empresa_id: empresaId,
+                data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: ""
+              }
+            }));
 
-            <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-primary">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold text-primary uppercase tracking-wider">Eficiência de Cobrança</p>
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <TrendingUp size={16} className="text-primary" />
-                </div>
-              </div>
-              <p className="text-2xl font-black text-primary">{eficienciaCobranca}%</p>
-              <p className="text-[10px] text-primary/70 mt-1 font-medium italic">Taxa de recebimento mensal</p>
-            </div>
-          </div>
-
-          <div className="module-card border border-border/50 bg-card/30 backdrop-blur-md">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-black text-card-foreground flex items-center gap-2">
-                <TrendingUp size={20} className="text-primary" /> Desempenho Financeiro - {globalCompetencia}
-              </h3>
-            </div>
-            <div className="h-72 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{ name: "Honorários", total: totalValorAgregado, pago: totalPago, pendente: totalPendente }]}>
-                  <XAxis dataKey="name" hide />
-                  <YAxis />
-                  <RechartsTooltip 
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px' }}
-                    itemStyle={{ fontWeight: 'bold' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="total" name="Total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="pago" name="Pago" fill="#10B981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="pendente" name="Pendente" fill="#F59E0B" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left whitespace-nowrap">
-                <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
-                  <tr>
-                    <th className="px-5 py-4 font-semibold">Empresa</th>
-                    <th className="px-5 py-4 font-semibold text-right">Valor Calculado</th>
-                    <th className="px-5 py-4 font-semibold text-center">Vencimento</th>
-                    <th className="px-5 py-4 font-semibold text-center">Status</th>
-                    <th className="px-5 py-4 font-semibold text-center">Pagamento</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {geralData.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">
-                        Nenhum honorário registrado para a competência {globalCompetencia}.
-                      </td>
-                    </tr>
-                  ) : (
-                    geralData.map((record) => (
-                      <tr key={record.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-5 py-4 font-medium text-card-foreground">
-                          {record.empresas?.nome_empresa}
-                        </td>
-                        <td className="px-5 py-4 font-bold text-primary text-right">
-                          {formatCurrency(record.valor_total)}
-                        </td>
-                        <td className="px-5 py-4 text-center text-muted-foreground">
-                          {record.data_vencimento ? format(new Date(record.data_vencimento), 'dd/MM/yyyy') : '—'}
-                        </td>
-                        <td className="px-5 py-4 text-center">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${record.status === "enviada" ? "bg-success/10 text-success border border-success/20" :
-                            record.status === "gerada" ? "bg-primary/10 text-primary border border-primary/20" : "bg-warning/10 text-warning border border-warning/20"
-                            }`}>
-                            {record.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-center">
-                          <button
-                            onClick={() => toggleGlobalPago(record.id, record.pago)}
-                            className={`flex items-center gap-2 justify-center w-32 mx-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${record.pago
-                              ? "bg-success text-success-foreground shadow-md hover:bg-success/90"
-                              : "bg-muted text-muted-foreground border border-border hover:bg-muted/80 hover:text-foreground"
-                              }`}
-                          >
-                            {record.pago ? <><CheckCircle size={14} /> PAGO</> : <><Clock size={14} /> PENDENTE</>}
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-            </>
-          ) : (
-            <>
-              {/* VIEW: SERVIÇOS ESPORÁDICOS */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-card border-2 border-primary/10 rounded-xl p-5 shadow-sm">
-                  <p className="text-xs font-bold text-muted-foreground uppercase mb-1 font-black">Total Esporádicos</p>
-                  <p className="text-2xl font-black text-primary">{formatCurrency(totalEsporadicos)}</p>
-                </div>
-                <div className="bg-card border-2 border-emerald-500/10 rounded-xl p-5 shadow-sm">
-                  <p className="text-xs font-bold text-muted-foreground uppercase mb-1 font-black">Total Recebido</p>
-                  <p className="text-2xl font-black text-emerald-500">{formatCurrency(totalEsporadicosPago)}</p>
-                </div>
-                <div className="flex items-center justify-end">
-                  <button 
-                    onClick={() => setIsAddingEsporadico(!isAddingEsporadico)}
-                    className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition-all text-xs uppercase tracking-widest"
-                  >
-                    {isAddingEsporadico ? <X size={18} /> : <Plus size={18} />}
-                    {isAddingEsporadico ? 'Cancelar' : 'Novo Serviço'}
-                  </button>
-                </div>
-              </div>
-
-              {isAddingEsporadico && (
-                <div className="bg-card border border-primary/20 rounded-xl p-6 shadow-md animate-in slide-in-from-top-2">
-                  <h3 className="font-bold text-primary mb-4 flex items-center gap-2 uppercase text-xs tracking-widest"><Plus size={16} /> Novo Serviço Esporádico</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div className="lg:col-span-2">
-                      <label className={labelCls}>Cliente</label>
-                      <input type="text" value={newEsporadico.nome_cliente} onChange={e => setNewEsporadico({...newEsporadico, nome_cliente: e.target.value})} className={inputCls} placeholder="Nome do cliente" />
-                    </div>
-                    <div>
-                      <label className={labelCls}>CPF/CNPJ</label>
-                      <input type="text" value={newEsporadico.cpf_cnpj} onChange={e => setNewEsporadico({...newEsporadico, cpf_cnpj: e.target.value})} className={inputCls} placeholder="000.000..." />
-                    </div>
-                    <div>
-                      <label className={labelCls}>Tipo de Serviço</label>
-                      <input type="text" value={newEsporadico.tipo_servico} onChange={e => setNewEsporadico({...newEsporadico, tipo_servico: e.target.value})} className={inputCls} placeholder="Ex: Abertura, IRPF..." />
-                    </div>
-                    <div>
-                      <label className={labelCls}>Valor (R$)</label>
-                      <input type="number" step="0.01" value={newEsporadico.valor} onChange={e => setNewEsporadico({...newEsporadico, valor: Number(e.target.value)})} className={inputCls} />
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-3 mt-6 border-t border-border pt-4">
-                    <button onClick={() => setIsAddingEsporadico(false)} className="text-xs font-bold text-muted-foreground px-4 py-2 hover:bg-muted rounded-lg font-black uppercase tracking-widest">Cancelar</button>
-                    <button onClick={() => handleSaveEsporadico(newEsporadico)} className="bg-primary text-white text-xs font-bold px-6 py-2 rounded-lg shadow-md uppercase tracking-widest">Salvar Serviço</button>
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-muted/50 text-[10px] font-black uppercase tracking-tighter text-muted-foreground border-b border-border">
-                    <tr>
-                      <th className="px-5 py-4">Cliente / Documento</th>
-                      <th className="px-5 py-4">Serviço</th>
-                      <th className="px-5 py-4 text-right">Valor</th>
-                      <th className="px-5 py-4 text-center">Status</th>
-                      <th className="px-5 py-4 text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {esporadicosData.length === 0 ? (
-                      <tr><td colSpan={5} className="px-5 py-12 text-center text-muted-foreground italic">Nenhum serviço esporádico para esta competência {globalCompetencia}.</td></tr>
-                    ) : (
-                      esporadicosData.map(item => (
-                        <tr key={item.id} className="hover:bg-muted/20 transition-colors">
-                          <td className="px-5 py-4">
-                            <p className="font-bold text-card-foreground">{item.nome_cliente}</p>
-                            <p className="text-[10px] text-muted-foreground">{item.cpf_cnpj || '—'}</p>
-                          </td>
-                          <td className="px-5 py-4 font-medium text-muted-foreground">{item.tipo_servico}</td>
-                          <td className="px-5 py-4 font-black text-primary text-right">{formatCurrency(item.valor)}</td>
-                          <td className="px-5 py-4 text-center">
-                            <button 
-                              onClick={() => toggleEsporadicoPago(item.id, item.pago)}
-                              className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest transition-all ${item.pago ? 'bg-emerald-500 text-white shadow-sm' : 'bg-muted text-muted-foreground border border-border'}`}
-                            >
-                              {item.pago ? 'PAGO' : 'PENDENTE'}
-                            </button>
-                          </td>
-                          <td className="px-5 py-4 text-right">
-                            <button onClick={() => deleteEsporadico(item.id)} className="text-destructive p-2 hover:bg-destructive/10 rounded-lg transition-all" title="Excluir">
-                              <Trash2 size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* VIEW: EMPRESAS (Existing content) */}
-      {mainTab === "empresas" && (
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+      ) : (
         <div className="space-y-4 animate-fade-in">
-
           <div className="flex border-b border-border overflow-x-auto no-scrollbar">
-            <button
-              className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "ativas"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              onClick={() => setActiveStatusTab("ativas")}
-            >
-              Empresas Ativas
-            </button>
-            <button
-              className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "mei"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              onClick={() => setActiveStatusTab("mei")}
-            >
-              Empresas MEI
-            </button>
-            <button
-              className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "paralisadas"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              onClick={() => setActiveStatusTab("paralisadas")}
-            >
-              Empresas Paralisadas
-            </button>
-            <button
-              className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "baixadas"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              onClick={() => setActiveStatusTab("baixadas")}
-            >
-              Empresas Baixadas
-            </button>
+            {["ativas", "mei", "paralisadas", "baixadas"].map(t => (
+              <button
+                key={t}
+                className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                onClick={() => setActiveStatusTab(t as any)}
+              >
+                {t === "ativas" ? "Empresas Ativas" : t === "mei" ? "Empresas MEI" : t === "paralisadas" ? "Empresas Paralisadas" : "Empresas Baixadas"}
+              </button>
+            ))}
           </div>
 
-          <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className={inputCls + " pl-9"} /></div>
-          <div className="space-y-3">
-            {filtered.map(emp => {
-              const isOpen = expanded === emp.id;
-              const tab = activeTab[emp.id] || "mensal";
-              const cForm = configForm[emp.id] || {};
-              const mForm = mensalForm[emp.id];
-              const hasMensalRecords = mensalData[emp.id] && mensalData[emp.id].length > 0;
+          <div className="relative max-w-sm">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className={inputCls + " pl-9"} />
+          </div>
 
-              return (
-                <div key={emp.id} className="module-card !p-0 overflow-hidden">
-                  <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => toggleExpand(emp.id)}>
-                    <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><Building2 size={16} className="text-primary" /></div><div><p className="font-medium text-card-foreground">{emp.nome_empresa}</p><p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p></div></div>
-                    {isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
-                  </div>
-
-                  {isOpen && (
-                    <div className="border-t border-border bg-muted/10">
-                      <div className="flex border-b border-border">
-                        <button className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === "mensal" ? "text-primary border-b-2 border-primary bg-background/50" : "text-muted-foreground hover:bg-muted/50"}`} onClick={() => setActiveTab(prev => ({ ...prev, [emp.id]: "mensal" }))}>Controle Mensal</button>
-                        <button className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === "configuracao" ? "text-primary border-b-2 border-primary bg-background/50" : "text-muted-foreground hover:bg-muted/50"}`} onClick={() => setActiveTab(prev => ({ ...prev, [emp.id]: "configuracao" }))}>Configuração</button>
-                      </div>
-
-                      <div className="p-5">
-                        {tab === "configuracao" && (
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div><label className={labelCls}>Valor Base (Honorário Mensal)</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span><input type="number" step="0.01" value={cForm.valor_honorario || ""} onChange={e => updateConfigForm(emp.id, "valor_honorario", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" /></div></div>
-                              <div><label className={labelCls}>Valor Adicion. por Funcionário</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span><input type="number" step="0.01" value={cForm.valor_por_funcionario || ""} onChange={e => updateConfigForm(emp.id, "valor_por_funcionario", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" /></div></div>
-                              <div><label className={labelCls}>Valor Adicion. por Recálculo</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span><input type="number" step="0.01" value={cForm.valor_por_recalculo || ""} onChange={e => updateConfigForm(emp.id, "valor_por_recalculo", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" /></div></div>
-                              <div><label className={labelCls}>Valor Adicion. Trabalhista (Fixo)</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span><input type="number" step="0.01" value={cForm.valor_trabalhista || ""} onChange={e => updateConfigForm(emp.id, "valor_trabalhista", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" /></div></div>
-                            </div>
-
-                            <div className="mt-6 pt-6 border-t border-border">
-                              <div className="flex items-center justify-between mb-4">
-                                <h4 className="text-sm font-bold text-card-foreground">Serviços Adicionais (Extra)</h4>
-                                <button onClick={() => addOutroServico(emp.id)} className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80">
-                                  <Plus size={14} /> Adicionar Serviço
-                                </button>
-                              </div>
-                              <div className="space-y-3">
-                                {cForm.outros_servicos?.map((servico: any, idx: number) => (
-                                  <div key={idx} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-background p-3 rounded-lg border border-border">
-                                    <div className="flex-1 w-full text-left">
-                                      <label className={labelCls}>Descrição</label>
-                                      <input type="text" value={servico.descricao || ""} onChange={e => updateOutroServico(emp.id, idx, "descricao", e.target.value)} className={inputCls} placeholder="Ex: Imposto Sindical, Taxa Extra..." />
-                                    </div>
-                                    <div className="w-full sm:w-1/3 text-left">
-                                      <label className={labelCls}>Valor</label>
-                                      <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
-                                        <input type="number" step="0.01" value={servico.valor || ""} onChange={e => updateOutroServico(emp.id, idx, "valor", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" />
-                                      </div>
-                                    </div>
-                                    <button onClick={() => removeOutroServico(emp.id, idx)} className="p-2 sm:mb-[2px] rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors" title="Excluir Serviço">
-                                      <Trash2 size={18} />
-                                    </button>
-                                  </div>
-                                ))}
-                                {(!cForm.outros_servicos || cForm.outros_servicos.length === 0) && (
-                                  <p className="text-xs text-muted-foreground italic">Nenhum serviço adicional configurado.</p>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex justify-end pt-4"><button onClick={() => handleSaveConfig(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Save size={16} /> Salvar Configuração</button></div>
-                          </div>
-                        )}
-
-                        {tab === "mensal" && (
-                          <div className="space-y-6">
-                            {!mForm && (
-                              <div className="flex flex-col sm:flex-row items-end gap-3 bg-background p-4 rounded-lg border border-border">
-                                <div className="flex-1 w-full"><label className={labelCls}>Nova Competência</label><input type="month" value={competenciaSelecionada[emp.id] || ""} onChange={e => setCompetenciaSelecionada(prev => ({ ...prev, [emp.id]: e.target.value }))} className={inputCls} /></div>
-                                <button onClick={() => handleGenerateMonth(emp.id)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-sm font-semibold transition-colors"><Plus size={16} /> Gerar ou Editar Mês</button>
-                              </div>
-                            )}
-
-                            {mForm && (
-                              <div className="bg-background p-5 rounded-lg border border-primary/20 shadow-sm space-y-4">
-                                <div className="flex items-center justify-between border-b border-border pb-3">
-                                  <h3 className="text-sm font-bold text-card-foreground flex items-center gap-2"><Calendar size={16} className="text-primary" /> Competência: {mForm.competencia}</h3>
-                                  <button onClick={() => setMensalForm(prev => { const n = { ...prev }; delete n[emp.id]; return n; })} className="text-xs text-muted-foreground hover:text-foreground">Cancelar</button>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-3 bg-muted/30 rounded-lg">
-                                  <div><label className="block text-[10px] uppercase text-muted-foreground font-semibold mb-1">Qtd. Funcionários</label><p className="text-sm text-card-foreground font-medium">{mForm.qtd_funcionarios}</p></div>
-                                  <div><label className="block text-[10px] uppercase text-muted-foreground font-semibold mb-1">Qtd. Recálculos</label><p className="text-sm text-card-foreground font-medium">{mForm.qtd_recalculos}</p></div>
-                                  <div><label className="block text-[10px] uppercase text-muted-foreground font-semibold mb-1">Encargos Trab.</label><p className="text-sm text-card-foreground font-medium">{mForm.teve_encargo_trabalhista ? "Sim" : "Não"}</p></div>
-                                  <div><label className="block text-[10px] uppercase text-primary font-bold mb-1">Valor Total Calculado</label><p className="text-lg text-primary font-bold">{formatCurrency(mForm.valor_total)}</p></div>
-                                </div>
-
-                                {mForm.detalhes_calculo && mForm.detalhes_calculo.length > 0 && (
-                                  <div className="bg-muted/10 border border-border rounded-lg p-4">
-                                    <h4 className="text-xs font-bold uppercase text-muted-foreground mb-3 flex items-center gap-2">
-                                      <DollarSign size={14} /> Detalhamento do Cálculo
-                                    </h4>
-                                    <div className="space-y-2">
-                                      <div className="grid grid-cols-4 text-[10px] font-bold text-muted-foreground uppercase border-b border-border pb-1">
-                                        <div className="col-span-2">Descrição</div>
-                                        <div className="text-right">Qtd x Valor</div>
-                                        <div className="text-right">Total</div>
-                                      </div>
-                                      {mForm.detalhes_calculo.map((det: any, idx: number) => (
-                                        <div key={idx} className="grid grid-cols-4 text-xs items-center py-1">
-                                          <div className="col-span-2 font-medium text-card-foreground line-clamp-1" title={det.rotulo}>{det.rotulo}</div>
-                                          <div className="text-right text-muted-foreground">
-                                            {det.qtd} x {formatCurrency(det.vlrUnit)}
-                                          </div>
-                                          <div className="text-right font-bold text-card-foreground">
-                                            {formatCurrency(det.vlrTotal)}
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                  <div><label className={labelCls}>Data Vencimento</label><input type="date" value={mForm.data_vencimento || ""} onChange={e => updateMensalForm(emp.id, "data_vencimento", e.target.value)} className={inputCls} /></div>
-                                  <div><label className={labelCls}>Data Envio</label><input type="date" value={mForm.data_envio || ""} onChange={e => updateMensalForm(emp.id, "data_envio", e.target.value)} className={inputCls} /></div>
-                                  <div><label className={labelCls}>Forma Envio</label><input type="text" value={mForm.forma_envio || ""} onChange={e => updateMensalForm(emp.id, "forma_envio", e.target.value)} className={inputCls} placeholder="Ex: WhatsApp, Email" /></div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                                  <div><label className={labelCls}>Status</label><select value={mForm.status || "pendente"} onChange={e => updateMensalForm(emp.id, "status", e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select></div>
-                                  <div className="flex items-center gap-2 pt-4"><input type="checkbox" id={`pago-${emp.id}`} checked={mForm.pago || false} onChange={e => updateMensalForm(emp.id, "pago", e.target.checked)} className="w-4 h-4 rounded text-primary border-border" /><label htmlFor={`pago-${emp.id}`} className="text-sm font-medium text-card-foreground cursor-pointer">Honorário Pago</label></div>
-                                  <div><label className={labelCls}>Valor Ajustado Manualmente</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span><input type="number" step="0.01" value={mForm.valor_total || ""} onChange={e => updateMensalForm(emp.id, "valor_total", parseFloat(e.target.value) || 0)} className={`${inputCls} pl-9`} /></div></div>
-                                </div>
-                                <div><label className={labelCls}>Observações</label><textarea value={mForm.observacoes || ""} onChange={e => updateMensalForm(emp.id, "observacoes", e.target.value)} className={`${inputCls} min-h-[80px] resize-y`} placeholder="Observações..." /></div>
-                                <div className="flex justify-end pt-2"><button onClick={() => handleSaveMensal(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Save size={16} /> Salvar Mês</button></div>
-                              </div>
-                            )}
-
-                            {hasMensalRecords && !mForm ? (
-                              <div className="overflow-x-auto rounded-lg border border-border">
-                                <table className="w-full text-sm text-left">
-                                  <thead className="bg-muted/50 text-xs uppercase text-muted-foreground"><tr><th className="px-4 py-3 font-medium">Competência</th><th className="px-4 py-3 font-medium">Valor Total</th><th className="px-4 py-3 font-medium">Vencimento</th><th className="px-4 py-3 font-medium">Status / Pago</th><th className="px-4 py-3 font-medium text-right">Ações</th></tr></thead>
-                                  <tbody className="divide-y divide-border bg-background">
-                                    {mensalData[emp.id].map((record: any) => (
-                                      <tr key={record.id} className="hover:bg-muted/20 transition-colors">
-                                        <td className="px-4 py-3 font-medium text-card-foreground">{record.competencia}</td>
-                                        <td className="px-4 py-3 text-primary font-semibold">{formatCurrency(record.valor_total)}</td>
-                                        <td className="px-4 py-3 text-muted-foreground">{record.data_vencimento ? format(new Date(record.data_vencimento), 'dd/MM/yyyy') : '—'}</td>
-                                        <td className="px-4 py-3">
-                                          <div className="flex items-center gap-2">
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${record.status === "enviada" ? "bg-success/10 text-success" : record.status === "gerada" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"}`}>{record.status}</span>
-                                            {record.pago ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-success/10 text-success border border-success/20">PAGO</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider text-muted-foreground border border-border">PENDENTE</span>}
-                                          </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-right"><button onClick={() => startEditMensal(emp.id, record)} className="text-primary hover:underline text-xs font-medium">Editar</button></td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            ) : !mForm ? <div className="text-center py-6 text-muted-foreground text-sm border border-dashed border-border rounded-lg">Nenhum controle mensal registrado para esta empresa.</div> : null}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
+          <HonorariosEmpresasView 
+            empresas={filteredEmpresas}
+            expanded={expanded}
+            onToggleExpand={toggleExpand}
+            activeTabs={activeTabs}
+            setActiveTab={(id, tab) => setActiveTabs(prev => ({ ...prev, [id]: tab }))}
+            configs={configs}
+            configForms={configForms}
+            onUpdateConfigField={(id, f, v) => setConfigForms(prev => ({ ...prev, [id]: { ...prev[id], [f]: v } }))}
+            onAddOutroServico={(id) => setConfigForms(prev => ({ ...prev, [id]: { ...prev[id], outros_servicos: [...(prev[id]?.outros_servicos || []), { descricao: "", valor: 0 }] } }))}
+            onUpdateOutroServico={(id, idx, f, v) => setConfigForms(prev => {
+              const outros = [...(prev[id]?.outros_servicos || [])];
+              outros[idx] = { ...outros[idx], [f]: v };
+              return { ...prev, [id]: { ...prev[id], outros_servicos: outros } };
             })}
-            {filtered.length === 0 && <div className="text-center py-12 text-muted-foreground module-card">Nenhuma empresa encontrada com "{(search)}"</div>}
-          </div>
+            onRemoveOutroServico={(id, idx) => setConfigForms(prev => {
+              const outros = [...(prev[id]?.outros_servicos || [])];
+              outros.splice(idx, 1);
+              return { ...prev, [id]: { ...prev[id], outros_servicos: outros } };
+            })}
+            onSaveConfig={(id) => {
+              const form = configForms[id];
+              saveConfig.mutate({
+                ...form,
+                valor_honorario: parseCurrency(form?.valor_honorario),
+                valor_por_funcionario: parseCurrency(form?.valor_por_funcionario),
+                valor_por_recalculo: parseCurrency(form?.valor_por_recalculo),
+                valor_trabalhista: parseCurrency(form?.valor_trabalhista),
+                outros_servicos: (form?.outros_servicos || []).map((s: any) => ({ ...s, valor: parseCurrency(s.valor) }))
+              } as any);
+            }}
+            mensalData={mensalData}
+            mensalForms={mensalForms}
+            onUpdateMensalField={(id, f, v) => setMensalForms(prev => ({ ...prev, [id]: { ...prev[id], [f]: v } }))}
+            onSaveMensal={async (id) => {
+              const form = mensalForms[id];
+              await saveMensal.mutateAsync({
+                ...form,
+                data_vencimento: form.data_vencimento || null,
+                data_envio: form.data_envio || null,
+                observacoes: form.observacoes ? { texto: typeof form.observacoes === 'string' ? form.observacoes : form.observacoes.texto } : null
+              } as any);
+              setMensalForms(prev => { const n = { ...prev }; delete n[id]; return n; });
+              const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", id).order('competencia', { ascending: false });
+              setMensalData(prev => ({ ...prev, [id]: (mensal as any) || [] }));
+            }}
+            onGenerateMonth={handleGenerateMonth}
+            onStartEditMensal={(id, record) => {
+              setCompetenciaSelecionada(prev => ({ ...prev, [id]: record.competencia }));
+              setMensalForms(prev => ({ ...prev, [id]: { ...record, observacoes: record.observacoes?.texto || "" } }));
+            }}
+            competenciaSelecionada={competenciaSelecionada}
+            setCompetenciaSelecionada={(id, v) => setCompetenciaSelecionada(prev => ({ ...prev, [id]: v }))}
+            onCancelMensalForm={(id) => setMensalForms(prev => { const n = { ...prev }; delete n[id]; return n; })}
+          />
         </div>
       )}
     </div>
