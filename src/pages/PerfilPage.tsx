@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, User, Lock } from "lucide-react";
+import { Save, User, Lock, Upload, Camera, Loader2 } from "lucide-react";
 import { maskCPF } from "@/lib/utils";
 
 
@@ -20,11 +20,13 @@ const PerfilPage: React.FC = () => {
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [upLoading, setUpLoading] = useState(false);
   const [form, setForm] = useState({
     nome_completo: "",
     cpf: "",
     telefone: "",
     data_nascimento: "",
+    foto_url: "",
     endereco: { cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "" } as Endereco,
   });
 
@@ -39,6 +41,7 @@ const PerfilPage: React.FC = () => {
           cpf: data.cpf || "",
           telefone: data.telefone || "",
           data_nascimento: data.data_nascimento || "",
+          foto_url: data.foto_url || "",
           endereco: {
             cep: end.cep || "", logradouro: end.logradouro || "", numero: end.numero || "",
             complemento: end.complemento || "", bairro: end.bairro || "", cidade: end.cidade || "", estado: end.estado || "",
@@ -61,6 +64,42 @@ const PerfilPage: React.FC = () => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
     if (digits.length <= 10) return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
     return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUpLoading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}_${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('documentos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('documentos')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ foto_url: publicUrl })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      setForm(prev => ({ ...prev, foto_url: publicUrl }));
+      toast.success("Foto atualizada com sucesso!");
+    } catch (err: any) {
+      toast.error("Erro ao fazer upload: " + err.message);
+    } finally {
+      setUpLoading(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -96,14 +135,36 @@ const PerfilPage: React.FC = () => {
   if (loading) return <div className="flex items-center justify-center p-8"><p className="text-muted-foreground">Carregando...</p></div>;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-3xl">
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-          <User size={22} className="text-primary-foreground" />
+    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto py-8">
+      <div className="flex flex-col items-center gap-4 mb-8 text-center">
+        <div className="relative group">
+          <div className="w-32 h-32 rounded-full border-4 border-background shadow-xl overflow-hidden bg-primary/10 flex items-center justify-center relative">
+            {form.foto_url ? (
+              <img src={form.foto_url} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <User size={64} className="text-primary" />
+            )}
+            {upLoading && (
+              <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                <Loader2 className="animate-spin text-primary" size={32} />
+              </div>
+            )}
+          </div>
+          <label htmlFor="foto-upload" className="absolute bottom-1 right-1 p-2.5 rounded-full bg-primary text-primary-foreground shadow-lg cursor-pointer hover:scale-110 active:scale-95 transition-all">
+            <Camera size={18} />
+            <input 
+              id="foto-upload" 
+              type="file" 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleFileUpload}
+              disabled={upLoading}
+            />
+          </label>
         </div>
         <div>
-          <h3 className="text-lg font-bold text-card-foreground">Meu Perfil</h3>
-          <p className="text-sm text-muted-foreground">Gerencie suas informações pessoais</p>
+          <h3 className="text-2xl font-bold text-card-foreground">Meu Perfil</h3>
+          <p className="text-muted-foreground">Gerencie suas informações pessoais e de acesso</p>
         </div>
       </div>
 
