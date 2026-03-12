@@ -87,7 +87,6 @@ const SocietarioEmpresaPage: React.FC = () => {
 
       const clientIds = new Set([
         ...(roles?.filter(r => (r.role as any) === 'client').map(r => r.user_id) || []),
-        ...(access?.map(a => a.user_id) || [])
       ]);
 
       const internalProfiles = profiles.filter(p => !clientIds.has(p.user_id));
@@ -327,7 +326,7 @@ const SocietarioEmpresaPage: React.FC = () => {
               <div><label className={labelCls}>Porte da Empresa</label><select value={porteEmpresa} onChange={e => setPorteEmpresa(e.target.value)} className={inputCls}><option value="">Selecione</option><option value="mei">MEI</option><option value="me">Microempresa (ME)</option><option value="epp">Empresa de Pequeno Porte (EPP)</option><option value="medio">Médio Porte</option><option value="grande">Grande Porte</option></select></div>
               <div><label className={labelCls}>Regime Tributário</label><select value={regimeTributario} onChange={e => setRegimeTributario(e.target.value)} className={inputCls}><option value="simples">Simples Nacional</option><option value="lucro_presumido">Lucro Presumido</option><option value="lucro_real">Lucro Real</option><option value="mei">MEI</option></select></div>
               <div><label className={labelCls}>Natureza Jurídica</label><select value={naturezaJuridica} onChange={e => setNaturezaJuridica(e.target.value)} className={inputCls}><option value="">Selecione</option><option value="ei">Empresário Individual (EI)</option><option value="eireli">EIRELI</option><option value="ltda">Sociedade Limitada (LTDA)</option><option value="slu">Sociedade Limitada Unipessoal (SLU)</option><option value="sa">Sociedade Anônima (S.A.)</option><option value="ss">Sociedade Simples</option><option value="mei">MEI</option></select></div>
-              <div><label className={labelCls}>Situação</label><select value={situacao} onChange={e => setSituacao(e.target.value)} className={inputCls}><option value="ativa">Ativa</option><option value="paralisada">Paralisada</option><option value="baixada">Baixada</option></select></div>
+              <div><label className={labelCls}>Situação</label><select value={situacao} onChange={e => setSituacao(e.target.value)} className={inputCls}><option value="ativa">Ativa</option><option value="paralisada">Paralisada</option><option value="baixada">Baixada</option><option value="entregue">Empresa Entregue</option></select></div>
             </div>
           </div>
         )}

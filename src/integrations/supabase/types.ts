@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -512,6 +512,7 @@ export type Database = {
       licencas: {
         Row: {
           empresa_id: string | null
+          file_url: string | null
           id: string
           numero_processo: string | null
           status: string | null
@@ -520,6 +521,7 @@ export type Database = {
         }
         Insert: {
           empresa_id?: string | null
+          file_url?: string | null
           id?: string
           numero_processo?: string | null
           status?: string | null
@@ -528,6 +530,7 @@ export type Database = {
         }
         Update: {
           empresa_id?: string | null
+          file_url?: string | null
           id?: string
           numero_processo?: string | null
           status?: string | null
@@ -1204,7 +1207,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "client"
       empresa_situacao: "ativa" | "paralisada" | "baixada"
       guia_status: "pendente" | "gerada" | "enviada"
       licenca_tipo:
@@ -1343,8 +1346,8 @@ export const Constants = {
   },
   public: {
     Enums: {
-      app_role: ["admin", "user"],
-      empresa_situacao: ["ativa", "paralisada", "baixada"],
+      app_role: ["admin", "user", "client"],
+      empresa_situacao: ["ativa", "paralisada", "baixada", "entregue"],
       guia_status: ["pendente", "gerada", "enviada"],
       licenca_tipo: [
         "definitiva",

@@ -97,7 +97,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const metadata = currentUser.user_metadata || {};
       const isAdmin = (roles?.some(r => r.role === "admin") || profileData?.role === "admin" || metadata.role === "admin") || false;
-      const isClient = (metadata.role === "client" || profileData?.role === "client" || !!access) || false;
+      const metaRole = metadata.role || profileData?.role;
+      const mappedRoles = roles?.map(r => r.role) || [];
+      const isClient = (metaRole === "client" || mappedRoles.includes("client") || (!!access && !isAdmin && !mappedRoles.includes("user"))) || false;
       const empresaId = access?.empresa_id || metadata.empresa_id || profileData?.empresa_id || undefined;
 
       if (isAdmin) {
