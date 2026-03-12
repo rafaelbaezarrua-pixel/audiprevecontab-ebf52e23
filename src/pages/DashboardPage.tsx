@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Clock, AlertTriangle, Award, DollarSign, PieChart as PieChartIcon, TrendingUp, Users, Trash2 } from "lucide-react";
+import { Building2, Clock, AlertTriangle, Award, DollarSign, PieChart as PieChartIcon, TrendingUp, Users, Trash2, FileText } from "lucide-react";
 import { TableSkeleton, PageHeaderSkeleton } from "@/components/PageSkeleton";
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { formatCurrency } from "@/lib/utils";
@@ -95,78 +95,112 @@ const DashboardPage: React.FC = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
-            <div className="module-card border border-border/50 bg-card/30 backdrop-blur-md">
-              <div className="flex items-center justify-between mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 module-card border border-border/50 shadow-xl overflow-hidden group">
+              <div className="flex items-center justify-between mb-4 px-2">
                 <h3 className="text-lg font-black text-card-foreground flex items-center gap-2">
-                  <PieChartIcon size={20} className="text-primary" /> Regimes Tributários
+                  <Building2 size={20} className="text-primary" /> Empresas Recentes
                 </h3>
+                <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded-full group-hover:bg-primary/20 group-hover:text-primary transition-colors cursor-default">Últimas 10</span>
               </div>
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={regimesData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {regimesData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                       contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px' }}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-
-          <div className="module-card border border-border/50 shadow-xl overflow-hidden group">
-            <div className="flex items-center justify-between mb-4 px-2">
-              <h3 className="text-lg font-black text-card-foreground flex items-center gap-2">
-                <Building2 size={20} className="text-primary" /> Empresas Recentes
-              </h3>
-              <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded-full group-hover:bg-primary/20 group-hover:text-primary transition-colors cursor-default">Últimas 10</span>
-            </div>
-            {empresas.length === 0 ? (
-              <p className="text-muted-foreground text-sm py-12 text-center bg-muted/20 rounded-xl border border-dashed border-border">Nenhuma empresa cadastrada</p>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-border/50">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
-                    <tr>
-                      <th className="px-5 py-4 font-bold tracking-tight">Empresa</th>
-                      <th className="px-5 py-4 font-bold tracking-tight">CNPJ</th>
-                      <th className="px-5 py-4 font-bold tracking-tight text-center">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border bg-card/20">
-                    {empresas.map((emp) => (
-                      <tr key={emp.id} className="hover:bg-primary/5 transition-colors">
-                        <td className="px-5 py-4 font-bold text-card-foreground">{emp.nome_empresa || "—"}</td>
-                        <td className="px-5 py-4 text-muted-foreground font-medium">{emp.cnpj || "—"}</td>
-                        <td className="px-5 py-4 text-center">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                            emp.situacao === "baixada" ? "bg-destructive/10 text-destructive border border-destructive/20" : 
-                            emp.situacao === "paralisada" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" : 
-                            "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                          }`}>
-                            {emp.situacao || "Ativa"}
-                          </span>
-                        </td>
+              {empresas.length === 0 ? (
+                <p className="text-muted-foreground text-sm py-12 text-center bg-muted/20 rounded-xl border border-dashed border-border">Nenhuma empresa cadastrada</p>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-border/50">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+                      <tr>
+                        <th className="px-5 py-4 font-bold tracking-tight">Empresa</th>
+                        <th className="px-5 py-4 font-bold tracking-tight">CNPJ</th>
+                        <th className="px-5 py-4 font-bold tracking-tight text-center">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-card/20">
+                      {empresas.map((emp) => (
+                        <tr key={emp.id} className="hover:bg-primary/5 transition-colors">
+                          <td className="px-5 py-4 font-bold text-card-foreground">{emp.nome_empresa || "—"}</td>
+                          <td className="px-5 py-4 text-muted-foreground font-medium">{emp.cnpj || "—"}</td>
+                          <td className="px-5 py-4 text-center">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                              emp.situacao === "baixada" ? "bg-destructive/10 text-destructive border border-destructive/20" : 
+                              emp.situacao === "paralisada" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" : 
+                              "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                            }`}>
+                              {emp.situacao || "Ativa"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              <div className="module-card border border-border/50 bg-card/30 backdrop-blur-md">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-black text-card-foreground flex items-center gap-2">
+                    <PieChartIcon size={20} className="text-primary" /> Regimes Tributários
+                  </h3>
+                </div>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={regimesData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={70}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {regimesData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                         contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px' }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-            )}
+
+              <div className="module-card border border-border/50 shadow-sm bg-gradient-to-br from-primary/5 to-transparent">
+                <h3 className="text-lg font-black text-card-foreground mb-4 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Ações Rápidas
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => window.location.href='/societario/nova'} className="p-3 rounded-xl bg-background border border-border/50 hover:border-primary/30 hover:shadow-md transition-all group flex flex-col items-center justify-center gap-2 text-center h-24">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Building2 size={16} />
+                    </div>
+                    <span className="text-xs font-bold text-card-foreground">Nova Empresa</span>
+                  </button>
+                  <button onClick={() => window.location.href='/configuracoes/usuarios/novo'} className="p-3 rounded-xl bg-background border border-border/50 hover:border-primary/30 hover:shadow-md transition-all group flex flex-col items-center justify-center gap-2 text-center h-24">
+                    <div className="w-8 h-8 rounded-full bg-info/10 text-info flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Users size={16} />
+                    </div>
+                    <span className="text-xs font-bold text-card-foreground">Novo Usuário</span>
+                  </button>
+                  <button onClick={() => window.location.href='/honorarios'} className="p-3 rounded-xl bg-background border border-border/50 hover:border-primary/30 hover:shadow-md transition-all group flex flex-col items-center justify-center gap-2 text-center h-24">
+                    <div className="w-8 h-8 rounded-full bg-success/10 text-success flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <DollarSign size={16} />
+                    </div>
+                    <span className="text-xs font-bold text-card-foreground">Honorários</span>
+                  </button>
+                  <button onClick={() => window.location.href='/relatorios'} className="p-3 rounded-xl bg-background border border-border/50 hover:border-primary/30 hover:shadow-md transition-all group flex flex-col items-center justify-center gap-2 text-center h-24">
+                    <div className="w-8 h-8 rounded-full bg-warning/10 text-warning flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <FileText size={16} />
+                    </div>
+                    <span className="text-xs font-bold text-card-foreground">Relatórios</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </>
       )}

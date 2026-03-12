@@ -54,7 +54,9 @@ export const syncCompanyClients = async (onProgress?: (current: number, total: n
                             continue;
                         }
                         if (body?.error) msg = body.error;
-                    } catch (e) { }
+                    } catch (e) {
+                        // Ignore parsing errors for error body
+                    }
                     console.error(`Detail for ${company.nome_empresa}: ${msg}`);
                     errors++;
                 } else {

@@ -348,83 +348,110 @@ const SocietarioPage: React.FC = () => {
       ) : (
         <>
           {activeMainTab === "empresas" && (
-            <div className="space-y-6 animate-in slide-in-from-left-2 duration-300">
-              <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-card-foreground">Societário</h1>
-                <div className="flex gap-2">
+            <div className="space-y-6 animate-in slide-in-from-left-2 duration-500">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h1 className="header-title">Societário</h1>
+                  <p className="text-muted-foreground mt-1">Gestão de empresas e processos de constituição/alteração.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setIsFavorite(!isFavorite)}
-                    className={`p-2.5 rounded-xl border transition-all ${isFavorite ? "bg-amber-500/10 border-amber-500/50 text-amber-500" : "bg-card border-border text-muted-foreground hover:bg-muted"}`}
+                    className={`p-2.5 rounded-xl border transition-all ${isFavorite ? "bg-amber-500/10 border-amber-500/50 text-amber-500 shadow-sm shadow-amber-500/10" : "bg-card border-border text-muted-foreground hover:bg-muted hover:border-border/80"}`}
                     title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
                   >
                     <Star size={20} fill={isFavorite ? "currentColor" : "none"} />
                   </button>
-                  <button
-                    onClick={async () => {
-                      const confirmed = window.confirm("Isso irá criar e confirmar o acesso de todas as empresas cadastradas que ainda não possuem login. Deseja continuar?");
-                      if (!confirmed) return;
+                    <button
+                      onClick={async () => {
+                        const confirmed = window.confirm("Isso irá criar e confirmar o acesso de todas as empresas cadastradas que ainda não possuem login. Deseja continuar?");
+                        if (!confirmed) return;
 
-                      const id = toast.loading("Sincronizando acessos...", { duration: 0 });
-                      try {
-                        const result = await syncCompanyClients((curr, total) => {
-                          toast.loading(`Sincronizando: ${curr}/${total}...`, { id });
-                        });
-                        toast.success(`Sincronização concluída! ${result?.synced} acessos criados/corrigidos.`, { id });
-                      } catch (err: any) {
-                        toast.error("Erro na sincronização: " + err.message, { id });
-                      }
-                    }}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-muted text-muted-foreground hover:bg-muted/80 transition-all border border-border"
-                    title="Sincronizar todos os acessos do portal"
-                  >
-                    <RefreshCw size={18} />
-                    Sincronizar Acessos
-                  </button>
-                  <button onClick={() => navigate("/societario/nova")} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-primary-foreground shadow-md hover:shadow-lg transition-all" style={{ background: "var(--gradient-primary)" }}>
-                    <Plus size={18} /> Nova Empresa
-                  </button>
+                        const id = toast.loading("Sincronizando acessos...", { duration: 0 });
+                        try {
+                          const result = await syncCompanyClients((curr, total) => {
+                            toast.loading(`Sincronizando: ${curr}/${total}...`, { id });
+                          });
+                          toast.success(`Sincronização concluída! ${result?.synced} acessos criados/corrigidos.`, { id });
+                        } catch (err: any) {
+                          toast.error("Erro na sincronização: " + err.message, { id });
+                        }
+                      }}
+                      className="button-secondary-premium"
+                      title="Sincronizar todos os acessos do portal"
+                    >
+                      <RefreshCw size={18} />
+                      Sincronizar Acessos
+                    </button>
+                    <button onClick={() => navigate("/societario/nova")} className="button-premium">
+                      <Plus size={18} /> Nova Empresa
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[{ label: "Ativas", value: stats.ativas, cls: "badge-success" }, { label: "MEI", value: stats.mei, cls: "bg-info/10 text-info border-info/20" }, { label: "Paralisadas", value: stats.paralisadas, cls: "badge-warning" }, { label: "Baixadas", value: stats.baixadas, cls: "badge-danger" }].map((s) => (
-                  <div key={s.label} className="stat-card flex items-center justify-between">
-                    <div><p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">{s.label}</p><p className="text-2xl font-bold text-card-foreground mt-1">{s.value}</p></div>
-                    <span className={`badge-status ${s.cls} text-lg px-4 py-1.5`}>{s.value}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { label: "Ativas", value: stats.ativas, cls: "text-success", bg: "bg-success/10", icon: Building2 },
+                  { label: "MEI", value: stats.mei, cls: "text-info", bg: "bg-info/10", icon: Activity },
+                  { label: "Paralisadas", value: stats.paralisadas, cls: "text-warning", bg: "bg-warning/10", icon: AlertCircle },
+                  { label: "Baixadas", value: stats.baixadas, cls: "text-destructive", bg: "bg-destructive/10", icon: X }
+                ].map((s) => (
+                  <div key={s.label} className="card-premium group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`p-2.5 rounded-2xl ${s.bg} ${s.cls} group-hover:scale-110 transition-transform shadow-sm`}>
+                        {s.icon ? <s.icon size={20} /> : <Building2 size={20} />}
+                      </div>
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{s.label}</span>
+                    </div>
+                    <p className="text-4xl font-black text-card-foreground group-hover:text-primary transition-colors duration-500">{s.value}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="module-card">
+              <div className="card-premium !p-4">
                 <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                  <div className="relative flex-1 w-full"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar por nome ou CNPJ..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-                  <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border transition-colors ${showFilters ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}><Filter size={16} /> Filtros <ChevronDown size={14} className={`transition-transform ${showFilters ? "rotate-180" : ""}`} /></button>
+                  <div className="relative flex-1 w-full flex items-center">
+                    <Search size={18} className="absolute left-4 text-muted-foreground" />
+                    <input 
+                      type="text" 
+                      placeholder="Buscar por nome ou CNPJ..." 
+                      value={search} 
+                      onChange={(e) => setSearch(e.target.value)} 
+                      className="w-full pl-12 pr-4 py-3 border border-border/50 rounded-2xl bg-muted/30 text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all" 
+                    />
+                  </div>
+                  <button 
+                    onClick={() => setShowFilters(!showFilters)} 
+                    className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold border transition-all ${showFilters ? "border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                  >
+                    <Filter size={18} /> Filtros <ChevronDown size={14} className={`transition-transform duration-300 ${showFilters ? "rotate-180" : ""}`} />
+                  </button>
                 </div>
                 {showFilters && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t border-border animate-in slide-in-from-top-2">
-                    <div>
-                      <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-tight">Regime</label>
-                      <select value={filterRegime} onChange={(e) => setFilterRegime(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none">
-                        <option value="todos">Todos</option>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6 pt-6 border-t border-border/50 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Regime Tributário</label>
+                      <select value={filterRegime} onChange={(e) => setFilterRegime(e.target.value)} className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                        <option value="todos">Todos os Regimes</option>
                         <option value="simples">Simples Nacional</option>
                         <option value="lucro_presumido">Lucro Presumido</option>
                         <option value="lucro_real">Lucro Real</option>
                         <option value="mei">MEI</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-tight">Situação (Geral)</label>
-                      <select value={filterSituacao} onChange={(e) => setFilterSituacao(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none">
-                        <option value="todas">Todas</option>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Situação Cadastral</label>
+                      <select value={filterSituacao} onChange={(e) => setFilterSituacao(e.target.value)} className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                        <option value="todas">Todas as Situações</option>
                         <option value="ativa">Ativa</option>
                         <option value="paralisada">Paralisada</option>
                         <option value="baixada">Baixada</option>
                       </select>
                     </div>
-                    <div className="flex items-end">
+                    <div className="flex items-end pb-1">
                       <button
                         onClick={() => { setSearch(""); setFilterSituacao("todas"); setFilterRegime("todos"); }}
-                        className="text-xs text-primary font-bold hover:underline py-2"
+                        className="text-xs text-primary font-black hover:underline uppercase tracking-widest px-4 py-2 decoration-2 underline-offset-4"
                       >
                         Limpar Filtros
                       </button>
@@ -435,109 +462,171 @@ const SocietarioPage: React.FC = () => {
 
               <div className="flex border-b border-border overflow-x-auto no-scrollbar pt-2">
                 {["ativas", "mei", "paralisadas", "baixadas"].map(t => (
-                  <button key={t} onClick={() => setActiveTab(t as any)} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${activeTab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{t === 'ativas' ? 'Empresas Ativas' : t === 'mei' ? 'Empresas MEI' : t === 'paralisadas' ? 'Paralisadas' : 'Baixadas'}</button>
+                  <button key={t} onClick={() => setActiveTab(t as any)} className={`px-6 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{t === 'ativas' ? 'Empresas Ativas' : t === 'mei' ? 'Empresas MEI' : t === 'paralisadas' ? 'Paralisadas' : 'Baixadas'}</button>
                 ))}
               </div>
 
-              <div className="module-card overflow-x-auto p-0 border-t-0 rounded-t-none">
-                <table className="data-table">
-                  <thead><tr><th>Empresa</th><th>CNPJ</th><th>Regime</th><th>Situação</th><th>Sócios</th><th className="text-right">Ações</th></tr></thead>
-                  <tbody>
-                    {filteredEmpresas.length === 0 ? (
-                      <tr><td colSpan={6} className="text-center py-12 text-muted-foreground"><p className="font-medium">Nenhuma empresa encontrada</p></td></tr>
-                    ) : filteredEmpresas.map((emp) => {
-                      const sit = situacaoConfig[emp.situacao || "ativa"] || situacaoConfig.ativa;
-                      return (
-                        <tr key={emp.id} className="cursor-pointer group" onClick={() => navigate(`/societario/${emp.id}`)}>
-                          <td><div className="flex items-center gap-3"><div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center transition-transform group-hover:scale-110"><Building2 size={16} className="text-primary" /></div><span className="font-semibold text-card-foreground">{emp.nome_empresa}</span></div></td>
-                          <td className="text-muted-foreground font-mono text-xs">{emp.cnpj || "—"}</td>
-                          <td className="text-muted-foreground">{regimeLabels[emp.regime_tributario || ""] || "—"}</td>
-                          <td><span className={`badge-status ${sit.cls}`}>{sit.label}</span></td>
-                          <td className="text-muted-foreground">{emp.socios_count || 0}</td>
-                          <td className="text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => navigate(`/societario/${emp.id}`)} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary"><Eye size={15} /></button>
-                              <button onClick={() => navigate(`/societario/${emp.id}`)} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary"><Edit2 size={15} /></button>
+              <div className="card-premium !p-0 overflow-hidden border-t-0 rounded-t-none">
+                <div className="overflow-x-auto">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th className="rounded-tl-none">Empresa</th>
+                        <th>CNPJ</th>
+                        <th>Regime</th>
+                        <th className="text-center">Situação</th>
+                        <th className="text-center">Sócios</th>
+                        <th className="text-right pr-8">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {filteredEmpresas.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center py-24 text-muted-foreground bg-muted/5">
+                            <div className="flex flex-col items-center gap-4">
+                              <div className="p-6 rounded-full bg-muted/10">
+                                <Building2 size={48} className="opacity-20" />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="font-black text-xl text-card-foreground">Nenhuma empresa encontrada</p>
+                                <p className="text-sm">Tente ajustar seus filtros de busca para encontrar o que procura.</p>
+                              </div>
                             </div>
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      ) : filteredEmpresas.map((emp) => {
+                        const sit = situacaoConfig[emp.situacao || "ativa"] || situacaoConfig.ativa;
+                        return (
+                          <tr key={emp.id} className="cursor-pointer group transition-all" onClick={() => navigate(`/societario/${emp.id}`)}>
+                            <td className="py-6">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center transition-all group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/20">
+                                  <Building2 size={22} />
+                                </div>
+                                <div>
+                                  <p className="font-black text-card-foreground group-hover:text-primary transition-colors text-base">{emp.nome_empresa}</p>
+                                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1 opacity-60">ID: {emp.id.split('-')[0]}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="text-muted-foreground font-mono text-xs">{emp.cnpj || "—"}</td>
+                            <td>
+                              <span className="text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg bg-muted/50 text-muted-foreground border border-border/50">
+                                {regimeLabels[emp.regime_tributario || ""] || "—"}
+                              </span>
+                            </td>
+                            <td className="text-center">
+                              <span className={`badge-status ${sit.cls} shadow-sm shadow-current/5 font-black text-[10px] px-3 py-1`}>{sit.label}</span>
+                            </td>
+                            <td className="text-center">
+                              <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-muted/50 text-xs font-black text-card-foreground border border-border/50">
+                                {emp.socios_count || 0}
+                              </span>
+                            </td>
+                            <td className="text-right pr-8" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-end gap-2">
+                                <button onClick={() => navigate(`/societario/${emp.id}`)} className="p-3 rounded-2xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all border border-transparent hover:border-primary/20" title="Ver Detalhes">
+                                  <Eye size={20} />
+                                </button>
+                                <button onClick={() => navigate(`/societario/${emp.id}`)} className="p-3 rounded-2xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all border border-transparent hover:border-primary/20" title="Editar">
+                                  <Edit2 size={20} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
           {activeMainTab === "processos" && (
-            <div className="space-y-6 animate-in slide-in-from-right-2 duration-300">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-card-foreground flex items-center gap-2"><History size={20} className="text-primary" /> Processos Societários</h3>
-                <button onClick={() => setShowNovoProcesso(true)} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-primary-foreground shadow-md transition-all" style={{ background: "var(--gradient-primary)" }}>
-                  <Plus size={18} /> Novo Processo
+            <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-xl font-black text-card-foreground flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                      <History size={24} />
+                    </div>
+                    Processos Societários
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1 ml-11">Acompanhamento de constituição, alteração e baixas.</p>
+                </div>
+                <button onClick={() => setShowNovoProcesso(true)} className="button-premium">
+                  <Plus size={20} /> Novo Processo
                 </button>
               </div>
 
               {showNovoProcesso && (
-                <div className="module-card bg-muted/20 border-primary/30 animate-in zoom-in-95 duration-200">
-                  <div className="flex items-center justify-between mb-4"><h4 className="font-bold text-primary flex items-center gap-2"><Plus size={16} /> Iniciar Novo Processo</h4><button onClick={() => setShowNovoProcesso(false)} className="p-1 hover:bg-muted rounded-md"><X size={18} /></button></div>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">TIPO DE PROCESSO</label>
+                <div className="card-premium bg-primary/[0.02] border-primary/20 animate-in zoom-in-95 duration-300 ring-4 ring-primary/5">
+                  <div className="flex items-center justify-between mb-8 pb-4 border-b border-primary/10">
+                    <h4 className="font-black text-primary flex items-center gap-2">
+                      <Plus size={20} /> INICIAR NOVO PROCESSO
+                    </h4>
+                    <button onClick={() => setShowNovoProcesso(false)} className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-foreground">
+                      <X size={20} />
+                    </button>
+                  </div>
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">TIPO DE PROCESSO</label>
                         <select 
                           value={novoProcessoData.tipo} 
                           onChange={e => setNovoProcessoData({ ...novoProcessoData, tipo: e.target.value, empresa_id: null, nome_empresa: '', eventos: [] })} 
-                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-primary"
+                          className="w-full px-4 py-3 border border-border rounded-2xl bg-background text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
                         >
                           {Object.entries(tipoProcessoLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                         </select>
                       </div>
                       
                       {novoProcessoData.tipo === 'alteracao' ? (
-                        <div>
-                          <label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">SELECIONAR EMPRESA</label>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">SELECIONAR EMPRESA</label>
                           <select 
                             value={novoProcessoData.empresa_id || ''} 
                             onChange={e => setNovoProcessoData({ ...novoProcessoData, empresa_id: e.target.value })} 
-                            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-4 py-3 border border-border rounded-2xl bg-background text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
                           >
-                            <option value="">Selecione...</option>
+                            <option value="">Selecione uma empresa...</option>
                             {empresas.map(emp => <option key={emp.id} value={emp.id}>{emp.nome_empresa}</option>)}
                           </select>
                         </div>
                       ) : (
-                        <div>
-                          <label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">NOME DA EMPRESA</label>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">NOME DA EMPRESA</label>
                           <input 
                             value={novoProcessoData.nome_empresa} 
                             onChange={e => setNovoProcessoData({ ...novoProcessoData, nome_empresa: e.target.value })} 
-                            placeholder="Ex: Nova LTDA" 
-                            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none" 
+                            placeholder="Ex: Audipreve Contabilidade LTDA" 
+                            className="w-full px-4 py-3 border border-border rounded-2xl bg-background text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all" 
                           />
                         </div>
                       )}
 
-                      <div>
-                        <label className="text-xs font-bold text-muted-foreground block mb-1 uppercase tracking-tight">Nº PROCESSO</label>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Nº PROCESSO (Protocolo)</label>
                         <input 
                           value={novoProcessoData.numero_processo} 
                           onChange={e => setNovoProcessoData({ ...novoProcessoData, numero_processo: e.target.value })} 
-                          placeholder="Número se houver" 
-                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm outline-none" 
+                          placeholder="Digite se houver..." 
+                          className="w-full px-4 py-3 border border-border rounded-2xl bg-background text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all" 
                         />
                       </div>
                     </div>
 
                     {novoProcessoData.tipo === 'alteracao' && (
-                      <div className="bg-card p-4 rounded-xl border border-border">
-                        <label className="text-xs font-bold text-muted-foreground block mb-3 uppercase tracking-tight">TIPOS DE ALTERAÇÃO (Eventos)</label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="bg-muted/30 p-6 rounded-2xl border border-border/50">
+                        <label className="text-[10px] font-black text-muted-foreground block mb-6 uppercase tracking-[0.2em] ml-1">TIPOS DE ALTERAÇÃO (Selecione um ou mais)</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {eventosAlteracao.map(evento => (
-                            <label key={evento} className="flex items-start gap-2 cursor-pointer group">
+                            <label key={evento} className="flex items-start gap-3 cursor-pointer group p-3 rounded-xl hover:bg-background transition-all border border-transparent hover:border-border/50">
                               <input 
                                 type="checkbox" 
-                                className="mt-1"
+                                className="mt-1 w-4 h-4 rounded border-border text-primary focus:ring-primary"
                                 checked={novoProcessoData.eventos.includes(evento)}
                                 onChange={e => {
                                   if (e.target.checked) {
@@ -547,82 +636,93 @@ const SocietarioPage: React.FC = () => {
                                   }
                                 }}
                               />
-                              <span className="text-xs group-hover:text-primary transition-colors">{evento}</span>
+                              <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors leading-tight">{evento}</span>
                             </label>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-end pt-4">
                       <button 
                         onClick={handleCreateProcesso} 
-                        className="px-8 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:opacity-90 shadow-lg shadow-primary/20"
+                        className="button-premium !px-12 py-4"
                       >
-                        Iniciar Processo
+                        Iniciar Processo Agora
                       </button>
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {processos.length === 0 ? (
-                  <div className="module-card text-center py-12 text-muted-foreground"><Activity size={40} className="mx-auto mb-3 opacity-20" /><p>Nenhum processo iniciado</p></div>
+                  <div className="card-premium text-center py-24 text-muted-foreground">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="p-6 rounded-full bg-muted/10">
+                        <Activity size={48} className="opacity-20" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-black text-xl text-card-foreground">Nenhum processo em andamento</p>
+                        <p className="text-sm">Inicie um novo processo para acompanhar o status aqui.</p>
+                      </div>
+                    </div>
+                  </div>
                 ) : processos.map(p => {
                   const isExpanded = expandedProcesso === p.id;
 
                   return (
-                    <div key={p.id} className={`module-card border-l-4 transition-all overflow-hidden ${isExpanded ? "border-l-primary shadow-lg ring-1 ring-primary/20" : "border-l-muted hover:border-l-primary/50"}`}>
+                    <div key={p.id} className={`card-premium !p-0 border-l-8 transition-all duration-500 overflow-hidden ${isExpanded ? "border-l-primary shadow-2xl ring-1 ring-primary/20 scale-[1.01]" : "border-l-muted hover:border-l-primary/40 hover:shadow-md"}`}>
                       {/* Accordion Header (Summary) */}
                       <div
-                        className="flex flex-col md:flex-row items-center justify-between gap-4 cursor-pointer"
+                        className={`p-6 flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer transition-colors ${isExpanded ? "bg-primary/[0.02]" : "hover:bg-muted/30"}`}
                         onClick={() => setExpandedProcesso(isExpanded ? null : p.id)}
                       >
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${isExpanded ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}>
-                            <Building2 size={24} />
+                        <div className="flex items-center gap-5 flex-1 w-full">
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${isExpanded ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30" : "bg-primary/10 text-primary"}`}>
+                            <Building2 size={28} />
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-bold text-card-foreground text-lg">{p.nome_empresa || "Sem Nome"}</h4>
-                              {p.status === 'concluido' && <span className="badge-status badge-success text-[10px]">Concluído</span>}
+                            <div className="flex items-center gap-3">
+                              <h4 className="font-black text-card-foreground text-xl group-hover:text-primary transition-colors">{p.nome_empresa || "Sem Nome"}</h4>
+                              {p.status === 'concluido' && <span className="badge-status badge-success text-[10px] font-black px-3 py-1">CONCLUÍDO</span>}
                             </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                              <span className="text-xs font-bold text-primary uppercase tracking-tighter">{tipoProcessoLabels[p.tipo] || p.tipo}</span>
-                              {p.numero_processo && <span className="text-xs text-muted-foreground font-mono"># {p.numero_processo}</span>}
-                              <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock size={12} /> {new Date(p.data_inicio).toLocaleDateString()}</span>
+                            <div className="flex flex-wrap gap-x-6 gap-y-2 mt-2">
+                              <span className="text-xs font-black text-primary uppercase tracking-[0.15em]">{tipoProcessoLabels[p.tipo] || p.tipo}</span>
+                              {p.numero_processo && <span className="text-xs text-muted-foreground font-mono font-bold opacity-60"># {p.numero_processo}</span>}
+                              <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-bold"><Clock size={14} className="text-primary/60" /> {new Date(p.data_inicio).toLocaleDateString()}</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-4 md:pt-0 border-border/50">
                           <button
                             onClick={(e) => { e.stopPropagation(); openDeleteConfirm(p.id, p.nome_empresa || "Sem Nome"); }}
-                            className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                            className="p-3 rounded-2xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all border border-transparent hover:border-destructive/20"
+                            title="Excluir Processo"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 size={20} />
                           </button>
-                          <div className="p-2 rounded-full hover:bg-muted text-primary transition-transform">
-                            {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                          <div className={`p-2.5 rounded-2xl transition-all duration-500 ${isExpanded ? "bg-primary text-primary-foreground rotate-180" : "bg-muted text-primary"}`}>
+                            <ChevronDown size={28} />
                           </div>
                         </div>
                       </div>
 
                       {/* Accordion Body (Details - Vertical Timeline) */}
                       {isExpanded && (
-                        <div className="mt-8 pt-6 border-t border-border animate-in slide-in-from-top-2 duration-300 space-y-8">
+                        <div className="p-8 border-t border-border/50 animate-in slide-in-from-top-4 duration-500 space-y-10 bg-gradient-to-b from-primary/[0.01] to-transparent">
                           {/* Tabs for Timeline / History */}
-                          <div className="flex gap-4 border-b border-border mb-6">
+                          <div className="flex gap-8 border-b border-border/50 mb-8">
                             <button 
                               onClick={() => setProcessTab({ ...processTab, [p.id]: 'timeline' })}
-                              className={`pb-2 px-4 text-xs font-bold transition-all border-b-2 ${(!processTab[p.id] || processTab[p.id] === 'timeline') ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+                              className={`pb-4 px-2 text-[10px] font-black tracking-widest transition-all border-b-4 ${(!processTab[p.id] || processTab[p.id] === 'timeline') ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                             >
                               LINHA DO TEMPO
                             </button>
                             <button 
                               onClick={() => setProcessTab({ ...processTab, [p.id]: 'historico' })}
-                              className={`pb-2 px-4 text-xs font-bold transition-all border-b-2 ${processTab[p.id] === 'historico' ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+                              className={`pb-4 px-2 text-[10px] font-black tracking-widest transition-all border-b-4 ${processTab[p.id] === 'historico' ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                             >
                               HISTÓRICO DO PROCESSO
                             </button>

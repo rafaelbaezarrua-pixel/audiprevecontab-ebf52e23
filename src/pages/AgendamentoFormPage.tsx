@@ -66,8 +66,35 @@ const AgendamentoFormPage: React.FC = () => {
             };
 
             const { error } = await (supabase.from("agendamentos" as any).insert(payload) as any);
-
             if (error) throw error;
+
+            // --- Send notification to assigned user ---
+            try {
+                const assignedUser = usuarios.find(u => u.id === form.usuario_id);
+                const assignedName = assignedUser?.nome || "você";
+                const formattedDate = new Date(form.data + "T" + form.horario).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+                // 1. Create the notification record
+                const { data: notifData, error: notifErr } = await (supabase as any).from("notifications").insert({
+                    title: "📅 Novo Agendamento Atribuído",
+                    message: `Você tem uma agenda agendada: "${form.assunto}" em ${formattedDate}.`,
+                    type: "agendamento",
+                    link: "/agendamentos",
+                }).select("id").single();
+
+                if (!notifErr && notifData?.id) {
+                    // 2. Create recipient entry for the assigned user
+                    const recipients = [{ notification_id: notifData.id, user_id: form.usuario_id }];
+                    // 3. Also notify creator if different
+                    if (user?.id && user.id !== form.usuario_id) {
+                        recipients.push({ notification_id: notifData.id, user_id: user.id });
+                    }
+                    await (supabase as any).from("notification_recipients").insert(recipients);
+                }
+            } catch {
+                // Notification failure should not block the main flow
+                console.warn("Falha ao enviar notificação de agendamento");
+            }
 
             toast.success("Agendamento criado com sucesso!");
             navigate("/agendamentos");

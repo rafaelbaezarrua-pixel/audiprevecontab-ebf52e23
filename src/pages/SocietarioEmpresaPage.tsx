@@ -286,7 +286,9 @@ const SocietarioEmpresaPage: React.FC = () => {
                         return;
                       }
                       if (body?.error) msg = body.error;
-                    } catch (e) { }
+                    } catch (e) {
+                      // Ignore parsing errors for error body
+                    }
                     throw new Error(msg);
                   }
 

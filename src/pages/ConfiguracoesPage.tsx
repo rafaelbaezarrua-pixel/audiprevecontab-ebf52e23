@@ -159,32 +159,45 @@ const ConfiguracoesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-card-foreground">Gerenciamento de Usuários</h3>
-        <button onClick={() => navigate("/configuracoes/usuarios/novo")} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}>
-          <Plus size={16} /> Novo Usuário
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h1 className="header-title text-3xl font-black tracking-tight text-foreground">
+            Gerenciamento de Usuários
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Controle de acessos, permissões e configurações do sistema.
+          </p>
+        </div>
+        <button onClick={() => navigate("/configuracoes/usuarios/novo")} className="button-premium">
+          <Plus size={18} /> Novo Usuário
         </button>
       </div>
 
-      <div className="flex border-b border-border mb-6">
+      <div className="flex border-b border-border overflow-x-auto no-scrollbar pt-2">
         <button
           onClick={() => setActiveTab('interna')}
-          className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium transition-colors ${activeTab === 'interna' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === 'interna' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
-          <Users size={18} /> Equipe Interna
+          <div className="flex items-center gap-2">
+            <Users size={16} /> Equipe Interna
+          </div>
         </button>
         <button
           onClick={() => setActiveTab('cliente')}
-          className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium transition-colors ${activeTab === 'cliente' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === 'cliente' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
-          <Building size={18} /> Portal Cliente
+          <div className="flex items-center gap-2">
+            <Building size={16} /> Portal Cliente
+          </div>
         </button>
         <button
           onClick={() => setActiveTab('auditoria')}
-          className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium transition-colors ${activeTab === 'auditoria' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === 'auditoria' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
-          <Shield size={18} /> Auditoria do Sistema
+          <div className="flex items-center gap-2">
+            <Shield size={16} /> Auditoria do Sistema
+          </div>
         </button>
       </div>
 
@@ -194,55 +207,84 @@ const ConfiguracoesPage: React.FC = () => {
         <>
           <div className="space-y-4">
             {usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).map(u => (
-              <div key={u.id} className="module-card">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                      <span className="text-primary-foreground text-sm font-bold">{(u.nome || "U").slice(0, 2).toUpperCase()}</span>
+              <div key={u.id} className="card-premium">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+                      <span className="text-primary text-lg font-black">{(u.nome || "U").slice(0, 2).toUpperCase()}</span>
                     </div>
                     <div>
-                      <p className="font-semibold text-card-foreground">{u.nome || "Sem nome"}</p>
-                      <p className="text-xs text-muted-foreground">{u.email} {u.departamento ? `• ${u.departamento}` : ""}</p>
+                      <p className="font-black text-card-foreground text-lg">{u.nome || "Sem nome"} {u.isAdmin && <span className="ml-2 badge-status badge-success text-[10px] uppercase align-middle">Admin</span>}</p>
+                      <p className="text-sm font-medium text-muted-foreground mt-0.5">{u.email} {u.departamento ? <span className="text-primary ml-2">• {u.departamento}</span> : ""}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => toggleAdmin(u.id, u.isAdmin)} className={`p-2 rounded-lg transition-colors ${u.isAdmin ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:text-primary"}`} title={u.isAdmin ? "Remover admin" : "Tornar admin"}>
+                  <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-4 md:pt-0 border-border/50">
+                    <button 
+                      onClick={() => toggleAdmin(u.id, u.isAdmin)} 
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${u.isAdmin ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20" : "bg-muted border-transparent text-muted-foreground hover:bg-muted/80 hover:text-foreground"}`} 
+                      title={u.isAdmin ? "Remover admin" : "Tornar admin"}
+                    >
                       {u.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
+                      {u.isAdmin ? 'Administrador' : 'Tornar Admin'}
                     </button>
-                    <button onClick={() => handleDelete(u.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={16} /></button>
+                    <button 
+                      onClick={() => handleDelete(u.id)} 
+                      className="p-2.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors border border-transparent hover:border-destructive/20"
+                      title="Excluir Usuário"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 </div>
+
                 {activeTab === 'interna' && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mt-4 pt-4 border-t border-border">
-                    {Object.entries(moduleLabels).map(([key, label]) => (
-                      <button
-                        key={key}
-                        onClick={() => toggleModule(u.id, key, u.modules?.[key] || false)}
-                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${u.isAdmin || u.modules?.[key]
-                          ? "border-success/30 bg-success/5 text-success"
-                          : "border-border bg-muted/30 text-muted-foreground hover:border-primary/30"
-                          }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
+                  <div className="mt-6 pt-6 border-t border-border/50">
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.15em] mb-4">Permissões de Módulos</p>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                      {Object.entries(moduleLabels).map(([key, label]) => {
+                        const hasAccess = u.isAdmin || u.modules?.[key];
+                        return (
+                          <button
+                            key={key}
+                            disabled={u.isAdmin}
+                            onClick={() => toggleModule(u.id, key, u.modules?.[key] || false)}
+                            className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess
+                              ? "border-primary/40 bg-primary/10 text-primary shadow-sm"
+                              : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30"
+                              } ${u.isAdmin ? "opacity-70 cursor-not-allowed" : ""}`}
+                          >
+                            <span className="truncate pr-2">{label}</span>
+                            {hasAccess && <div className="w-2 h-2 rounded-full bg-primary shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
             ))}
+
             {loadingUsers ? (
-              <div className="module-card text-center py-8">
-                <p className="text-muted-foreground">Carregando usuários...</p>
+              <div className="card-premium text-center py-12">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto opacity-50 mb-3" />
+                <p className="text-muted-foreground font-bold">Carregando equipe...</p>
               </div>
             ) : usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).length === 0 ? (
-              <div className="module-card text-center py-8">
-                <p className="text-muted-foreground">Nenhum usuário cadastrado</p>
+              <div className="card-premium text-center py-16">
+                <div className="p-4 rounded-full bg-muted/10 w-fit mx-auto mb-4">
+                  <Users size={32} className="text-muted-foreground opacity-50" />
+                </div>
+                <p className="text-lg font-black text-card-foreground">Nenhum usuário encontrado</p>
+                <p className="text-sm text-muted-foreground mt-1">Você pode adicionar novos usuários clicando no botão acima.</p>
               </div>
             ) : null}
           </div>
 
-          <div className="space-y-6 pt-6 border-t border-border">
-            <h3 className="text-lg font-bold text-card-foreground">Configurações de Notificações</h3>
+          <div className="pt-8">
+            <h3 className="header-title text-2xl font-black mb-6 flex items-center gap-3">
+              <div className="w-1 h-6 bg-primary rounded-full" />
+              Configurações de Notificações
+            </h3>
             <NotificationConfig />
           </div>
         </>
@@ -268,24 +310,29 @@ const NotificationConfig: React.FC = () => {
   };
 
   return (
-    <div className="module-card">
-      <h4 className="font-semibold text-sm mb-4">Gatilhos de Notificação</h4>
-      <div className="space-y-3">
-        {types.map(t => (
-          <div key={t.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
-            <div>
-              <p className="text-sm font-medium">{t.label}</p>
-              <p className="text-xs text-muted-foreground">{t.description}</p>
-            </div>
-            <button
-              onClick={() => toggleType(t.id, t.is_enabled)}
-              className={`w-12 h-6 rounded-full transition-colors relative ${t.is_enabled ? "bg-primary" : "bg-muted-foreground/30"}`}
-            >
-              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${t.is_enabled ? "left-7" : "left-1"}`} />
-            </button>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {types.map((t) => (
+        <div key={t.id} className="card-premium flex items-center justify-between gap-4 p-5 hover:border-primary/30 transition-colors">
+          <div className="flex-1">
+            <p className="text-base font-black text-foreground">{t.label}</p>
+            <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">
+              {t.description}
+            </p>
           </div>
-        ))}
-      </div>
+          <button
+            onClick={() => toggleType(t.id, t.is_enabled)}
+            className={`w-14 h-7 rounded-full transition-colors relative shrink-0 ${
+              t.is_enabled ? "bg-primary shadow-sm shadow-primary/20" : "bg-muted-foreground/30"
+            }`}
+          >
+            <div
+              className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all shadow-sm ${
+                t.is_enabled ? "left-8" : "left-1"
+              }`}
+            />
+          </button>
+        </div>
+      ))}
     </div>
   );
 };

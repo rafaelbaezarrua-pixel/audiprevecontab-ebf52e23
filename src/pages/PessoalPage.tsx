@@ -40,17 +40,47 @@ const PessoalPage: React.FC = () => {
     return matchSearch && matchTab;
   });
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
     const existing = pessoalData[id] || {};
+    
+    let infoGerais = {
+      forma_envio: "", qtd_funcionarios: 0, qtd_pro_labore: 0,
+      possui_vt: false, possui_va: false, possui_vc: false,
+      possui_recibos: false, qtd_recibos: 0
+    };
+
+    if (!existing.id) {
+      const { data: prev } = await supabase.from("pessoal").select("*").eq("empresa_id", id).order("competencia", { ascending: false }).limit(1);
+      if (prev?.[0]) {
+        infoGerais = {
+          forma_envio: prev[0].forma_envio || "",
+          qtd_funcionarios: prev[0].qtd_funcionarios || 0,
+          qtd_pro_labore: prev[0].qtd_pro_labore || 0,
+          possui_vt: prev[0].possui_vt || false,
+          possui_va: prev[0].possui_va || false,
+          possui_vc: prev[0].possui_vc || false,
+          possui_recibos: prev[0].possui_recibos || false,
+          qtd_recibos: prev[0].qtd_recibos || 0
+        };
+      }
+    } else {
+      infoGerais = {
+        forma_envio: existing.forma_envio || "",
+        qtd_funcionarios: existing.qtd_funcionarios || 0,
+        qtd_pro_labore: existing.qtd_pro_labore || 0,
+        possui_vt: existing.possui_vt || false,
+        possui_va: existing.possui_va || false,
+        possui_vc: existing.possui_vc || false,
+        possui_recibos: existing.possui_recibos || false,
+        qtd_recibos: existing.qtd_recibos || 0
+      };
+    }
+
     setEditForm(prev => ({
       ...prev, [id]: {
-        forma_envio: existing.forma_envio || "", qtd_funcionarios: existing.qtd_funcionarios || 0,
-        qtd_pro_labore: existing.qtd_pro_labore || 0,
-        possui_vt: existing.possui_vt || false, possui_va: existing.possui_va || false,
-        possui_vc: existing.possui_vc || false, possui_recibos: existing.possui_recibos || false,
-        qtd_recibos: existing.qtd_recibos || 0,
+        ...infoGerais,
         vt_status: existing.vt_status || "pendente", vt_data_envio: existing.vt_data_envio || "",
         va_status: existing.va_status || "pendente", va_data_envio: existing.va_data_envio || "",
         vc_status: existing.vc_status || "pendente", vc_data_envio: existing.vc_data_envio || "",
