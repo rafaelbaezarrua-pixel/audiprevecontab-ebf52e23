@@ -15,8 +15,8 @@ const DashboardPage: React.FC = () => {
     return (
       <div className="space-y-8 animate-fade-in">
         <PageHeaderSkeleton />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-32 rounded-3xl bg-muted animate-pulse" />)}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => <div key={i} className="h-32 rounded-3xl bg-muted animate-pulse" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 h-[400px] rounded-3xl bg-muted animate-pulse" />
