@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   FileText, Download, Calendar, DollarSign, 
   Shield, ClipboardList, AlertCircle, Building2,
-  Users, CheckCircle, Circle, Save, Search
+  Users, CheckCircle, Circle, Save, Search, MoveHorizontal
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -47,8 +48,10 @@ const RelatoriosPage: React.FC = () => {
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [loading, setLoading] = useState(false);
   const [headerConfig, setHeaderConfig] = useState<HeaderConfig>(DEFAULT_HEADER);
+  const navigate = useNavigate();
   
   // Data States
+  const [allCompanies, setAllCompanies] = useState<any[]>([]);
   const [financeiro, setFinanceiro] = useState<any[]>([]);
   const [pessoal, setPessoal] = useState<any[]>([]);
   const [fiscal, setFiscal] = useState<any[]>([]);
@@ -82,10 +85,10 @@ const RelatoriosPage: React.FC = () => {
       
       if (honError) console.error("Erro honorarios:", honError);
         
-      const { data: espData } = await supabase
-        .from("servicos_esporadicos")
+      const { data: espData } = await (supabase
+        .from("servicos_esporadicos" as any)
         .select("*")
-        .eq("competencia", competencia);
+        .eq("competencia", competencia) as any);
 
       // 2. Departamento Pessoal
       const { data: pesData } = await supabase
@@ -131,6 +134,10 @@ const RelatoriosPage: React.FC = () => {
         .gte("data_ocorrencia", currentMonthStart)
         .lte("data_ocorrencia", currentMonthEnd);
 
+      // 6. Fetch All Companies
+      const { data: companiesData } = await supabase.from("empresas").select("*").order("nome_empresa");
+
+      setAllCompanies(companiesData || []);
       setFinanceiro([...(honData || []), ...(espData || [])]);
       setPessoal(pesData || []);
       setFiscal(fisData || []);
@@ -201,7 +208,7 @@ const RelatoriosPage: React.FC = () => {
   };
 
   const exportFinanceiro = async () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     await generatePDFHeader(doc);
     const pageWidth = doc.internal.pageSize.getWidth();
     
@@ -209,19 +216,23 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`RELATÓRIO FINANCEIRO - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body = financeiro.map(item => [
-      item.empresas?.nome_empresa || item.nome_cliente || "—",
-      item.tipo_servico || "Honorário Mensal",
-      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor || 0),
-      item.pago || item.status_pago ? "PAGO" : "PENDENTE"
-    ]);
+    // Ensure all companies are included
+    const body = allCompanies.map(company => {
+      const item = financeiro.find(f => f.empresa_id === company.id) || financeiro.find(f => f.nome_cliente === company.nome_empresa);
+      return [
+        company.nome_empresa,
+        item?.tipo_servico || "—",
+        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item?.valor || 0),
+        item?.pago || item?.status_pago ? "PAGO" : item ? "PENDENTE" : "—"
+      ];
+    });
 
     autoTable(doc, {
       startY: 60,
       head: [['Empresa/Cliente', 'Tipo', 'Valor', 'Status']],
       body: body,
       theme: 'grid',
-      headStyles: { fillGray: 200, textColor: 0, fontStyle: 'bold' },
+      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
       styles: { font: 'Ubuntu' }
     });
 
@@ -229,7 +240,7 @@ const RelatoriosPage: React.FC = () => {
   };
 
   const exportPessoal = async () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     await generatePDFHeader(doc);
     const pageWidth = doc.internal.pageSize.getWidth();
     
@@ -237,21 +248,24 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`RELATÓRIO DEPARTAMENTO PESSOAL - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body = pessoal.map(item => [
-      item.empresas?.nome_empresa || "—",
-      item.qtd_funcionarios || 0,
-      item.qtd_pro_labore || 0,
-      item.qtd_recibos || 0,
-      item.dctf_web_gerada ? "GERADA" : "PENDENTE",
-      item.possui_vt || item.possui_va || item.possui_vc ? "SIM" : "NÃO"
-    ]);
+    const body = allCompanies.map(company => {
+      const item = pessoal.find(p => p.empresa_id === company.id);
+      return [
+        company.nome_empresa,
+        item?.qtd_funcionarios || 0,
+        item?.qtd_pro_labore || 0,
+        item?.qtd_recibos || 0,
+        item?.dctf_web_gerada ? "GERADA" : item ? "PENDENTE" : "—",
+        item?.possui_vt || item?.possui_va || item?.possui_vc ? "SIM" : item ? "NÃO" : "—"
+      ];
+    });
 
     autoTable(doc, {
       startY: 60,
       head: [['Empresa', 'Func.', 'Pro-Lab.', 'Recibos', 'DCTF Web', 'Trab.']],
       body: body,
       theme: 'grid',
-      headStyles: { fillGray: 200, textColor: 0, fontStyle: 'bold' },
+      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
       styles: { font: 'Ubuntu' }
     });
 
@@ -259,7 +273,7 @@ const RelatoriosPage: React.FC = () => {
   };
 
   const exportFiscal = async () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     await generatePDFHeader(doc);
     const pageWidth = doc.internal.pageSize.getWidth();
     
@@ -267,19 +281,22 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`RELATÓRIO FISCAL - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body = fiscal.map(item => [
-      item.empresas?.nome_empresa || "—",
-      item.tipo_nota || "—",
-      item.status_guia || "PENDENTE",
-      item.data_envio ? format(new Date(item.data_envio), "dd/MM/yyyy") : "—"
-    ]);
+    const body = allCompanies.map(company => {
+      const item = fiscal.find(f => f.empresa_id === company.id);
+      return [
+        company.nome_empresa,
+        item?.tipo_nota || "—",
+        item?.status_guia || (item ? "PENDENTE" : "—"),
+        item?.data_envio ? format(new Date(item.data_envio), "dd/MM/yyyy") : "—"
+      ];
+    });
 
     autoTable(doc, {
       startY: 60,
       head: [['Empresa', 'Tipo Nota', 'Status Guia', 'Data Env.']],
       body: body,
       theme: 'grid',
-      headStyles: { fillGray: 200, textColor: 0, fontStyle: 'bold' },
+      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
       styles: { font: 'Ubuntu' }
     });
 
@@ -287,7 +304,7 @@ const RelatoriosPage: React.FC = () => {
   };
 
   const exportVencimentos = async () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     await generatePDFHeader(doc);
     const pageWidth = doc.internal.pageSize.getWidth();
     
@@ -295,22 +312,31 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`VENCIMENTOS DO MÊS - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body = vencimentos.reduce<string[][]>((acc, item) => {
-      if (!item.data) return acc;
-      try {
-        const d = new Date(item.data.length === 10 ? item.data + "T12:00:00" : item.data);
-        if (isNaN(d.getTime())) return acc;
-        acc.push([item.empresa, item.tipo, format(d, "dd/MM/yyyy"), item.status]);
-      } catch { /* skip malformed dates */ }
-      return acc;
-    }, []);
+    const body: string[][] = [];
+
+    allCompanies.forEach(company => {
+      const items = vencimentos.filter(v => v.empresa === company.nome_empresa);
+      if (items.length > 0) {
+        items.forEach(item => {
+          if (!item.data) return;
+          try {
+            const d = new Date(item.data.length === 10 ? item.data + "T12:00:00" : item.data);
+            if (!isNaN(d.getTime())) {
+              body.push([company.nome_empresa, item.tipo, format(d, "dd/MM/yyyy"), item.status]);
+            }
+          } catch { /* skip */ }
+        });
+      } else {
+        body.push([company.nome_empresa, "—", "—", "—"]);
+      }
+    });
 
     autoTable(doc, {
       startY: 60,
       head: [['Empresa', 'Tipo de Documento', 'Vencimento', 'Status']],
       body: body,
       theme: 'grid',
-      headStyles: { fillGray: 200, textColor: 0, fontStyle: 'bold' },
+      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
       styles: { font: 'Ubuntu' },
       didParseCell: (data: any) => {
         if (data.section === 'body' && data.column.index === 3) {
@@ -325,7 +351,7 @@ const RelatoriosPage: React.FC = () => {
   };
 
   const exportOcorrencias = async () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     await generatePDFHeader(doc);
     const pageWidth = doc.internal.pageSize.getWidth();
     
@@ -333,24 +359,163 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`RELATÓRIO DE OCORRÊNCIAS - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body = ocorrencias.map(item => [
-      format(new Date(item.data_ocorrencia), "dd/MM/yyyy"),
-      item.empresas?.nome_empresa || "—",
-      item.departamento || "—",
-      item.descricao || "—"
-    ]);
+    const body: string[][] = [];
+    
+    allCompanies.forEach(company => {
+      const records = ocorrencias.filter(o => o.empresa_id === company.id);
+      if (records.length > 0) {
+        records.forEach(r => {
+          body.push([
+            format(new Date(r.data_ocorrencia), "dd/MM/yyyy"),
+            company.nome_empresa,
+            r.departamento || "—",
+            r.descricao || "—"
+          ]);
+        });
+      } else {
+        body.push(["—", company.nome_empresa, "—", "—"]);
+      }
+    });
 
     autoTable(doc, {
       startY: 60,
       head: [['Data', 'Empresa', 'Depto.', 'Descrição']],
       body: body,
       theme: 'grid',
-      headStyles: { fillGray: 200, textColor: 0, fontStyle: 'bold' },
+      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
       styles: { font: 'Ubuntu' },
       columnStyles: { 3: { cellWidth: 80 } }
     });
 
     doc.save(`Relatorio_Ocorrencias_${competencia}.pdf`);
+  };
+
+  const handleGenerateCustomReport = async (selection: { modules: string[]; fields: Record<string, string[]> }) => {
+    const doc = new jsPDF();
+    await generatePDFHeader(doc);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    doc.setFontSize(14);
+    doc.setFont("Ubuntu", "bold");
+    doc.text(`RELATÓRIO PERSONALIZADO - ${competencia}`, pageWidth / 2, 50, { align: "center" });
+
+    let currentY = 60;
+
+    for (const modId of selection.modules) {
+      const fields = selection.fields[modId];
+      if (!fields || fields.length === 0) continue;
+
+      const modLabel = modId.charAt(0).toUpperCase() + modId.slice(1);
+      
+      // Module Title
+      doc.setFontSize(12);
+      doc.setFont("Ubuntu", "bold");
+      doc.setTextColor(50, 50, 50);
+      doc.text(modLabel.toUpperCase(), 14, currentY);
+      currentY += 5;
+
+      const head: string[] = [];
+      const body: any[][] = [];
+
+      // Field Mapping
+      if (modId === "financeiro") {
+        if (fields.includes("empresa")) head.push("Empresa/Cliente");
+        if (fields.includes("tipo")) head.push("Tipo");
+        if (fields.includes("valor")) head.push("Valor");
+        if (fields.includes("status")) head.push("Status");
+
+        financeiro.forEach(item => {
+          const row: any[] = [];
+          if (fields.includes("empresa")) row.push(item.empresas?.nome_empresa || item.nome_cliente || "—");
+          if (fields.includes("tipo")) row.push(item.tipo_servico || "Honorário Mensal");
+          if (fields.includes("valor")) row.push(new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor || 0));
+          if (fields.includes("status")) row.push(item.pago || item.status_pago ? "PAGO" : "PENDENTE");
+          body.push(row);
+        });
+      } else if (modId === "pessoal") {
+        if (fields.includes("empresa")) head.push("Empresa");
+        if (fields.includes("qtd_func")) head.push("Func.");
+        if (fields.includes("qtd_pro")) head.push("Pro-Lab.");
+        if (fields.includes("qtd_rec")) head.push("Recibos");
+        if (fields.includes("dctf")) head.push("DCTF Web");
+        if (fields.includes("beneficios")) head.push("Benef.");
+
+        pessoal.forEach(item => {
+          const row: any[] = [];
+          if (fields.includes("empresa")) row.push(item.empresas?.nome_empresa || "—");
+          if (fields.includes("qtd_func")) row.push(item.qtd_funcionarios || 0);
+          if (fields.includes("qtd_pro")) row.push(item.qtd_pro_labore || 0);
+          if (fields.includes("qtd_rec")) row.push(item.qtd_recibos || 0);
+          if (fields.includes("dctf")) row.push(item.dctf_web_gerada ? "SIM" : "NÃO");
+          if (fields.includes("beneficios")) row.push(item.possui_vt || item.possui_va || item.possui_vc ? "SIM" : "NÃO");
+          body.push(row);
+        });
+      } else if (modId === "fiscal") {
+        if (fields.includes("empresa")) head.push("Empresa");
+        if (fields.includes("tipo_nota")) head.push("Tipo Nota");
+        if (fields.includes("status_guia")) head.push("Status Guia");
+        if (fields.includes("data_envio")) head.push("Data Env.");
+
+        fiscal.forEach(item => {
+          const row: any[] = [];
+          if (fields.includes("empresa")) row.push(item.empresas?.nome_empresa || "—");
+          if (fields.includes("tipo_nota")) row.push(item.tipo_nota || "—");
+          if (fields.includes("status_guia")) row.push(item.status_guia || "PENDENTE");
+          if (fields.includes("data_envio")) row.push(item.data_envio ? format(new Date(item.data_envio), "dd/MM/yyyy") : "—");
+          body.push(row);
+        });
+      } else if (modId === "vencimentos") {
+        if (fields.includes("empresa")) head.push("Empresa");
+        if (fields.includes("tipo_doc")) head.push("Tipo");
+        if (fields.includes("data_venc")) head.push("Vencimento");
+        if (fields.includes("status")) head.push("Status");
+
+        vencimentos.forEach(item => {
+          const row: any[] = [];
+          if (fields.includes("empresa")) row.push(item.empresa);
+          if (fields.includes("tipo_doc")) row.push(item.tipo);
+          if (fields.includes("data_venc")) row.push(item.data ? format(new Date(item.data), "dd/MM/yyyy") : "—");
+          if (fields.includes("status")) row.push(item.status);
+          body.push(row);
+        });
+      } else if (modId === "ocorrencias") {
+        if (fields.includes("data")) head.push("Data");
+        if (fields.includes("empresa")) head.push("Empresa");
+        if (fields.includes("depto")) head.push("Depto.");
+        if (fields.includes("descricao")) head.push("Descrição");
+
+        ocorrencias.forEach(item => {
+          const row: any[] = [];
+          if (fields.includes("data")) row.push(format(new Date(item.data_ocorrencia), "dd/MM/yyyy"));
+          if (fields.includes("empresa")) row.push(item.empresas?.nome_empresa || "—");
+          if (fields.includes("depto")) row.push(item.departamento || "—");
+          if (fields.includes("descricao")) row.push(item.descricao || "—");
+          body.push(row);
+        });
+      }
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [head],
+        body: body,
+        theme: 'grid',
+        headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
+        styles: { font: 'Ubuntu' },
+        margin: { top: 10, bottom: 10 },
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+      
+      // Check if need to add page
+      if (currentY > 260 && modId !== selection.modules[selection.modules.length - 1]) {
+        doc.addPage();
+        currentY = 20;
+      }
+    }
+
+    doc.save(`Relatorio_Personalizado_${competencia}.pdf`);
+    toast.success("Relatório personalizado gerado com sucesso!");
   };
 
   return (
@@ -426,6 +591,16 @@ const RelatoriosPage: React.FC = () => {
             count={ocorrencias.length}
             onExport={exportOcorrencias}
             color="bg-rose-500/10 text-rose-500"
+          />
+
+          {/* Relatório Personalizado */}
+          <ReportCard 
+            title="Personalizado" 
+            description="Selecione os módulos e as informações que deseja incluir no seu relatório."
+            icon={<MoveHorizontal size={24} />}
+            count={5} // Just a symbolic number
+            onExport={() => navigate("/relatorios/personalizado")}
+            color="bg-slate-500/10 text-slate-500"
           />
         </div>
       )}

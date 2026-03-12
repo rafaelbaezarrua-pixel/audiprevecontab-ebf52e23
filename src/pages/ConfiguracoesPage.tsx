@@ -86,8 +86,9 @@ const ConfiguracoesPage: React.FC = () => {
         const modules: Record<string, boolean> = {};
         userPerms.forEach((m: string) => { modules[m] = true; });
 
-        // A user is a client if they have the 'client' role OR if they have enterprise accesses
-        const isClient = userRoles.includes('client') || accessByUserId[p.user_id] === true;
+        // A user is a client if they have the 'client' role. 
+        // Presence in enterprise access for a 'user' role means restriction, not client status.
+        const isClient = userRoles.includes('client');
         const isAdmin = userRoles.includes('admin');
 
         users.push({

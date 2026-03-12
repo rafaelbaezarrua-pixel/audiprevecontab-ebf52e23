@@ -24,7 +24,7 @@ const HonorariosPage: React.FC = () => {
 
   const [expanded, setExpanded] = useState<string | null>(null);
   const [activeTabs, setActiveTabs] = useState<Record<string, "mensal" | "configuracao">>({});
-  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
+  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
 
   const [configs, setConfigs] = useState<Record<string, Partial<HonorarioConfig>>>({});
   const [mensalData, setMensalData] = useState<Record<string, HonorarioMensal[]>>({});
@@ -111,6 +111,7 @@ const HonorariosPage: React.FC = () => {
     else if (activeStatusTab === "mei") matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
     else if (activeStatusTab === "paralisadas") matchTab = e.situacao === "paralisada";
     else if (activeStatusTab === "baixadas") matchTab = e.situacao === "baixada";
+    else if (activeStatusTab === "entregue") matchTab = e.situacao === "entregue";
     return matchSearch && matchTab;
   });
 
@@ -203,13 +204,13 @@ const HonorariosPage: React.FC = () => {
       ) : (
         <div className="space-y-4 animate-fade-in">
           <div className="flex border-b border-border overflow-x-auto no-scrollbar">
-            {["ativas", "mei", "paralisadas", "baixadas"].map(t => (
+            {["ativas", "mei", "paralisadas", "baixadas", "entregue"].map(t => (
               <button
                 key={t}
                 className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                 onClick={() => setActiveStatusTab(t as any)}
               >
-                {t === "ativas" ? "Empresas Ativas" : t === "mei" ? "Empresas MEI" : t === "paralisadas" ? "Empresas Paralisadas" : "Empresas Baixadas"}
+                {t === "ativas" ? "Empresas Ativas" : t === "mei" ? "Empresas MEI" : t === "paralisadas" ? "Empresas Paralisadas" : t === "entregue" ? "Empresas Entregues" : "Empresas Baixadas"}
               </button>
             ))}
           </div>
