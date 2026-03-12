@@ -30,6 +30,7 @@ export interface UserPermissions {
   profileCompleted?: boolean;
   termsAccepted?: boolean;
   firstAccessDone?: boolean;
+  foto_url?: string;
 }
 
 interface AuthContextType {
@@ -113,6 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           profileCompleted,
           termsAccepted,
           firstAccessDone,
+          foto_url: profileData?.foto_url || currentUser.user_metadata?.avatar_url || "",
         });
       } else {
         const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", currentUser.id);
@@ -145,6 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           profileCompleted,
           termsAccepted,
           firstAccessDone,
+          foto_url: profileData?.foto_url || currentUser.user_metadata?.avatar_url || "",
         });
       }
     } catch (err) {

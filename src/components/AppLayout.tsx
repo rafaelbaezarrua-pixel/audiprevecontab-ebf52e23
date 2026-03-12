@@ -178,8 +178,12 @@ const AppLayout: React.FC = () => {
             {!collapsed && <span>Meu Perfil</span>}
           </button>
           <div className={`flex items-center gap-3 p-2 rounded-lg ${collapsed ? "justify-center" : ""}`}>
-            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-              <span className="text-primary-foreground text-sm font-bold">{initials}</span>
+            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50">
+              {userData?.foto_url ? (
+                <img src={userData.foto_url} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-primary-foreground text-sm font-bold">{initials}</span>
+              )}
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
