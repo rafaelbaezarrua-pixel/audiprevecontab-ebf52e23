@@ -155,16 +155,29 @@ const HonorariosPage: React.FC = () => {
     setMensalData(prev => ({ ...prev, [empresaId]: data || [] }));
   };
 
+  const parseCurrency = (val: any) => {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    const str = String(val);
+    if (str.includes(',')) {
+      return parseFloat(str.replace(/\./g, "").replace(",", ".")) || 0;
+    }
+    return parseFloat(str) || 0;
+  };
+
   const handleSaveConfig = async (empresaId: string) => {
     const form = configForm[empresaId];
     try {
       const payload = {
         empresa_id: empresaId,
-        valor_honorario: parseFloat(form.valor_honorario) || 0,
-        valor_por_funcionario: parseFloat(form.valor_por_funcionario) || 0,
-        valor_por_recalculo: parseFloat(form.valor_por_recalculo) || 0,
-        valor_trabalhista: parseFloat(form.valor_trabalhista) || 0,
-        outros_servicos: form.outros_servicos || []
+        valor_honorario: parseCurrency(form.valor_honorario),
+        valor_por_funcionario: parseCurrency(form.valor_por_funcionario),
+        valor_por_recalculo: parseCurrency(form.valor_por_recalculo),
+        valor_trabalhista: parseCurrency(form.valor_trabalhista),
+        outros_servicos: (form.outros_servicos || []).map((s: any) => ({
+          ...s,
+          valor: parseCurrency(s.valor)
+        }))
       };
       if (configs[empresaId]?.id) await supabase.from("honorarios_config").update(payload).eq("id", configs[empresaId].id);
       else await supabase.from("honorarios_config").insert(payload);

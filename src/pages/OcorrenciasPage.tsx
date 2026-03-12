@@ -257,7 +257,7 @@ const OcorrenciasPage: React.FC = () => {
         doc.text(splitDesc, 20, 90);
 
         const descHeight = splitDesc.length * 7;
-        let lineY = 90 + descHeight + 10;
+        const lineY = 90 + descHeight + 10;
 
 
         // Date/Place

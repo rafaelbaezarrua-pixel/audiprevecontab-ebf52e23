@@ -65,19 +65,17 @@ const PortalDashboardPage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {stats.map((stat) => (
-                    <Card key={stat.label} className="border-none shadow-md overflow-hidden group hover:shadow-lg transition-all">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-tight">
+                    <div key={stat.label} className="card-premium group">
+                        <div className="flex flex-row items-center justify-between mb-4">
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                                 {stat.label}
-                            </CardTitle>
-                            <div className={`p-2 rounded-lg ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
+                            </span>
+                            <div className={`p-2 rounded-xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
                                 <stat.icon size={20} />
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold">{stat.value}</div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                        <div className="text-4xl font-black text-card-foreground">{stat.value}</div>
+                    </div>
                 ))}
             </div>
 
@@ -90,20 +88,20 @@ const PortalDashboardPage: React.FC = () => {
                         </h3>
                         <Button variant="ghost" size="sm" className="text-primary font-bold">Ver Todos</Button>
                     </div>
-                    <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+                    <div className="card-premium !p-0 overflow-hidden">
                         {[1, 2, 3].map((_, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
-                                        <FileText size={18} />
+                            <div key={i} className="flex items-center justify-between p-5 border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors group">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
+                                        <FileText size={20} />
                                     </div>
                                     <div>
-                                        <p className="font-bold text-sm">Folha de Pagamento - 02/2026</p>
-                                        <p className="text-xs text-muted-foreground">Disponibilizado em 05/03/2026</p>
+                                        <p className="font-bold text-base text-card-foreground">Folha de Pagamento - 02/2026</p>
+                                        <p className="text-sm text-muted-foreground">Disponibilizado em 05/03/2026</p>
                                     </div>
                                 </div>
-                                <Button variant="outline" size="icon" className="h-8 w-8 rounded-full">
-                                    <Download size={14} />
+                                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all">
+                                    <Download size={16} />
                                 </Button>
                             </div>
                         ))}
@@ -118,27 +116,27 @@ const PortalDashboardPage: React.FC = () => {
                         </h3>
                         <Button variant="ghost" size="sm" className="text-primary font-bold">Ver Todos</Button>
                     </div>
-                    <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                        <div className="relative pl-8 space-y-8">
-                            <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-muted" />
-
-                            <div className="relative">
-                                <div className="absolute -left-[24px] top-0 w-4 h-4 rounded-full bg-green-500 ring-4 ring-background" />
-                                <div>
-                                    <p className="font-bold text-sm">Abertura de Empresa</p>
-                                    <p className="text-xs text-muted-foreground">Etapa: Arquivamento na Junta</p>
-                                    <div className="mt-2 text-[10px] font-bold px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full inline-block uppercase">
+                    <div className="card-premium">
+                        <div className="relative pl-10 space-y-10">
+                            <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-muted/50" />
+                            
+                            <div className="relative group">
+                                <div className="absolute -left-[29px] top-0 w-5 h-5 rounded-full bg-success ring-4 ring-background z-10 shadow-sm" />
+                                <div className="bg-muted/20 p-4 rounded-2xl border border-transparent group-hover:border-success/20 transition-all">
+                                    <p className="font-bold text-base text-card-foreground">Abertura de Empresa</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Etapa: Arquivamento na Junta</p>
+                                    <div className="mt-3 text-[10px] font-black px-3 py-1 bg-success/10 text-success rounded-full inline-block uppercase tracking-wider">
                                         Concluído
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="relative">
-                                <div className="absolute -left-[24px] top-0 w-4 h-4 rounded-full bg-primary ring-4 ring-background animate-pulse" />
-                                <div>
-                                    <p className="font-bold text-sm">Alteração Contratual</p>
-                                    <p className="text-xs text-muted-foreground">Etapa: Coleta de Assinaturas</p>
-                                    <div className="mt-2 text-[10px] font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-full inline-block uppercase animate-pulse">
+                            <div className="relative group">
+                                <div className="absolute -left-[29px] top-0 w-5 h-5 rounded-full bg-primary ring-4 ring-background animate-pulse z-10 shadow-sm shadow-primary/30" />
+                                <div className="bg-muted/20 p-4 rounded-2xl border border-transparent group-hover:border-primary/20 transition-all">
+                                    <p className="font-bold text-base text-card-foreground">Alteração Contratual</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Etapa: Coleta de Assinaturas</p>
+                                    <div className="mt-3 text-[10px] font-black px-3 py-1 bg-primary/10 text-primary rounded-full inline-block uppercase tracking-wider animate-pulse">
                                         Em Andamento
                                     </div>
                                 </div>
@@ -149,17 +147,17 @@ const PortalDashboardPage: React.FC = () => {
             </div>
 
             {/* Informativos/Mensagens */}
-            <section className="bg-primary/5 border border-primary/20 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
-                <div className="absolute -right-10 -bottom-10 opacity-10">
-                    <MessageSquare size={200} className="text-primary" />
+            <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-[2rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative shadow-inner">
+                <div className="absolute -right-16 -bottom-16 opacity-[0.05] pointer-events-none">
+                    <MessageSquare size={320} className="text-primary" />
                 </div>
-                <div className="space-y-2 relative z-10 text-center md:text-left">
-                    <h3 className="text-2xl font-bold text-primary">Precisa de ajuda ou suporte?</h3>
-                    <p className="text-muted-foreground text-lg">Envie uma mensagem direta para o nosso time de consultores.</p>
+                <div className="space-y-4 relative z-10 text-center md:text-left max-w-xl">
+                    <h3 className="text-3xl font-black text-primary leading-tight">Precisa de suporte agora?</h3>
+                    <p className="text-muted-foreground text-lg leading-relaxed">Nossa equipe está pronta para te atender. Envie uma mensagem e responderemos o mais breve possível.</p>
                 </div>
-                <Button className="px-8 py-6 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 relative z-10" size="lg">
-                    Enviar Mensagem <ArrowRight size={20} className="ml-2" />
-                </Button>
+                <button className="button-premium px-10 py-5 rounded-2xl text-lg font-bold shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95 relative z-10 flex items-center gap-3">
+                    Enviar Mensagem <ArrowRight size={22} />
+                </button>
             </section>
         </div>
     );

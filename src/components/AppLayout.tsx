@@ -86,26 +86,25 @@ const AppLayout: React.FC = () => {
         `}
       >
         {/* Logo */}
-        <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
+        <div className="p-6 border-b border-sidebar-border flex items-center justify-between bg-sidebar/50 backdrop-blur-sm">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <img src={logoAudipreve} alt="Audipreve" className="w-10 h-10 object-contain" />
+              <img src={logoAudipreve} alt="Audipreve" className="w-9 h-9 object-contain" />
               <div>
-                <h1 className="text-lg font-bold text-card-foreground">Audipreve</h1>
-                <p className="text-xs text-sidebar-muted">Contabilidade</p>
+                <h1 className="text-lg font-bold text-card-foreground tracking-tight">Audipreve</h1>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-primary/70">Contabilidade</p>
               </div>
             </div>
           )}
           {collapsed && (
-            <img src={logoAudipreve} alt="Audipreve" className="w-10 h-10 object-contain mx-auto" />
+            <img src={logoAudipreve} alt="Audipreve" className="w-9 h-9 object-contain mx-auto" />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden lg:flex w-8 h-8 items-center justify-center rounded-lg text-sidebar-muted hover:text-primary hover:bg-sidebar-accent transition-colors"
+            className="hidden lg:flex w-7 h-7 items-center justify-center rounded-lg text-sidebar-muted hover:text-primary hover:bg-sidebar-accent transition-all border border-transparent hover:border-sidebar-border shadow-sm"
             aria-label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
-            title={collapsed ? "Expandir" : "Recolher"}
           >
-            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </button>
         </div>
 
@@ -122,12 +121,15 @@ const AppLayout: React.FC = () => {
                 {showSection && !collapsed && <div className="menu-header">{item.section}</div>}
                 <button
                   onClick={() => accessible && handleNav(item.path)}
-                  className={`nav-item w-full ${active ? "active" : ""} ${!accessible ? "opacity-40 cursor-not-allowed" : ""} ${collapsed ? "justify-center px-2" : ""}`}
+                  className={`nav-item w-full group relative ${active ? "active shadow-sm" : ""} ${!accessible ? "opacity-30 cursor-not-allowed" : ""} ${collapsed ? "justify-center px-0 h-11 w-11 mx-auto" : ""}`}
                   aria-label={item.label}
                   title={collapsed ? item.label : undefined}
                 >
-                  {item.icon}
-                  {!collapsed && <span>{item.label}</span>}
+                  <div className={`transition-transform duration-300 group-hover:scale-110 ${active ? "text-primary" : ""}`}>
+                    {item.icon}
+                  </div>
+                  {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                  {active && !collapsed && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-l-full" />}
                 </button>
               </React.Fragment>
             );
@@ -197,24 +199,30 @@ const AppLayout: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-card border-b border-border px-4 lg:px-6 py-3 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
+        <header className="bg-background/80 backdrop-blur-md border-b border-border px-4 lg:px-8 py-4 flex items-center justify-between flex-shrink-0 sticky top-0 z-30">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden text-muted-foreground hover:text-foreground"
+              className="lg:hidden p-2 rounded-xl bg-card border border-border text-muted-foreground hover:text-foreground hover:shadow-sm transition-all"
               aria-label="Abrir menu lateral"
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
-            <div className="hidden md:block ml-4">
+            <div className="hidden md:flex items-center gap-2">
               <GlobalSearch />
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <NotificationHeader />
-            <ThemeToggle />
-            <div className="hidden sm:block px-3 py-1.5 bg-muted rounded-lg">
-              <p className="text-xs font-medium text-muted-foreground capitalize">{currentDate}</p>
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-muted/40 border border-transparent hover:border-border rounded-xl transition-all cursor-default">
+              <Calendar size={14} className="text-primary" />
+              <p className="text-xs font-bold text-muted-foreground capitalize">{currentDate}</p>
+            </div>
+
+            <div className="h-8 w-px bg-border/60 mx-1 hidden sm:block"></div>
+
+            <div className="flex items-center gap-2">
+              <NotificationHeader />
+              <ThemeToggle />
             </div>
           </div>
         </header>

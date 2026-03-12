@@ -199,8 +199,6 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                     notificationId = created?.id;
 
                 }
-            } else {
-
             }
 
             // 3. Link the user to the notification

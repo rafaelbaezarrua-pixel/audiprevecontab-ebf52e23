@@ -160,7 +160,7 @@ const ParcelamentosPage: React.FC = () => {
       const newVal = !p.encerrado;
       // Se tentou re-abrir mas a data já passou, alertar? Ou limpar a data?
       // Vamos apagar a data de encerramento se ele explicitamente reabrir para não dar conflito 
-      let payload: any = { encerrado: newVal };
+      const payload: any = { encerrado: newVal };
 
       if (!newVal && p.previsao_termino) {
         const hoje = new Date();

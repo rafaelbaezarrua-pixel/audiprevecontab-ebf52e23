@@ -52,7 +52,7 @@ const RelatoriosPage: React.FC = () => {
   const [financeiro, setFinanceiro] = useState<any[]>([]);
   const [pessoal, setPessoal] = useState<any[]>([]);
   const [fiscal, setFiscal] = useState<any[]>([]);
-  const [licencas, setLicencas] = useState<any[]>([]);
+  const [vencimentos, setVencimentos] = useState<{empresa: string; tipo: string; data: string; status: string}[]>([]);
   const [ocorrencias, setOcorrencias] = useState<any[]>([]);
 
   useEffect(() => {
@@ -99,29 +99,42 @@ const RelatoriosPage: React.FC = () => {
         .select("*, empresas(nome_empresa)")
         .eq("competencia", competencia);
 
-      // 4. Licenças vencendo no mês
+      const licencaLabels: Record<string, string> = { alvara: "Alvará", vigilancia_sanitaria: "Vigilância Sanitária", corpo_bombeiros: "Corpo de Bombeiros", meio_ambiente: "Meio Ambiente" };
+      const calcStatus = (data: string) => { const dias = Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); return dias < 0 ? "Vencido" : dias <= 30 ? "Próximo" : "Em Dia"; };
+
+      const vencList: {empresa: string; tipo: string; data: string; status: string}[] = [];
+
+      const [{ data: licData }, { data: certData }, { data: procData }, { data: certidoesData }, { data: taxasData }] = await Promise.all([
+        supabase.from("licencas").select("*, empresas(nome_empresa)").eq("status", "com_vencimento").not("vencimento", "is", null),
+        supabase.from("certificados_digitais").select("*, empresas(nome_empresa)").not("data_vencimento", "is", null),
+        supabase.from("procuracoes").select("*, empresas(nome_empresa)").not("data_vencimento", "is", null),
+        supabase.from("certidoes").select("*, empresas(nome_empresa)").not("vencimento", "is", null),
+        (supabase.from("licencas_taxas" as any).select("*, empresas(nome_empresa)").not("data_vencimento", "is", null) as any),
+      ]);
+
+      licData?.forEach((l: any) => vencList.push({ empresa: l.empresas?.nome_empresa || "—", tipo: `Licença: ${licencaLabels[l.tipo_licenca] || l.tipo_licenca}`, data: l.vencimento, status: calcStatus(l.vencimento) }));
+      certData?.forEach((c: any) => vencList.push({ empresa: c.empresas?.nome_empresa || "—", tipo: "Certificado Digital", data: c.data_vencimento, status: calcStatus(c.data_vencimento) }));
+      procData?.forEach((p: any) => vencList.push({ empresa: p.empresas?.nome_empresa || "—", tipo: "Procuração", data: p.data_vencimento, status: calcStatus(p.data_vencimento) }));
+      certidoesData?.forEach((c: any) => vencList.push({ empresa: c.empresas?.nome_empresa || "—", tipo: `Certidão: ${c.tipo_certidao}`, data: c.vencimento, status: calcStatus(c.vencimento) }));
+      taxasData?.forEach((t: any) => vencList.push({ empresa: t.empresas?.nome_empresa || "—", tipo: `Taxa: ${licencaLabels[t.tipo_licenca] || t.tipo_licenca}`, data: t.data_vencimento, status: calcStatus(t.data_vencimento) }));
+      vencList.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+
+      // 5. Ocorrências (still filtered by selected month)
       const currentMonthStart = `${competencia}-01`;
       const nextMonth = new Date(competencia + "-01");
       nextMonth.setMonth(nextMonth.getMonth() + 1);
       const currentMonthEnd = nextMonth.toISOString().split('T')[0];
 
-      const { data: licData } = await supabase
-        .from("licencas")
-        .select("*, empresas(nome_empresa)")
-        .gte("vencimento", currentMonthStart)
-        .lte("vencimento", currentMonthEnd);
-
-      // 5. Ocorrências
       const { data: ocData } = await supabase
         .from("ocorrencias")
         .select("*, empresas(nome_empresa)")
-        .gte("data_ocorrencia", currentMonthStart) // Fixed: data_ocorrencia
+        .gte("data_ocorrencia", currentMonthStart)
         .lte("data_ocorrencia", currentMonthEnd);
 
       setFinanceiro([...(honData || []), ...(espData || [])]);
       setPessoal(pesData || []);
       setFiscal(fisData || []);
-      setLicencas(licData || []);
+      setVencimentos(vencList);
       setOcorrencias(ocData || []);
 
     } catch (error) {
@@ -140,27 +153,36 @@ const RelatoriosPage: React.FC = () => {
 
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Try to load logo
-    try {
-      const logoToUse = headerConfig.logoUrl || logoCaduceu;
-      const imgData = await new Promise<HTMLImageElement | string>((resolve, reject) => {
-        if (logoToUse.startsWith('data:')) resolve(logoToUse);
-        else {
-          const img = new Image();
-          img.crossOrigin = 'Anonymous';
-          img.onload = () => resolve(img);
-          img.onerror = () => reject(new Error("Image fail"));
-          img.src = logoToUse;
-        }
+    // Helper: load image as HTMLImageElement (works with jsPDF addImage)
+    const loadImg = (src: string, cors?: string): Promise<HTMLImageElement> =>
+      new Promise((res, rej) => {
+        const img = new Image();
+        if (cors) img.crossOrigin = cors;
+        img.onload = () => res(img);
+        img.onerror = () => rej(new Error("load-fail"));
+        img.src = src;
       });
-      doc.addImage(imgData as any, 'PNG', headerConfig.logoX, headerConfig.logoY, headerConfig.logoWidth, headerConfig.logoHeight);
-    } catch (e) {
-      console.warn("PDF Header logo failed load, using fallback", e);
+
+    // Try external URL first (with 3s CORS timeout), then local fallback, then skip
+    const logoX = headerConfig.logoX ?? 20;
+    const logoY = headerConfig.logoY ?? 10;
+    const logoW = headerConfig.logoWidth ?? 20;
+    const logoH = headerConfig.logoHeight ?? 20;
+
+    let logoImg: HTMLImageElement | null = null;
+    if (headerConfig.logoUrl) {
       try {
-        doc.addImage(logoCaduceu, 'PNG', headerConfig.logoX, headerConfig.logoY, headerConfig.logoWidth, headerConfig.logoHeight);
-      } catch (err) {
-        console.error("Critical: Fallback logo failed");
-      }
+        logoImg = await Promise.race([
+          loadImg(headerConfig.logoUrl, 'Anonymous'),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 3000))
+        ]) as HTMLImageElement;
+      } catch { logoImg = null; }
+    }
+    if (!logoImg) {
+      try { logoImg = await loadImg(logoCaduceu); } catch { logoImg = null; }
+    }
+    if (logoImg) {
+      try { doc.addImage(logoImg, 'PNG', logoX, logoY, logoW, logoH); } catch { /* skip */ }
     }
 
     doc.setFont("Ubuntu", "bold");
@@ -273,20 +295,30 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`VENCIMENTOS DO MÊS - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body = licencas.map(item => [
-      item.empresas?.nome_empresa || "—",
-      item.tipo_licenca || "Licença",
-      format(new Date(item.vencimento), "dd/MM/yyyy"),
-      item.status || "—"
-    ]);
+    const body = vencimentos.reduce<string[][]>((acc, item) => {
+      if (!item.data) return acc;
+      try {
+        const d = new Date(item.data.length === 10 ? item.data + "T12:00:00" : item.data);
+        if (isNaN(d.getTime())) return acc;
+        acc.push([item.empresa, item.tipo, format(d, "dd/MM/yyyy"), item.status]);
+      } catch { /* skip malformed dates */ }
+      return acc;
+    }, []);
 
     autoTable(doc, {
       startY: 60,
-      head: [['Empresa', 'Tipo', 'Vencimento', 'Status']],
+      head: [['Empresa', 'Tipo de Documento', 'Vencimento', 'Status']],
       body: body,
       theme: 'grid',
       headStyles: { fillGray: 200, textColor: 0, fontStyle: 'bold' },
-      styles: { font: 'Ubuntu' }
+      styles: { font: 'Ubuntu' },
+      didParseCell: (data: any) => {
+        if (data.section === 'body' && data.column.index === 3) {
+          if (data.cell.raw === 'Vencido') data.cell.styles.textColor = [220, 38, 38];
+          else if (data.cell.raw === 'Próximo') data.cell.styles.textColor = [217, 119, 6];
+          else data.cell.styles.textColor = [22, 163, 74];
+        }
+      }
     });
 
     doc.save(`Relatorio_Vencimentos_${competencia}.pdf`);
@@ -379,9 +411,9 @@ const RelatoriosPage: React.FC = () => {
           {/* Vencimentos */}
           <ReportCard 
             title="Vencimentos" 
-            description="Licenças e documentos vencendo no período."
+            description="Certificados, procurações, certidões, licenças e taxas vencendo no período."
             icon={<AlertCircle size={24} />}
-            count={licencas.length}
+            count={vencimentos.length}
             onExport={exportVencimentos}
             color="bg-amber-500/10 text-amber-500"
           />
