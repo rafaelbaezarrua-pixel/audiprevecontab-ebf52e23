@@ -87,7 +87,7 @@ const HonorariosPage: React.FC = () => {
         return;
       }
       const { data: pessoalData } = await supabase.from("pessoal").select("*").eq("empresa_id", empresaId).eq("competencia", comp).maybeSingle();
-      const qtdFunc = pessoalData?.qtd_funcionarios || 0;
+      const qtdFunc = (pessoalData?.qtd_funcionarios || 0) + (pessoalData?.qtd_pro_labore || 0);
       const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
       const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", comp);
 
@@ -178,7 +178,7 @@ const HonorariosPage: React.FC = () => {
 
             // 4. Trigger generation with the loaded config
             const { data: pessoalData } = await supabase.from("pessoal").select("*").eq("empresa_id", empresaId).eq("competencia", globalCompetencia).maybeSingle();
-            const qtdFunc = pessoalData?.qtd_funcionarios || 0;
+            const qtdFunc = (pessoalData?.qtd_funcionarios || 0) + (pessoalData?.qtd_pro_labore || 0);
             const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
             const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", globalCompetencia);
 
@@ -241,14 +241,20 @@ const HonorariosPage: React.FC = () => {
             })}
             onSaveConfig={(id) => {
               const form = configForms[id];
-              saveConfig.mutate({
-                ...form,
+              const finalizedFields = {
                 valor_honorario: parseCurrency(form?.valor_honorario),
                 valor_por_funcionario: parseCurrency(form?.valor_por_funcionario),
                 valor_por_recalculo: parseCurrency(form?.valor_por_recalculo),
                 valor_trabalhista: parseCurrency(form?.valor_trabalhista),
                 outros_servicos: (form?.outros_servicos || []).map((s: any) => ({ ...s, valor: parseCurrency(s.valor) }))
-              } as any);
+              };
+              const payload = { ...form, ...finalizedFields };
+              
+              saveConfig.mutate(payload as any, {
+                onSuccess: () => {
+                  setConfigs(prev => ({ ...prev, [id]: payload }));
+                }
+              });
             }}
             mensalData={mensalData}
             mensalForms={mensalForms}
