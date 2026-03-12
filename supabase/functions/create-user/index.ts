@@ -108,6 +108,8 @@ Deno.serve(async (req) => {
     // Role assignment
     if (makeAdmin || role === 'admin') {
       await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "admin" }, { onConflict: 'user_id,role' });
+    } else if (role === 'client') {
+      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "client" }, { onConflict: 'user_id,role' });
     } else {
       // Ensure they have 'user' role at least
       await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "user" }, { onConflict: 'user_id,role' });

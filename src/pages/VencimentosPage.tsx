@@ -16,7 +16,7 @@ const VencimentosPage: React.FC = () => {
   const [filter, setFilter] = useState("todos");
   const [categoryFilter, setCategoryFilter] = useState("todos");
   const [search, setSearch] = useState("");
-  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
+  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
 
   useEffect(() => {
     const load = async () => {
@@ -132,6 +132,8 @@ const VencimentosPage: React.FC = () => {
       matchTab = v.empresa_situacao === "paralisada";
     } else if (activeStatusTab === "baixadas") {
       matchTab = v.empresa_situacao === "baixada";
+    } else if (activeStatusTab === "entregue") {
+      matchTab = v.empresa_situacao === "entregue";
     }
 
     return matchSearch && matchStatusFilter && matchCategory && matchTab;
@@ -183,6 +185,15 @@ const VencimentosPage: React.FC = () => {
           onClick={() => setActiveStatusTab("baixadas")}
         >
           Empresas Baixadas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "entregue"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("entregue")}
+        >
+          Empresas Entregues
         </button>
       </div>
 
