@@ -26,7 +26,7 @@ const SocietarioPage: React.FC = () => {
   } = useSocietario();
 
   const [activeMainTab, setActiveMainTab] = useState<"empresas" | "processos">("empresas");
-  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas" | "mei">("ativas");
+  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas" | "mei" | "entregue">("ativas");
   const [isFavorite, setIsFavorite] = useState(false);
   const [search, setSearch] = useState("");
   const [filterSituacao, setFilterSituacao] = useState("todas");
@@ -95,6 +95,7 @@ const SocietarioPage: React.FC = () => {
     if (activeTab === "ativas") matchTab = !e.situacao || e.situacao === "ativa";
     else if (activeTab === "paralisadas") matchTab = e.situacao === "paralisada";
     else if (activeTab === "baixadas") matchTab = e.situacao === "baixada";
+    else if (activeTab === "entregue") matchTab = e.situacao === "entregue";
     else if (activeTab === "mei") matchTab = e.porte_empresa === "mei" && (!e.situacao || e.situacao === "ativa");
     return matchSearch && matchSituacao && matchRegime && matchTab;
   });
@@ -103,6 +104,7 @@ const SocietarioPage: React.FC = () => {
     ativas: empresas.filter(e => !e.situacao || e.situacao === "ativa").length,
     paralisadas: empresas.filter(e => e.situacao === "paralisada").length,
     baixadas: empresas.filter(e => e.situacao === "baixada").length,
+    entregues: empresas.filter(e => e.situacao === "entregue").length,
     mei: empresas.filter(e => e.porte_empresa === "mei" && (!e.situacao || e.situacao === "ativa")).length,
     processosAtivos: processos.filter(p => p.status === 'em_andamento').length,
   };
@@ -207,6 +209,7 @@ const SocietarioPage: React.FC = () => {
                     <option value="ativa">Ativa</option>
                     <option value="paralisada">Paralisada</option>
                     <option value="baixada">Baixada</option>
+                    <option value="entregue">Entregue</option>
                   </select>
                 </div>
                 <div className="flex items-end">
@@ -217,8 +220,8 @@ const SocietarioPage: React.FC = () => {
           </div>
 
           <div className="flex border-b border-border overflow-x-auto no-scrollbar pt-2">
-            {["ativas", "mei", "paralisadas", "baixadas"].map(t => (
-              <button key={t} onClick={() => setActiveTab(t as any)} className={`px-6 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{t.toUpperCase()}</button>
+            {["ativas", "mei", "paralisadas", "baixadas", "entregue"].map(t => (
+              <button key={t} onClick={() => setActiveTab(t as any)} className={`px-6 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{t === "entregue" ? "ENTREGUES" : t.toUpperCase()}</button>
             ))}
           </div>
 

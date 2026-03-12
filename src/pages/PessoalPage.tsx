@@ -11,7 +11,7 @@ const PessoalPage: React.FC = () => {
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
-  const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
+  const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
 
   useEffect(() => {
     const load = async () => {
@@ -35,6 +35,8 @@ const PessoalPage: React.FC = () => {
       matchTab = e.situacao === "paralisada";
     } else if (activeTab === "baixadas") {
       matchTab = e.situacao === "baixada";
+    } else if (activeTab === "entregue") {
+      matchTab = e.situacao === "entregue";
     }
 
     return matchSearch && matchTab;
@@ -181,6 +183,15 @@ const PessoalPage: React.FC = () => {
           onClick={() => setActiveTab("baixadas")}
         >
           Empresas Baixadas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "entregue"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveTab("entregue")}
+        >
+          Empresas Entregues
         </button>
       </div>
 

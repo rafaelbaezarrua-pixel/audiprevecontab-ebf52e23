@@ -15,6 +15,7 @@ interface SocietarioStatsProps {
     ativas: number;
     paralisadas: number;
     baixadas: number;
+    entregues: number;
     mei: number;
   };
 }
@@ -24,7 +25,8 @@ export const SocietarioStats = ({ stats }: SocietarioStatsProps) => {
     { label: "Ativas", value: stats.ativas, cls: "text-success", bg: "bg-success/10", icon: Building2 },
     { label: "MEI", value: stats.mei, cls: "text-info", bg: "bg-info/10", icon: Activity },
     { label: "Paralisadas", value: stats.paralisadas, cls: "text-warning", bg: "bg-warning/10", icon: AlertCircle },
-    { label: "Baixadas", value: stats.baixadas, cls: "text-destructive", bg: "bg-destructive/10", icon: X }
+    { label: "Baixadas", value: stats.baixadas, cls: "text-destructive", bg: "bg-destructive/10", icon: X },
+    { label: "Entregues", value: stats.entregues, cls: "text-primary", bg: "bg-primary/10", icon: Building2 }
   ];
 
   return (

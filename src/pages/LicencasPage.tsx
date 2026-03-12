@@ -39,7 +39,7 @@ const LicencasPage: React.FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabType>("licencas");
-  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas">("ativas");
+  const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [taxasForm, setTaxasForm] = useState<Record<string, Record<string, any>>>({});
 
@@ -86,6 +86,8 @@ const LicencasPage: React.FC = () => {
       matchTab = e.situacao === "paralisada";
     } else if (activeStatusTab === "baixadas") {
       matchTab = e.situacao === "baixada";
+    } else if (activeStatusTab === "entregue") {
+      matchTab = e.situacao === "entregue";
     }
 
     return matchSearch && matchStatus && matchTab;
@@ -230,6 +232,15 @@ const LicencasPage: React.FC = () => {
           onClick={() => setActiveStatusTab("baixadas")}
         >
           Empresas Baixadas
+        </button>
+        <button
+          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "entregue"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          onClick={() => setActiveStatusTab("entregue")}
+        >
+          Empresas Entregues
         </button>
       </div>
 
