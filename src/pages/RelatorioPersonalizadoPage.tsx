@@ -22,6 +22,13 @@ interface ModuleConfig {
   fields: { id: string; label: string; accessor?: (item: any) => any }[];
 }
 
+const licencaLabels: Record<string, string> = { 
+  alvara: "Alvará", 
+  vigilancia_sanitaria: "Vigilância Sanitária", 
+  corpo_bombeiros: "Corpo de Bombeiros", 
+  meio_ambiente: "Meio Ambiente" 
+};
+
 const MODULES_CONFIG: ModuleConfig[] = [
   {
     id: "societario",
@@ -139,6 +146,20 @@ const MODULES_CONFIG: ModuleConfig[] = [
     ]
   },
   {
+    id: "licencas_taxas",
+    label: "Taxas de Licenças",
+    table: "licencas_taxas",
+    icon: <DollarSign size={18} />,
+    color: "bg-teal-600",
+    fields: [
+      { id: "tipo_licenca", label: "Tipo", accessor: (i: any) => licencaLabels[i.tipo_licenca] || i.tipo_licenca },
+      { id: "status", label: "Status", accessor: (i: any) => i.status ? i.status.charAt(0).toUpperCase() + i.status.slice(1) : "—" },
+      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => i.data_vencimento ? format(new Date(i.data_vencimento + "T12:00:00"), "dd/MM/yyyy") : "—" },
+      { id: "data_envio", label: "Data de Envio", accessor: (i: any) => i.data_envio ? format(new Date(i.data_envio + "T12:00:00"), "dd/MM/yyyy") : "—" },
+      { id: "forma_envio", label: "Forma de Envio" },
+    ]
+  },
+  {
     id: "recalculos",
     label: "Recálculos",
     table: "recalculos",
@@ -187,7 +208,35 @@ const MODULES_CONFIG: ModuleConfig[] = [
       { id: "ano", label: "Ano Base" },
       { id: "enviada", label: "Enviada", accessor: (i) => i.enviada ? "Sim" : "Não" },
     ]
+  },
+  {
+    id: "vencimentos",
+    label: "Vencimentos (Consolidado)",
+    table: "vencimentos_virtual",
+    icon: <AlertCircle size={18} />,
+    color: "bg-orange-600",
+    fields: [
+      { id: "certificados", label: "Certificado Digital" },
+      { id: "procuracoes", label: "Procurações" },
+      { id: "certidoes", label: "Certidões" },
+      { id: "licenca_alvara", label: "Licença: Alvará" },
+      { id: "licenca_vigilancia", label: "Licença: Vigilância" },
+      { id: "licenca_bombeiros", label: "Licença: Bombeiros" },
+      { id: "licenca_meio_ambiente", label: "Licença: Meio Ambiente" },
+      { id: "taxa_alvara", label: "Taxa: Alvará" },
+      { id: "taxa_vigilancia", label: "Taxa: Vigilância" },
+      { id: "taxa_bombeiros", label: "Taxa: Bombeiros" },
+      { id: "taxa_meio_ambiente", label: "Taxa: Meio Ambiente" },
+    ]
   }
+];
+
+const SITUATIONS = [
+  { id: "ativa", label: "Ativas" },
+  { id: "mei", label: "MEI" },
+  { id: "paralisada", label: "Paralisadas" },
+  { id: "baixada", label: "Baixadas" },
+  { id: "entregue", label: "Entregues" }
 ];
 
 const RelatorioPersonalizadoPage: React.FC = () => {
@@ -195,6 +244,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [selectedFields, setSelectedFields] = useState<Record<string, string[]>>({});
+  const [selectedSituations, setSelectedSituations] = useState<string[]>(["ativa", "mei", "paralisada", "baixada", "entregue"]);
   const [loading, setLoading] = useState(false);
   const [headerConfig, setHeaderConfig] = useState<any>(null);
 
@@ -228,6 +278,18 @@ const RelatorioPersonalizadoPage: React.FC = () => {
       setSelectedFields(prev => ({ ...prev, [modId]: current.filter(f => f !== fieldId) }));
     } else {
       setSelectedFields(prev => ({ ...prev, [modId]: [...current, fieldId] }));
+    }
+  };
+
+  const toggleSituation = (id: string) => {
+    if (selectedSituations.includes(id)) {
+      if (selectedSituations.length > 1) {
+        setSelectedSituations(prev => prev.filter(s => s !== id));
+      } else {
+        toast.error("Selecione pelo menos uma situação");
+      }
+    } else {
+      setSelectedSituations(prev => [...prev, id]);
     }
   };
 
@@ -265,14 +327,31 @@ const RelatorioPersonalizadoPage: React.FC = () => {
 
     setLoading(true);
     try {
-      // 1. Fetch All Companies First
-      const { data: allCompanies, error: companiesError } = await supabase
+      // 1. Fetch All Companies First (Filtered by Situation)
+      const situacoesWithoutMei = selectedSituations.filter(s => s !== "mei");
+      let query = supabase
         .from("empresas")
         .select("id, nome_empresa, cnpj, data_abertura, regime_tributario, situacao, natureza_juridica")
         .order("nome_empresa");
 
+      if (selectedSituations.includes("mei")) {
+        if (situacoesWithoutMei.length > 0) {
+          query = query.or(`situacao.in.(${situacoesWithoutMei.join(",")}),regime_tributario.eq.mei`);
+        } else {
+          query = query.eq("regime_tributario", "mei");
+        }
+      } else {
+        query = query.in("situacao", situacoesWithoutMei as any);
+      }
+
+      const { data: allCompanies, error: companiesError } = await query;
+
       if (companiesError) throw companiesError;
-      if (!allCompanies) return;
+      if (!allCompanies || allCompanies.length === 0) {
+        toast.error("Nenhuma empresa encontrada para as situações selecionadas.");
+        setLoading(false);
+        return;
+      }
 
       const doc = new jsPDF({ orientation: 'landscape' });
       await generatePDFHeader(doc);
@@ -294,6 +373,71 @@ const RelatorioPersonalizadoPage: React.FC = () => {
         // Special case: if it's the societario module, we already have the data
         if (modId === "societario") {
           moduleData = allCompanies;
+        } else if (modId === "vencimentos") {
+          // Virtual Vencimentos Module Logic
+          const calcStatus = (data: string) => { 
+            const dias = Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); 
+            return dias < 0 ? "Vencido" : dias <= 30 ? "Próximo" : "Em Dia"; 
+          };
+
+          const [{ data: licData }, { data: certData }, { data: procData }, { data: certidoesData }, { data: taxasData }] = await Promise.all([
+            // Only fetch if corresponding sources are selected as "fields"
+            fieldsToInclude.some(f => f.startsWith("licenca_")) 
+              ? supabase.from("licencas").select("*").eq("status", "com_vencimento").not("vencimento", "is", null)
+              : Promise.resolve({ data: [] }),
+            fieldsToInclude.includes("certificados")
+              ? supabase.from("certificados_digitais").select("*").not("data_vencimento", "is", null)
+              : Promise.resolve({ data: [] }),
+            fieldsToInclude.includes("procuracoes")
+              ? supabase.from("procuracoes").select("*").not("data_vencimento", "is", null)
+              : Promise.resolve({ data: [] }),
+            fieldsToInclude.includes("certidoes")
+              ? supabase.from("certidoes").select("*").not("vencimento", "is", null)
+              : Promise.resolve({ data: [] }),
+            fieldsToInclude.some(f => f.startsWith("taxa_"))
+              ? (supabase.from("licencas_taxas" as any).select("*").not("data_vencimento", "is", null) as any)
+              : Promise.resolve({ data: [] }),
+          ]);
+
+          const compiledVenc: any[] = [];
+          
+          // Helper maps
+          const licMap: Record<string, string> = { alvara: "licenca_alvara", vigilancia_sanitaria: "licenca_vigilancia", corpo_bombeiros: "licenca_bombeiros", meio_ambiente: "licenca_meio_ambiente" };
+          const taxaMap: Record<string, string> = { alvara: "taxa_alvara", vigilancia_sanitaria: "taxa_vigilancia", corpo_bombeiros: "taxa_bombeiros", meio_ambiente: "taxa_meio_ambiente" };
+
+          licData?.forEach((l: any) => {
+            if (fieldsToInclude.includes(licMap[l.tipo_licenca])) {
+              compiledVenc.push({ empresa_id: l.empresa_id, tipo: `Licença: ${licencaLabels[l.tipo_licenca] || l.tipo_licenca}`, data: l.vencimento, status: calcStatus(l.vencimento) });
+            }
+          });
+          
+          if (fieldsToInclude.includes("certificados")) {
+            certData?.forEach((c: any) => compiledVenc.push({ empresa_id: c.empresa_id, tipo: "Certificado Digital", data: c.data_vencimento, status: calcStatus(c.data_vencimento) }));
+          }
+          
+          if (fieldsToInclude.includes("procuracoes")) {
+            procData?.forEach((p: any) => compiledVenc.push({ empresa_id: p.empresa_id, tipo: "Procuração", data: p.data_vencimento, status: calcStatus(p.data_vencimento) }));
+          }
+          
+          if (fieldsToInclude.includes("certidoes")) {
+            certidoesData?.forEach((c: any) => compiledVenc.push({ empresa_id: c.empresa_id, tipo: `Certidão: ${c.tipo_certidao}`, data: c.vencimento, status: calcStatus(c.vencimento) }));
+          }
+          
+          taxasData?.forEach((t: any) => {
+            if (fieldsToInclude.includes(taxaMap[t.tipo_licenca])) {
+              compiledVenc.push({ 
+                empresa_id: t.empresa_id, 
+                tipo: `Taxa: ${licencaLabels[t.tipo_licenca] || t.tipo_licenca}`, 
+                data: t.data_vencimento, 
+                status: calcStatus(t.data_vencimento),
+                db_status: t.status,
+                data_envio: t.data_envio,
+                forma_envio: t.forma_envio
+              });
+            }
+          });
+          
+          moduleData = compiledVenc;
         } else {
           // Fetch Module Data
           let query = supabase.from(mod.table as any).select("*");
@@ -315,72 +459,94 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           }
         }
 
-        // Merge logic: ensure every company is present
-        // If a company has multiple records (like Ocorrências), we show all of them.
-        // If it has none, we show the company once with empty fields.
-        let mergedRows: any[] = [];
-        
-        allCompanies.forEach(company => {
-          const companyRecords = moduleData.filter(d => d.empresa_id === company.id);
+        // Merge logic: ensure every company is present grouped by situation
+        for (const sit of SITUATIONS) {
+          if (!selectedSituations.includes(sit.id)) continue;
+
+          const situationCompanies = allCompanies.filter(c => {
+             if (sit.id === "mei") return c.regime_tributario === "mei";
+             return c.situacao === sit.id && c.regime_tributario !== "mei";
+          });
+
+          if (situationCompanies.length === 0) continue;
+
+          let situationRows: any[] = [];
           
-          if (companyRecords.length > 0) {
-            companyRecords.forEach(record => {
-              mergedRows.push({ ...company, ...record, isPartial: false });
-            });
-          } else {
-            // No data for this company in this module, add an empty row
-            mergedRows.push({ ...company, isPartial: true });
-          }
-        });
+          situationCompanies.forEach(company => {
+            const companyRecords = moduleData.filter(d => d.empresa_id === company.id);
+            
+            if (companyRecords.length > 0) {
+              companyRecords.forEach(record => {
+                situationRows.push({ ...company, ...record, isPartial: false });
+              });
+            } else {
+              // No data for this company in this module, add an empty row
+              situationRows.push({ ...company, isPartial: true });
+            }
+          });
 
-        // Module Section Header
-        if (currentY > 250) {
-          doc.addPage();
-          currentY = 20;
+          // Situation Sub-header
+          if (currentY > 260) {
+            doc.addPage();
+            currentY = 20;
+          }
+
+          doc.setFontSize(10);
+          doc.setFont("Ubuntu", "bold");
+          doc.setTextColor(100, 100, 100);
+          doc.text(`SITUAÇÃO: ${sit.label.toUpperCase()}`, 14, currentY + 5);
+          currentY += 8;
+          doc.setTextColor(0, 0, 0);
+
+          const head = modId === "vencimentos" 
+            ? [["Empresa", "Tipo de Documento", "Vencimento", "Situação", "Status Taxa", "Data de Envio", "Forma de Envio"]]
+            : [["Empresa", ...mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => f.label)]];
+
+          const body = situationRows.map(item => [
+            item.nome_empresa || "—",
+            ...(modId === "vencimentos" 
+              ? [
+                  item.tipo || "—", 
+                  item.data ? format(new Date(item.data + "T12:00:00"), "dd/MM/yyyy") : "—", 
+                  item.status || "—",
+                  item.db_status ? item.db_status.charAt(0).toUpperCase() + item.db_status.slice(1) : "—",
+                  item.data_envio ? format(new Date(item.data_envio + "T12:00:00"), "dd/MM/yyyy") : "—",
+                  item.forma_envio || "—"
+                ]
+              : mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => {
+                  if (item.isPartial && modId !== "societario") return "—";
+                  
+                  const val = item[f.id];
+                  if (f.accessor) return f.accessor(item);
+                  if (val === null || val === undefined) return "—";
+                  
+                  if (typeof val === 'string' && val.includes('T') && val.length > 10) {
+                    try { return format(new Date(val), "dd/MM/yyyy HH:mm"); } catch { return val; }
+                  }
+                  if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                    try { return format(new Date(val + "T12:00:00"), "dd/MM/yyyy"); } catch { return val; }
+                  }
+                  return String(val);
+                })
+            )
+          ]);
+
+          autoTable(doc, {
+            startY: currentY,
+            head: head,
+            body: body,
+            theme: 'grid',
+            headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 8 },
+            bodyStyles: { fontSize: 7, cellPadding: 2 },
+            styles: { font: 'Ubuntu' },
+            margin: { horizontal: 10 },
+            didDrawPage: (data) => {
+              currentY = data.cursor?.y || currentY;
+            }
+          });
+
+          currentY = (doc as any).lastAutoTable.finalY + 10;
         }
-
-        doc.setFontSize(12);
-        doc.setFont("Ubuntu", "bold");
-        doc.setTextColor(30, 64, 175);
-        doc.text(mod.label.toUpperCase(), 14, currentY);
-        doc.setTextColor(0, 0, 0);
-        currentY += 5;
-
-        const head = [["Empresa", ...mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => f.label)]];
-        const body = mergedRows.map(item => [
-          item.nome_empresa || "—",
-          ...mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => {
-            if (item.isPartial && modId !== "societario") return "—";
-            
-            const val = item[f.id];
-            if (f.accessor) return f.accessor(item);
-            if (val === null || val === undefined) return "—";
-            
-            if (typeof val === 'string' && val.includes('T') && val.length > 10) {
-               try { return format(new Date(val), "dd/MM/yyyy HH:mm"); } catch { return val; }
-            }
-            if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
-               try { return format(new Date(val + "T12:00:00"), "dd/MM/yyyy"); } catch { return val; }
-            }
-            return String(val);
-          })
-        ]);
-
-        autoTable(doc, {
-          startY: currentY,
-          head: head,
-          body: body,
-          theme: 'grid',
-          headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 8 },
-          bodyStyles: { fontSize: 7, cellPadding: 2 },
-          styles: { font: 'Ubuntu' },
-          margin: { horizontal: 10 },
-          didDrawPage: (data) => {
-            currentY = data.cursor?.y || currentY;
-          }
-        });
-
-        currentY = (doc as any).lastAutoTable.finalY + 15;
       }
 
       doc.save(`Relatorio_Personalizado_${competencia}.pdf`);
@@ -410,14 +576,39 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-background p-2 rounded-2xl border border-border">
-          <Calendar className="text-primary ml-2" size={20} />
-          <input 
-            type="month" 
-            value={competencia} 
-            onChange={(e) => setCompetencia(e.target.value)}
-            className="px-4 py-2 bg-transparent text-sm font-black outline-none"
-          />
+        <div className="flex flex-wrap items-center gap-6">
+          {/* Situation Filter */}
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Filtrar por Situação</span>
+            <div className="flex flex-wrap items-center gap-2 bg-background/50 p-1.5 rounded-2xl border border-border/50 shadow-inner">
+              {SITUATIONS.map(sit => (
+                <button
+                  key={sit.id}
+                  onClick={() => toggleSituation(sit.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    selectedSituations.includes(sit.id)
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-105"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {sit.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Período de Referência</span>
+            <div className="flex items-center gap-3 bg-background/50 p-1.5 rounded-2xl border border-border/50 shadow-inner">
+              <Calendar size={16} className="text-primary ml-1" />
+              <input 
+                type="month" 
+                value={competencia} 
+                onChange={(e) => setCompetencia(e.target.value)}
+                className="bg-transparent border-none text-sm font-bold outline-none focus:ring-0 w-32"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

@@ -44,10 +44,19 @@ const DEFAULT_HEADER: HeaderConfig = {
     logoY: 10
 };
 
+const SITUATIONS = [
+  { id: "ativa", label: "Ativas" },
+  { id: "mei", label: "MEI" },
+  { id: "paralisada", label: "Paralisadas" },
+  { id: "baixada", label: "Baixadas" },
+  { id: "entregue", label: "Entregues" }
+];
+
 const RelatoriosPage: React.FC = () => {
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [loading, setLoading] = useState(false);
   const [headerConfig, setHeaderConfig] = useState<HeaderConfig>(DEFAULT_HEADER);
+  const [selectedSituations, setSelectedSituations] = useState<string[]>(["ativa", "mei", "paralisada", "baixada", "entregue"]);
   const navigate = useNavigate();
   
   // Data States
@@ -61,7 +70,19 @@ const RelatoriosPage: React.FC = () => {
   useEffect(() => {
     fetchHeaderConfig();
     fetchReportData();
-  }, [competencia]);
+  }, [competencia, selectedSituations]);
+
+  const toggleSituation = (id: string) => {
+    if (selectedSituations.includes(id)) {
+      if (selectedSituations.length > 1) {
+        setSelectedSituations(prev => prev.filter(s => s !== id));
+      } else {
+        toast.error("Selecione pelo menos uma situação");
+      }
+    } else {
+      setSelectedSituations(prev => [...prev, id]);
+    }
+  };
 
   const fetchHeaderConfig = async () => {
     const { data } = await supabase.from("app_config").select("value").eq("key", "pdf_header_config").maybeSingle();
@@ -134,8 +155,24 @@ const RelatoriosPage: React.FC = () => {
         .gte("data_ocorrencia", currentMonthStart)
         .lte("data_ocorrencia", currentMonthEnd);
 
-      // 6. Fetch All Companies
-      const { data: companiesData } = await supabase.from("empresas").select("*").order("nome_empresa");
+      // 6. Fetch All Companies (Filtered by Situation)
+      const situacoesWithoutMei = selectedSituations.filter(s => s !== "mei");
+      let compQuery = supabase
+        .from("empresas")
+        .select("*")
+        .order("nome_empresa");
+
+      if (selectedSituations.includes("mei")) {
+        if (situacoesWithoutMei.length > 0) {
+          compQuery = compQuery.or(`situacao.in.(${situacoesWithoutMei.join(",")}),regime_tributario.eq.mei`);
+        } else {
+          compQuery = compQuery.eq("regime_tributario", "mei");
+        }
+      } else {
+        compQuery = compQuery.in("situacao", situacoesWithoutMei as any);
+      }
+
+      const { data: companiesData } = await compQuery;
 
       setAllCompanies(companiesData || []);
       setFinanceiro([...(honData || []), ...(espData || [])]);
@@ -216,25 +253,54 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`RELATÓRIO FINANCEIRO - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    // Ensure all companies are included
-    const body = allCompanies.map(company => {
-      const item = financeiro.find(f => f.empresa_id === company.id) || financeiro.find(f => f.nome_cliente === company.nome_empresa);
-      return [
-        company.nome_empresa,
-        item?.tipo_servico || "—",
-        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item?.valor || 0),
-        item?.pago || item?.status_pago ? "PAGO" : item ? "PENDENTE" : "—"
-      ];
-    });
+    let currentY = 60;
 
-    autoTable(doc, {
-      startY: 60,
-      head: [['Empresa/Cliente', 'Tipo', 'Valor', 'Status']],
-      body: body,
-      theme: 'grid',
-      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
-      styles: { font: 'Ubuntu' }
-    });
+    for (const sit of SITUATIONS) {
+      if (!selectedSituations.includes(sit.id)) continue;
+
+      const situationCompanies = allCompanies.filter(c => {
+        if (sit.id === "mei") return c.regime_tributario === "mei";
+        return c.situacao === sit.id && c.regime_tributario !== "mei";
+      });
+
+      if (situationCompanies.length === 0) continue;
+
+      if (currentY > 170) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFontSize(10);
+      doc.setFont("Ubuntu", "bold");
+      doc.setTextColor(100, 100, 100);
+      doc.text(`SITUAÇÃO: ${sit.label.toUpperCase()}`, 14, currentY + 5);
+      currentY += 8;
+      doc.setTextColor(0, 0, 0);
+
+      const body = situationCompanies.map(company => {
+        const item = financeiro.find(f => f.empresa_id === company.id) || financeiro.find(f => f.nome_cliente === company.nome_empresa);
+        return [
+          company.nome_empresa,
+          item?.tipo_servico || "—",
+          new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item?.valor || 0),
+          item?.pago || item?.status_pago ? "PAGO" : item ? "PENDENTE" : "—"
+        ];
+      });
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Empresa/Cliente', 'Tipo', 'Valor', 'Status']],
+        body: body,
+        theme: 'grid',
+        headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
+        styles: { font: 'Ubuntu' },
+        didDrawPage: (data) => {
+          currentY = data.cursor?.y || currentY;
+        }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+    }
 
     doc.save(`Relatorio_Financeiro_${competencia}.pdf`);
   };
@@ -248,26 +314,56 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`RELATÓRIO DEPARTAMENTO PESSOAL - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body = allCompanies.map(company => {
-      const item = pessoal.find(p => p.empresa_id === company.id);
-      return [
-        company.nome_empresa,
-        item?.qtd_funcionarios || 0,
-        item?.qtd_pro_labore || 0,
-        item?.qtd_recibos || 0,
-        item?.dctf_web_gerada ? "GERADA" : item ? "PENDENTE" : "—",
-        item?.possui_vt || item?.possui_va || item?.possui_vc ? "SIM" : item ? "NÃO" : "—"
-      ];
-    });
+    let currentY = 60;
 
-    autoTable(doc, {
-      startY: 60,
-      head: [['Empresa', 'Func.', 'Pro-Lab.', 'Recibos', 'DCTF Web', 'Trab.']],
-      body: body,
-      theme: 'grid',
-      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
-      styles: { font: 'Ubuntu' }
-    });
+    for (const sit of SITUATIONS) {
+      if (!selectedSituations.includes(sit.id)) continue;
+
+      const situationCompanies = allCompanies.filter(c => {
+        if (sit.id === "mei") return c.regime_tributario === "mei";
+        return c.situacao === sit.id && c.regime_tributario !== "mei";
+      });
+
+      if (situationCompanies.length === 0) continue;
+
+      if (currentY > 170) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFontSize(10);
+      doc.setFont("Ubuntu", "bold");
+      doc.setTextColor(100, 100, 100);
+      doc.text(`SITUAÇÃO: ${sit.label.toUpperCase()}`, 14, currentY + 5);
+      currentY += 8;
+      doc.setTextColor(0, 0, 0);
+
+      const body = situationCompanies.map(company => {
+        const item = pessoal.find(p => p.empresa_id === company.id);
+        return [
+          company.nome_empresa,
+          item?.qtd_funcionarios || 0,
+          item?.qtd_pro_labore || 0,
+          item?.qtd_recibos || 0,
+          item?.dctf_web_gerada ? "GERADA" : item ? "PENDENTE" : "—",
+          item?.possui_vt || item?.possui_va || item?.possui_vc ? "SIM" : item ? "NÃO" : "—"
+        ];
+      });
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Empresa', 'Func.', 'Pro-Lab.', 'Recibos', 'DCTF Web', 'Trab.']],
+        body: body,
+        theme: 'grid',
+        headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
+        styles: { font: 'Ubuntu' },
+        didDrawPage: (data) => {
+          currentY = data.cursor?.y || currentY;
+        }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+    }
 
     doc.save(`Relatorio_Pessoal_${competencia}.pdf`);
   };
@@ -281,24 +377,54 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`RELATÓRIO FISCAL - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body = allCompanies.map(company => {
-      const item = fiscal.find(f => f.empresa_id === company.id);
-      return [
-        company.nome_empresa,
-        item?.tipo_nota || "—",
-        item?.status_guia || (item ? "PENDENTE" : "—"),
-        item?.data_envio ? format(new Date(item.data_envio), "dd/MM/yyyy") : "—"
-      ];
-    });
+    let currentY = 60;
 
-    autoTable(doc, {
-      startY: 60,
-      head: [['Empresa', 'Tipo Nota', 'Status Guia', 'Data Env.']],
-      body: body,
-      theme: 'grid',
-      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
-      styles: { font: 'Ubuntu' }
-    });
+    for (const sit of SITUATIONS) {
+      if (!selectedSituations.includes(sit.id)) continue;
+
+      const situationCompanies = allCompanies.filter(c => {
+        if (sit.id === "mei") return c.regime_tributario === "mei";
+        return c.situacao === sit.id && c.regime_tributario !== "mei";
+      });
+
+      if (situationCompanies.length === 0) continue;
+
+      if (currentY > 170) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFontSize(10);
+      doc.setFont("Ubuntu", "bold");
+      doc.setTextColor(100, 100, 100);
+      doc.text(`SITUAÇÃO: ${sit.label.toUpperCase()}`, 14, currentY + 5);
+      currentY += 8;
+      doc.setTextColor(0, 0, 0);
+
+      const body = situationCompanies.map(company => {
+        const item = fiscal.find(f => f.empresa_id === company.id);
+        return [
+          company.nome_empresa,
+          item?.tipo_nota || "—",
+          item?.status_guia || (item ? "PENDENTE" : "—"),
+          item?.data_envio ? format(new Date(item.data_envio), "dd/MM/yyyy") : "—"
+        ];
+      });
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Empresa', 'Tipo Nota', 'Status Guia', 'Data Env.']],
+        body: body,
+        theme: 'grid',
+        headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
+        styles: { font: 'Ubuntu' },
+        didDrawPage: (data) => {
+          currentY = data.cursor?.y || currentY;
+        }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+    }
 
     doc.save(`Relatorio_Fiscal_${competencia}.pdf`);
   };
@@ -312,40 +438,70 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`VENCIMENTOS DO MÊS - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body: string[][] = [];
+    let currentY = 60;
 
-    allCompanies.forEach(company => {
-      const items = vencimentos.filter(v => v.empresa === company.nome_empresa);
-      if (items.length > 0) {
-        items.forEach(item => {
-          if (!item.data) return;
-          try {
-            const d = new Date(item.data.length === 10 ? item.data + "T12:00:00" : item.data);
-            if (!isNaN(d.getTime())) {
-              body.push([company.nome_empresa, item.tipo, format(d, "dd/MM/yyyy"), item.status]);
-            }
-          } catch { /* skip */ }
-        });
-      } else {
-        body.push([company.nome_empresa, "—", "—", "—"]);
+    for (const sit of SITUATIONS) {
+      if (!selectedSituations.includes(sit.id)) continue;
+
+      const situationCompanies = allCompanies.filter(c => {
+        if (sit.id === "mei") return c.regime_tributario === "mei";
+        return c.situacao === sit.id && c.regime_tributario !== "mei";
+      });
+
+      if (situationCompanies.length === 0) continue;
+
+      if (currentY > 170) {
+        doc.addPage();
+        currentY = 20;
       }
-    });
 
-    autoTable(doc, {
-      startY: 60,
-      head: [['Empresa', 'Tipo de Documento', 'Vencimento', 'Status']],
-      body: body,
-      theme: 'grid',
-      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
-      styles: { font: 'Ubuntu' },
-      didParseCell: (data: any) => {
-        if (data.section === 'body' && data.column.index === 3) {
-          if (data.cell.raw === 'Vencido') data.cell.styles.textColor = [220, 38, 38];
-          else if (data.cell.raw === 'Próximo') data.cell.styles.textColor = [217, 119, 6];
-          else data.cell.styles.textColor = [22, 163, 74];
+      doc.setFontSize(10);
+      doc.setFont("Ubuntu", "bold");
+      doc.setTextColor(100, 100, 100);
+      doc.text(`SITUAÇÃO: ${sit.label.toUpperCase()}`, 14, currentY + 5);
+      currentY += 8;
+      doc.setTextColor(0, 0, 0);
+
+      const body: string[][] = [];
+
+      situationCompanies.forEach(company => {
+        const items = vencimentos.filter(v => v.empresa === company.nome_empresa);
+        if (items.length > 0) {
+          items.forEach(item => {
+            if (!item.data) return;
+            try {
+              const d = new Date(item.data.length === 10 ? item.data + "T12:00:00" : item.data);
+              if (!isNaN(d.getTime())) {
+                body.push([company.nome_empresa, item.tipo, format(d, "dd/MM/yyyy"), item.status]);
+              }
+            } catch { /* skip */ }
+          });
+        } else {
+          body.push([company.nome_empresa, "—", "—", "—"]);
         }
-      }
-    });
+      });
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Empresa', 'Tipo de Documento', 'Vencimento', 'Status']],
+        body: body,
+        theme: 'grid',
+        headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
+        styles: { font: 'Ubuntu' },
+        didParseCell: (data: any) => {
+          if (data.section === 'body' && data.column.index === 3) {
+            if (data.cell.raw === 'Vencido') data.cell.styles.textColor = [220, 38, 38];
+            else if (data.cell.raw === 'Próximo') data.cell.styles.textColor = [217, 119, 6];
+            else data.cell.styles.textColor = [22, 163, 74];
+          }
+        },
+        didDrawPage: (data) => {
+          currentY = data.cursor?.y || currentY;
+        }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+    }
 
     doc.save(`Relatorio_Vencimentos_${competencia}.pdf`);
   };
@@ -359,33 +515,63 @@ const RelatoriosPage: React.FC = () => {
     doc.setFont("Ubuntu", "bold");
     doc.text(`RELATÓRIO DE OCORRÊNCIAS - ${competencia}`, pageWidth / 2, 50, { align: "center" });
 
-    const body: string[][] = [];
-    
-    allCompanies.forEach(company => {
-      const records = ocorrencias.filter(o => o.empresa_id === company.id);
-      if (records.length > 0) {
-        records.forEach(r => {
-          body.push([
-            format(new Date(r.data_ocorrencia), "dd/MM/yyyy"),
-            company.nome_empresa,
-            r.departamento || "—",
-            r.descricao || "—"
-          ]);
-        });
-      } else {
-        body.push(["—", company.nome_empresa, "—", "—"]);
-      }
-    });
+    let currentY = 60;
 
-    autoTable(doc, {
-      startY: 60,
-      head: [['Data', 'Empresa', 'Depto.', 'Descrição']],
-      body: body,
-      theme: 'grid',
-      headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
-      styles: { font: 'Ubuntu' },
-      columnStyles: { 3: { cellWidth: 80 } }
-    });
+    for (const sit of SITUATIONS) {
+      if (!selectedSituations.includes(sit.id)) continue;
+
+      const situationCompanies = allCompanies.filter(c => {
+        if (sit.id === "mei") return c.regime_tributario === "mei";
+        return c.situacao === sit.id && c.regime_tributario !== "mei";
+      });
+
+      if (situationCompanies.length === 0) continue;
+
+      if (currentY > 170) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFontSize(10);
+      doc.setFont("Ubuntu", "bold");
+      doc.setTextColor(100, 100, 100);
+      doc.text(`SITUAÇÃO: ${sit.label.toUpperCase()}`, 14, currentY + 5);
+      currentY += 8;
+      doc.setTextColor(0, 0, 0);
+
+      const body: string[][] = [];
+      
+      situationCompanies.forEach(company => {
+        const records = ocorrencias.filter(o => o.empresa_id === company.id);
+        if (records.length > 0) {
+          records.forEach(r => {
+            body.push([
+              format(new Date(r.data_ocorrencia), "dd/MM/yyyy"),
+              company.nome_empresa,
+              r.departamento || "—",
+              r.descricao || "—"
+            ]);
+          });
+        } else {
+          body.push(["—", company.nome_empresa, "—", "—"]);
+        }
+      });
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Data', 'Empresa', 'Depto.', 'Descrição']],
+        body: body,
+        theme: 'grid',
+        headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
+        styles: { font: 'Ubuntu' },
+        columnStyles: { 3: { cellWidth: 80 } },
+        didDrawPage: (data) => {
+          currentY = data.cursor?.y || currentY;
+        }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+    }
 
     doc.save(`Relatorio_Ocorrencias_${competencia}.pdf`);
   };
@@ -525,14 +711,40 @@ const RelatoriosPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-card-foreground">Central de Relatórios</h1>
           <p className="text-muted-foreground">Emissão de relatórios mensais consolidados em PDF</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Calendar className="text-primary" />
-          <input 
-            type="month" 
-            value={competencia} 
-            onChange={(e) => setCompetencia(e.target.value)}
-            className="px-4 py-2 border border-border rounded-xl bg-background text-sm font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm"
-          />
+        
+        <div className="flex flex-wrap items-center gap-6">
+          {/* Situation Filter */}
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Filtrar por Situação</span>
+            <div className="flex flex-wrap items-center gap-2 bg-background/50 p-1.5 rounded-2xl border border-border/50 shadow-inner">
+              {SITUATIONS.map(sit => (
+                <button
+                  key={sit.id}
+                  onClick={() => toggleSituation(sit.id)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all ${
+                    selectedSituations.includes(sit.id)
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-105"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {sit.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Competência</span>
+            <div className="flex items-center gap-3 bg-background/50 p-1.5 rounded-2xl border border-border/50 shadow-inner">
+              <Calendar size={16} className="text-primary ml-1" />
+              <input 
+                type="month" 
+                value={competencia} 
+                onChange={(e) => setCompetencia(e.target.value)}
+                className="bg-transparent border-none text-sm font-bold outline-none focus:ring-0 w-32"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

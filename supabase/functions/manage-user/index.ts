@@ -61,9 +61,19 @@ Deno.serve(async (req) => {
       }
     }
     else if (action === "deleteUser") {
-      await supabaseAdmin.from("profiles").delete().eq("user_id", target_user_id);
+      // First, we delete the profile. Cascades should handle the rest in public schema.
+      const { error: profileError } = await supabaseAdmin.from("profiles").delete().eq("user_id", target_user_id);
+      if (profileError) {
+        console.error("Error deleting profile:", profileError);
+        throw new Error(`Erro ao excluir perfil: ${profileError.message}`);
+      }
+
+      // Then delete the auth user
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(target_user_id);
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error("Error deleting auth user:", deleteError);
+        throw deleteError;
+      }
     }
     else {
       throw new Error(`Ação desconhecida: ${action}`);
