@@ -1,7 +1,7 @@
 
 import React from "react";
 import { format } from "date-fns";
-import { CheckCircle, Clock } from "lucide-react";
+import { CheckCircle, Clock, Plus } from "lucide-react";
 import { HonorarioMensal } from "@/types/honorarios";
 
 interface HonorariosMensalTableProps {
@@ -9,11 +9,29 @@ interface HonorariosMensalTableProps {
   competencia: string;
   onTogglePago: (id: string, currentValue: boolean) => void;
   onToggleStatus: (id: string, currentValue: string) => void;
+  onUpdateValor: (id: string, newValue: number) => void;
 }
 
 const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
-export const HonorariosMensalTable = ({ data, competencia, onTogglePago, onToggleStatus }: HonorariosMensalTableProps) => {
+export const HonorariosMensalTable = ({ data, competencia, onTogglePago, onToggleStatus, onUpdateValor }: HonorariosMensalTableProps) => {
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [editValue, setEditValue] = React.useState<string>("");
+
+  const handleStartEdit = (record: HonorarioMensal) => {
+    setEditingId(record.id || null);
+    setEditValue(String(record.valor_total || 0));
+  };
+
+  const handleSave = () => {
+    if (editingId) {
+      const val = parseFloat(editValue.replace(",", "."));
+      if (!isNaN(val)) {
+        onUpdateValor(editingId, val);
+      }
+    }
+    setEditingId(null);
+  };
   return (
     <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -40,8 +58,28 @@ export const HonorariosMensalTable = ({ data, competencia, onTogglePago, onToggl
                   <td className="px-5 py-4 font-medium text-card-foreground">
                     {record.empresas?.nome_empresa}
                   </td>
-                  <td className="px-5 py-4 font-bold text-primary text-right">
-                    {formatCurrency(record.valor_total)}
+                  <td className="px-5 py-4 font-bold text-primary text-right cursor-pointer group" onDoubleClick={() => handleStartEdit(record)}>
+                    {editingId === record.id ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        className="w-24 px-2 py-1 text-right border border-primary rounded bg-background outline-none"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={handleSave}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSave();
+                          if (e.key === "Escape") setEditingId(null);
+                        }}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-end gap-2">
+                        <span>{formatCurrency(record.valor_total)}</span>
+                        <div className="opacity-0 group-hover:opacity-50 transition-opacity">
+                           <Plus size={10} className="rotate-45" /> 
+                        </div>
+                      </div>
+                    )}
                   </td>
                   <td className="px-5 py-4 text-center text-muted-foreground">
                     {record.data_vencimento ? format(new Date(record.data_vencimento), 'dd/MM/yyyy') : '—'}

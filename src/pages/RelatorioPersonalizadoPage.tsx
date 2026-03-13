@@ -4,13 +4,15 @@ import {
   FileText, Download, Calendar, DollarSign, Calculator,
   Shield, Users, AlertCircle, Building2,
   CheckCircle2, Circle, ChevronRight, ChevronLeft,
-  ArrowLeft, Search, Filter, Layers, ListChecks
+  ArrowLeft, Search, Filter, Layers, ListChecks,
+  FileSpreadsheet
 } from "lucide-react";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
 
 interface ModuleConfig {
@@ -33,8 +35,8 @@ const COMPANY_FIELDS = [
 
 const licencaLabels: Record<string, string> = { 
   alvara: "Alvará", 
-  vigilancia_sanitaria: "Vigilância Sanitária", 
-  corpo_bombeiros: "Corpo de Bombeiros", 
+  vigilancia_sanitaria: "Vigilância", 
+  corpo_bombeiros: "Bombeiros", 
   meio_ambiente: "Meio Ambiente" 
 };
 
@@ -159,8 +161,8 @@ const MODULES_CONFIG: ModuleConfig[] = [
     fields: [
       { id: "tipo_licenca", label: "Tipo", accessor: (i: any) => licencaLabels[i.tipo_licenca] || i.tipo_licenca },
       { id: "status", label: "Status", accessor: (i: any) => i.status ? i.status.charAt(0).toUpperCase() + i.status.slice(1) : "—" },
-      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => i.data_vencimento ? format(new Date(i.data_vencimento + "T12:00:00"), "dd/MM/yyyy") : "—" },
-      { id: "data_envio", label: "Data de Envio", accessor: (i: any) => i.data_envio ? format(new Date(i.data_envio + "T12:00:00"), "dd/MM/yyyy") : "—" },
+      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
+      { id: "data_envio", label: "Data de Envio", accessor: (i: any) => safeFormatDate(i.data_envio) },
       { id: "forma_envio", label: "Forma de Envio" },
     ]
   },
@@ -227,9 +229,9 @@ const MODULES_CONFIG: ModuleConfig[] = [
       { id: "ano_exercicio", label: "Ano Base" },
       { id: "valor_a_pagar", label: "Valor a Pagar", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor_a_pagar || 0) },
       { id: "status_pago", label: "Pagamento", accessor: (i) => i.status_pago ? "Pago" : "Pendente" },
-      { id: "data_pagamento", label: "Data de Pgto", accessor: (i) => i.data_pagamento ? format(new Date(i.data_pagamento + "T12:00:00"), "dd/MM/yyyy") : "—" },
+      { id: "data_pagamento", label: "Data de Pgto", accessor: (i) => safeFormatDate(i.data_pagamento) },
       { id: "status_transmissao", label: "Transmissão", accessor: (i) => i.status_transmissao ? i.status_transmissao.charAt(0).toUpperCase() + i.status_transmissao.slice(1) : "Pendente" },
-      { id: "data_transmissao", label: "Data Transmissão", accessor: (i) => i.data_transmissao ? format(new Date(i.data_transmissao + "T12:00:00"), "dd/MM/yyyy") : "—" },
+      { id: "data_transmissao", label: "Data Transmissão", accessor: (i) => safeFormatDate(i.data_transmissao) },
       { id: "transmitido_por", label: "Transmitido Por" }
     ]
   },
@@ -241,7 +243,7 @@ const MODULES_CONFIG: ModuleConfig[] = [
     color: "bg-blue-600",
     fields: [
       { id: "dctf_web_gerada", label: "DCTF Web Gerada", accessor: (i) => i.dctf_web_gerada ? "Sim" : "Não" },
-      { id: "dctf_web_data_envio", label: "Data de Envio DCTF", accessor: (i) => i.dctf_web_data_envio ? format(new Date(i.dctf_web_data_envio + "T12:00:00"), "dd/MM/yyyy") : "—" },
+      { id: "dctf_web_data_envio", label: "Data de Envio DCTF", accessor: (i) => safeFormatDate(i.dctf_web_data_envio) },
     ]
   },
   {
@@ -251,6 +253,13 @@ const MODULES_CONFIG: ModuleConfig[] = [
     icon: <AlertCircle size={18} />,
     color: "bg-orange-600",
     fields: [
+      { id: "tipo", label: "Item" },
+      { id: "status", label: "Situação" },
+      { id: "data", label: "Vencimento", accessor: (i) => safeFormatDate(i.data) },
+      { id: "status_taxa", label: "Status Taxa" },
+      { id: "data_envio", label: "Data de Envio" },
+      { id: "forma_envio", label: "Forma de Envio" },
+      // Virtual field IDs for the UI selector
       { id: "certificados", label: "Certificado Digital" },
       { id: "procuracoes", label: "Procurações" },
       { id: "certidoes", label: "Certidões" },
@@ -274,6 +283,17 @@ const SITUATIONS = [
   { id: "entregue", label: "Entregues" }
 ];
 
+const safeFormatDate = (dateStr: string | null | undefined) => {
+  if (!dateStr) return "—";
+  try {
+    const d = new Date(dateStr + (dateStr.includes("T") ? "" : "T12:00:00"));
+    if (isNaN(d.getTime())) return "—";
+    return format(d, "dd/MM/yyyy");
+  } catch (e) {
+    return "—";
+  }
+};
+
 const RelatorioPersonalizadoPage: React.FC = () => {
   const navigate = useNavigate();
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
@@ -281,7 +301,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
   const [selectedFields, setSelectedFields] = useState<Record<string, string[]>>({});
   const [selectedCompanyFields, setSelectedCompanyFields] = useState<string[]>([]);
   const [selectedSituations, setSelectedSituations] = useState<string[]>(["ativa", "mei", "paralisada", "baixada", "entregue"]);
-  const [loading, setLoading] = useState(false);
+  const [loadingType, setLoadingType] = useState<'pdf' | 'excel' | null>(null);
   const [headerConfig, setHeaderConfig] = useState<any>(null);
 
   useEffect(() => {
@@ -355,13 +375,13 @@ const RelatorioPersonalizadoPage: React.FC = () => {
     doc.line(10, 40, pageWidth - 10, 40);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (exportFormat: 'pdf' | 'excel' = 'pdf') => {
     if (selectedModules.length === 0) {
       toast.error("Selecione pelo menos um módulo");
       return;
     }
 
-    setLoading(true);
+    setLoadingType(exportFormat);
     try {
       // 1. Fetch All Companies First (Filtered by Situation)
       const situacoesWithoutMei = selectedSituations.filter(s => s !== "mei");
@@ -385,19 +405,24 @@ const RelatorioPersonalizadoPage: React.FC = () => {
       if (companiesError) throw companiesError;
       if (!allCompanies || allCompanies.length === 0) {
         toast.error("Nenhuma empresa encontrada para as situações selecionadas.");
-        setLoading(false);
+        setLoadingType(null);
         return;
       }
 
-      const doc = new jsPDF({ orientation: 'landscape' });
-      await generatePDFHeader(doc);
-      const pageWidth = doc.internal.pageSize.getWidth();
-
-      doc.setFontSize(14);
-      doc.setFont("Ubuntu", "bold");
-      doc.text(`RELATÓRIO PERSONALIZADO DO SISTEMA - ${competencia}`, pageWidth / 2, 50, { align: "center" });
-
+      let doc: jsPDF | null = null;
+      let pageWidth = 0;
       let currentY = 60;
+      let excelAoA: any[][] = []; // Array of Arrays for Excel
+
+      if (exportFormat === 'pdf') {
+        doc = new jsPDF({ orientation: 'landscape' });
+        await generatePDFHeader(doc);
+        pageWidth = doc.internal.pageSize.getWidth();
+
+        doc.setFontSize(14);
+        doc.setFont("Ubuntu", "bold");
+        doc.text(`RELATÓRIO PERSONALIZADO DO SISTEMA - ${competencia}`, pageWidth / 2, 50, { align: "center" });
+      }
 
       for (const modId of selectedModules) {
         const mod = MODULES_CONFIG.find(m => m.id === modId)!;
@@ -417,19 +442,23 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           };
 
           const [{ data: licData }, { data: certData }, { data: procData }, { data: certidoesData }, { data: taxasData }] = await Promise.all([
-            // Only fetch if corresponding sources are selected as "fields"
+            // Licenses
             fieldsToInclude.some(f => f.startsWith("licenca_")) 
               ? supabase.from("licencas").select("*").eq("status", "com_vencimento").not("vencimento", "is", null)
               : Promise.resolve({ data: [] }),
+            // Certificates
             fieldsToInclude.includes("certificados")
               ? supabase.from("certificados_digitais").select("*").not("data_vencimento", "is", null)
               : Promise.resolve({ data: [] }),
+            // Proxies
             fieldsToInclude.includes("procuracoes")
               ? supabase.from("procuracoes").select("*").not("data_vencimento", "is", null)
               : Promise.resolve({ data: [] }),
+            // Certidaes
             fieldsToInclude.includes("certidoes")
               ? supabase.from("certidoes").select("*").not("vencimento", "is", null)
               : Promise.resolve({ data: [] }),
+            // Taxes
             fieldsToInclude.some(f => f.startsWith("taxa_"))
               ? (supabase.from("licencas_taxas" as any).select("*").not("data_vencimento", "is", null) as any)
               : Promise.resolve({ data: [] }),
@@ -443,7 +472,12 @@ const RelatorioPersonalizadoPage: React.FC = () => {
 
           licData?.forEach((l: any) => {
             if (fieldsToInclude.includes(licMap[l.tipo_licenca])) {
-              compiledVenc.push({ empresa_id: l.empresa_id, tipo: `Licença: ${licencaLabels[l.tipo_licenca] || l.tipo_licenca}`, data: l.vencimento, status: calcStatus(l.vencimento) });
+              compiledVenc.push({ 
+                empresa_id: l.empresa_id, 
+                tipo: `Licença: ${licencaLabels[l.tipo_licenca] || l.tipo_licenca}`, 
+                data: l.vencimento, 
+                status: calcStatus(l.vencimento) 
+              });
             }
           });
           
@@ -466,9 +500,10 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                 tipo: `Taxa: ${licencaLabels[t.tipo_licenca] || t.tipo_licenca}`, 
                 data: t.data_vencimento, 
                 status: calcStatus(t.data_vencimento),
-                db_status: t.status,
-                data_envio: t.data_envio,
-                forma_envio: t.forma_envio
+                // Extra fields for taxes
+                status_taxa: t.status ? t.status.charAt(0).toUpperCase() + t.status.slice(1) : "Pendente",
+                data_envio: safeFormatDate(t.data_envio),
+                forma_envio: t.forma_envio || "—"
               });
             }
           });
@@ -521,20 +556,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
             const catData = moduleData.filter((d: any) => d.categoria === cat);
             if (catData.length === 0) continue;
 
-            if (currentY > 260) {
-              doc.addPage();
-              currentY = 20;
-            }
-
-            doc.setFontSize(10);
-            doc.setFont("Ubuntu", "bold");
-            doc.setTextColor(100, 100, 100);
-            doc.text(`${cat.toUpperCase()} (${competencia.split('-')[0]})`, 14, currentY + 5);
-            currentY += 8;
-            doc.setTextColor(0, 0, 0);
-
             const moduleHeaders = mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => f.label);
-            // Contribuinte replaces Empresa. Company Fields are ignored since there is no company.
             const head = [moduleHeaders];
 
             const body = catData.map((item: any) => [
@@ -546,21 +568,41 @@ const RelatorioPersonalizadoPage: React.FC = () => {
               })
             ]);
 
-            autoTable(doc, {
-              startY: currentY,
-              head: head,
-              body: body,
-              theme: 'grid',
-              headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 8 },
-              bodyStyles: { fontSize: 7, cellPadding: 2 },
-              styles: { font: 'Ubuntu' },
-              margin: { horizontal: 10 },
-              didDrawPage: (data) => {
-                currentY = data.cursor?.y || currentY;
+            if (exportFormat === 'pdf' && doc) {
+              if (currentY > 260) {
+                doc.addPage();
+                currentY = 20;
               }
-            });
 
-            currentY = (doc as any).lastAutoTable.finalY + 10;
+              doc.setFontSize(10);
+              doc.setFont("Ubuntu", "bold");
+              doc.setTextColor(100, 100, 100);
+              doc.text(`${cat.toUpperCase()} (${competencia.split('-')[0]})`, 14, currentY + 5);
+              currentY += 8;
+              doc.setTextColor(0, 0, 0);
+
+              autoTable(doc, {
+                startY: currentY,
+                head: head,
+                body: body,
+                theme: 'grid',
+                headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 12 },
+                bodyStyles: { fontSize: 12, cellPadding: 2 },
+                styles: { font: 'Ubuntu' },
+                margin: { horizontal: 5 },
+                didDrawPage: (data) => {
+                  currentY = data.cursor?.y || currentY;
+                }
+              });
+
+              currentY = (doc as any).lastAutoTable.finalY + 10;
+            } else if (exportFormat === 'excel') {
+              // Write Excel data for IRPF block
+              excelAoA.push([]);
+              excelAoA.push([`--- IRPF: ${cat.toUpperCase()} (${competencia.split('-')[0]}) ---`]);
+              excelAoA.push(head[0]);
+              body.forEach(row => excelAoA.push(row));
+            }
           }
           
           continue;
@@ -580,7 +622,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           const situationRows: any[] = [];
           
           situationCompanies.forEach(company => {
-            const companyRecords = moduleData.filter(d => d.empresa_id === company.id);
+            const companyRecords = moduleData.filter((d: any) => d.empresa_id === company.id);
             
             if (companyRecords.length > 0) {
               companyRecords.forEach(record => {
@@ -592,140 +634,225 @@ const RelatorioPersonalizadoPage: React.FC = () => {
             }
           });
 
-          // Situation Sub-header
-          if (currentY > 260) {
-            doc.addPage();
-            currentY = 20;
+          // Build Table Headers
+          const extraHeaders = COMPANY_FIELDS.filter(f => selectedCompanyFields.includes(f.id)).map(f => f.label);
+          
+          let moduleHeaders: string[] = [];
+          let activeFields: ModuleConfig['fields'] = [];
+          
+          if (modId === "vencimentos") {
+            // Adaptive headers for Vencimentos
+            const showTaxColumns = fieldsToInclude.some(f => f.startsWith("taxa_"));
+            activeFields = [
+              { id: "tipo", label: "Item" },
+              { id: "status", label: "Situação" },
+              { id: "data", label: "Vencimento", accessor: (i) => safeFormatDate(i.data) }
+            ];
+            
+            if (showTaxColumns) {
+              activeFields.push(
+                { id: "status_taxa", label: "Status Taxa" },
+                { id: "data_envio", label: "Data de Envio" },
+                { id: "forma_envio", label: "Forma de Envio" }
+              );
+            }
+            moduleHeaders = activeFields.map(f => f.label);
+          } else {
+            activeFields = mod.fields.filter(f => fieldsToInclude.includes(f.id));
+            moduleHeaders = activeFields.map(f => f.label);
           }
 
-          doc.setFontSize(10);
-          doc.setFont("Ubuntu", "bold");
-          doc.setTextColor(100, 100, 100);
-          doc.text(`SITUAÇÃO: ${sit.label.toUpperCase()}`, 14, currentY + 5);
-          currentY += 8;
-          doc.setTextColor(0, 0, 0);
+          const head = [["Empresa", ...extraHeaders, ...moduleHeaders]];
 
-          const fieldsToInclude = selectedFields[modId] || [];
-          
-          const companyHeaders = COMPANY_FIELDS.filter(f => selectedCompanyFields.includes(f.id)).map(f => f.label);
-          const moduleHeaders = mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => f.label);
-
-          const head = modId === "vencimentos" 
-            ? [["Empresa", ...companyHeaders, "Tipo de Documento", "Vencimento", "Situação", "Status Taxa", "Data de Envio", "Forma de Envio"]]
-            : [["Empresa", ...companyHeaders, ...moduleHeaders]];
-
-          const body = situationRows.map(item => {
+          // Build Table Body
+          const body = situationRows.map(row => {
             const companyValues = COMPANY_FIELDS.filter(f => selectedCompanyFields.includes(f.id)).map(f => {
-              const val = item[f.id];
-              if (val === null || val === undefined) return "—";
-              if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
-                try { return format(new Date(val + "T12:00:00"), "dd/MM/yyyy"); } catch { return val; }
-              }
-              return String(val);
+              const val = row[f.id];
+              if (f.id === "data_abertura" && val) return safeFormatDate(val);
+              return val || "—";
             });
 
-            const moduleValues = modId === "vencimentos" 
-              ? [
-                  item.tipo || "—", 
-                  item.data ? format(new Date(item.data + "T12:00:00"), "dd/MM/yyyy") : "—", 
-                  item.status || "—",
-                  item.db_status ? item.db_status.charAt(0).toUpperCase() + item.db_status.slice(1) : "—",
-                  item.data_envio ? format(new Date(item.data_envio + "T12:00:00"), "dd/MM/yyyy") : "—",
-                  item.forma_envio || "—"
-                ]
-              : mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => {
-                  if (item.isPartial && modId !== "societario") return "—";
-                  
-                  const val = item[f.id];
-                  if (f.accessor) return f.accessor(item);
-                  if (val === null || val === undefined) return "—";
-                  
-                  if (typeof val === 'string' && val.includes('T') && val.length > 10) {
-                    try { return format(new Date(val), "dd/MM/yyyy HH:mm"); } catch { return val; }
-                  }
-                  if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
-                    try { return format(new Date(val + "T12:00:00"), "dd/MM/yyyy"); } catch { return val; }
-                  }
-                  return String(val);
-                });
-
-            return [
-              item.nome_empresa || "—",
-              ...companyValues,
-              ...moduleValues
-            ];
+            const moduleValues = activeFields.map(f => {
+              if (row.isPartial) return "—";
+              const val = row[f.id];
+              if (f.accessor) return f.accessor(row);
+              if (val === null || val === undefined) return "—";
+              return String(val);
           });
 
-          autoTable(doc, {
-            startY: currentY,
-            head: head,
-            body: body,
-            theme: 'grid',
-            headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 8 },
-            bodyStyles: { fontSize: 7, cellPadding: 2 },
-            styles: { font: 'Ubuntu' },
-            margin: { horizontal: 10 },
-            didDrawPage: (data) => {
-              currentY = data.cursor?.y || currentY;
+            return [row.nome_empresa, ...companyValues, ...moduleValues];
+          });
+
+          if (exportFormat === 'pdf' && doc) {
+            // Situation Sub-header
+            if (currentY > 260) {
+              doc.addPage();
+              currentY = 20;
             }
-          });
 
-          currentY = (doc as any).lastAutoTable.finalY + 10;
+            doc.setFontSize(10);
+            doc.setFont("Ubuntu", "bold");
+            doc.setTextColor(100, 100, 100);
+            doc.text(`SITUAÇÃO: ${sit.label.toUpperCase()}`, 14, currentY + 5);
+            currentY += 8;
+            doc.setTextColor(0, 0, 0);
+
+            autoTable(doc, {
+              startY: currentY,
+              head: head,
+              body: body,
+              theme: 'grid',
+              headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 12 },
+              bodyStyles: { fontSize: 12, cellPadding: 2 },
+              styles: { font: 'Ubuntu' },
+              margin: { horizontal: 5 },
+              didDrawPage: (data) => {
+                currentY = data.cursor?.y || currentY;
+              }
+            });
+
+            currentY = (doc as any).lastAutoTable.finalY + 10;
+          } else if (exportFormat === 'excel') {
+            // Write Excel data for this situation
+            excelAoA.push([]);
+            excelAoA.push([`--- MÓDULO: ${mod.label.toUpperCase()} | SITUAÇÃO: ${sit.label.toUpperCase()} ---`]);
+            excelAoA.push(head[0]);
+            body.forEach(row => excelAoA.push(row));
+          }
         }
       }
 
-      doc.save(`Relatorio_Personalizado_${competencia}.pdf`);
-      toast.success("Relatório gerado com sucesso!");
+      if (exportFormat === 'pdf' && doc) {
+        doc.save(`Relatorio_Personalizado_${competencia}.pdf`);
+        toast.success("Relatório PDF gerado com sucesso!");
+      } else if (exportFormat === 'excel') {
+        const ws = XLSX.utils.aoa_to_sheet(excelAoA);
+        
+        // Auto-fit columns
+        const colWidths = excelAoA.reduce((acc: any[], row: any[]) => {
+          row.forEach((cell, i) => {
+            const cellLen = String(cell || "").length;
+            acc[i] = Math.max(acc[i] || 10, cellLen + 2);
+          });
+          return acc;
+        }, []);
+        ws['!cols'] = colWidths.map(w => ({ wch: w }));
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+        
+        XLSX.writeFile(wb, `Relatorio_Personalizado_${competencia}.xlsx`);
+        toast.success("Relatório Excel exportado com sucesso!");
+      }
+
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao gerar PDF.");
+      toast.error(`Erro ao gerar ${exportFormat.toUpperCase()}.`);
     } finally {
-      setLoading(false);
+      setLoadingType(null);
     }
   };
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-card p-6 rounded-3xl border border-border/50 shadow-sm shadow-primary/5">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-black text-card-foreground">Central de Relatórios</h1>
-            <p className="text-muted-foreground text-sm">Monte seu relatório selecionando módulos e dados específicos</p>
-          </div>
-        </div>
+      <div className="bg-card rounded-[2rem] border border-border/50 shadow-sm shadow-primary/5 overflow-hidden">
+        <div className="p-8 space-y-8">
+          {/* Top Row: Title and Main Config Status */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-black text-card-foreground tracking-tight">Central de Relatórios</h1>
+              <p className="text-muted-foreground text-sm">Configure e exporte documentos personalizados</p>
+            </div>
 
-        <div className="flex flex-wrap items-center gap-6">
-          {/* Situation Filter */}
-          <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Filtrar por Situação</span>
-            <div className="flex flex-wrap items-center gap-2 bg-background/50 p-1.5 rounded-2xl border border-border/50 shadow-inner">
-              {SITUATIONS.map(sit => (
-                <button
-                  key={sit.id}
-                  onClick={() => toggleSituation(sit.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    selectedSituations.includes(sit.id)
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-105"
-                      : "text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {sit.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex flex-col items-end px-4 border-r border-border/50">
+                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Status da Seleção</span>
+                <span className="text-sm font-bold text-primary">
+                  {selectedModules.length} {selectedModules.length === 1 ? "módulo selecionado" : "módulos selecionados"}
+                </span>
+              </div>
+
+               <div className="flex items-center gap-2">
+                 <button
+                    onClick={() => handleGenerate('excel')}
+                    disabled={loadingType !== null || selectedModules.length === 0}
+                    className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm transition-all shadow-sm ${
+                      loadingType !== null || selectedModules.length === 0
+                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                        : "bg-surface text-foreground border border-border/50 hover:bg-muted active:scale-95"
+                    }`}
+                 >
+                   {loadingType === 'excel' ? (
+                     <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+                   ) : (
+                     <FileSpreadsheet size={18} className="text-emerald-600" />
+                   )}
+                   <span>{loadingType === 'excel' ? "Gerando..." : "Excel"}</span>
+                 </button>
+
+                 <button
+                    onClick={() => handleGenerate('pdf')}
+                    disabled={loadingType !== null || selectedModules.length === 0}
+                    className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 ${
+                      loadingType !== null || selectedModules.length === 0
+                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                        : "bg-primary text-white shadow-primary/20 hover:scale-105"
+                    }`}
+                 >
+                   {loadingType === 'pdf' ? (
+                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                   ) : (
+                     <Download size={18} />
+                   )}
+                   <span>{loadingType === 'pdf' ? "Gerando..." : "PDF"}</span>
+                 </button>
+               </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Período de Referência</span>
-            <div className="flex items-center gap-3 bg-background/50 p-1.5 rounded-2xl border border-border/50 shadow-inner">
-              <Calendar size={16} className="text-primary ml-1" />
-              <input 
-                type="month" 
-                value={competencia} 
-                onChange={(e) => setCompetencia(e.target.value)}
-                className="bg-transparent border-none text-sm font-bold outline-none focus:ring-0 w-32"
-              />
+          {/* Bottom Row: Filters Hub */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-border/40">
+            {/* Filter: Situations */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <Filter size={14} className="text-primary" />
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Filtrar Empresas por Situação</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {SITUATIONS.map(sit => (
+                  <button
+                    key={sit.id}
+                    onClick={() => toggleSituation(sit.id)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                      selectedSituations.includes(sit.id)
+                        ? "bg-primary/10 border-primary/30 text-primary shadow-sm"
+                        : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/20"
+                    }`}
+                  >
+                    {sit.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Filter: Period */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <Calendar size={14} className="text-primary" />
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Período de Referência (Mês/Ano)</span>
+              </div>
+              <div className="flex items-center w-full max-w-sm">
+                <div className="flex items-center gap-3 bg-background/50 p-3 rounded-2xl border border-border/40 shadow-inner w-full group focus-within:border-primary/40 transition-colors">
+                  <input 
+                    type="month" 
+                    value={competencia} 
+                    onChange={(e) => setCompetencia(e.target.value)}
+                    className="bg-transparent border-none text-sm font-bold outline-none focus:ring-0 w-full"
+                  />
+                  <ChevronRight size={16} className="text-muted-foreground/30" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -830,28 +957,26 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                     </div>
                     
                     <div className="p-6">
-                      {modId === "vencimentos" ? (
-                        <p className="text-sm text-muted-foreground">O modelo consolidado de vencimentos é pré-formatado e listará os status. As colunas da empresa selecionadas acima serão incluídas.</p>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                          {mod.fields.map(field => (
-                            <button
-                              key={field.id}
-                              onClick={() => toggleField(modId, field.id)}
-                              className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
-                                selectedFields[modId]?.includes(field.id)
-                                  ? "border-primary/40 bg-primary/5"
-                                  : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
-                              }`}
-                            >
-                               <div className={`transition-colors ${selectedFields[modId]?.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
-                                 {selectedFields[modId]?.includes(field.id) ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-                               </div>
-                               <span className="text-xs font-bold">{field.label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {mod.fields
+                          .filter(f => !["tipo", "status", "data", "status_taxa", "data_envio", "forma_envio"].includes(f.id))
+                          .map(field => (
+                          <button
+                            key={field.id}
+                            onClick={() => toggleField(modId, field.id)}
+                            className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
+                              selectedFields[modId]?.includes(field.id)
+                                ? "border-primary/40 bg-primary/5"
+                                : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
+                            }`}
+                          >
+                             <div className={`transition-colors ${selectedFields[modId]?.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
+                               {selectedFields[modId]?.includes(field.id) ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                             </div>
+                             <span className="text-xs font-bold">{field.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 );
@@ -859,34 +984,6 @@ const RelatorioPersonalizadoPage: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Floating Action Bar */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-lg px-4">
-         <div className="bg-card/80 backdrop-blur-xl border border-primary/20 rounded-full p-2 shadow-2xl flex items-center justify-between">
-            <div className="pl-6">
-               <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Configuração</p>
-               <p className="text-sm font-bold text-card-foreground">
-                 {selectedModules.length} módulos selecionados
-               </p>
-            </div>
-            <button
-               onClick={handleGenerate}
-               disabled={loading || selectedModules.length === 0}
-               className={`flex items-center gap-2 px-8 py-3 rounded-full font-black text-sm transition-all ${
-                 loading || selectedModules.length === 0
-                   ? "bg-muted text-muted-foreground cursor-not-allowed"
-                   : "bg-primary text-white shadow-lg shadow-primary/30 hover:scale-105 active:scale-95"
-               }`}
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Download size={18} />
-              )}
-              {loading ? "Gerando..." : "Gerar Relatório PDF"}
-            </button>
-         </div>
       </div>
     </div>
   );

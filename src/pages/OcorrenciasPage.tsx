@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { FileText, Download, Building2, User, Search, Plus, Trash2, Calendar, History as HistoryIcon, Settings2, Upload, Image as ImageIcon } from "lucide-react";
+import { FileText, Download, Building2, User, Search, Plus, Trash2, Calendar, History as HistoryIcon, Settings2, Upload, LayoutGrid, List, Image as ImageIcon } from "lucide-react";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import logoCaduceu from "@/assets/logo-caduceu.png";
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
+import { OcorrenciasKanban } from "@/components/ocorrencias/OcorrenciasKanban";
 
 interface HeaderConfig {
     logoUrl: string;
@@ -53,6 +54,7 @@ interface Ocorrencia {
     cidade: string;
     estado: string;
     data_ocorrencia: string;
+    status: string; // pendente, em_andamento, concluido
     created_at: string;
     empresas: {
         nome_empresa: string;
@@ -76,6 +78,7 @@ const OcorrenciasPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<"geral" | "config">("geral");
+    const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
     const [headerConfig, setHeaderConfig] = useState<HeaderConfig>(DEFAULT_HEADER);
     const [savingConfig, setSavingConfig] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -131,6 +134,7 @@ const OcorrenciasPage: React.FC = () => {
                     cidade,
                     estado,
                     data_ocorrencia: dataOcorrencia,
+                    status: 'pendente',
                     usuario_id: userData?.userId
                 }
             ]).select("*, empresas(nome_empresa, cnpj)").single();
@@ -299,6 +303,20 @@ const OcorrenciasPage: React.FC = () => {
             toast.success("Ocorrência excluída");
         } catch (error) {
             toast.error("Erro ao excluir");
+        }
+    };
+
+    const handleUpdateStatus = async (id: string, newStatus: string) => {
+        try {
+            // Optimistic update
+            setOcorrencias(ocorrencias.map(o => o.id === id ? { ...o, status: newStatus } : o));
+            
+            const { error } = await (supabase.from("ocorrencias") as any).update({ status: newStatus }).eq("id", id);
+            if (error) throw error;
+        } catch (error: any) {
+            toast.error("Erro ao atualizar status do card: " + error.message);
+            // Revert state
+            fetchInitialData();
         }
     };
 
@@ -581,11 +599,35 @@ const OcorrenciasPage: React.FC = () => {
 
                     {/* List of Recent Occurrences */}
                     <div className="lg:col-span-2 space-y-4">
-                        <div className="module-card">
-                            <h3 className="text-lg font-bold text-card-foreground flex items-center gap-2 mb-4">
-                                <HistoryIcon size={20} className="text-primary" /> Histórico Recente
-                            </h3>
+                        <div className="flex items-center justify-between mb-2">
+                           <h3 className="text-lg font-bold text-card-foreground flex items-center gap-2">
+                               <HistoryIcon size={20} className="text-primary" /> Board de Ocorrências
+                           </h3>
+                           <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50 border border-border/50">
+                                <button 
+                                  onClick={() => setViewMode("kanban")}
+                                  className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                                >
+                                  <LayoutGrid size={18} />
+                                </button>
+                                <button 
+                                  onClick={() => setViewMode("list")}
+                                  className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                                >
+                                  <List size={18} />
+                                </button>
+                           </div>
+                        </div>
 
+                        {viewMode === "kanban" ? (
+                            <OcorrenciasKanban 
+                               ocorrencias={ocorrencias}
+                               onUpdateStatus={handleUpdateStatus}
+                               onGeneratePdf={handleGeneratePdf}
+                               onDelete={handleDelete}
+                            />
+                        ) : (
+                        <div className="module-card">
                             <div className="space-y-3">
                                 {ocorrencias.length === 0 && !loading && (
                                     <div className="text-center py-12 text-muted-foreground">
@@ -628,6 +670,7 @@ const OcorrenciasPage: React.FC = () => {
                                 ))}
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
             )}

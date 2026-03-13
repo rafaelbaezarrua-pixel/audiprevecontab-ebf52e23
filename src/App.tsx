@@ -36,6 +36,7 @@ const AgendamentoFormPage = lazy(() => import("@/pages/AgendamentoFormPage"));
 const UsuarioFormPage = lazy(() => import("@/pages/UsuarioFormPage"));
 const OcorrenciasPage = lazy(() => import("@/pages/OcorrenciasPage"));
 const ConfiguracoesPage = lazy(() => import("@/pages/ConfiguracoesPage"));
+const GestorAlertasPage = lazy(() => import("@/pages/GestorAlertasPage"));
 const CompletarPerfilPage = lazy(() => import("@/pages/CompletarPerfilPage"));
 const TermosPage = lazy(() => import("@/pages/TermosPage"));
 const PerfilPage = lazy(() => import("@/pages/PerfilPage"));
@@ -162,6 +163,7 @@ const App = () => (
                   <Route path="/perfil" element={<PerfilPage />} />
                   <Route path="/notificacoes" element={<NotificacoesPage />} />
                   <Route path="/configuracoes" element={<AdminRoute><ConfiguracoesPage /></AdminRoute>} />
+                  <Route path="/configuracoes/alertas" element={<AdminRoute><GestorAlertasPage /></AdminRoute>} />
                   <Route path="/configuracoes/auditoria" element={<AdminRoute><AuditoriaPage /></AdminRoute>} />
                 </Route>
 

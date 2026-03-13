@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Building2, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, Plus, Clock } from "lucide-react";
 import { Empresa } from "@/types/societario";
 import { HonorarioConfig, HonorarioMensal } from "@/types/honorarios";
 import { HonorarioConfigForm } from "./HonorarioConfigForm";
@@ -28,6 +28,11 @@ interface HonorariosEmpresasViewProps {
   competenciaSelecionada: Record<string, string>;
   setCompetenciaSelecionada: (id: string, value: string) => void;
   onCancelMensalForm: (id: string) => void;
+  pagination: { pageIndex: number; pageSize: number };
+  onPageChange: (page: number) => void;
+  totalCount: number;
+  loading: boolean;
+  onUpdateMensalValor: (id: string, recordId: string, newValue: number) => void;
 }
 
 const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -36,13 +41,43 @@ export const HonorariosEmpresasView = ({
   empresas, expanded, onToggleExpand, activeTabs, setActiveTab,
   configs, configForms, onUpdateConfigField, onAddOutroServico, onUpdateOutroServico, onRemoveOutroServico, onSaveConfig,
   mensalData, mensalForms, onUpdateMensalField, onSaveMensal, onGenerateMonth, onStartEditMensal,
-  competenciaSelecionada, setCompetenciaSelecionada, onCancelMensalForm
+  competenciaSelecionada, setCompetenciaSelecionada, onCancelMensalForm,
+  pagination, onPageChange, totalCount, loading, onUpdateMensalValor
 }: HonorariosEmpresasViewProps) => {
+  const [editingRecordId, setEditingRecordId] = React.useState<string | null>(null);
+  const [editVal, setEditVal] = React.useState<string>("");
+
+  const handleStartEdit = (record: HonorarioMensal) => {
+    setEditingRecordId(record.id || null);
+    setEditVal(String(record.valor_total || 0));
+  };
+
+  const handleSave = (empId: string) => {
+    if (editingRecordId) {
+      const val = parseFloat(editVal.replace(",", "."));
+      if (!isNaN(val)) {
+        onUpdateMensalValor(empId, editingRecordId, val);
+      }
+    }
+    setEditingRecordId(null);
+  };
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
   return (
     <div className="space-y-3">
+      {loading && empresas.length === 0 && (
+        <div className="flex items-center justify-center py-12">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
+      {!loading && empresas.length === 0 && (
+        <div className="text-center py-12 card-premium bg-muted/20">
+          <p className="text-muted-foreground">Nenhuma empresa encontrada com estes critérios.</p>
+        </div>
+      )}
+
       {empresas.map(emp => {
         const isOpen = expanded === emp.id;
         const tab = activeTabs[emp.id] || "mensal";
@@ -137,7 +172,29 @@ export const HonorariosEmpresasView = ({
                               {mensalData[emp.id].map((record: HonorarioMensal) => (
                                 <tr key={record.id} className="hover:bg-muted/20 transition-colors">
                                   <td className="px-4 py-3 font-medium text-card-foreground">{record.competencia}</td>
-                                  <td className="px-4 py-3 text-primary font-semibold">{formatCurrency(record.valor_total)}</td>
+                                  <td className="px-4 py-3 text-primary font-semibold cursor-pointer group" onDoubleClick={() => handleStartEdit(record)}>
+                                    {editingRecordId === record.id ? (
+                                      <input
+                                        autoFocus
+                                        type="text"
+                                        className="w-24 px-2 py-1 text-right border border-primary rounded bg-background outline-none"
+                                        value={editVal}
+                                        onChange={(e) => setEditVal(e.target.value)}
+                                        onBlur={() => handleSave(emp.id)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") handleSave(emp.id);
+                                          if (e.key === "Escape") setEditingRecordId(null);
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="flex items-center gap-2">
+                                        <span>{formatCurrency(record.valor_total)}</span>
+                                        <div className="opacity-0 group-hover:opacity-50 transition-opacity">
+                                          <Plus size={10} className="rotate-45" /> 
+                                        </div>
+                                      </div>
+                                    )}
+                                  </td>
                                   <td className="px-4 py-3 text-muted-foreground">{record.data_vencimento ? new Date(record.data_vencimento).toLocaleDateString('pt-BR') : '—'}</td>
                                   <td className="px-4 py-3">
                                     <div className="flex items-center gap-2">
@@ -164,6 +221,41 @@ export const HonorariosEmpresasView = ({
           </div>
         );
       })}
+
+      {totalCount > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-border/50">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+            Mostrando {pagination.pageIndex * pagination.pageSize + 1} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalCount)} de {totalCount} empresas
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onPageChange(Math.max(0, pagination.pageIndex - 1))}
+              disabled={pagination.pageIndex === 0 || loading}
+              className="px-4 py-2 text-xs font-black uppercase tracking-tighter bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all border border-border/50"
+            >
+              Anterior
+            </button>
+            <div className="flex items-center gap-1">
+               {Array.from({ length: Math.min(5, Math.ceil(totalCount / pagination.pageSize)) }).map((_, i) => (
+                 <button
+                   key={i}
+                   onClick={() => onPageChange(i)}
+                   className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${pagination.pageIndex === i ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                 >
+                   {i + 1}
+                 </button>
+               ))}
+            </div>
+            <button
+              onClick={() => onPageChange(pagination.pageIndex + 1)}
+              disabled={(pagination.pageIndex + 1) * pagination.pageSize >= totalCount || loading}
+              className="px-4 py-2 text-xs font-black uppercase tracking-tighter bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all border border-border/50"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

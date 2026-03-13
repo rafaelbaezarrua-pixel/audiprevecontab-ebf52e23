@@ -2,6 +2,7 @@
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
+import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { AlertsSidebar } from "@/components/dashboard/AlertsSidebar";
 import { useDashboard } from "@/hooks/useDashboard";
 import { PageHeaderSkeleton } from "@/components/PageSkeleton";
@@ -9,7 +10,7 @@ import { Sparkles, ArrowUpRight } from "lucide-react";
 
 const DashboardPage: React.FC = () => {
   const { userData } = useAuth();
-  const { stats, alerts, loading } = useDashboard();
+  const { stats, analytics, alerts, loading } = useDashboard();
 
   if (loading) {
     return (
@@ -53,8 +54,11 @@ const DashboardPage: React.FC = () => {
       {/* Main Stats */}
       <DashboardStats stats={stats} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-3">
+      {/* BI Analytics Charts */}
+      {analytics && <DashboardCharts data={analytics} />}
+
+      <div className="grid grid-cols-1 gap-8 mt-4">
+        <div className="lg:col-span-1 border border-border/50 rounded-3xl p-6 bg-card">
           <AlertsSidebar alerts={alerts} />
         </div>
       </div>
