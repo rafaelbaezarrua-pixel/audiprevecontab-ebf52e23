@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Mail, Clock, Shield, Plus, ArrowRight, Trash2, CalendarDays, Key } from "lucide-react";
+import { Bell, Mail, Clock, Shield, Plus, ArrowRight, Trash2, CalendarDays, Key, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
