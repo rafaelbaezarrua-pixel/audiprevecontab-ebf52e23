@@ -48,16 +48,20 @@ Deno.serve(async (req) => {
     if (action === "toggleModule") {
       if (!module) throw new Error("Module é obrigatório.");
       if (enable) {
-        await supabaseAdmin.from("user_module_permissions").insert({ user_id: target_user_id, module_name: module });
+        const { error: insErr } = await supabaseAdmin.from("user_module_permissions").insert({ user_id: target_user_id, module_name: module });
+        if (insErr) throw insErr;
       } else {
-        await supabaseAdmin.from("user_module_permissions").delete().eq("user_id", target_user_id).eq("module_name", module);
+        const { error: delErr } = await supabaseAdmin.from("user_module_permissions").delete().eq("user_id", target_user_id).eq("module_name", module);
+        if (delErr) throw delErr;
       }
     }
     else if (action === "toggleAdmin") {
       if (enable) {
-        await supabaseAdmin.from("user_roles").insert({ user_id: target_user_id, role: "admin" });
+        const { error: insErr } = await supabaseAdmin.from("user_roles").insert({ user_id: target_user_id, role: "admin" });
+        if (insErr) throw insErr;
       } else {
-        await supabaseAdmin.from("user_roles").delete().eq("user_id", target_user_id).eq("role", "admin");
+        const { error: delErr } = await supabaseAdmin.from("user_roles").delete().eq("user_id", target_user_id).eq("role", "admin");
+        if (delErr) throw delErr;
       }
     }
     else if (action === "deleteUser") {

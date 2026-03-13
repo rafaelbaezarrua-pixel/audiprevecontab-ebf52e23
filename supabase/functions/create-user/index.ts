@@ -107,12 +107,15 @@ Deno.serve(async (req) => {
 
     // Role assignment
     if (makeAdmin || role === 'admin') {
-      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "admin" }, { onConflict: 'user_id,role' });
+      const { error: roleErr } = await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "admin" }, { onConflict: 'user_id,role' });
+      if (roleErr) throw roleErr;
     } else if (role === 'client') {
-      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "client" }, { onConflict: 'user_id,role' });
+      const { error: roleErr } = await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "client" }, { onConflict: 'user_id,role' });
+      if (roleErr) throw roleErr;
     } else {
       // Ensure they have 'user' role at least
-      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "user" }, { onConflict: 'user_id,role' });
+      const { error: roleErr } = await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "user" }, { onConflict: 'user_id,role' });
+      if (roleErr) throw roleErr;
     }
 
     // Client assignment (empresa_acessos)
@@ -135,10 +138,14 @@ Deno.serve(async (req) => {
 
       if (moduleInserts.length > 0) {
         // Clear existing permissions just in case it's an update
-        await supabaseAdmin.from("user_module_permissions").delete().eq("user_id", userId);
+        const { error: clrErr } = await supabaseAdmin.from("user_module_permissions").delete().eq("user_id", userId);
+        if (clrErr) throw clrErr;
 
         const { error: modulesError } = await supabaseAdmin.from("user_module_permissions").insert(moduleInserts);
-        if (modulesError) console.error("Modules insert error:", modulesError);
+        if (modulesError) {
+          console.error("Modules insert error:", modulesError);
+          throw modulesError;
+        }
       }
     }
 
