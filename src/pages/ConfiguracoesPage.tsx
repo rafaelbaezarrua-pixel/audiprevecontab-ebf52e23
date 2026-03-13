@@ -10,6 +10,7 @@ interface Usuario {
   id: string;
   nome: string;
   email: string;
+  email_alertas?: string;
   isAdmin: boolean;
   isClient: boolean;
   departamento?: string;
@@ -39,6 +40,8 @@ const ConfiguracoesPage: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [activeTab, setActiveTab] = useState<'interna' | 'cliente' | 'auditoria'>('interna');
+  const [editingEmailId, setEditingEmailId] = useState<string | null>(null);
+  const [emailAlertasInput, setEmailAlertasInput] = useState<string>("");
 
   const loadUsers = async () => {
     try {
@@ -95,6 +98,7 @@ const ConfiguracoesPage: React.FC = () => {
           id: p.user_id,
           nome: p.nome_completo || "Sem nome",
           email: "",
+          email_alertas: p.email_alertas || "",
           isAdmin,
           isClient,
           departamento: "",
@@ -159,6 +163,24 @@ const ConfiguracoesPage: React.FC = () => {
     }
   };
 
+  const handleUpdateEmailAlertas = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ email_alertas: emailAlertasInput })
+        .eq("user_id", userId);
+
+      if (error) throw error;
+      
+      toast.success("E-mail de alertas atualizado com sucesso!");
+      setEditingEmailId(null);
+      loadUsers();
+    } catch (err: any) {
+      console.error("Erro:", err);
+      toast.error("Erro ao atualizar e-mail: " + err.message);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -217,6 +239,41 @@ const ConfiguracoesPage: React.FC = () => {
                     <div>
                       <p className="font-black text-card-foreground text-lg">{u.nome || "Sem nome"} {u.isAdmin && <span className="ml-2 badge-status badge-success text-[10px] uppercase align-middle">Admin</span>}</p>
                       <p className="text-sm font-medium text-muted-foreground mt-0.5">{u.email} {u.departamento ? <span className="text-primary ml-2">• {u.departamento}</span> : ""}</p>
+                      
+                      {/* Interface de E-mail de Alertas para Clientes */}
+                      {u.isClient && (
+                         <div className="mt-2">
+                           {editingEmailId === u.id ? (
+                             <div className="flex items-center gap-2">
+                               <input 
+                                 type="email"
+                                 autoFocus
+                                 className="px-3 py-1 text-sm border border-border rounded-lg bg-background w-64 focus:ring-1 focus:ring-primary outline-none"
+                                 placeholder="alerta@empresa.com"
+                                 value={emailAlertasInput}
+                                 onChange={(e) => setEmailAlertasInput(e.target.value)}
+                                 onKeyDown={(e) => e.key === 'Enter' && handleUpdateEmailAlertas(u.id)}
+                               />
+                               <button onClick={() => handleUpdateEmailAlertas(u.id)} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-lg font-bold hover:opacity-90 transition-opacity">
+                                 Salvar
+                               </button>
+                               <button onClick={() => setEditingEmailId(null)} className="text-muted-foreground hover:text-foreground p-1 transition-colors">
+                                 <X size={16} />
+                               </button>
+                             </div>
+                           ) : (
+                             <div className="flex items-center gap-2">
+                               <span className="text-xs font-semibold text-muted-foreground">E-mail para Alertas Automáticos:</span>
+                               <span className={u.email_alertas ? "text-xs font-bold text-foreground" : "text-xs italic text-muted-foreground opacity-70"}>
+                                 {u.email_alertas || "Não configurado"}
+                               </span>
+                               <button onClick={() => { setEditingEmailId(u.id); setEmailAlertasInput(u.email_alertas || ""); }} className="text-[10px] uppercase tracking-wider font-bold text-primary hover:underline ml-1">
+                                 Alterar
+                               </button>
+                             </div>
+                           )}
+                         </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-4 md:pt-0 border-border/50">

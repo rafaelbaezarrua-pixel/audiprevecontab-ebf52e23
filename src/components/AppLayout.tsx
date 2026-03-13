@@ -148,6 +148,15 @@ const AppLayout: React.FC = () => {
                 {!collapsed && <span>Configurações</span>}
               </button>
               <button
+                onClick={() => handleNav("/configuracoes/alertas")}
+                className={`nav-item w-full ${location.pathname === "/configuracoes/alertas" ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
+                title={collapsed ? "Gestor de Alertas" : undefined}
+                aria-label="Gestor de Alertas"
+              >
+                <Bell size={18} />
+                {!collapsed && <span>Gestor de Alertas</span>}
+              </button>
+              <button
                 onClick={() => handleNav("/configuracoes/auditoria")}
                 className={`nav-item w-full ${location.pathname === "/configuracoes/auditoria" ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
                 title={collapsed ? "Auditoria do Sistema" : undefined}

@@ -10,6 +10,7 @@ export const useSocietario = () => {
   const { data: listEmpresas = [], isLoading: loadingEmpresas } = useQuery({
     queryKey: ["empresas"],
     queryFn: async () => {
+      // Keeping original listEmpresas for backward compatibility in forms/dropdowns
       const { data } = await supabase.from("empresas").select("*").order("nome_empresa");
       const { data: sociosData } = await supabase.from("socios").select("empresa_id");
       const sociosCounts: Record<string, number> = {};
@@ -19,6 +20,79 @@ export const useSocietario = () => {
       return (data || []).map(e => ({ ...e, socios_count: sociosCounts[e.id] || 0 })) as Empresa[];
     }
   });
+
+  const getPaginatedEmpresas = async (page: number, limit: number, search: string, situacao: string, regime: string, moduloId?: string, userId?: string) => {
+    let query = supabase.from("empresas").select("*", { count: 'exact' });
+
+    if (moduloId && moduloId !== "declaracoes_mensais") {
+      query = query.contains("modulos_ativos", [moduloId]);
+    }
+
+    if (search) {
+      query = query.or(`nome_empresa.ilike.%${search}%,cnpj.ilike.%${search}%`);
+    }
+
+    if (situacao && situacao !== 'todas') {
+      const situacaoMap: Record<string, string> = {
+        'ativas': 'ativa',
+        'paralisadas': 'paralisada',
+        'baixadas': 'baixada',
+        'entregue': 'entregue'
+      };
+
+      const mappedSituacao = situacaoMap[situacao] || situacao;
+
+      if (situacao === 'mei') {
+         query = query.eq("regime_tributario", "mei").in("situacao", ["ativa", "paralisada"]);
+      } else if (mappedSituacao === 'ativa') {
+         query = query.eq("situacao", "ativa");
+      } else {
+         query = query.eq("situacao", mappedSituacao as any);
+      }
+    }
+
+    if (regime && regime !== 'todos') {
+      query = query.eq("regime_tributario", regime as any);
+    }
+
+    const from = page * limit;
+    const to = from + limit - 1;
+
+    const { data: empresasData, count, error } = await query
+      .order('nome_empresa')
+      .range(from, to);
+
+    if (error) throw error;
+
+    // Get socio count map for these specific companies
+    const empIds = (empresasData || []).map(e => e.id);
+    const { data: sociosData } = await supabase.from("socios").select("empresa_id").in("empresa_id", empIds);
+    const sociosCounts: Record<string, number> = {};
+    sociosData?.forEach(s => {
+      sociosCounts[s.empresa_id] = (sociosCounts[s.empresa_id] || 0) + 1;
+    });
+
+    const enrichedData = (empresasData || []).map(e => ({ ...e, socios_count: sociosCounts[e.id] || 0 })) as Empresa[];
+
+    if (userId && moduloId) {
+      const { data: acessos } = await supabase
+        .from("empresa_acessos")
+        .select("empresa_id, modulos_permitidos")
+        .eq("user_id", userId);
+
+      if (acessos && acessos.length > 0) {
+        const acessosMap = new Map(acessos.map(a => [a.empresa_id, a.modulos_permitidos]));
+        const filtered = enrichedData.filter(emp => {
+          const modulosPermitidos = acessosMap.get(emp.id);
+          if (!modulosPermitidos) return true; // Full access if no specific rule
+          return modulosPermitidos.includes(moduloId);
+        });
+        return { data: filtered, count: count || 0 };
+      }
+    }
+    
+    return { data: enrichedData, count: count || 0 };
+  };
 
   const { data: listProcessos = [], isLoading: loadingProcessos } = useQuery({
     queryKey: ["processos_societarios"],
@@ -84,6 +158,7 @@ export const useSocietario = () => {
     isLoading: loadingEmpresas || loadingProcessos,
     addHistorico,
     deleteProcesso,
-    updateProcesso
+    updateProcesso,
+    getPaginatedEmpresas
   };
 };

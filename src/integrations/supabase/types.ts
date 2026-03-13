@@ -996,6 +996,7 @@ export type Database = {
           created_at: string | null
           data_nascimento: string | null
           departamento: string | null
+          email_alertas: string | null
           endereco: Json | null
           first_access_done: boolean | null
           foto_url: string | null
@@ -1016,6 +1017,7 @@ export type Database = {
           created_at?: string | null
           data_nascimento?: string | null
           departamento?: string | null
+          email_alertas?: string | null
           endereco?: Json | null
           first_access_done?: boolean | null
           foto_url?: string | null
@@ -1036,6 +1038,7 @@ export type Database = {
           created_at?: string | null
           data_nascimento?: string | null
           departamento?: string | null
+          email_alertas?: string | null
           endereco?: Json | null
           first_access_done?: boolean | null
           foto_url?: string | null

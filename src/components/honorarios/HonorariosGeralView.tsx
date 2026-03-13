@@ -21,6 +21,7 @@ interface HonorariosGeralViewProps {
   onDeleteEsporadico: (id: string) => void;
   onSaveEsporadico: (data: any) => void;
   onActionGerar: (empresaId: string) => void;
+  onUpdateValor: (id: string, newValue: number) => void;
 }
 
 const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -37,7 +38,8 @@ export const HonorariosGeralView = ({
   onToggleEsporadicoPago,
   onDeleteEsporadico,
   onSaveEsporadico,
-  onActionGerar
+  onActionGerar,
+  onUpdateValor
 }: HonorariosGeralViewProps) => {
   const [subTab, setSubTab] = useState<"mensal" | "esporadicos">("mensal");
   const [filterPago, setFilterPago] = useState<"todos" | "pago" | "pendente">("todos");
@@ -173,6 +175,7 @@ export const HonorariosGeralView = ({
             competencia={globalCompetencia} 
             onTogglePago={onToggleMensalPago} 
             onToggleStatus={onToggleMensalStatus}
+            onUpdateValor={onUpdateValor}
           />
 
           {empresasFaltantes.length > 0 && (

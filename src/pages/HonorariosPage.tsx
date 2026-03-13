@@ -5,12 +5,15 @@ import { Search } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { useHonorarios } from "@/hooks/useHonorarios";
+import { useSocietario } from "@/hooks/useSocietario";
+import { useAuth } from "@/contexts/AuthContext";
 import { HonorariosGeralView } from "@/components/honorarios/HonorariosGeralView";
 import { HonorariosEmpresasView } from "@/components/honorarios/HonorariosEmpresasView";
 import { HonorarioConfig, HonorarioMensal } from "@/types/honorarios";
 
 const HonorariosPage: React.FC = () => {
-  const { empresas, loading: loadingEmpresas } = useEmpresas("honorarios");
+  const { user } = useAuth();
+  const { getPaginatedEmpresas } = useSocietario();
   const [search, setSearch] = useState("");
   const [mainTab, setMainTab] = useState<"empresas" | "geral">("empresas");
   const [globalCompetencia, setGlobalCompetencia] = useState(new Date().toISOString().slice(0, 7));
@@ -20,17 +23,59 @@ const HonorariosPage: React.FC = () => {
     saveConfig, saveMensal, saveEsporadico, deleteEsporadico 
   } = useHonorarios(globalCompetencia);
 
-  const { empresas: todasEmpresas } = useEmpresas("honorarios");
-
   const [expanded, setExpanded] = useState<string | null>(null);
   const [activeTabs, setActiveTabs] = useState<Record<string, "mensal" | "configuracao">>({});
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
+
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 12 });
+  const [paginatedData, setPaginatedData] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loadingPaginated, setLoadingPaginated] = useState(false);
 
   const [configs, setConfigs] = useState<Record<string, Partial<HonorarioConfig>>>({});
   const [mensalData, setMensalData] = useState<Record<string, HonorarioMensal[]>>({});
   const [configForms, setConfigForms] = useState<Record<string, Partial<HonorarioConfig>>>({});
   const [mensalForms, setMensalForms] = useState<Record<string, any>>({});
   const [competenciaSelecionada, setCompetenciaSelecionada] = useState<Record<string, string>>({});
+  const [todasEmpresas, setTodasEmpresas] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (mainTab === 'geral' && todasEmpresas.length === 0) {
+      const fetchAll = async () => {
+        const { data } = await supabase.from("empresas").select("*").order("nome_empresa");
+        setTodasEmpresas(data || []);
+      };
+      fetchAll();
+    }
+  }, [mainTab, todasEmpresas.length]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      setLoadingPaginated(true);
+      try {
+        const { data, count } = await getPaginatedEmpresas(
+          pagination.pageIndex,
+          pagination.pageSize,
+          search,
+          activeStatusTab,
+          "todos",
+          "honorarios",
+          user?.id
+        );
+        setPaginatedData(data);
+        setTotalCount(count);
+      } catch (err) {
+        console.error("Erro ao carregar empresas paginadas:", err);
+      } finally {
+        setLoadingPaginated(false);
+      }
+    };
+    fetch();
+  }, [pagination, search, activeStatusTab, user]);
+
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+  }, [search, activeStatusTab]);
 
   const toggleExpand = async (empresaId: string) => {
     if (expanded === empresaId) {
@@ -104,20 +149,9 @@ const HonorariosPage: React.FC = () => {
     } catch (err: any) { toast.error("Erro ao gerar mês: " + err.message); }
   };
 
-  const filteredEmpresas = empresas.filter(e => {
-    const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
-    let matchTab = false;
-    if (activeStatusTab === "ativas") matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa !== "mei";
-    else if (activeStatusTab === "mei") matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
-    else if (activeStatusTab === "paralisadas") matchTab = e.situacao === "paralisada";
-    else if (activeStatusTab === "baixadas") matchTab = e.situacao === "baixada";
-    else if (activeStatusTab === "entregue") matchTab = e.situacao === "entregue";
-    return matchSearch && matchTab;
-  });
-
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
 
-  if (loadingEmpresas) {
+  if (loadingPaginated && paginatedData.length === 0) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   }
 
@@ -200,6 +234,7 @@ const HonorariosPage: React.FC = () => {
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
+          onUpdateValor={(id, val) => saveMensal.mutate({ id, valor_total: val } as any)}
         />
       ) : (
         <div className="space-y-4 animate-fade-in">
@@ -221,7 +256,7 @@ const HonorariosPage: React.FC = () => {
           </div>
 
           <HonorariosEmpresasView 
-            empresas={filteredEmpresas}
+            empresas={paginatedData}
             expanded={expanded}
             onToggleExpand={toggleExpand}
             activeTabs={activeTabs}
@@ -280,6 +315,15 @@ const HonorariosPage: React.FC = () => {
             competenciaSelecionada={competenciaSelecionada}
             setCompetenciaSelecionada={(id, v) => setCompetenciaSelecionada(prev => ({ ...prev, [id]: v }))}
             onCancelMensalForm={(id) => setMensalForms(prev => { const n = { ...prev }; delete n[id]; return n; })}
+            pagination={pagination}
+            onPageChange={(page) => setPagination(prev => ({ ...prev, pageIndex: page }))}
+            totalCount={totalCount}
+            loading={loadingPaginated}
+            onUpdateMensalValor={async (empId, recId, val) => {
+              await saveMensal.mutateAsync({ id: recId, valor_total: val } as any);
+              const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empId).order('competencia', { ascending: false });
+              setMensalData(prev => ({ ...prev, [empId]: (mensal as any) || [] }));
+            }}
           />
         </div>
       )}

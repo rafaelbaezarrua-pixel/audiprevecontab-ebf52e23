@@ -22,7 +22,7 @@ const SocietarioPage: React.FC = () => {
   const navigate = useNavigate();
   const { 
     empresas, processos, isLoading, 
-    deleteProcesso, updateProcesso 
+    deleteProcesso, updateProcesso, getPaginatedEmpresas
   } = useSocietario();
 
   const [activeMainTab, setActiveMainTab] = useState<"empresas" | "processos">("empresas");
@@ -46,6 +46,78 @@ const SocietarioPage: React.FC = () => {
     data_inicio: new Date().toISOString().split('T')[0],
     eventos: [] as string[]
   });
+
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const [paginatedData, setPaginatedData] = useState<{ data: Empresa[]; count: number }>({ data: [], count: 0 });
+  const [isFetchingPage, setIsFetchingPage] = useState(false);
+
+  React.useEffect(() => {
+    // Reset to page 0 if filters change
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+  }, [search, filterSituacao, filterRegime, activeTab]);
+
+  React.useEffect(() => {
+    const fetchPage = async () => {
+      setIsFetchingPage(true);
+      try {
+        const result = await getPaginatedEmpresas(
+           pagination.pageIndex, 
+           pagination.pageSize, 
+           search, 
+           // activeTab acts as situacao filter if nothing else is selected in the regular filter dropdown
+           filterSituacao !== 'todas' ? filterSituacao : activeTab, 
+           filterRegime
+        );
+        setPaginatedData(result);
+      } catch (err) {
+        toast.error("Erro ao carregar empresas");
+      } finally {
+        setIsFetchingPage(false);
+      }
+    };
+    
+    // Debounce search
+    const timeout = setTimeout(() => {
+        fetchPage();
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [pagination.pageIndex, pagination.pageSize, search, filterSituacao, filterRegime, activeTab]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    let channel: any;
+
+    const setupRealtime = async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'empresas' },
+          (payload) => {
+            if (isMounted) {
+               // Force a refetch of the current page
+               setPagination(prev => ({ ...prev }));
+            }
+          }
+        )
+        .subscribe();
+    }
+    
+    setupRealtime();
+
+    return () => {
+      isMounted = false;
+      if (channel) {
+        channel.unsubscribe();
+      }
+    };
+  }, []);
 
   const handleCreateProcesso = async () => {
     // Basic validation
@@ -82,30 +154,16 @@ const SocietarioPage: React.FC = () => {
       });
       toast.success("Processo iniciado!");
       setShowNovoProcesso(false);
-      // Invalidate queries via hook or directly if needed
-      window.location.reload(); // Simple way for now, or use queryClient
+      window.location.reload(); 
     }
   };
 
-  const filteredEmpresas = empresas.filter((e) => {
-    const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
-    const matchSituacao = filterSituacao === "todas" || e.situacao === filterSituacao;
-    const matchRegime = filterRegime === "todos" || e.regime_tributario === filterRegime;
-    let matchTab = false;
-    if (activeTab === "ativas") matchTab = !e.situacao || e.situacao === "ativa";
-    else if (activeTab === "paralisadas") matchTab = e.situacao === "paralisada";
-    else if (activeTab === "baixadas") matchTab = e.situacao === "baixada";
-    else if (activeTab === "entregue") matchTab = e.situacao === "entregue";
-    else if (activeTab === "mei") matchTab = e.porte_empresa === "mei" && (!e.situacao || e.situacao === "ativa");
-    return matchSearch && matchSituacao && matchRegime && matchTab;
-  });
-
   const stats = {
-    ativas: empresas.filter(e => !e.situacao || e.situacao === "ativa").length,
+    ativas: empresas.filter(e => e.situacao === "ativa").length,
     paralisadas: empresas.filter(e => e.situacao === "paralisada").length,
     baixadas: empresas.filter(e => e.situacao === "baixada").length,
     entregues: empresas.filter(e => e.situacao === "entregue").length,
-    mei: empresas.filter(e => e.porte_empresa === "mei" && (!e.situacao || e.situacao === "ativa")).length,
+    mei: empresas.filter(e => e.regime_tributario === "mei" && ["ativa", "paralisada"].includes(e.situacao || "")).length,
     processosAtivos: processos.filter(p => p.status === 'em_andamento').length,
   };
 
@@ -225,7 +283,24 @@ const SocietarioPage: React.FC = () => {
             ))}
           </div>
 
-          <EmpresaTable empresas={filteredEmpresas} />
+          <EmpresaTable 
+            empresas={paginatedData.data} 
+            totalCount={paginatedData.count} 
+            pagination={pagination} 
+            setPagination={setPagination}
+            isLoading={isFetchingPage}
+            onInlineEdit={async (id, field, value) => {
+              try {
+                const { error } = await (await import("@/integrations/supabase/client")).supabase.from("empresas").update({ [field]: value }).eq("id", id);
+                if (error) throw error;
+                toast.success("Empresa atualizada!");
+                // Force fetch page again to get updated item
+                setPagination(prev => ({ ...prev }));
+              } catch (e: any) {
+                toast.error("Erro ao atualizar: " + e.message);
+              }
+            }}
+          />
         </div>
       ) : (
         <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
