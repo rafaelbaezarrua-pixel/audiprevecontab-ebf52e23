@@ -159,7 +159,11 @@ const NotificacoesPage: React.FC = () => {
                           className="w-10 h-10 rounded-xl hover:bg-background shadow-sm border border-transparent hover:border-border"
                           onClick={(e) => {
                             e.stopPropagation();
-                            n.is_read ? markAsUnread(n.recipient_id) : markAsRead(n.recipient_id);
+                            if (n.is_read) {
+                              markAsUnread(n.recipient_id);
+                            } else {
+                              markAsRead(n.recipient_id);
+                            }
                           }}
                           title={n.is_read ? "Marcar como não lida" : "Marcar como lida"}
                         >

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  FileText, Download, Calendar, DollarSign, 
+  FileText, Download, Calendar, DollarSign, Calculator,
   Shield, Users, AlertCircle, Building2,
   CheckCircle2, Circle, ChevronRight, ChevronLeft,
   ArrowLeft, Search, Filter, Layers, ListChecks
@@ -22,6 +22,15 @@ interface ModuleConfig {
   fields: { id: string; label: string; accessor?: (item: any) => any }[];
 }
 
+const COMPANY_FIELDS = [
+  { id: "cnpj", label: "CNPJ" },
+  { id: "regime_tributario", label: "Regime Tributário" },
+  { id: "natureza_juridica", label: "Natureza Jurídica" },
+  { id: "data_abertura", label: "Abertura" },
+  { id: "porte_empresa", label: "Porte" },
+  { id: "socios_count", label: "Nº Sócios" }
+];
+
 const licencaLabels: Record<string, string> = { 
   alvara: "Alvará", 
   vigilancia_sanitaria: "Vigilância Sanitária", 
@@ -37,11 +46,7 @@ const MODULES_CONFIG: ModuleConfig[] = [
     icon: <Building2 size={18} />,
     color: "bg-blue-500",
     fields: [
-      { id: "cnpj", label: "CNPJ" },
-      { id: "data_abertura", label: "Data de Abertura" },
-      { id: "regime_tributario", label: "Regime Tributário" },
       { id: "situacao", label: "Situação" },
-      { id: "natureza_juridica", label: "Natureza Jurídica" },
     ]
   },
   {
@@ -210,6 +215,36 @@ const MODULES_CONFIG: ModuleConfig[] = [
     ]
   },
   {
+    id: "irpf",
+    label: "IRPF",
+    table: "irpf",
+    icon: <Calculator size={18} />,
+    color: "bg-emerald-600",
+    fields: [
+      { id: "nome_completo", label: "Contribuinte" },
+      { id: "cpf", label: "CPF" },
+      { id: "empresa", label: "Empresa Vinculada" },
+      { id: "ano_exercicio", label: "Ano Base" },
+      { id: "valor_a_pagar", label: "Valor a Pagar", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor_a_pagar || 0) },
+      { id: "status_pago", label: "Pagamento", accessor: (i) => i.status_pago ? "Pago" : "Pendente" },
+      { id: "data_pagamento", label: "Data de Pgto", accessor: (i) => i.data_pagamento ? format(new Date(i.data_pagamento + "T12:00:00"), "dd/MM/yyyy") : "—" },
+      { id: "status_transmissao", label: "Transmissão", accessor: (i) => i.status_transmissao ? i.status_transmissao.charAt(0).toUpperCase() + i.status_transmissao.slice(1) : "Pendente" },
+      { id: "data_transmissao", label: "Data Transmissão", accessor: (i) => i.data_transmissao ? format(new Date(i.data_transmissao + "T12:00:00"), "dd/MM/yyyy") : "—" },
+      { id: "transmitido_por", label: "Transmitido Por" }
+    ]
+  },
+  {
+    id: "declaracoes_mensais",
+    label: "Declarações Mensais",
+    table: "pessoal",
+    icon: <ListChecks size={18} />,
+    color: "bg-blue-600",
+    fields: [
+      { id: "dctf_web_gerada", label: "DCTF Web Gerada", accessor: (i) => i.dctf_web_gerada ? "Sim" : "Não" },
+      { id: "dctf_web_data_envio", label: "Data de Envio DCTF", accessor: (i) => i.dctf_web_data_envio ? format(new Date(i.dctf_web_data_envio + "T12:00:00"), "dd/MM/yyyy") : "—" },
+    ]
+  },
+  {
     id: "vencimentos",
     label: "Vencimentos (Consolidado)",
     table: "vencimentos_virtual",
@@ -244,6 +279,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [selectedFields, setSelectedFields] = useState<Record<string, string[]>>({});
+  const [selectedCompanyFields, setSelectedCompanyFields] = useState<string[]>([]);
   const [selectedSituations, setSelectedSituations] = useState<string[]>(["ativa", "mei", "paralisada", "baixada", "entregue"]);
   const [loading, setLoading] = useState(false);
   const [headerConfig, setHeaderConfig] = useState<any>(null);
@@ -442,21 +478,92 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           // Fetch Module Data
           let query = supabase.from(mod.table as any).select("*");
           
-          if (["fiscal", "pessoal", "honorarios", "recalculos", "licencas_taxas", "agendamentos"].includes(modId)) {
+          if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos"].includes(modId)) {
              query = query.eq("competencia", competencia);
-          } else if (modId === "ocorrencias") {
-             const start = `${competencia}-01`;
-             const next = new Date(competencia + "-01");
-             next.setMonth(next.getMonth() + 1);
-             query = query.gte("data_ocorrencia", start).lt("data_ocorrencia", next.toISOString().split('T')[0]);
+          } else if (modId === "irpf") {
+             const ano = competencia.split('-')[0];
+             const { data: irpfClientes } = await supabase.from("irpf").select("*").eq("ano_exercicio", ano);
+             const { data: irpfSocios } = await supabase.from("declaracoes_irpf" as any).select(`*, socios(nome, cpf, empresas(nome_empresa))`).eq("ano", ano);
+             
+             const unified = [];
+             if (irpfClientes) {
+                irpfClientes.forEach(c => unified.push({
+                   categoria: "IRPF Clientes", nome_completo: c.nome_completo, cpf: c.cpf, empresa: "—",
+                   ano_exercicio: c.ano_exercicio, valor_a_pagar: c.valor_a_pagar, status_pago: c.status_pago,
+                   data_pagamento: c.data_pagamento, status_transmissao: c.status_transmissao, data_transmissao: c.data_transmissao, transmitido_por: c.transmitido_por
+                }));
+             }
+             if (irpfSocios) {
+                irpfSocios.forEach((s: any) => unified.push({
+                   categoria: "IRPF Clientes Empresa", nome_completo: s.socios?.nome || "—", cpf: s.socios?.cpf || "—", empresa: s.socios?.empresas?.nome_empresa || "—",
+                   ano_exercicio: s.ano, valor_a_pagar: null, status_pago: null, data_pagamento: null,
+                   status_transmissao: s.transmitida ? "transmitida" : "pendente", data_transmissao: s.data_transmissao, transmitido_por: s.quem_transmitiu
+                }));
+             }
+             moduleData = unified;
           }
 
-          const { data, error } = await query;
-          if (error) {
-            console.error(`Erro ao buscar ${mod.label}:`, error);
-          } else {
-            moduleData = data || [];
+          if (modId !== "irpf") {
+            const { data, error } = await query;
+            if (error) {
+              console.error(`Erro ao buscar ${mod.label}:`, error);
+            } else {
+              moduleData = data || [];
+            }
           }
+        }
+
+        // Specific Isolated Block for IRPF (Not linked to Companies)
+        if (modId === "irpf") {
+          const categorias = ["IRPF Clientes", "IRPF Clientes Empresa"];
+          
+          for (const cat of categorias) {
+            const catData = moduleData.filter((d: any) => d.categoria === cat);
+            if (catData.length === 0) continue;
+
+            if (currentY > 260) {
+              doc.addPage();
+              currentY = 20;
+            }
+
+            doc.setFontSize(10);
+            doc.setFont("Ubuntu", "bold");
+            doc.setTextColor(100, 100, 100);
+            doc.text(`${cat.toUpperCase()} (${competencia.split('-')[0]})`, 14, currentY + 5);
+            currentY += 8;
+            doc.setTextColor(0, 0, 0);
+
+            const moduleHeaders = mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => f.label);
+            // Contribuinte replaces Empresa. Company Fields are ignored since there is no company.
+            const head = [moduleHeaders];
+
+            const body = catData.map((item: any) => [
+              ...mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => {
+                const val = item[f.id];
+                if (f.accessor) return f.accessor(item);
+                if (val === null || val === undefined) return "—";
+                return String(val);
+              })
+            ]);
+
+            autoTable(doc, {
+              startY: currentY,
+              head: head,
+              body: body,
+              theme: 'grid',
+              headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 8 },
+              bodyStyles: { fontSize: 7, cellPadding: 2 },
+              styles: { font: 'Ubuntu' },
+              margin: { horizontal: 10 },
+              didDrawPage: (data) => {
+                currentY = data.cursor?.y || currentY;
+              }
+            });
+
+            currentY = (doc as any).lastAutoTable.finalY + 10;
+          }
+          
+          continue;
         }
 
         // Merge logic: ensure every company is present grouped by situation
@@ -470,7 +577,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
 
           if (situationCompanies.length === 0) continue;
 
-          let situationRows: any[] = [];
+          const situationRows: any[] = [];
           
           situationCompanies.forEach(company => {
             const companyRecords = moduleData.filter(d => d.empresa_id === company.id);
@@ -498,13 +605,26 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           currentY += 8;
           doc.setTextColor(0, 0, 0);
 
-          const head = modId === "vencimentos" 
-            ? [["Empresa", "Tipo de Documento", "Vencimento", "Situação", "Status Taxa", "Data de Envio", "Forma de Envio"]]
-            : [["Empresa", ...mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => f.label)]];
+          const fieldsToInclude = selectedFields[modId] || [];
+          
+          const companyHeaders = COMPANY_FIELDS.filter(f => selectedCompanyFields.includes(f.id)).map(f => f.label);
+          const moduleHeaders = mod.fields.filter(f => fieldsToInclude.includes(f.id)).map(f => f.label);
 
-          const body = situationRows.map(item => [
-            item.nome_empresa || "—",
-            ...(modId === "vencimentos" 
+          const head = modId === "vencimentos" 
+            ? [["Empresa", ...companyHeaders, "Tipo de Documento", "Vencimento", "Situação", "Status Taxa", "Data de Envio", "Forma de Envio"]]
+            : [["Empresa", ...companyHeaders, ...moduleHeaders]];
+
+          const body = situationRows.map(item => {
+            const companyValues = COMPANY_FIELDS.filter(f => selectedCompanyFields.includes(f.id)).map(f => {
+              const val = item[f.id];
+              if (val === null || val === undefined) return "—";
+              if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                try { return format(new Date(val + "T12:00:00"), "dd/MM/yyyy"); } catch { return val; }
+              }
+              return String(val);
+            });
+
+            const moduleValues = modId === "vencimentos" 
               ? [
                   item.tipo || "—", 
                   item.data ? format(new Date(item.data + "T12:00:00"), "dd/MM/yyyy") : "—", 
@@ -527,9 +647,14 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                     try { return format(new Date(val + "T12:00:00"), "dd/MM/yyyy"); } catch { return val; }
                   }
                   return String(val);
-                })
-            )
-          ]);
+                });
+
+            return [
+              item.nome_empresa || "—",
+              ...companyValues,
+              ...moduleValues
+            ];
+          });
 
           autoTable(doc, {
             startY: currentY,
@@ -564,14 +689,8 @@ const RelatorioPersonalizadoPage: React.FC = () => {
       {/* Header Area */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-card p-6 rounded-3xl border border-border/50 shadow-sm shadow-primary/5">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => navigate("/relatorios")}
-            className="p-3 rounded-2xl bg-muted hover:bg-muted/80 transition-colors"
-          >
-            <ArrowLeft size={20} className="text-muted-foreground" />
-          </button>
           <div>
-            <h1 className="text-2xl font-black text-card-foreground">Relatório Personalizado</h1>
+            <h1 className="text-2xl font-black text-card-foreground">Central de Relatórios</h1>
             <p className="text-muted-foreground text-sm">Monte seu relatório selecionando módulos e dados específicos</p>
           </div>
         </div>
@@ -658,46 +777,86 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                </p>
             </div>
           ) : (
-            selectedModules.map(modId => {
-              const mod = MODULES_CONFIG.find(m => m.id === modId)!;
-              return (
-                <div key={modId} className="bg-card rounded-3xl border border-border/50 shadow-sm animate-scale-in">
-                  <div className="p-6 border-b border-border/50 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${mod.color} text-white`}>
-                        {mod.icon}
-                      </div>
-                      <h3 className="font-black text-card-foreground text-lg">{mod.label}</h3>
-                    </div>
-                    <button 
-                      onClick={() => toggleModule(modId)}
-                      className="text-xs font-bold text-destructive hover:opacity-80"
-                    >
-                      Remover módulo
-                    </button>
-                  </div>
-                  
-                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {mod.fields.map(field => (
-                      <button
-                        key={field.id}
-                        onClick={() => toggleField(modId, field.id)}
-                        className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
-                          selectedFields[modId]?.includes(field.id)
-                            ? "border-primary/40 bg-primary/5"
-                            : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
-                        }`}
-                      >
-                         <div className={`transition-colors ${selectedFields[modId]?.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
-                           {selectedFields[modId]?.includes(field.id) ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-                         </div>
-                         <span className="text-xs font-bold">{field.label}</span>
-                      </button>
-                    ))}
-                  </div>
+            <div className="space-y-6 animate-scale-in">
+              {/* Global Company Sub-panel inside the form */}
+              <div className="bg-card rounded-3xl border border-primary/20 shadow-sm p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                <h3 className="font-black text-card-foreground text-lg mb-4 flex items-center gap-2 relative z-10">
+                  <Building2 size={20} className="text-primary" /> Informações da Empresa
+                </h3>
+                <p className="text-xs text-muted-foreground mb-6 max-w-md relative z-10">
+                  Estes campos serão adicionados como colunas para todos os módulos selecionados abaixo.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 relative z-10">
+                   {COMPANY_FIELDS.map(field => (
+                     <button
+                       key={field.id}
+                       onClick={() => setSelectedCompanyFields(prev => 
+                        prev.includes(field.id) ? prev.filter(f => f !== field.id) : [...prev, field.id]
+                       )}
+                       className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
+                         selectedCompanyFields.includes(field.id)
+                           ? "border-primary/40 bg-primary/5 shadow-sm"
+                           : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
+                       }`}
+                     >
+                        <div className={`transition-colors ${selectedCompanyFields.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
+                          {selectedCompanyFields.includes(field.id) ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                        </div>
+                        <span className="text-xs font-bold">{field.label}</span>
+                     </button>
+                   ))}
                 </div>
-              );
-            })
+              </div>
+
+              {/* Module Specific Panels */}
+              {selectedModules.map(modId => {
+                const mod = MODULES_CONFIG.find(m => m.id === modId)!;
+                return (
+                  <div key={modId} className="bg-card rounded-3xl border border-border/50 shadow-sm">
+                    <div className="p-6 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${mod.color} text-white`}>
+                          {mod.icon}
+                        </div>
+                        <h3 className="font-black text-card-foreground text-lg">{mod.label}</h3>
+                      </div>
+                      <button 
+                        onClick={() => toggleModule(modId)}
+                        className="text-xs font-bold text-destructive hover:opacity-80 px-3 py-1.5 rounded-lg hover:bg-destructive/10 transition-colors self-start sm:self-auto"
+                      >
+                        Remover módulo
+                      </button>
+                    </div>
+                    
+                    <div className="p-6">
+                      {modId === "vencimentos" ? (
+                        <p className="text-sm text-muted-foreground">O modelo consolidado de vencimentos é pré-formatado e listará os status. As colunas da empresa selecionadas acima serão incluídas.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          {mod.fields.map(field => (
+                            <button
+                              key={field.id}
+                              onClick={() => toggleField(modId, field.id)}
+                              className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
+                                selectedFields[modId]?.includes(field.id)
+                                  ? "border-primary/40 bg-primary/5"
+                                  : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
+                              }`}
+                            >
+                               <div className={`transition-colors ${selectedFields[modId]?.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
+                                 {selectedFields[modId]?.includes(field.id) ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                               </div>
+                               <span className="text-xs font-bold">{field.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
