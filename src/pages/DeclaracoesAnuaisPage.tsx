@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-    ClipboardList, Search, Calendar, CheckCircle,
-    Circle, Save, Filter, Users, Building2,
-    AlertCircle, Info
+    ClipboardList, Search, CheckCircle,
+    Circle, Save, Building2,
+    Users, Info
 } from "lucide-react";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
+
+type DeclaracaoAnualRow = Database['public']['Tables']['declaracoes_anuais']['Row'];
+type DeclaracaoIRPFRow = Database['public']['Tables']['declaracoes_irpf']['Row'];
 
 interface Empresa {
     id: string;
@@ -24,24 +28,22 @@ interface Socio {
     empresa_nome?: string;
 }
 
-interface DeclaracaoAnual {
-    id?: string;
+interface DeclaracaoAnual extends Partial<DeclaracaoAnualRow> {
     empresa_id: string;
     ano: number;
     tipo_declaracao: string;
     obrigatorio: boolean;
     enviada: boolean;
-    data_envio: string | null;
+    data_envio?: string | null;
 }
 
-interface DeclaracaoIRPF {
-    id?: string;
+interface DeclaracaoIRPF extends Partial<DeclaracaoIRPFRow> {
     socio_id: string;
     ano: number;
     faz_pelo_escritorio: boolean;
     transmitida: boolean;
-    data_transmissao: string | null;
-    quem_transmitiu: string | null;
+    data_transmissao?: string | null;
+    quem_transmitiu?: string | null;
 }
 
 const DeclaracoesAnuaisPage: React.FC = () => {
@@ -63,29 +65,29 @@ const DeclaracoesAnuaisPage: React.FC = () => {
         irpf: "31/05"
     };
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setLoading(true);
         try {
             const { data: emps } = await supabase.from("empresas").select("*").order("nome_empresa");
-            setEmpresas(emps || []);
+            setEmpresas((emps as Empresa[]) || []);
 
             const { data: socs } = await supabase.from("socios").select("*, empresas(nome_empresa)");
-            setSocios((socs || []).map((s: any) => ({
+            setSocios(((socs || []) as any[]).map((s: any) => ({
                 ...s,
                 empresa_nome: s.empresas?.nome_empresa
             })));
 
-            const { data: decls } = await (supabase.from("declaracoes_anuais" as any) as any).select("*").eq("ano", ano);
+            const { data: decls } = await supabase.from("declaracoes_anuais").select("*").eq("ano", ano);
             const declMap: Record<string, DeclaracaoAnual> = {};
-            (decls as any[])?.forEach(d => {
-                declMap[`${d.empresa_id}_${d.tipo_declaracao}`] = d;
+            (decls as DeclaracaoAnualRow[])?.forEach(d => {
+                declMap[`${d.empresa_id}_${d.tipo_declaracao}`] = d as DeclaracaoAnual;
             });
             setDeclaracoes(declMap);
 
-            const { data: irpfs } = await (supabase.from("declaracoes_irpf" as any) as any).select("*").eq("ano", ano);
+            const { data: irpfs } = await supabase.from("declaracoes_irpf").select("*").eq("ano", ano);
             const irpfMap: Record<string, DeclaracaoIRPF> = {};
-            (irpfs as any[])?.forEach(i => {
-                irpfMap[i.socio_id] = i;
+            (irpfs as DeclaracaoIRPFRow[])?.forEach(i => {
+                irpfMap[i.socio_id] = i as DeclaracaoIRPF;
             });
             setDeclaracoesIRPF(irpfMap);
         } catch (err: any) {
@@ -93,11 +95,11 @@ const DeclaracoesAnuaisPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [ano]);
 
     useEffect(() => {
         loadData();
-    }, [ano]);
+    }, [loadData]);
 
     const handleToggleObrigatorio = (empresaId: string, tipo: string) => {
         const key = `${empresaId}_${tipo}`;
@@ -137,7 +139,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
         }));
     };
 
-    const updateDeclaracao = (empresaId: string, tipo: string, field: string, value: any) => {
+    const updateDeclaracao = (empresaId: string, tipo: string, field: keyof DeclaracaoAnual, value: any) => {
         const key = `${empresaId}_${tipo}`;
         const current = declaracoes[key] || {
             empresa_id: empresaId,
@@ -161,16 +163,21 @@ const DeclaracoesAnuaisPage: React.FC = () => {
         if (!data) return;
 
         try {
+            // Filter only fields that exist in the database Row
+            // Note: 'obrigatorio' and 'data_envio' are not in the current DB schema for declaracoes_anuais
+            const dbData = {
+                empresa_id: data.empresa_id,
+                ano: data.ano,
+                tipo_declaracao: data.tipo_declaracao,
+                enviada: data.enviada
+            };
+
             if (data.id) {
-                await (supabase.from("declaracoes_anuais" as any) as any).update({
-                    obrigatorio: data.obrigatorio,
-                    enviada: data.enviada,
-                    data_envio: data.data_envio
-                }).eq("id", data.id);
+                await supabase.from("declaracoes_anuais").update(dbData).eq("id", data.id);
             } else {
-                const { data: inserted } = await (supabase.from("declaracoes_anuais" as any) as any).insert(data).select().single();
+                const { data: inserted } = await supabase.from("declaracoes_anuais").insert(dbData).select().single();
                 if (inserted) {
-                    setDeclaracoes(prev => ({ ...prev, [key]: inserted as DeclaracaoAnual }));
+                    setDeclaracoes(prev => ({ ...prev, [key]: inserted as unknown as DeclaracaoAnual }));
                 }
             }
             toast.success("Declaração salva!");
@@ -182,7 +189,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
     };
 
     // IRPF handlers
-    const updateIRPF = (socioId: string, field: string, value: any) => {
+    const updateIRPF = (socioId: string, field: keyof DeclaracaoIRPF, value: any) => {
         const current = declaracoesIRPF[socioId] || {
             socio_id: socioId,
             ano,
@@ -204,17 +211,20 @@ const DeclaracoesAnuaisPage: React.FC = () => {
         if (!data) return;
 
         try {
+            // Filter only fields that exist in the database Row
+            // Note: 'faz_pelo_escritorio', 'data_transmissao', 'quem_transmitiu' are not in the current DB schema for declaracoes_irpf
+            const dbData = {
+                socio_id: data.socio_id,
+                ano: data.ano,
+                transmitida: data.transmitida
+            };
+
             if (data.id) {
-                await (supabase.from("declaracoes_irpf" as any) as any).update({
-                    faz_pelo_escritorio: data.faz_pelo_escritorio,
-                    transmitida: data.transmitida,
-                    data_transmissao: data.data_transmissao,
-                    quem_transmitiu: data.quem_transmitiu
-                }).eq("id", data.id);
+                await supabase.from("declaracoes_irpf").update(dbData).eq("id", data.id);
             } else {
-                const { data: inserted } = await (supabase.from("declaracoes_irpf" as any) as any).insert(data).select().single();
+                const { data: inserted } = await supabase.from("declaracoes_irpf").insert(dbData).select().single();
                 if (inserted) {
-                    setDeclaracoesIRPF(prev => ({ ...prev, [socioId]: inserted as DeclaracaoIRPF }));
+                    setDeclaracoesIRPF(prev => ({ ...prev, [socioId]: inserted as unknown as DeclaracaoIRPF }));
                 }
             }
             toast.success("IRPF salvo!");
