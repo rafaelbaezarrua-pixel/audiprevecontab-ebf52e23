@@ -195,7 +195,7 @@ const RecalculosPage: React.FC = () => {
                 className={inputCls}
               >
                 <option value="Fiscal">Fiscal</option>
-                <option value="Pessoal">Pessoal / RH</option>
+                <option value="Pessoal">Pessoal</option>
                 <option value="Licenças">Licenças</option>
                 <option value="Parcelamentos">Parcelamentos</option>
               </select>
