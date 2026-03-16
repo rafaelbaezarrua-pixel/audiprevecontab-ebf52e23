@@ -1,15 +1,15 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
-import { useEmpresas } from "@/hooks/useEmpresas";
 import { useHonorarios } from "@/hooks/useHonorarios";
 import { useSocietario } from "@/hooks/useSocietario";
 import { useAuth } from "@/contexts/AuthContext";
 import { HonorariosGeralView } from "@/components/honorarios/HonorariosGeralView";
 import { HonorariosEmpresasView } from "@/components/honorarios/HonorariosEmpresasView";
 import { HonorarioConfig, HonorarioMensal } from "@/types/honorarios";
+import { Empresa } from "@/types/societario";
 
 const HonorariosPage: React.FC = () => {
   const { user } = useAuth();
@@ -28,50 +28,51 @@ const HonorariosPage: React.FC = () => {
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
 
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 12 });
-  const [paginatedData, setPaginatedData] = useState<any[]>([]);
+  const [paginatedData, setPaginatedData] = useState<Empresa[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loadingPaginated, setLoadingPaginated] = useState(false);
 
   const [configs, setConfigs] = useState<Record<string, Partial<HonorarioConfig>>>({});
   const [mensalData, setMensalData] = useState<Record<string, HonorarioMensal[]>>({});
   const [configForms, setConfigForms] = useState<Record<string, Partial<HonorarioConfig>>>({});
-  const [mensalForms, setMensalForms] = useState<Record<string, any>>({});
+  const [mensalForms, setMensalForms] = useState<Record<string, Partial<HonorarioMensal>>>({});
   const [competenciaSelecionada, setCompetenciaSelecionada] = useState<Record<string, string>>({});
-  const [todasEmpresas, setTodasEmpresas] = useState<any[]>([]);
+  const [todasEmpresas, setTodasEmpresas] = useState<Empresa[]>([]);
 
   useEffect(() => {
     if (mainTab === 'geral' && todasEmpresas.length === 0) {
       const fetchAll = async () => {
         const { data } = await supabase.from("empresas").select("*").order("nome_empresa");
-        setTodasEmpresas(data || []);
+        setTodasEmpresas((data as Empresa[]) || []);
       };
       fetchAll();
     }
   }, [mainTab, todasEmpresas.length]);
 
+  const loadPaginatedData = useCallback(async () => {
+    setLoadingPaginated(true);
+    try {
+      const { data, count } = await getPaginatedEmpresas(
+        pagination.pageIndex,
+        pagination.pageSize,
+        search,
+        activeStatusTab,
+        "todos",
+        "honorarios",
+        user?.id
+      );
+      setPaginatedData(data);
+      setTotalCount(count);
+    } catch (err) {
+      console.error("Erro ao carregar empresas paginadas:", err);
+    } finally {
+      setLoadingPaginated(false);
+    }
+  }, [pagination.pageIndex, pagination.pageSize, search, activeStatusTab, user?.id, getPaginatedEmpresas]);
+
   useEffect(() => {
-    const fetch = async () => {
-      setLoadingPaginated(true);
-      try {
-        const { data, count } = await getPaginatedEmpresas(
-          pagination.pageIndex,
-          pagination.pageSize,
-          search,
-          activeStatusTab,
-          "todos",
-          "honorarios",
-          user?.id
-        );
-        setPaginatedData(data);
-        setTotalCount(count);
-      } catch (err) {
-        console.error("Erro ao carregar empresas paginadas:", err);
-      } finally {
-        setLoadingPaginated(false);
-      }
-    };
-    fetch();
-  }, [pagination, search, activeStatusTab, user]);
+    loadPaginatedData();
+  }, [loadPaginatedData]);
 
   useEffect(() => {
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
@@ -88,15 +89,15 @@ const HonorariosPage: React.FC = () => {
     
     // Load local data for the company
     const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
-    const finalConfig = (config as any) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
+    const finalConfig: Partial<HonorarioConfig> = config || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
     setConfigs(prev => ({ ...prev, [empresaId]: finalConfig }));
     setConfigForms(prev => ({ ...prev, [empresaId]: { ...finalConfig } }));
 
     const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empresaId).order('competencia', { ascending: false });
-    setMensalData(prev => ({ ...prev, [empresaId]: (mensal as any) || [] }));
+    setMensalData(prev => ({ ...prev, [empresaId]: (mensal as HonorarioMensal[]) || [] }));
   };
 
-  const parseCurrency = (val: any) => {
+  const parseCurrency = (val: any): number => {
     if (typeof val === 'number') return val;
     if (!val) return 0;
     const str = String(val);
@@ -104,7 +105,7 @@ const HonorariosPage: React.FC = () => {
     return parseFloat(str) || 0;
   };
 
-  const calculateTotal = (config: any, qtdFunc: number, qtdRecalculos: number, teveTrabalhista: boolean) => {
+  const calculateTotal = (config: Partial<HonorarioConfig>, qtdFunc: number, qtdRecalculos: number, teveTrabalhista: boolean) => {
     const honorario = Number(config?.valor_honorario || 0);
     const funcVlr = Number(config?.valor_por_funcionario || 0) * qtdFunc;
     const recVlr = Number(config?.valor_por_recalculo || 0) * qtdRecalculos;
@@ -136,14 +137,14 @@ const HonorariosPage: React.FC = () => {
       const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
       const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", comp);
 
-      const { total: valorTotal, detalhes } = calculateTotal(config, qtdFunc, qtdRecalculos || 0, teveTrabalhista || false);
+      const { total: valorTotal, detalhes } = calculateTotal(config, qtdFunc, (qtdRecalculos as number) || 0, teveTrabalhista || false);
 
       setMensalForms(prev => ({
         ...prev, [empresaId]: {
-          competencia: comp, qtd_funcionarios: qtdFunc, qtd_recalculos: qtdRecalculos || 0,
+          competencia: comp, qtd_funcionarios: qtdFunc, qtd_recalculos: (qtdRecalculos as number) || 0,
           teve_encargo_trabalhista: teveTrabalhista || false, valor_total: valorTotal,
           detalhes_calculo: detalhes, empresa_id: empresaId,
-          data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: ""
+          data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: { texto: "" }
         }
       }));
     } catch (err: any) { toast.error("Erro ao gerar mês: " + err.message); }
@@ -177,7 +178,7 @@ const HonorariosPage: React.FC = () => {
           geralData={listGeral}
           esporadicosData={listEsporadicos}
           revenueTrend={revenueTrend}
-          todasEmpresas={todasEmpresas}
+          todasEmpresas={todasEmpresas as any}
           globalCompetencia={globalCompetencia}
           setGlobalCompetencia={setGlobalCompetencia}
           onToggleMensalPago={(id, current) => saveMensal.mutate({ id, pago: !current } as any)}
@@ -203,13 +204,13 @@ const HonorariosPage: React.FC = () => {
             
             // 3. Load config and generate (mimic toggleExpand + handleGenerateMonth)
             const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
-            const finalConfig = (config as any) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
+            const finalConfig: Partial<HonorarioConfig> = config || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
             
             setConfigs(prev => ({ ...prev, [empresaId]: finalConfig }));
             setConfigForms(prev => ({ ...prev, [empresaId]: { ...finalConfig } }));
 
             const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empresaId).order('competencia', { ascending: false });
-            setMensalData(prev => ({ ...prev, [empresaId]: (mensal as any) || [] }));
+            setMensalData(prev => ({ ...prev, [empresaId]: (mensal as HonorarioMensal[]) || [] }));
 
             // 4. Trigger generation with the loaded config
             const { data: pessoalData } = await supabase.from("pessoal").select("*").eq("empresa_id", empresaId).eq("competencia", globalCompetencia).maybeSingle();
@@ -217,18 +218,18 @@ const HonorariosPage: React.FC = () => {
             const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
             const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", globalCompetencia);
 
-            const { total: valorTotal, detalhes } = calculateTotal(finalConfig, qtdFunc, qtdRecalculos || 0, teveTrabalhista || false);
+            const { total: valorTotal, detalhes } = calculateTotal(finalConfig, qtdFunc, (qtdRecalculos as number) || 0, teveTrabalhista || false);
 
             setMensalForms(prev => ({
               ...prev, [empresaId]: {
                 competencia: globalCompetencia,
                 qtd_funcionarios: qtdFunc,
-                qtd_recalculos: qtdRecalculos || 0,
+                qtd_recalculos: (qtdRecalculos as number) || 0,
                 teve_encargo_trabalhista: teveTrabalhista || false,
                 valor_total: valorTotal,
                 detalhes_calculo: detalhes,
                 empresa_id: empresaId,
-                data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: ""
+                data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: { texto: "" }
               }
             }));
 
@@ -256,7 +257,7 @@ const HonorariosPage: React.FC = () => {
           </div>
 
           <HonorariosEmpresasView 
-            empresas={paginatedData}
+            empresas={paginatedData as any}
             expanded={expanded}
             onToggleExpand={toggleExpand}
             activeTabs={activeTabs}
@@ -299,18 +300,18 @@ const HonorariosPage: React.FC = () => {
               const form = mensalForms[id];
               await saveMensal.mutateAsync({
                 ...form,
-                data_vencimento: form.data_vencimento || null,
-                data_envio: form.data_envio || null,
-                observacoes: form.observacoes ? { texto: typeof form.observacoes === 'string' ? form.observacoes : form.observacoes.texto } : null
+                data_vencimento: form?.data_vencimento || null,
+                data_envio: form?.data_envio || null,
+                observacoes: form?.observacoes ? { texto: typeof form.observacoes === 'string' ? form.observacoes : form.observacoes.texto } : null
               } as any);
               setMensalForms(prev => { const n = { ...prev }; delete n[id]; return n; });
               const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", id).order('competencia', { ascending: false });
-              setMensalData(prev => ({ ...prev, [id]: (mensal as any) || [] }));
+              setMensalData(prev => ({ ...prev, [id]: (mensal as HonorarioMensal[]) || [] }));
             }}
             onGenerateMonth={handleGenerateMonth}
             onStartEditMensal={(id, record) => {
               setCompetenciaSelecionada(prev => ({ ...prev, [id]: record.competencia }));
-              setMensalForms(prev => ({ ...prev, [id]: { ...record, observacoes: record.observacoes?.texto || "" } }));
+              setMensalForms(prev => ({ ...prev, [id]: { ...record, observacoes: { texto: record.observacoes?.texto || "" } } }));
             }}
             competenciaSelecionada={competenciaSelecionada}
             setCompetenciaSelecionada={(id, v) => setCompetenciaSelecionada(prev => ({ ...prev, [id]: v }))}
@@ -322,7 +323,7 @@ const HonorariosPage: React.FC = () => {
             onUpdateMensalValor={async (empId, recId, val) => {
               await saveMensal.mutateAsync({ id: recId, valor_total: val } as any);
               const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empId).order('competencia', { ascending: false });
-              setMensalData(prev => ({ ...prev, [empId]: (mensal as any) || [] }));
+              setMensalData(prev => ({ ...prev, [empId]: (mensal as HonorarioMensal[]) || [] }));
             }}
           />
         </div>
