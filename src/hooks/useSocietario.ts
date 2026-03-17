@@ -37,13 +37,15 @@ export const useSocietario = () => {
         'ativas': 'ativa',
         'paralisadas': 'paralisada',
         'baixadas': 'baixada',
-        'entregue': 'entregue'
+        'entregue': 'entregue',
+        'mei': 'mei'
       };
 
       const mappedSituacao = situacaoMap[situacao] || situacao;
 
       if (situacao === 'mei') {
-         query = query.eq("regime_tributario", "mei").in("situacao", ["ativa", "paralisada"]);
+         // Filter by regime MEI OR situation MEI
+         query = query.or(`regime_tributario.eq.mei,situacao.eq.mei`);
       } else if (mappedSituacao === 'ativa') {
          query = query.eq("situacao", "ativa");
       } else {

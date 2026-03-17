@@ -11,8 +11,9 @@ const PessoalPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, Partial<PessoalRecord> & Record<string, any>>>({});
+  const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
+  const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
 
   useEffect(() => {
     const load = async () => {
@@ -29,9 +30,9 @@ const PessoalPage: React.FC = () => {
 
     let matchTab = false;
     if (activeTab === "ativas") {
-      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa !== "mei";
+      matchTab = (e.situacao === "ativa" || !e.situacao) && e.porte_empresa !== "mei";
     } else if (activeTab === "mei") {
-      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
+      matchTab = e.situacao === "mei" || ((e.situacao === "ativa" || !e.situacao) && e.porte_empresa === "mei");
     } else if (activeTab === "paralisadas") {
       matchTab = e.situacao === "paralisada";
     } else if (activeTab === "baixadas") {
@@ -40,7 +41,25 @@ const PessoalPage: React.FC = () => {
       matchTab = e.situacao === "entregue";
     }
 
-    return matchSearch && matchTab;
+    let matchStatus = true;
+    if (filterStatus !== "todos") {
+      const record = pessoalData[e.id];
+      if (!record) {
+        matchStatus = filterStatus === 'pendente';
+      } else {
+        const checks = [];
+        if (record.possui_vt) checks.push(record.vt_status);
+        if (record.possui_va) checks.push(record.va_status);
+        if (record.possui_vc) checks.push(record.vc_status);
+        checks.push(record.inss_status);
+        checks.push(record.fgts_status);
+        
+        const isAllConcluido = checks.every(s => s === 'concluido' || s === 'isento') && record.dctf_web_gerada;
+        matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
+      }
+    }
+
+    return matchSearch && matchTab && matchStatus;
   });
 
   const toggleExpand = async (id: string) => {
@@ -139,15 +158,47 @@ const PessoalPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
-        <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <input
+              type="text"
+              placeholder="Buscar empresa..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm w-full sm:w-64"
+            />
+          </div>
+          <input
+            type="month"
+            value={competencia}
+            onChange={(e) => setCompetencia(e.target.value)}
+            className="px-4 py-2 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm"
+          />
+        </div>
+
+        <div className="flex bg-muted/50 p-1 rounded-lg self-end">
+          <button 
+            onClick={() => setFilterStatus("todos")}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "todos" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Todos
+          </button>
+          <button 
+            onClick={() => setFilterStatus("pendente")}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "pendente" ? "bg-card text-orange-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Pendentes
+          </button>
+          <button 
+            onClick={() => setFilterStatus("concluido")}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "concluido" ? "bg-card text-green-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Concluídos
+          </button>
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Empresas</p><p className="text-2xl font-bold text-primary mt-1">{filtered.length}</p></div>
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Concluídas</p><p className="text-2xl font-bold text-success mt-1">{completedCount}</p></div>
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Pendentes</p><p className="text-2xl font-bold text-warning mt-1">{filtered.length - completedCount}</p></div>
-      </div>
-      <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
 
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
         <button

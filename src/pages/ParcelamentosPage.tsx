@@ -26,6 +26,7 @@ const ParcelamentosPage: React.FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, Partial<ParcelamentoMensalRecord>>>({});
   const [activeTab, setActiveTab] = useState<"andamento" | "encerrados">("andamento");
+  const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
 
   useEffect(() => {
     const loadParcelamentos = async () => {
@@ -69,7 +70,15 @@ const ParcelamentosPage: React.FC = () => {
     const matchesSearch =
       p.nome_pessoa_fisica?.toLowerCase().includes(search.toLowerCase()) ||
       p.cpf_pessoa_fisica?.includes(search);
-    return matchesTab && matchesSearch;
+    
+    let matchesStatus = true;
+    if (filterStatus !== "todos") {
+      const record = mensalData[p.id];
+      const isConcluido = record?.status === "concluido" || record?.status === "isento";
+      matchesStatus = filterStatus === "concluido" ? isConcluido : !isConcluido;
+    }
+
+    return matchesTab && matchesSearch && matchesStatus;
   });
 
   const toggleExpand = (id: string) => {
