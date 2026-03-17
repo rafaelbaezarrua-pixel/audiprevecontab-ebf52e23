@@ -31,6 +31,7 @@ const GestorAlertasPage: React.FC = () => {
   const [alertTypes, setAlertTypes] = useState<AlertType[]>([]);
   const [rules, setRules] = useState<NotificationRule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [triggerLoading, setTriggerLoading] = useState(false);
   const [showAddRule, setShowAddRule] = useState(false);
   
   const [newRule, setNewRule] = useState({
@@ -116,6 +117,25 @@ const GestorAlertasPage: React.FC = () => {
       fetchRules();
     } catch (err) {
       toast.error("Erro ao adicionar regra");
+    }
+  };
+
+  const handleManualTrigger = async () => {
+    try {
+      setTriggerLoading(true);
+      const { data, error } = await supabase.functions.invoke('send-alert-email');
+      
+      if (error) throw error;
+      
+      toast.success(
+        `Disparo concluído! ${data.companiesNotified || 0} empresas e ${data.usersNotified || 0} usuários notificados.`,
+        { duration: 5000 }
+      );
+    } catch (err: any) {
+      toast.error(`Erro ao disparar alertas: ${err.message || 'Erro desconhecido'}`);
+      console.error(err);
+    } finally {
+      setTriggerLoading(false);
     }
   };
 
@@ -298,13 +318,25 @@ const GestorAlertasPage: React.FC = () => {
                 <Key className="text-primary" size={16} /> Edge Function do Provedor
              </h2>
              <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-               Para que os e-mails cheguem fisicamente à caixa de entrada do cliente final, o provedor externo 
-               (Resend, SendGrid) precisa ser injetado na próxima versão (Phase 6: Edge Function <code className="bg-muted px-1 py-0.5 rounded">send-alert-email</code>).
+               Utilize o botão abaixo para forçar o processamento de todos os vencimentos de hoje e enviar os e-mails imediatamente para empresas e gestores.
              </p>
-             <button className="w-full py-2.5 text-xs font-bold bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center gap-2">
-               Acessar Documentação <ArrowRight size={14} />
+             <button 
+                onClick={handleManualTrigger}
+                disabled={triggerLoading}
+                className={`w-full py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  triggerLoading 
+                    ? "bg-muted text-muted-foreground cursor-not-allowed" 
+                    : "bg-primary text-white hover:scale-[1.02] shadow-lg shadow-primary/20"
+                }`}
+             >
+               {triggerLoading ? (
+                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+               ) : (
+                 <Mail size={14} />
+               )}
+               {triggerLoading ? "Processando..." : "Disparar Alertas Agora"}
              </button>
-          </div>
+           </div>
         </div>
       </div>
     </div>
