@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { 
+import {
   FileText, Download, Calendar, DollarSign, Calculator,
   Shield, Users, AlertCircle, Building2,
   CheckCircle2, Circle, ChevronRight, ChevronLeft,
@@ -41,11 +41,11 @@ const COMPANY_FIELDS = [
   { id: "qsa", label: "Sócios (QSA)", accessor: (i: any) => i.qsa && Array.isArray(i.qsa) ? i.qsa.map((s: any) => s.nome || s.nome_socio).join(", ") : "—" },
 ];
 
-const licencaLabels: Record<string, string> = { 
-  alvara: "Alvará", 
-  vigilancia_sanitaria: "Vigilância", 
-  corpo_bombeiros: "Bombeiros", 
-  meio_ambiente: "Meio Ambiente" 
+const licencaLabels: Record<string, string> = {
+  alvara: "Alvará",
+  vigilancia_sanitaria: "Vigilância",
+  corpo_bombeiros: "Bombeiros",
+  meio_ambiente: "Meio Ambiente"
 };
 
 const MODULES_CONFIG: ModuleConfig[] = [
@@ -313,11 +313,11 @@ const MODULES_CONFIG: ModuleConfig[] = [
 ];
 
 const SITUATIONS = [
-  { id: "ativa", label: "Ativas" },
-  { id: "mei", label: "MEI" },
-  { id: "paralisada", label: "Paralisadas" },
-  { id: "baixada", label: "Baixadas" },
-  { id: "entregue", label: "Entregues" }
+  { id: "Ativa", label: "Ativas" },
+  { id: "MEI", label: "MEI" },
+  { id: "Paralisada", label: "Paralisadas" },
+  { id: "Baixada", label: "Baixadas" },
+  { id: "Entregue", label: "Entregues" }
 ];
 
 const safeFormatDate = (dateStr: string | null | undefined) => {
@@ -348,7 +348,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
   const fetchHeaderConfig = async () => {
     const { data } = await supabase.from("app_config").select("value").eq("key", "pdf_header_config").maybeSingle();
     if (data?.value) {
-       try { setHeaderConfig(JSON.parse(data.value)); } catch (e) { console.error(e); }
+      try { setHeaderConfig(JSON.parse(data.value)); } catch (e) { console.error(e); }
     }
   };
 
@@ -393,10 +393,10 @@ const RelatorioPersonalizadoPage: React.FC = () => {
     doc.addFont("Ubuntu-Bold.ttf", "Ubuntu", "bold");
 
     const config = headerConfig || {
-       title: "Audipreve Contabilidade",
-       subtitle: "CRC-PR nº. 01.0093/O - 6",
-       address: "Rua Jequitibá, n.º 789, 1º andar, sala 01, Bairro Nações, Fazenda Rio Grande/PR",
-       contact: "Fone: (41) 3604-8059 | societario@audiprevecontabilidade.com.br"
+      title: "Audipreve Contabilidade",
+      subtitle: "CRC-PR nº. 01.0093/O - 6",
+      address: "Rua Jequitibá, n.º 789, 1º andar, sala 01, Bairro Nações, Fazenda Rio Grande/PR",
+      contact: "Fone: (41) 3604-8059 | societario@audiprevecontabilidade.com.br"
     };
 
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -473,14 +473,14 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           moduleData = allCompanies;
         } else if (modId === "vencimentos") {
           // Virtual Vencimentos Module Logic
-          const calcStatus = (data: string) => { 
-            const dias = Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); 
-            return dias < 0 ? "Vencido" : dias <= 30 ? "Próximo" : "Em Dia"; 
+          const calcStatus = (data: string) => {
+            const dias = Math.ceil((new Date(data).getTime() - Date.now()) / 86400000);
+            return dias < 0 ? "Vencido" : dias <= 30 ? "Próximo" : "Em Dia";
           };
 
           const [{ data: licData }, { data: certData }, { data: procData }, { data: certidoesData }, { data: taxasData }] = await Promise.all([
             // Licenses
-            fieldsToInclude.some(f => f.startsWith("licenca_")) 
+            fieldsToInclude.some(f => f.startsWith("licenca_"))
               ? supabase.from("licencas").select("*").eq("status", "com_vencimento").not("vencimento", "is", null)
               : Promise.resolve({ data: [] }),
             // Certificates
@@ -502,40 +502,40 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           ]);
 
           const compiledVenc: any[] = [];
-          
+
           // Helper maps
           const licMap: Record<string, string> = { alvara: "licenca_alvara", vigilancia_sanitaria: "licenca_vigilancia", corpo_bombeiros: "licenca_bombeiros", meio_ambiente: "licenca_meio_ambiente" };
           const taxaMap: Record<string, string> = { alvara: "taxa_alvara", vigilancia_sanitaria: "taxa_vigilancia", corpo_bombeiros: "taxa_bombeiros", meio_ambiente: "taxa_meio_ambiente" };
 
           licData?.forEach((l: any) => {
             if (fieldsToInclude.includes(licMap[l.tipo_licenca])) {
-              compiledVenc.push({ 
-                empresa_id: l.empresa_id, 
-                tipo: `Licença: ${licencaLabels[l.tipo_licenca] || l.tipo_licenca}`, 
-                data: l.vencimento, 
-                status: calcStatus(l.vencimento) 
+              compiledVenc.push({
+                empresa_id: l.empresa_id,
+                tipo: `Licença: ${licencaLabels[l.tipo_licenca] || l.tipo_licenca}`,
+                data: l.vencimento,
+                status: calcStatus(l.vencimento)
               });
             }
           });
-          
+
           if (fieldsToInclude.includes("certificados")) {
             certData?.forEach((c: any) => compiledVenc.push({ empresa_id: c.empresa_id, tipo: "Certificado Digital", data: c.data_vencimento, status: calcStatus(c.data_vencimento) }));
           }
-          
+
           if (fieldsToInclude.includes("procuracoes")) {
             procData?.forEach((p: any) => compiledVenc.push({ empresa_id: p.empresa_id, tipo: "Procuração", data: p.data_vencimento, status: calcStatus(p.data_vencimento) }));
           }
-          
+
           if (fieldsToInclude.includes("certidoes")) {
             certidoesData?.forEach((c: any) => compiledVenc.push({ empresa_id: c.empresa_id, tipo: `Certidão: ${c.tipo_certidao}`, data: c.vencimento, status: calcStatus(c.vencimento) }));
           }
-          
+
           taxasData?.forEach((t: any) => {
             if (fieldsToInclude.includes(taxaMap[t.tipo_licenca])) {
-              compiledVenc.push({ 
-                empresa_id: t.empresa_id, 
-                tipo: `Taxa: ${licencaLabels[t.tipo_licenca] || t.tipo_licenca}`, 
-                data: t.data_vencimento, 
+              compiledVenc.push({
+                empresa_id: t.empresa_id,
+                tipo: `Taxa: ${licencaLabels[t.tipo_licenca] || t.tipo_licenca}`,
+                data: t.data_vencimento,
                 status: calcStatus(t.data_vencimento),
                 // Extra fields for taxes
                 status_taxa: t.status ? t.status.charAt(0).toUpperCase() + t.status.slice(1) : "Pendente",
@@ -544,35 +544,35 @@ const RelatorioPersonalizadoPage: React.FC = () => {
               });
             }
           });
-          
+
           moduleData = compiledVenc;
         } else {
           // Fetch Module Data
           let query = supabase.from(mod.table as any).select("*");
-          
+
           if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos"].includes(modId)) {
-             query = query.eq("competencia", competencia);
+            query = query.eq("competencia", competencia);
           } else if (modId === "irpf") {
-             const ano = competencia.split('-')[0];
-             const { data: irpfClientes } = await supabase.from("irpf").select("*").eq("ano_exercicio", ano);
-             const { data: irpfSocios } = await supabase.from("declaracoes_irpf" as any).select(`*, socios(nome, cpf, empresas(nome_empresa))`).eq("ano", ano);
-             
-             const unified = [];
-             if (irpfClientes) {
-                irpfClientes.forEach(c => unified.push({
-                   categoria: "IRPF Clientes", nome_completo: c.nome_completo, cpf: c.cpf, empresa: "—",
-                   ano_exercicio: c.ano_exercicio, valor_a_pagar: c.valor_a_pagar, status_pago: c.status_pago,
-                   data_pagamento: c.data_pagamento, status_transmissao: c.status_transmissao, data_transmissao: c.data_transmissao, transmitido_por: c.transmitido_por
-                }));
-             }
-             if (irpfSocios) {
-                irpfSocios.forEach((s: any) => unified.push({
-                   categoria: "IRPF Clientes Empresa", nome_completo: s.socios?.nome || "—", cpf: s.socios?.cpf || "—", empresa: s.socios?.empresas?.nome_empresa || "—",
-                   ano_exercicio: s.ano, valor_a_pagar: null, status_pago: null, data_pagamento: null,
-                   status_transmissao: s.transmitida ? "transmitida" : "pendente", data_transmissao: s.data_transmissao, transmitido_por: s.quem_transmitiu
-                }));
-             }
-             moduleData = unified;
+            const ano = competencia.split('-')[0];
+            const { data: irpfClientes } = await (supabase.from("irpf" as any).select("*").eq("ano_exercicio", ano) as any);
+            const { data: irpfSocios } = await supabase.from("declaracoes_irpf" as any).select(`*, socios(nome, cpf, empresas(nome_empresa))`).eq("ano", ano);
+
+            const unified: any[] = [];
+            if (irpfClientes) {
+              (irpfClientes as any[]).forEach(c => unified.push({
+                categoria: "IRPF Clientes", nome_completo: c.nome_completo, cpf: c.cpf, empresa: "—",
+                ano_exercicio: c.ano_exercicio, valor_a_pagar: c.valor_a_pagar, status_pago: c.status_pago,
+                data_pagamento: c.data_pagamento, status_transmissao: c.status_transmissao, data_transmissao: c.data_transmissao, transmitido_por: c.transmitido_por
+              }));
+            }
+            if (irpfSocios) {
+              (irpfSocios as any[]).forEach((s: any) => unified.push({
+                categoria: "IRPF Clientes Empresa", nome_completo: s.socios?.nome || "—", cpf: s.socios?.cpf || "—", empresa: s.socios?.empresas?.nome_empresa || "—",
+                ano_exercicio: s.ano, valor_a_pagar: null, status_pago: null, data_pagamento: null,
+                status_transmissao: s.transmitida ? "transmitida" : "pendente", data_transmissao: s.data_transmissao, transmitido_por: s.quem_transmitiu
+              }));
+            }
+            moduleData = unified;
           }
 
           if (modId !== "irpf") {
@@ -588,7 +588,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
         // Specific Isolated Block for IRPF (Not linked to Companies)
         if (modId === "irpf") {
           const categorias = ["IRPF Clientes", "IRPF Clientes Empresa"];
-          
+
           for (const cat of categorias) {
             const catData = moduleData.filter((d: any) => d.categoria === cat);
             if (catData.length === 0) continue;
@@ -641,7 +641,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
               body.forEach(row => excelAoA.push(row));
             }
           }
-          
+
           continue;
         }
 
@@ -695,20 +695,20 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           if (!selectedSituations.includes(sit.id)) continue;
 
           const situationCompanies = allCompanies.filter(c => {
-             if (sit.id === "mei") return c.regime_tributario === "mei";
-             return c.situacao === sit.id && c.regime_tributario !== "mei";
+            if (sit.id === "mei") return c.regime_tributario === "mei";
+            return c.situacao === sit.id && c.regime_tributario !== "mei";
           });
 
           if (situationCompanies.length === 0) continue;
 
           const situationRows: any[] = [];
-          
+
           situationCompanies.forEach(company => {
             const companyRecords = moduleData.filter((d: any) => {
               if (modId === "societario") return d.id === company.id;
               return d.empresa_id === company.id;
             });
-            
+
             if (companyRecords.length > 0) {
               companyRecords.forEach(record => {
                 situationRows.push({ ...company, ...record, isPartial: false });
@@ -721,10 +721,10 @@ const RelatorioPersonalizadoPage: React.FC = () => {
 
           // Build Table Headers
           const extraHeaders = COMPANY_FIELDS.filter(f => selectedCompanyFields.includes(f.id)).map(f => f.label);
-          
+
           let moduleHeaders: string[] = [];
           let activeFields: ModuleConfig['fields'] = [];
-          
+
           if (modId === "vencimentos") {
             // Adaptive headers for Vencimentos
             const showTaxColumns = fieldsToInclude.some(f => f.startsWith("taxa_"));
@@ -733,7 +733,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
               { id: "status", label: "Situação" },
               { id: "data", label: "Vencimento", accessor: (i) => safeFormatDate(i.data) }
             ];
-            
+
             if (showTaxColumns) {
               activeFields.push(
                 { id: "status_taxa", label: "Status Taxa" },
@@ -764,7 +764,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
               if (f.accessor) return f.accessor(row);
               if (val === null || val === undefined) return "—";
               return String(val);
-          });
+            });
 
             return [row.nome_empresa, ...companyValues, ...moduleValues];
           });
@@ -813,7 +813,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
         toast.success("Relatório PDF gerado com sucesso!");
       } else if (exportFormat === 'excel') {
         const ws = XLSX.utils.aoa_to_sheet(excelAoA);
-        
+
         // Auto-fit columns
         const colWidths = excelAoA.reduce((acc: any[], row: any[]) => {
           row.forEach((cell, i) => {
@@ -826,7 +826,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
 
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Relatório");
-        
+
         XLSX.writeFile(wb, `Relatorio_Personalizado_${competencia}.xlsx`);
         toast.success("Relatório Excel exportado com sucesso!");
       }
@@ -859,41 +859,39 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                 </span>
               </div>
 
-               <div className="flex items-center gap-2">
-                 <button
-                    onClick={() => handleGenerate('excel')}
-                    disabled={loadingType !== null || selectedModules.length === 0}
-                    className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm transition-all shadow-sm ${
-                      loadingType !== null || selectedModules.length === 0
-                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                        : "bg-surface text-foreground border border-border/50 hover:bg-muted active:scale-95"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleGenerate('excel')}
+                  disabled={loadingType !== null || selectedModules.length === 0}
+                  className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm transition-all shadow-sm ${loadingType !== null || selectedModules.length === 0
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                      : "bg-surface text-foreground border border-border/50 hover:bg-muted active:scale-95"
                     }`}
-                 >
-                   {loadingType === 'excel' ? (
-                     <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-                   ) : (
-                     <FileSpreadsheet size={18} className="text-emerald-600" />
-                   )}
-                   <span>{loadingType === 'excel' ? "Gerando..." : "Excel"}</span>
-                 </button>
+                >
+                  {loadingType === 'excel' ? (
+                    <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <FileSpreadsheet size={18} className="text-emerald-600" />
+                  )}
+                  <span>{loadingType === 'excel' ? "Gerando..." : "Excel"}</span>
+                </button>
 
-                 <button
-                    onClick={() => handleGenerate('pdf')}
-                    disabled={loadingType !== null || selectedModules.length === 0}
-                    className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 ${
-                      loadingType !== null || selectedModules.length === 0
-                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                        : "bg-primary text-white shadow-primary/20 hover:scale-105"
+                <button
+                  onClick={() => handleGenerate('pdf')}
+                  disabled={loadingType !== null || selectedModules.length === 0}
+                  className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 ${loadingType !== null || selectedModules.length === 0
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                      : "bg-primary text-white shadow-primary/20 hover:scale-105"
                     }`}
-                 >
-                   {loadingType === 'pdf' ? (
-                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                   ) : (
-                     <Download size={18} />
-                   )}
-                   <span>{loadingType === 'pdf' ? "Gerando..." : "PDF"}</span>
-                 </button>
-               </div>
+                >
+                  {loadingType === 'pdf' ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Download size={18} />
+                  )}
+                  <span>{loadingType === 'pdf' ? "Gerando..." : "PDF"}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -910,11 +908,10 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                   <button
                     key={sit.id}
                     onClick={() => toggleSituation(sit.id)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
-                      selectedSituations.includes(sit.id)
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedSituations.includes(sit.id)
                         ? "bg-primary/10 border-primary/30 text-primary shadow-sm"
                         : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/20"
-                    }`}
+                      }`}
                   >
                     {sit.label}
                   </button>
@@ -930,9 +927,9 @@ const RelatorioPersonalizadoPage: React.FC = () => {
               </div>
               <div className="flex items-center w-full max-w-sm">
                 <div className="flex items-center gap-3 bg-background/50 p-3 rounded-2xl border border-border/40 shadow-inner w-full group focus-within:border-primary/40 transition-colors">
-                  <input 
-                    type="month" 
-                    value={competencia} 
+                  <input
+                    type="month"
+                    value={competencia}
                     onChange={(e) => setCompetencia(e.target.value)}
                     className="bg-transparent border-none text-sm font-bold outline-none focus:ring-0 w-full"
                   />
@@ -948,32 +945,31 @@ const RelatorioPersonalizadoPage: React.FC = () => {
         {/* Module Selection Sidebar */}
         <div className="lg:col-span-4 space-y-4">
           <div className="bg-card rounded-3xl border border-border/50 p-6 shadow-sm overflow-hidden">
-             <div className="flex items-center gap-2 mb-6">
-               <Layers className="text-primary" size={20} />
-               <h3 className="font-black uppercase tracking-widest text-xs text-muted-foreground">Departamentos</h3>
-             </div>
-             
-             <div className="space-y-2">
-               {MODULES_CONFIG.map(mod => (
-                 <button
-                   key={mod.id}
-                   onClick={() => toggleModule(mod.id)}
-                   className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
-                     selectedModules.includes(mod.id)
-                       ? "border-primary bg-primary/5 shadow-inner"
-                       : "border-transparent hover:bg-muted/50 text-muted-foreground"
-                   }`}
-                 >
-                   <div className={`p-2.5 rounded-xl ${selectedModules.includes(mod.id) ? mod.color + " text-white" : "bg-muted text-muted-foreground"}`}>
-                     {mod.icon}
-                   </div>
-                   <span className={`font-bold text-sm flex-1 ${selectedModules.includes(mod.id) ? "text-card-foreground" : ""}`}>
-                     {mod.label}
-                   </span>
-                   {selectedModules.includes(mod.id) && <CheckCircle2 size={18} className="text-primary" />}
-                 </button>
-               ))}
-             </div>
+            <div className="flex items-center gap-2 mb-6">
+              <Layers className="text-primary" size={20} />
+              <h3 className="font-black uppercase tracking-widest text-xs text-muted-foreground">Departamentos</h3>
+            </div>
+
+            <div className="space-y-2">
+              {MODULES_CONFIG.map(mod => (
+                <button
+                  key={mod.id}
+                  onClick={() => toggleModule(mod.id)}
+                  className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${selectedModules.includes(mod.id)
+                      ? "border-primary bg-primary/5 shadow-inner"
+                      : "border-transparent hover:bg-muted/50 text-muted-foreground"
+                    }`}
+                >
+                  <div className={`p-2.5 rounded-xl ${selectedModules.includes(mod.id) ? mod.color + " text-white" : "bg-muted text-muted-foreground"}`}>
+                    {mod.icon}
+                  </div>
+                  <span className={`font-bold text-sm flex-1 ${selectedModules.includes(mod.id) ? "text-card-foreground" : ""}`}>
+                    {mod.label}
+                  </span>
+                  {selectedModules.includes(mod.id) && <CheckCircle2 size={18} className="text-primary" />}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -981,13 +977,13 @@ const RelatorioPersonalizadoPage: React.FC = () => {
         <div className="lg:col-span-8 space-y-6">
           {selectedModules.length === 0 ? (
             <div className="bg-card rounded-3xl border border-dashed border-border/60 p-20 flex flex-col items-center justify-center text-center opacity-60">
-               <div className="p-6 rounded-full bg-muted mb-4">
-                 <ListChecks size={40} className="text-muted-foreground" />
-               </div>
-               <h3 className="text-xl font-bold text-card-foreground">Nenhum módulo selecionado</h3>
-               <p className="text-sm text-muted-foreground max-w-xs mt-2">
-                 Selecione um ou mais departamentos ao lado para começar a configurar seu relatório.
-               </p>
+              <div className="p-6 rounded-full bg-muted mb-4">
+                <ListChecks size={40} className="text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-bold text-card-foreground">Nenhum módulo selecionado</h3>
+              <p className="text-sm text-muted-foreground max-w-xs mt-2">
+                Selecione um ou mais departamentos ao lado para começar a configurar seu relatório.
+              </p>
             </div>
           ) : (
             <div className="space-y-6 animate-scale-in">
@@ -1001,24 +997,23 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                   Estes campos serão adicionados como colunas para todos os módulos selecionados abaixo.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 relative z-10">
-                   {COMPANY_FIELDS.map(field => (
-                     <button
-                       key={field.id}
-                       onClick={() => setSelectedCompanyFields(prev => 
+                  {COMPANY_FIELDS.map(field => (
+                    <button
+                      key={field.id}
+                      onClick={() => setSelectedCompanyFields(prev =>
                         prev.includes(field.id) ? prev.filter(f => f !== field.id) : [...prev, field.id]
-                       )}
-                       className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
-                         selectedCompanyFields.includes(field.id)
-                           ? "border-primary/40 bg-primary/5 shadow-sm"
-                           : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
-                       }`}
-                     >
-                        <div className={`transition-colors ${selectedCompanyFields.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
-                          {selectedCompanyFields.includes(field.id) ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-                        </div>
-                        <span className="text-xs font-bold">{field.label}</span>
-                     </button>
-                   ))}
+                      )}
+                      className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${selectedCompanyFields.includes(field.id)
+                          ? "border-primary/40 bg-primary/5 shadow-sm"
+                          : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
+                        }`}
+                    >
+                      <div className={`transition-colors ${selectedCompanyFields.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
+                        {selectedCompanyFields.includes(field.id) ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                      </div>
+                      <span className="text-xs font-bold">{field.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1034,34 +1029,33 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                         </div>
                         <h3 className="font-black text-card-foreground text-lg">{mod.label}</h3>
                       </div>
-                      <button 
+                      <button
                         onClick={() => toggleModule(modId)}
                         className="text-xs font-bold text-destructive hover:opacity-80 px-3 py-1.5 rounded-lg hover:bg-destructive/10 transition-colors self-start sm:self-auto"
                       >
                         Remover módulo
                       </button>
                     </div>
-                    
+
                     <div className="p-6">
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {mod.fields
                           .filter(f => !["tipo", "status", "data", "status_taxa", "data_envio", "forma_envio"].includes(f.id))
                           .map(field => (
-                          <button
-                            key={field.id}
-                            onClick={() => toggleField(modId, field.id)}
-                            className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
-                              selectedFields[modId]?.includes(field.id)
-                                ? "border-primary/40 bg-primary/5"
-                                : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
-                            }`}
-                          >
-                             <div className={`transition-colors ${selectedFields[modId]?.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
-                               {selectedFields[modId]?.includes(field.id) ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-                             </div>
-                             <span className="text-xs font-bold">{field.label}</span>
-                          </button>
-                        ))}
+                            <button
+                              key={field.id}
+                              onClick={() => toggleField(modId, field.id)}
+                              className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${selectedFields[modId]?.includes(field.id)
+                                  ? "border-primary/40 bg-primary/5"
+                                  : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
+                                }`}
+                            >
+                              <div className={`transition-colors ${selectedFields[modId]?.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
+                                {selectedFields[modId]?.includes(field.id) ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                              </div>
+                              <span className="text-xs font-bold">{field.label}</span>
+                            </button>
+                          ))}
                       </div>
                     </div>
                   </div>
