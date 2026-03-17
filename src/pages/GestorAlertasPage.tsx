@@ -4,6 +4,13 @@ import { Bell, Mail, Clock, Shield, Plus, ArrowRight, Trash2, CalendarDays, Key,
 import { toast } from "sonner";
 import { format } from "date-fns";
 
+interface EmailTemplate {
+  id?: string;
+  template_type: string;
+  subject: string;
+  body_html: string;
+}
+
 interface AlertType {
   id: string;
   label: string;
@@ -32,13 +39,27 @@ const GestorAlertasPage: React.FC = () => {
   const [rules, setRules] = useState<NotificationRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [triggerLoading, setTriggerLoading] = useState(false);
+  const [testMode, setTestMode] = useState(false);
   const [showAddRule, setShowAddRule] = useState(false);
+  const [activeTab, setActiveTab] = useState<"regras" | "templates">("regras");
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [savingTemplate, setSavingTemplate] = useState(false);
   
   const [newRule, setNewRule] = useState({
     module_id: "licencas",
     trigger_name: "",
     days_before: 7
   });
+
+  const fetchTemplates = async () => {
+    try {
+      const { data, error } = await supabase.from("email_templates" as any).select("*");
+      if (error) throw error;
+      if (data) setTemplates(data as unknown as EmailTemplate[]);
+    } catch (err: any) {
+      console.error("Erro ao carregar templates", err);
+    }
+  };
 
   const fetchAlertTypes = async () => {
     try {
@@ -70,6 +91,7 @@ const GestorAlertasPage: React.FC = () => {
   useEffect(() => {
     fetchAlertTypes();
     fetchRules();
+    fetchTemplates();
   }, []);
 
   const toggleAlertType = async (id: string, current: boolean) => {
@@ -120,16 +142,66 @@ const GestorAlertasPage: React.FC = () => {
     }
   };
 
+  const handleSaveTemplate = async (template_type: string) => {
+    const template = templates.find(t => t.template_type === template_type);
+    if (!template) return;
+
+    setSavingTemplate(true);
+    try {
+      // Upsert logic
+      const payload = {
+         template_type: template.template_type,
+         subject: template.subject,
+         body_html: template.body_html
+      };
+
+      let error;
+      if (template.id) {
+         ({ error } = await supabase.from("email_templates" as any).update(payload).eq("id", template.id));
+      } else {
+         ({ error } = await supabase.from("email_templates" as any).upsert(payload, { onConflict: "template_type" }));
+      }
+      
+      if (error) throw error;
+      toast.success("Template salvo com sucesso!");
+      fetchTemplates();
+    } catch (err: any) {
+      toast.error("Erro ao salvar template: " + (err.message || ""));
+      console.error(err);
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
+  const currentCompanyTemplate = templates.find(t => t.template_type === "company_alert") || { template_type: "company_alert", subject: "", body_html: "" };
+  const currentUserTemplate = templates.find(t => t.template_type === "user_summary") || { template_type: "user_summary", subject: "", body_html: "" };
+
   const handleManualTrigger = async () => {
     try {
       setTriggerLoading(true);
-      const { data, error } = await supabase.functions.invoke('send-alert-email');
+      const { data, error } = await supabase.functions.invoke('send-alert-email', {
+        body: { test: testMode }
+      });
       
       if (error) throw error;
       
-      toast.success(
-        `Disparo concluído! ${data.companiesNotified || 0} empresas e ${data.usersNotified || 0} usuários notificados.`,
-        { duration: 5000 }
+      console.log('Edge Function Response:', data);
+      
+      let debugInfo = data.debug 
+        ? `\n(Docs: ${data.debug.expirationsFound}, Acessos: ${data.debug.accessRowsFound})`
+        : '';
+        
+      if (data.failCount > 0 && data.debug?.errors?.length > 0) {
+        const firstErrorDetails = data.debug.errors[0].error;
+        const errorMsg = firstErrorDetails?.message || firstErrorDetails?.name || JSON.stringify(firstErrorDetails);
+        debugInfo += `\nFalhas: ${data.failCount}. Motivo: ${errorMsg}`;
+      }
+
+      const toastFn = data.successCount > 0 ? toast.success : (data.failCount > 0 ? toast.error : toast.success);
+
+      toastFn(
+        `Disparo concluído! ${data.companiesNotified || 0} empresas e ${data.usersNotified || 0} usuários notificados.${debugInfo}`,
+        { duration: 10000 }
       );
     } catch (err: any) {
       toast.error(`Erro ao disparar alertas: ${err.message || 'Erro desconhecido'}`);
@@ -159,7 +231,26 @@ const GestorAlertasPage: React.FC = () => {
         </button>
       </div>
 
-      {showAddRule && (
+      <div className="flex gap-2 border-b border-border/50 pb-2 mb-6">
+          <button
+            onClick={() => setActiveTab("regras")}
+            className={`px-4 py-2 text-sm font-bold transition-all border-b-2 ${
+              activeTab === "regras" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Regras de Disparo
+          </button>
+          <button
+            onClick={() => setActiveTab("templates")}
+            className={`px-4 py-2 text-sm font-bold transition-all border-b-2 ${
+              activeTab === "templates" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Templates de E-mail
+          </button>
+      </div>
+
+      {showAddRule && activeTab === "regras" && (
         <div className="card-premium p-6 animate-scale-in border-primary/30">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             <Plus className="text-primary" size={20} /> Adicionar Nova Regra
@@ -207,12 +298,13 @@ const GestorAlertasPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Painel Principal: Cronogramas / Regras Fictícias por enquanto (UI Ilustrativa que aproxima ao real) */}
+        {/* Painel Principal */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="card-premium p-6">
-            <h2 className="text-lg font-bold flex items-center gap-2 mb-6">
-              <CalendarDays className="text-primary" size={20} /> Regras de Disparo Ativas
-            </h2>
+          {activeTab === "regras" ? (
+            <div className="card-premium p-6">
+              <h2 className="text-lg font-bold flex items-center gap-2 mb-6">
+                <CalendarDays className="text-primary" size={20} /> Regras de Disparo Ativas
+              </h2>
 
             <div className="space-y-4">
               {loading ? (
@@ -273,8 +365,88 @@ const GestorAlertasPage: React.FC = () => {
                   </div>
                </div>
             </div>
-          </div>
-        </div>
+            </div>
+          ) : (
+             <div className="space-y-6">
+                <div className="card-premium p-6">
+                   <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+                     <Mail className="text-primary" size={20} /> Template: E-mail para Empresa
+                   </h2>
+                   <p className="text-sm text-muted-foreground mb-6">
+                     Este é o e-mail individual que cada empresa receberá contendo os documentos dela que estão por vencer.
+                     Variáveis disponíveis: <code className="bg-muted px-1 rounded text-primary">{'{{nome_empresa}}'}</code> e a tabela automática.
+                   </p>
+                   
+                   <div className="space-y-4">
+                      <div>
+                         <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Assunto do E-mail</label>
+                         <input 
+                           type="text" 
+                           className="w-full px-4 py-3 border border-border rounded-xl bg-background"
+                           value={currentCompanyTemplate.subject}
+                           onChange={e => setTemplates(templates.map(t => t.template_type === "company_alert" ? { ...t, subject: e.target.value } : t).concat(templates.some(t => t.template_type === "company_alert") ? [] : [{ template_type: "company_alert", subject: e.target.value, body_html: "" }]))}
+                         />
+                      </div>
+                      <div>
+                         <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Mensagem Inicial (HTML permitido)</label>
+                         <textarea 
+                           className="w-full px-4 py-3 border border-border rounded-xl bg-background min-h-[100px]"
+                           value={currentCompanyTemplate.body_html}
+                           onChange={e => setTemplates(templates.map(t => t.template_type === "company_alert" ? { ...t, body_html: e.target.value } : t).concat(templates.some(t => t.template_type === "company_alert") ? [] : [{ template_type: "company_alert", subject: "", body_html: e.target.value }]))}
+                         />
+                      </div>
+                      <div className="flex justify-end">
+                         <button 
+                           onClick={() => handleSaveTemplate("company_alert")} 
+                           disabled={savingTemplate}
+                           className="button-premium px-6 bg-primary text-white"
+                         >
+                           {savingTemplate ? "Salvando..." : "Salvar Template da Empresa"}
+                         </button>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="card-premium p-6">
+                   <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+                     <Shield className="text-primary" size={20} /> Template: Resumo da Equipe Externa/Interna
+                   </h2>
+                   <p className="text-sm text-muted-foreground mb-6">
+                     Este é o e-mail sumarizado que os colaboradores/gestores recebem, contendo todas as empresas sob seus cuidados.
+                   </p>
+                   
+                   <div className="space-y-4">
+                      <div>
+                         <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Assunto do E-mail</label>
+                         <input 
+                           type="text" 
+                           className="w-full px-4 py-3 border border-border rounded-xl bg-background"
+                           value={currentUserTemplate.subject}
+                           onChange={e => setTemplates(templates.map(t => t.template_type === "user_summary" ? { ...t, subject: e.target.value } : t).concat(templates.some(t => t.template_type === "user_summary") ? [] : [{ template_type: "user_summary", subject: e.target.value, body_html: "" }]))}
+                         />
+                      </div>
+                      <div>
+                         <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Mensagem Inicial (HTML permitido)</label>
+                         <textarea 
+                           className="w-full px-4 py-3 border border-border rounded-xl bg-background min-h-[100px]"
+                           value={currentUserTemplate.body_html}
+                           onChange={e => setTemplates(templates.map(t => t.template_type === "user_summary" ? { ...t, body_html: e.target.value } : t).concat(templates.some(t => t.template_type === "user_summary") ? [] : [{ template_type: "user_summary", subject: "", body_html: e.target.value }]))}
+                         />
+                      </div>
+                      <div className="flex justify-end">
+                         <button 
+                           onClick={() => handleSaveTemplate("user_summary")} 
+                           disabled={savingTemplate}
+                           className="button-premium px-6 bg-primary text-white"
+                         >
+                           {savingTemplate ? "Salvando..." : "Salvar Template da Equipe"}
+                          </button>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+           )}
+         </div>
 
         {/* Sidebar Direita: Categorias Nativas */}
         <div className="space-y-6">
@@ -320,6 +492,26 @@ const GestorAlertasPage: React.FC = () => {
              <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                Utilize o botão abaixo para forçar o processamento de todos os vencimentos de hoje e enviar os e-mails imediatamente para empresas e gestores.
              </p>
+
+             <div className="flex items-center justify-between p-3 mb-4 rounded-xl border border-primary/20 bg-primary/5">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-primary">Modo de Teste (Forçar Todos)</span>
+                  <span className="text-[10px] text-muted-foreground italic">Ignora filtros de datas (envia tudo dos próximos 30 dias)</span>
+                </div>
+                <button
+                  onClick={() => setTestMode(!testMode)}
+                  className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${
+                    testMode ? "bg-primary" : "bg-muted-foreground/30"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${
+                      testMode ? "left-5" : "left-1"
+                    }`}
+                  />
+                </button>
+             </div>
+
              <button 
                 onClick={handleManualTrigger}
                 disabled={triggerLoading}
@@ -334,7 +526,7 @@ const GestorAlertasPage: React.FC = () => {
                ) : (
                  <Mail size={14} />
                )}
-               {triggerLoading ? "Processando..." : "Disparar Alertas Agora"}
+               {triggerLoading ? "Processando..." : (testMode ? "Disparar TESTE Agora" : "Disparar Alertas Agora")}
              </button>
            </div>
         </div>

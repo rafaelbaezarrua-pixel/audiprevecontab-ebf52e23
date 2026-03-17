@@ -155,6 +155,7 @@ const ConfiguracoesPage: React.FC = () => {
         body: { action: "deleteUser", target_user_id: userId }
       });
       if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
       toast.success("Usuário removido!");
       loadUsers();
     } catch (err: any) {

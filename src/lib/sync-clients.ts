@@ -10,7 +10,7 @@ export const syncCompanyClients = async (onProgress?: (current: number, total: n
         // 1. Fetch all companies
         const { data: companies, error: empError } = await supabase
             .from("empresas")
-            .select("id, nome_empresa, cnpj");
+            .select("id, nome_empresa, cnpj, email_rfb");
 
         if (empError) throw empError;
         if (!companies) return;
@@ -26,11 +26,15 @@ export const syncCompanyClients = async (onProgress?: (current: number, total: n
             if (onProgress) onProgress(i + 1, companies.length);
 
             if (!company.cnpj) continue;
+            if (!company.email_rfb) {
+                console.warn(`Skipping ${company.nome_empresa} - missing email_rfb`);
+                continue;
+            }
 
             const cleanCNPJ = company.cnpj.replace(/\D/g, "");
             if (!cleanCNPJ) continue;
 
-            const email = `${cleanCNPJ}@audipreve.com`;
+            const email = company.email_rfb;
             const password = cleanCNPJ; // Default password is CNPJ
 
             try {

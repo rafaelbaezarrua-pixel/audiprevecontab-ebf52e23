@@ -1,6 +1,8 @@
+// @ts-ignore: Deno
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
-Deno.serve(async (req) => {
+// @ts-ignore: Deno
+Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
   const corsHeaders = {
     "Access-Control-Allow-Origin": origin || "*",
@@ -15,12 +17,15 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Não autenticado" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      console.error("Missing Authorization header");
+      return new Response(JSON.stringify({ error: "Não autenticado", status: 'error' }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
+    // @ts-ignore: Deno
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    // @ts-ignore: Deno
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -36,7 +41,7 @@ Deno.serve(async (req) => {
 
     // Check if the caller is an admin
     const { data: roles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", user.id);
-    const isAdmin = roles?.some(r => r.role === 'admin');
+    const isAdmin = roles?.some((r: any) => r.role === 'admin');
     if (!isAdmin) throw new Error("Apenas administradores podem gerenciar usuários.");
 
     // Parse payload
@@ -89,8 +94,8 @@ Deno.serve(async (req) => {
 
   } catch (err: any) {
     console.error("manage-user error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 400,
+    return new Response(JSON.stringify({ error: err.message, status: 'error' }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

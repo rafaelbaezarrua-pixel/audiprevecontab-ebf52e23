@@ -1,5 +1,5 @@
 -- Migration to create a unified function for daily expirations
-CREATE OR REPLACE FUNCTION public.get_daily_expirations()
+CREATE OR REPLACE FUNCTION public.get_daily_expirations(p_force_all BOOLEAN DEFAULT FALSE)
 RETURNS TABLE (
     empresa_id UUID,
     nome_empresa TEXT,
@@ -15,6 +15,7 @@ AS $$
 BEGIN
     RETURN QUERY
     WITH all_expirations AS (
+        -- [Union blocks as before...]
         -- Certificados Digitais
         SELECT 
             c.empresa_id, 
@@ -92,7 +93,10 @@ BEGIN
         (ae.vencimento - CURRENT_DATE)::INTEGER as dias_restantes,
         ae.link
     FROM all_expirations ae
-    WHERE (ae.vencimento - CURRENT_DATE) IN (30, 15, 7, 1, 0);
+    WHERE 
+        (p_force_all = TRUE AND (ae.vencimento - CURRENT_DATE) BETWEEN 0 AND 30)
+        OR
+        (p_force_all = FALSE AND (ae.vencimento - CURRENT_DATE) IN (30, 15, 7, 1, 0));
 END;
 $$ LANGUAGE plpgsql;
 

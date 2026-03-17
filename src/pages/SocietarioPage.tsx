@@ -146,7 +146,7 @@ const SocietarioPage: React.FC = () => {
     if (error) {
       toast.error("Erro ao criar: " + error.message);
     } else {
-      const inserted = data as { id: string };
+      const inserted = (data as any) as { id: string };
       await (await import("@/integrations/supabase/client")).supabase.from("processos_societarios_historico" as any).insert({
         processo_id: inserted.id,
         usuario_id: user.id,
