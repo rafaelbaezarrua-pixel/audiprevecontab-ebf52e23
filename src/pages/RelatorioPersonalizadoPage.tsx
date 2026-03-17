@@ -5,7 +5,7 @@ import {
   Shield, Users, AlertCircle, Building2,
   CheckCircle2, Circle, ChevronRight, ChevronLeft,
   ArrowLeft, Search, Filter, Layers, ListChecks,
-  FileSpreadsheet
+  FileSpreadsheet, History
 } from "lucide-react";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
+import { tipoProcessoLabels } from "@/constants/societario";
 
 interface ModuleConfig {
   id: string;
@@ -26,11 +27,18 @@ interface ModuleConfig {
 
 const COMPANY_FIELDS = [
   { id: "cnpj", label: "CNPJ" },
+  { id: "nome_fantasia", label: "Nome Fantasia" },
   { id: "regime_tributario", label: "Regime Tributário" },
   { id: "natureza_juridica", label: "Natureza Jurídica" },
   { id: "data_abertura", label: "Abertura" },
   { id: "porte_empresa", label: "Porte" },
-  { id: "socios_count", label: "Nº Sócios" }
+  { id: "socios_count", label: "Nº Sócios" },
+  { id: "capital_social", label: "Capital Social", accessor: (i: any) => i.capital_social ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.capital_social) : "—" },
+  { id: "cnae_fiscal", label: "CNAE" },
+  { id: "cnae_fiscal_descricao", label: "Atividade Principal" },
+  { id: "email_rfb", label: "E-mail RFB" },
+  { id: "telefone_rfb", label: "Telefone RFB" },
+  { id: "qsa", label: "Sócios (QSA)", accessor: (i: any) => i.qsa && Array.isArray(i.qsa) ? i.qsa.map((s: any) => s.nome || s.nome_socio).join(", ") : "—" },
 ];
 
 const licencaLabels: Record<string, string> = { 
@@ -49,6 +57,11 @@ const MODULES_CONFIG: ModuleConfig[] = [
     color: "bg-blue-500",
     fields: [
       { id: "situacao", label: "Situação" },
+      { id: "opcao_pelo_simples", label: "Optante Simples", accessor: (i) => i.opcao_pelo_simples ? "Sim" : "Não" },
+      { id: "data_opcao_pelo_simples", label: "Data Opção Simples", accessor: (i) => safeFormatDate(i.data_opcao_pelo_simples) },
+      { id: "opcao_pelo_mei", label: "Optante MEI", accessor: (i) => i.opcao_pelo_mei ? "Sim" : "Não" },
+      { id: "data_opcao_pelo_mei", label: "Data Opção MEI", accessor: (i) => safeFormatDate(i.data_opcao_pelo_mei) },
+      { id: "porte_rfb", label: "Porte (RFB)" },
     ]
   },
   {
@@ -272,6 +285,30 @@ const MODULES_CONFIG: ModuleConfig[] = [
       { id: "taxa_bombeiros", label: "Taxa: Bombeiros" },
       { id: "taxa_meio_ambiente", label: "Taxa: Meio Ambiente" },
     ]
+  },
+  {
+    id: "processos_societarios",
+    label: "Processos Societários",
+    table: "processos_societarios",
+    icon: <History size={18} />,
+    color: "bg-indigo-600",
+    fields: [
+      { id: "tipo", label: "Tipo", accessor: (i: any) => tipoProcessoLabels[i.tipo] || i.tipo },
+      { id: "numero_processo", label: "Número" },
+      { id: "data_inicio", label: "Início", accessor: (i: any) => safeFormatDate(i.data_inicio) },
+      { id: "status", label: "Status", accessor: (i: any) => i.status === 'concluido' ? 'Concluído' : 'Em Andamento' },
+      { id: "current_step", label: "Etapa Atual" },
+      { id: "foi_deferido", label: "Deferido", accessor: (i: any) => i.foi_deferido ? "Sim" : "Não" },
+      { id: "foi_arquivado", label: "Arquivado", accessor: (i: any) => i.foi_arquivado ? "Sim" : "Não" },
+      { id: "em_exigencia", label: "Exigência", accessor: (i: any) => i.em_exigencia ? "Sim" : "Não" },
+      { id: "exigencia_motivo", label: "Motivo Exigência" },
+      { id: "envio_dbe_at", label: "Envio DBE", accessor: (i: any) => safeFormatDate(i.envio_dbe_at) },
+      { id: "envio_fcn_at", label: "Envio FCN", accessor: (i: any) => safeFormatDate(i.envio_fcn_at) },
+      { id: "envio_contrato_at", label: "Envio Contrato", accessor: (i: any) => safeFormatDate(i.envio_contrato_at) },
+      { id: "envio_taxa_at", label: "Envio Taxa", accessor: (i: any) => safeFormatDate(i.envio_taxa_at) },
+      { id: "assinatura_contrato_at", label: "Assinatura", accessor: (i: any) => safeFormatDate(i.assinatura_contrato_at) },
+      { id: "arquivamento_junta_at", label: "Arquivamento", accessor: (i: any) => safeFormatDate(i.arquivamento_junta_at) },
+    ]
   }
 ];
 
@@ -387,7 +424,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
       const situacoesWithoutMei = selectedSituations.filter(s => s !== "mei");
       let query = supabase
         .from("empresas")
-        .select("id, nome_empresa, cnpj, data_abertura, regime_tributario, situacao, natureza_juridica")
+        .select("*")
         .order("nome_empresa");
 
       if (selectedSituations.includes("mei")) {
@@ -608,6 +645,51 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           continue;
         }
 
+        // Special case: Processos Societários without linked company (e.g. Aberturas)
+        if (modId === "processos_societarios") {
+          const orphanedProcesses = moduleData.filter((d: any) => !d.empresa_id);
+          if (orphanedProcesses.length > 0) {
+            const fieldsToInclude = selectedFields[modId] || [];
+            const activeFields = mod.fields.filter(f => fieldsToInclude.includes(f.id));
+            const head = [["Referência", ...activeFields.map(f => f.label)]];
+            const body = orphanedProcesses.map(proc => [
+              proc.nome_empresa || "—",
+              ...activeFields.map(f => {
+                if (f.accessor) return f.accessor(proc);
+                return proc[f.id] || "—";
+              })
+            ]);
+
+            if (exportFormat === 'pdf' && doc) {
+              if (currentY > 260) { doc.addPage(); currentY = 20; }
+              doc.setFontSize(10);
+              doc.setFont("Ubuntu", "bold");
+              doc.setTextColor(100, 100, 100);
+              doc.text("PROCESSOS SEM EMPRESA VINCULADA (NOVAS ABERTURAS)", 14, currentY + 5);
+              currentY += 8;
+              doc.setTextColor(0, 0, 0);
+
+              autoTable(doc, {
+                startY: currentY,
+                head: head,
+                body: body,
+                theme: 'grid',
+                headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', fontSize: 12 },
+                bodyStyles: { fontSize: 12, cellPadding: 2 },
+                styles: { font: 'Ubuntu' },
+                margin: { horizontal: 5 },
+                didDrawPage: (data) => { currentY = data.cursor?.y || currentY; }
+              });
+              currentY = (doc as any).lastAutoTable.finalY + 10;
+            } else if (exportFormat === 'excel') {
+              excelAoA.push([]);
+              excelAoA.push(["--- PROCESSOS SEM EMPRESA VINCULADA ---"]);
+              excelAoA.push(head[0]);
+              body.forEach(row => excelAoA.push(row));
+            }
+          }
+        }
+
         // Merge logic: ensure every company is present grouped by situation
         for (const sit of SITUATIONS) {
           if (!selectedSituations.includes(sit.id)) continue;
@@ -622,7 +704,10 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           const situationRows: any[] = [];
           
           situationCompanies.forEach(company => {
-            const companyRecords = moduleData.filter((d: any) => d.empresa_id === company.id);
+            const companyRecords = moduleData.filter((d: any) => {
+              if (modId === "societario") return d.id === company.id;
+              return d.empresa_id === company.id;
+            });
             
             if (companyRecords.length > 0) {
               companyRecords.forEach(record => {
@@ -667,6 +752,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
           // Build Table Body
           const body = situationRows.map(row => {
             const companyValues = COMPANY_FIELDS.filter(f => selectedCompanyFields.includes(f.id)).map(f => {
+              if (f.accessor) return f.accessor(row);
               const val = row[f.id];
               if (f.id === "data_abertura" && val) return safeFormatDate(val);
               return val || "—";
