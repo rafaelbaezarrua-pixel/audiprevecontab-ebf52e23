@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { LicencaRecord, LicencaTaxaRecord, GuiaStatus } from "@/types/administrative";
 
 const licencaLabels: Record<string, string> = {
   alvara: "Alvará de Funcionamento",
@@ -31,8 +32,8 @@ type TabType = "licencas" | "taxas";
 
 const LicencasPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("licencas");
-  const [licencas, setLicencas] = useState<any[]>([]);
-  const [taxas, setTaxas] = useState<any[]>([]);
+  const [licencas, setLicencas] = useState<LicencaRecord[]>([]);
+  const [taxas, setTaxas] = useState<LicencaTaxaRecord[]>([]);
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
@@ -41,20 +42,20 @@ const LicencasPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("licencas");
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
-  const [taxasForm, setTaxasForm] = useState<Record<string, Record<string, any>>>({});
+  const [taxasForm, setTaxasForm] = useState<Record<string, Record<string, Partial<LicencaTaxaRecord>>>>({});
 
   const loadBaseData = async () => {
     const { data: lics } = await supabase.from("licencas").select("*");
-    setLicencas(lics || []);
+    setLicencas((lics as unknown as LicencaRecord[]) || []);
   };
 
   const loadTaxas = async () => {
     const { data } = await supabase.from("licencas_taxas").select("*").eq("competencia", competencia);
-    setTaxas(data || []);
+    setTaxas((data as unknown as LicencaTaxaRecord[]) || []);
 
     // Auto-populate edit form with fetched data
-    const map: Record<string, Record<string, any>> = {};
-    data?.forEach(t => {
+    const map: Record<string, Record<string, Partial<LicencaTaxaRecord>>> = {};
+    (data as unknown as LicencaTaxaRecord[])?.forEach(t => {
       if (!map[t.empresa_id]) map[t.empresa_id] = {};
       map[t.empresa_id][t.tipo_licenca] = {
         id: t.id,
@@ -75,7 +76,7 @@ const LicencasPage: React.FC = () => {
   // Filters for Licencas Tab
   const filteredLicencas = empresas.filter(e => {
     const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
-    const matchStatus = filterStatus === "todos" || licByEmpresa(e.id).some((l: any) => l.status === filterStatus);
+    const matchStatus = filterStatus === "todos" || licByEmpresa(e.id).some((l: LicencaRecord) => l.status === filterStatus);
 
     let matchTab = false;
     if (activeStatusTab === "ativas") {
@@ -120,7 +121,7 @@ const LicencasPage: React.FC = () => {
   };
 
   // --- Handlers for Taxas Tab ---
-  const handleTaxaChange = (empresaId: string, tipoLicenca: string, field: string, value: any) => {
+  const handleTaxaChange = (empresaId: string, tipoLicenca: string, field: string, value: string | GuiaStatus | null) => {
     setTaxasForm(prev => {
       const empData = prev[empresaId] || {};
       const licData = empData[tipoLicenca] || { status: 'pendente', data_envio: '', forma_envio: '' };
@@ -267,13 +268,13 @@ const LicencasPage: React.FC = () => {
                 <div key={emp.id} className="module-card !p-0 overflow-hidden">
                   <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => setExpanded(isOpen ? null : emp.id)}>
                     <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><Building2 size={16} className="text-primary" /></div><div><p className="font-medium text-card-foreground">{emp.nome_empresa}</p><p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p></div></div>
-                    <div className="flex items-center gap-2">{empLicencas.map((l: any, i: number) => { const cfg = tipoStatusLabels[l.status] || { label: "—", cls: "badge-gray" }; return <span key={i} className={`badge-status ${cfg.cls} text-[10px]`}>{cfg.label}</span>; })}{isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}</div>
+                    <div className="flex items-center gap-2">{empLicencas.map((l: LicencaRecord, i: number) => { const cfg = tipoStatusLabels[l.status || ""] || { label: "—", cls: "badge-gray" }; return <span key={i} className={`badge-status ${cfg.cls} text-[10px]`}>{cfg.label}</span>; })}{isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}</div>
                   </div>
                   {isOpen && (
                     <div className="border-t border-border p-5 bg-muted/10">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {Object.entries(licencaLabels).map(([key, label]) => {
-                          const lic = empLicencas.find((l: any) => l.tipo_licenca === key);
+                          const lic = empLicencas.find((l: LicencaRecord) => l.tipo_licenca === key);
                           const cfg = lic ? tipoStatusLabels[lic.status] || { label: "Não definido", cls: "badge-gray" } : { label: "Não definido", cls: "badge-gray" };
                           const dias = lic?.status === "com_vencimento" ? calcDias(lic.vencimento) : null;
                           return (
@@ -388,7 +389,7 @@ const LicencasPage: React.FC = () => {
                     <div className="border-t border-border p-5 bg-muted/10 space-y-4">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {Object.entries(licencaLabels).map(([key, label]) => {
-                          const lic = empLicencas.find((l: any) => l.tipo_licenca === key);
+                          const lic = empLicencas.find((l: LicencaRecord) => l.tipo_licenca === key);
                           if (!lic) return null; // Only show taxes blocks for licenses they actually have
 
                           const taxaData = (taxasForm[emp.id] && taxasForm[emp.id][key]) || { status: 'pendente', data_envio: '', forma_envio: '' };

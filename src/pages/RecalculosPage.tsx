@@ -3,18 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, Plus, ChevronDown, ChevronUp, Save, CheckCircle, Circle, Users, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { RecalculoRecord, ParcelamentoRecord, GuiaStatus } from "@/types/administrative";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI" };
 
 const RecalculosPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("recalculos");
-  const [parcelamentos, setParcelamentos] = useState<any[]>([]);
-  const [recalculos, setRecalculos] = useState<any[]>([]);
+  const [parcelamentos, setParcelamentos] = useState<ParcelamentoRecord[]>([]);
+  const [recalculos, setRecalculos] = useState<RecalculoRecord[]>([]);
 
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [editForm, setEditForm] = useState<Record<string, Partial<RecalculoRecord>>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas">("ativas");
 
   // Inline Form State
@@ -44,7 +45,7 @@ const RecalculosPage: React.FC = () => {
       `)
       .eq("competencia", competencia)
       .order("created_at", { ascending: false });
-    setRecalculos(recs || []);
+    setRecalculos((recs as unknown as RecalculoRecord[]) || []);
   };
 
   useEffect(() => {
@@ -105,7 +106,7 @@ const RecalculosPage: React.FC = () => {
     }
   };
 
-  const updateForm = (id: string, field: string, value: any) => {
+  const updateForm = (id: string, field: string, value: string | GuiaStatus | null) => {
     setEditForm(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
   };
 
@@ -135,7 +136,7 @@ const RecalculosPage: React.FC = () => {
         data_recalculo: newRecalculo.data_recalculo || null,
         data_envio: newRecalculo.data_envio || null,
         forma_envio: newRecalculo.forma_envio || null,
-        status: "pendente" as any
+        status: "pendente" as GuiaStatus
       };
 
       const { error } = await supabase.from("recalculos").insert(payload);

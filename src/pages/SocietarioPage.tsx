@@ -1,4 +1,4 @@
-
+import { RealtimeChannel } from "@supabase/supabase-js";
 import React, { useState } from "react";
 import { 
   Building2, Search, Filter, ChevronDown, 
@@ -89,8 +89,7 @@ const SocietarioPage: React.FC = () => {
   }, [pagination.pageIndex, pagination.pageSize, search, filterSituacao, filterRegime, activeTab]);
 
   React.useEffect(() => {
-    let isMounted = true;
-    let channel: any;
+    let channel: RealtimeChannel;
 
     const setupRealtime = async () => {
       const { supabase } = await import("@/integrations/supabase/client");
@@ -146,8 +145,9 @@ const SocietarioPage: React.FC = () => {
     if (error) {
       toast.error("Erro ao criar: " + error.message);
     } else {
+      const inserted = data as { id: string };
       await (await import("@/integrations/supabase/client")).supabase.from("processos_societarios_historico" as any).insert({
-        processo_id: (data as any).id,
+        processo_id: inserted.id,
         usuario_id: user.id,
         acao: 'PROCESSO_INICIADO',
         detalhes: `Tipo: ${tipoProcessoLabels[novoProcessoData.tipo]}`
@@ -352,7 +352,7 @@ const SocietarioPage: React.FC = () => {
                 if (status === "foi_arquivado") {
                   updateProcesso.mutate({ id, updates: { foi_arquivado: true, arquivamento_junta_at: new Date().toISOString() } });
                 } else if (status === "pending") {
-                  const reset: any = {};
+                  const reset: Record<string, string | null> = {};
                   passosConfig.forEach(p => reset[p.id] = null);
                   updateProcesso.mutate({ id, updates: { ...reset, foi_arquivado: false } });
                 } else {

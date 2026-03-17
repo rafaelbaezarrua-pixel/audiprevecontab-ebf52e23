@@ -14,7 +14,7 @@ interface NovoProcessoFormProps {
     data_inicio: string;
     eventos: string[];
   };
-  setNovoProcessoData: (data: any) => void;
+  setNovoProcessoData: (data: NovoProcessoFormProps["novoProcessoData"]) => void;
   onSubmit: () => void;
   onCancel: () => void;
 }

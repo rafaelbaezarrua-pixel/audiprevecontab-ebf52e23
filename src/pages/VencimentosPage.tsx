@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, AlertTriangle, CheckCircle, Search } from "lucide-react";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { LicencaTaxaRecord, CertidaoRecord } from "@/types/administrative";
 
 interface Vencimento { empresa: string; tipo: string; data: string; diasRestantes: number; status: string; empresa_situacao?: string; empresa_porte?: string; }
 
@@ -80,7 +81,7 @@ const VencimentosPage: React.FC = () => {
 
       // Certidoes
       const { data: certidoes } = await supabase.from("certidoes").select("*").not("vencimento", "is", null);
-      certidoes?.forEach(c => {
+      (certidoes as unknown as CertidaoRecord[])?.forEach(c => {
         const dias = calcDias(c.vencimento);
         const empInfo = empMap[c.empresa_id] || { nome: "—", situacao: "", porte: "" };
         list.push({
@@ -95,8 +96,8 @@ const VencimentosPage: React.FC = () => {
       });
 
       // Taxas de Licenças
-      const { data: taxas } = await (supabase.from("licencas_taxas").select("*").not("data_vencimento", "is", null) as any);
-      taxas?.forEach((t: any) => {
+      const { data: taxas } = await (supabase.from("licencas_taxas" as any).select("*").not("data_vencimento", "is", null));
+      (taxas as unknown as LicencaTaxaRecord[])?.forEach((t) => {
         const dias = calcDias(t.data_vencimento);
         const empInfo = empMap[t.empresa_id] || { nome: "—", situacao: "", porte: "" };
         list.push({

@@ -7,7 +7,7 @@ interface IRPFRecordCardProps {
   record: IRPFRecord;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  onUpdateField: (id: string, field: string, value: any) => void;
+  onUpdateField: (id: string, field: string, value: string | number | boolean) => void;
   onSave: (record: IRPFRecord) => void;
   onDelete: (id: string) => void;
   onQuickToggleTransmissao: (record: IRPFRecord) => void;

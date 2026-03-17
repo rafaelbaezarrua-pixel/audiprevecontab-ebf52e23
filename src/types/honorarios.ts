@@ -22,7 +22,7 @@ export interface HonorarioMensal {
   forma_envio: string | null;
   status: string;
   pago: boolean;
-  detalhes_calculo?: any[];
+  detalhes_calculo?: Array<{ rotulo: string; qtd: number; vlrUnit: number; vlrTotal: number }>;
   observacoes?: { texto: string } | null;
   empresas?: { nome_empresa: string };
 }

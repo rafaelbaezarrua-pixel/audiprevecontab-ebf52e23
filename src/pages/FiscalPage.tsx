@@ -3,23 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { FiscalRecord, GuiaStatus } from "@/types/fiscal";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI" };
 
 const FiscalPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("fiscal");
-  const [fiscalData, setFiscalData] = useState<Record<string, any>>({});
+  const [fiscalData, setFiscalData] = useState<Record<string, FiscalRecord>>({});
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [editForm, setEditForm] = useState<Record<string, Partial<FiscalRecord> & Record<string, any>>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.from("fiscal").select("*").eq("competencia", competencia);
-      const map: Record<string, any> = {};
-      data?.forEach(f => { map[f.empresa_id] = f; });
+      const map: Record<string, FiscalRecord> = {};
+      data?.forEach(f => { map[f.empresa_id] = f as unknown as FiscalRecord; });
       setFiscalData(map);
     };
     load();
@@ -134,13 +135,13 @@ const FiscalPage: React.FC = () => {
       }
       toast.success("Dados fiscais salvos!");
       const { data } = await supabase.from("fiscal").select("*").eq("competencia", competencia);
-      const map: Record<string, any> = {};
-      data?.forEach(f => { map[f.empresa_id] = f; });
+      const map: Record<string, FiscalRecord> = {};
+      data?.forEach(f => { map[f.empresa_id] = f as unknown as FiscalRecord; });
       setFiscalData(map);
     } catch (err: any) { toast.error(err.message); }
   };
 
-  const updateForm = (empresaId: string, field: string, value: any) => {
+  const updateForm = (empresaId: string, field: string, value: string | number | boolean | null | Record<string, any>) => {
     setEditForm(prev => ({ ...prev, [empresaId]: { ...prev[empresaId], [field]: value } }));
   };
 

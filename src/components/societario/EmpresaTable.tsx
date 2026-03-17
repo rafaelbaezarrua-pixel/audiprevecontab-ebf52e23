@@ -16,7 +16,7 @@ interface EmpresaTableProps {
   pagination: PaginationState;
   setPagination: React.Dispatch<React.SetStateAction<PaginationState>>;
   isLoading: boolean;
-  onInlineEdit?: (id: string, field: string, value: any) => void;
+  onInlineEdit?: (id: string, field: string, value: string | number | boolean) => void;
 }
 
 const regimeLabels: Record<string, string> = {
