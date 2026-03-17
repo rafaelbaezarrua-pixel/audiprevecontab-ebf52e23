@@ -18,6 +18,11 @@ export interface Empresa {
   telefone_rfb?: string | null;
   qsa?: any[] | null;
   info_rfb_completa?: any | null;
+  opcao_pelo_simples?: boolean | null;
+  data_opcao_pelo_simples?: string | null;
+  opcao_pelo_mei?: boolean | null;
+  data_opcao_pelo_mei?: string | null;
+  porte_rfb?: string | null;
 }
 
 export interface DetalhesPasso {
