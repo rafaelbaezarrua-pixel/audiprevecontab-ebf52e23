@@ -89,6 +89,7 @@ const SocietarioPage: React.FC = () => {
   }, [pagination.pageIndex, pagination.pageSize, search, filterSituacao, filterRegime, activeTab]);
 
   React.useEffect(() => {
+    let isMounted = true;
     let channel: RealtimeChannel;
 
     const setupRealtime = async () => {
