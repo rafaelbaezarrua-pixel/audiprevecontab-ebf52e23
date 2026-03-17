@@ -3,21 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { PessoalRecord, GuiaStatus } from "@/types/pessoal";
 
 const PessoalPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("pessoal");
-  const [pessoalData, setPessoalData] = useState<Record<string, any>>({});
+  const [pessoalData, setPessoalData] = useState<Record<string, PessoalRecord>>({});
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [editForm, setEditForm] = useState<Record<string, Partial<PessoalRecord> & Record<string, any>>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.from("pessoal").select("*").eq("competencia", competencia);
-      const map: Record<string, any> = {};
-      data?.forEach(p => { map[p.empresa_id] = p; });
+      const map: Record<string, PessoalRecord> = {};
+      data?.forEach(p => { map[p.empresa_id] = p as unknown as PessoalRecord; });
       setPessoalData(map);
     };
     load();
@@ -45,7 +46,7 @@ const PessoalPage: React.FC = () => {
   const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
-    const existing = pessoalData[id] || {};
+    const existing = (pessoalData[id] || {}) as Partial<PessoalRecord> & Record<string, any>;
     
     let infoGerais = {
       forma_envio: "", qtd_funcionarios: 0, qtd_pro_labore: 0,
@@ -99,16 +100,17 @@ const PessoalPage: React.FC = () => {
     try {
       const payload = {
         empresa_id: empresaId, competencia, forma_envio: form.forma_envio || null,
-        qtd_funcionarios: parseInt(form.qtd_funcionarios) || 0, qtd_pro_labore: parseInt(form.qtd_pro_labore) || 0,
-        possui_vt: form.possui_vt || false, possui_va: form.possui_va || false,
-        possui_vc: form.possui_vc || false, possui_recibos: form.possui_recibos || false,
-        qtd_recibos: parseInt(form.qtd_recibos) || 0,
-        vt_status: form.vt_status as any, vt_data_envio: form.vt_data_envio || null,
-        va_status: form.va_status as any, va_data_envio: form.va_data_envio || null,
-        vc_status: form.vc_status as any, vc_data_envio: form.vc_data_envio || null,
-        inss_status: form.inss_status as any, inss_data_envio: form.inss_data_envio || null,
-        fgts_status: form.fgts_status as any, fgts_data_envio: form.fgts_data_envio || null,
-        dctf_web_gerada: form.dctf_web_gerada || false, dctf_web_data_envio: form.dctf_web_data_envio || null,
+        qtd_funcionarios: parseInt(String(form.qtd_funcionarios || 0)) || 0, 
+        qtd_pro_labore: parseInt(String(form.qtd_pro_labore || 0)) || 0,
+        possui_vt: !!form.possui_vt, possui_va: !!form.possui_va,
+        possui_vc: !!form.possui_vc, possui_recibos: !!form.possui_recibos,
+        qtd_recibos: parseInt(String(form.qtd_recibos || 0)) || 0,
+        vt_status: form.vt_status as GuiaStatus, vt_data_envio: form.vt_data_envio || null,
+        va_status: form.va_status as GuiaStatus, va_data_envio: form.va_data_envio || null,
+        vc_status: form.vc_status as GuiaStatus, vc_data_envio: form.vc_data_envio || null,
+        inss_status: form.inss_status as GuiaStatus, inss_data_envio: form.inss_data_envio || null,
+        fgts_status: form.fgts_status as GuiaStatus, fgts_data_envio: form.fgts_data_envio || null,
+        dctf_web_gerada: !!form.dctf_web_gerada, dctf_web_data_envio: form.dctf_web_data_envio || null,
       };
       if (existing?.id) {
         await supabase.from("pessoal").update(payload).eq("id", existing.id);
@@ -117,13 +119,13 @@ const PessoalPage: React.FC = () => {
       }
       toast.success("Dados do pessoal salvos!");
       const { data } = await supabase.from("pessoal").select("*").eq("competencia", competencia);
-      const map: Record<string, any> = {};
-      data?.forEach(p => { map[p.empresa_id] = p; });
+      const map: Record<string, PessoalRecord> = {};
+      data?.forEach(p => { map[p.empresa_id] = p as unknown as PessoalRecord; });
       setPessoalData(map);
     } catch (err: any) { toast.error(err.message); }
   };
 
-  const updateForm = (empresaId: string, field: string, value: any) => {
+  const updateForm = (empresaId: string, field: string, value: string | number | boolean | null) => {
     setEditForm(prev => ({ ...prev, [empresaId]: { ...prev[empresaId], [field]: value } }));
   };
 
@@ -235,7 +237,7 @@ const PessoalPage: React.FC = () => {
                         { label: "VT", checkKey: "possui_vt", statusKey: "vt_status", dateKey: "vt_data_envio" },
                         { label: "VA", checkKey: "possui_va", statusKey: "va_status", dateKey: "va_data_envio" },
                         { label: "VC", checkKey: "possui_vc", statusKey: "vc_status", dateKey: "vc_data_envio" },
-                      ].map(item => (
+                      ].map((item: { label: string; checkKey: keyof PessoalRecord; statusKey: keyof PessoalRecord; dateKey: keyof PessoalRecord }) => (
                         <div key={item.label} className="grid grid-cols-3 gap-3 items-center">
                           <label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer">
                             <input type="checkbox" checked={form[item.checkKey] || false} onChange={e => updateForm(emp.id, item.checkKey, e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> {item.label}
@@ -256,7 +258,7 @@ const PessoalPage: React.FC = () => {
                   {/* Encargos */}
                   <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Encargos - {competencia}</h3>
                     <div className="space-y-3">
-                      {[{ label: "INSS", statusKey: "inss_status", dateKey: "inss_data_envio" }, { label: "FGTS", statusKey: "fgts_status", dateKey: "fgts_data_envio" }].map(enc => (
+                      {([{ label: "INSS", statusKey: "inss_status", dateKey: "inss_data_envio" }, { label: "FGTS", statusKey: "fgts_status", dateKey: "fgts_data_envio" }] as const).map((enc) => (
                         <div key={enc.label} className="grid grid-cols-3 gap-3 items-center">
                           <span className="text-sm font-medium text-card-foreground">{enc.label}</span>
                           <select value={form[enc.statusKey] || "pendente"} onChange={e => updateForm(emp.id, enc.statusKey, e.target.value)} className={inputCls}>

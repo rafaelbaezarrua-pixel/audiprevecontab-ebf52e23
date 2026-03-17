@@ -5,9 +5,9 @@ import { HonorarioConfig } from "@/types/honorarios";
 
 interface HonorarioConfigFormProps {
   config: Partial<HonorarioConfig>;
-  onUpdateField: (field: string, value: any) => void;
+  onUpdateField: (field: string, value: string | number | boolean) => void;
   onAddOutroServico: () => void;
-  onUpdateOutroServico: (index: number, field: string, value: any) => void;
+  onUpdateOutroServico: (index: number, field: string, value: string | number) => void;
   onRemoveOutroServico: (index: number) => void;
   onSave: () => void;
 }
@@ -64,7 +64,7 @@ export const HonorarioConfigForm = ({
           </button>
         </div>
         <div className="space-y-3">
-          {config.outros_servicos?.map((servico: any, idx: number) => (
+          {config.outros_servicos?.map((servico: { descricao: string; valor: number }, idx: number) => (
             <div key={idx} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-background p-3 rounded-lg border border-border">
               <div className="flex-1 w-full text-left">
                 <label className={labelCls}>Descrição</label>

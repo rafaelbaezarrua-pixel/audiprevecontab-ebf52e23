@@ -5,7 +5,7 @@ import { HonorarioMensal } from "@/types/honorarios";
 
 interface HonorarioMensalFormProps {
   form: HonorarioMensal;
-  onUpdateField: (field: string, value: any) => void;
+  onUpdateField: (field: string, value: string | number | boolean) => void;
   onCancel: () => void;
   onSave: () => void;
 }
@@ -60,7 +60,7 @@ export const HonorarioMensalForm = ({
               <div className="text-right">Qtd x Valor</div>
               <div className="text-right">Total</div>
             </div>
-            {form.detalhes_calculo.map((det: any, idx: number) => (
+            {form.detalhes_calculo.map((det: { rotulo: string; qtd: number; vlrUnit: number; vlrTotal: number }, idx: number) => (
               <div key={idx} className="grid grid-cols-4 text-xs items-center py-1">
                 <div className="col-span-2 font-medium text-card-foreground line-clamp-1" title={det.rotulo}>{det.rotulo}</div>
                 <div className="text-right text-muted-foreground">

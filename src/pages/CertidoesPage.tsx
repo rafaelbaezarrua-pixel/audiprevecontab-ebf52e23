@@ -3,13 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, Plus, Trash2, ChevronDown, ChevronUp, Building2, FileText, Upload, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { CertidaoRecord } from "@/types/administrative";
 
 const tiposCertidao = ["CND Federal", "CND Estadual", "CND Municipal", "CND FGTS", "CND Trabalhista", "CNDT", "Certidão INSS", "Certidão Tributos Federais", "Outra"];
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
 
 const CertidoesPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("certidoes");
-  const [certidoes, setCertidoes] = useState<any[]>([]);
+  const [certidoes, setCertidoes] = useState<CertidaoRecord[]>([]);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [newCert, setNewCert] = useState({ tipo_certidao: "CND Federal", vencimento: "", observacao: "" });
@@ -43,7 +44,7 @@ const CertidoesPage: React.FC = () => {
   const handleFileUpload = (certId: string) => {
     const input = fileInputRef.current;
     if (!input) return;
-    input.onchange = (e: any) => {
+    input.onchange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) uploadFile(certId, file);
       input.value = "";
@@ -113,7 +114,7 @@ const CertidoesPage: React.FC = () => {
                 <div className="border-t border-border p-5 space-y-4 bg-muted/10">
                   {empCerts.length > 0 && (
                     <div className="space-y-2">
-                      {empCerts.map((c: any) => {
+                      {empCerts.map((c: CertidaoRecord) => {
                         const dias = calcDias(c.vencimento);
                         const statusCls = dias < 0 ? "badge-danger" : dias <= 30 ? "badge-warning" : "badge-success";
                         const statusLabel = dias === 999 ? "—" : dias < 0 ? "Vencida" : dias <= 30 ? "Próxima" : "Válida";

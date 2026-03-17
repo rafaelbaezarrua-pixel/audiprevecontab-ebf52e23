@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 interface ProcessoTimelineProps {
   processo: Processo;
-  onUpdatePasso: (id: string, campo: string, value: any) => void;
+  onUpdatePasso: (id: string, campo: string, value: string | number | boolean | null) => void;
   onUpdateDetalhePasso: (id: string, stepId: string, field: string, value: string) => void;
 }
 
@@ -32,9 +32,9 @@ export const ProcessoTimeline = ({
 
       <div className="space-y-6">
         {passosConfig.map((step, idx) => {
-          const isDone = !!(processo as any)[step.id];
+          const isDone = !!(processo as Record<string, any>)[step.id];
           const prevStepId = idx > 0 ? passosConfig[idx - 1].id : null;
-          const isPrevDone = prevStepId ? !!(processo as any)[prevStepId] : true;
+          const isPrevDone = prevStepId ? !!(processo as Record<string, any>)[prevStepId] : true;
           
           const isDBE = step.id === 'envio_dbe_at';
           const isSignature = step.id === 'assinatura_contrato_at';

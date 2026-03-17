@@ -72,7 +72,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
             setEmpresas((emps as Empresa[]) || []);
 
             const { data: socs } = await supabase.from("socios").select("*, empresas(nome_empresa)");
-            setSocios(((socs || []) as any[]).map((s: any) => ({
+            setSocios(((socs || []) as unknown as (Socio & { empresas: { nome_empresa: string } | null })[]).map((s) => ({
                 ...s,
                 empresa_nome: s.empresas?.nome_empresa
             })));
@@ -139,7 +139,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
         }));
     };
 
-    const updateDeclaracao = (empresaId: string, tipo: string, field: keyof DeclaracaoAnual, value: any) => {
+    const updateDeclaracao = (empresaId: string, tipo: string, field: keyof DeclaracaoAnual, value: string | boolean | number | null) => {
         const key = `${empresaId}_${tipo}`;
         const current = declaracoes[key] || {
             empresa_id: empresaId,
@@ -189,7 +189,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
     };
 
     // IRPF handlers
-    const updateIRPF = (socioId: string, field: keyof DeclaracaoIRPF, value: any) => {
+    const updateIRPF = (socioId: string, field: keyof DeclaracaoIRPF, value: string | boolean | number | null) => {
         const current = declaracoesIRPF[socioId] || {
             socio_id: socioId,
             ano,

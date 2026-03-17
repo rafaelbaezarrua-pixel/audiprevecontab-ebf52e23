@@ -12,14 +12,14 @@ interface HonorariosGeralViewProps {
   geralData: HonorarioMensal[];
   esporadicosData: ServicoEsporadico[];
   revenueTrend: { month: string; total: number; pago: number; }[];
-  todasEmpresas: any[];
+  todasEmpresas: { id: string; situacao: string; nome_empresa?: string }[];
   globalCompetencia: string;
   setGlobalCompetencia: (comp: string) => void;
   onToggleMensalPago: (id: string, current: boolean) => void;
   onToggleMensalStatus: (id: string, current: string) => void;
   onToggleEsporadicoPago: (id: string, current: boolean) => void;
   onDeleteEsporadico: (id: string) => void;
-  onSaveEsporadico: (data: any) => void;
+  onSaveEsporadico: (data: Omit<ServicoEsporadico, 'competencia' | 'id'>) => void;
   onActionGerar: (empresaId: string) => void;
   onUpdateValor: (id: string, newValue: number) => void;
 }
@@ -92,7 +92,7 @@ export const HonorariosGeralView = ({
             <label className="text-xs font-bold text-muted-foreground uppercase">Pago:</label>
             <select 
               value={filterPago} 
-              onChange={(e) => setFilterPago(e.target.value as any)}
+              onChange={(e) => setFilterPago(e.target.value as "todos" | "pago" | "pendente")}
               className="px-2 py-1.5 border border-border rounded-lg bg-background text-xs font-bold"
             >
               <option value="todos">Todos</option>
@@ -105,7 +105,7 @@ export const HonorariosGeralView = ({
             <label className="text-xs font-bold text-muted-foreground uppercase">Envio:</label>
             <select 
               value={filterEnvio} 
-              onChange={(e) => setFilterEnvio(e.target.value as any)}
+              onChange={(e) => setFilterEnvio(e.target.value as "todos" | "enviado" | "pendente")}
               className="px-2 py-1.5 border border-border rounded-lg bg-background text-xs font-bold"
             >
               <option value="todos">Todos</option>

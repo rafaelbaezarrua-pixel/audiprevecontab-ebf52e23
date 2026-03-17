@@ -13,17 +13,18 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { format, isBefore, isSameDay } from "date-fns";
+import { ParcelamentoRecord, ParcelamentoMensalRecord, GuiaStatus } from "@/types/administrative";
 
 const ParcelamentosPage: React.FC = () => {
   const navigate = useNavigate();
-  const [parcelamentos, setParcelamentos] = useState<any[]>([]);
-  const [mensalData, setMensalData] = useState<Record<string, any>>({});
+  const [parcelamentos, setParcelamentos] = useState<ParcelamentoRecord[]>([]);
+  const [mensalData, setMensalData] = useState<Record<string, ParcelamentoMensalRecord>>({});
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(
     new Date().toISOString().slice(0, 7)
   );
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [editForm, setEditForm] = useState<Record<string, Partial<ParcelamentoMensalRecord>>>({});
   const [activeTab, setActiveTab] = useState<"andamento" | "encerrados">("andamento");
 
   useEffect(() => {
@@ -32,27 +33,24 @@ const ParcelamentosPage: React.FC = () => {
         .from("parcelamentos")
         .select("*")
         .order("nome_pessoa_fisica");
-      setParcelamentos(data || []);
+      setParcelamentos((data as unknown as ParcelamentoRecord[]) || []);
     };
     loadParcelamentos();
   }, []);
 
   useEffect(() => {
     const loadMensal = async () => {
-      const { data } = await supabase
-        .from("parcelamentos_mensal")
-        .select("*")
-        .eq("competencia", competencia);
-      const map: Record<string, any> = {};
+      const { data } = await (supabase.from("parcelamentos_mensal" as any).select("*").eq("competencia", competencia) as any);
+      const map: Record<string, ParcelamentoMensalRecord> = {};
       data?.forEach((f) => {
-        map[f.parcelamento_id] = f;
+        map[f.parcelamento_id] = f as unknown as ParcelamentoMensalRecord;
       });
       setMensalData(map);
     };
     loadMensal();
   }, [competencia]);
 
-  const calcIsEncerrado = (p: any) => {
+  const calcIsEncerrado = (p: ParcelamentoRecord) => {
     if (p.encerrado) return true;
     if (p.previsao_termino) {
       const hoje = new Date();
@@ -80,7 +78,7 @@ const ParcelamentosPage: React.FC = () => {
       return;
     }
     setExpanded(id);
-    const existing = mensalData[id] || {};
+    const existing = (mensalData[id] || {}) as Partial<ParcelamentoMensalRecord>;
 
     setEditForm((prev) => ({
       ...prev,
@@ -93,7 +91,7 @@ const ParcelamentosPage: React.FC = () => {
   };
 
   const handleSaveMensal = async (parcelamentoId: string) => {
-    const form = editForm[parcelamentoId];
+    const form = (editForm[parcelamentoId] || {}) as Partial<ParcelamentoMensalRecord>;
     const existing = mensalData[parcelamentoId];
     try {
       const payload = {
@@ -104,24 +102,24 @@ const ParcelamentosPage: React.FC = () => {
         observacoes: form.observacoes || null,
       };
 
-      if (existing?.id) {
-        await supabase
-          .from("parcelamentos_mensal")
-          .update(payload)
-          .eq("id", existing.id);
-      } else {
-        await supabase.from("parcelamentos_mensal").insert(payload);
-      }
+        if (existing?.id) {
+          await supabase
+            .from("parcelamentos_mensal" as any)
+            .update(payload)
+            .eq("id", existing.id);
+        } else {
+          await supabase.from("parcelamentos_mensal" as any).insert(payload);
+        }
       toast.success("Mês atualizado com sucesso!");
 
       // Refresh just the month data
-      const { data } = await supabase
-        .from("parcelamentos_mensal")
+      const { data } = await (supabase
+        .from("parcelamentos_mensal" as any)
         .select("*")
-        .eq("competencia", competencia);
-      const map: Record<string, any> = {};
+        .eq("competencia", competencia) as any);
+      const map: Record<string, ParcelamentoMensalRecord> = {};
       data?.forEach((f) => {
-        map[f.parcelamento_id] = f;
+        map[f.parcelamento_id] = f as unknown as ParcelamentoMensalRecord;
       });
       setMensalData(map);
       setExpanded(null);
@@ -141,7 +139,7 @@ const ParcelamentosPage: React.FC = () => {
     }
   };
 
-  const handleToggleEncerrado = async (p: any) => {
+  const handleToggleEncerrado = async (p: ParcelamentoRecord) => {
     const isAtualmenteEncerrado = calcIsEncerrado(p);
     // Para reabrir, forçamos 'encerrado' para false E removemos a 'previsao_termino'
     // se ela já tiver passado, para não fechar automaticamente de novo.
@@ -160,7 +158,7 @@ const ParcelamentosPage: React.FC = () => {
       const newVal = !p.encerrado;
       // Se tentou re-abrir mas a data já passou, alertar? Ou limpar a data?
       // Vamos apagar a data de encerramento se ele explicitamente reabrir para não dar conflito 
-      const payload: any = { encerrado: newVal };
+      const payload: Partial<ParcelamentoRecord> = { encerrado: newVal };
 
       if (!newVal && p.previsao_termino) {
         const hoje = new Date();
@@ -186,7 +184,7 @@ const ParcelamentosPage: React.FC = () => {
     }
   };
 
-  const updateForm = (id: string, field: string, value: any) => {
+  const updateForm = (id: string, field: string, value: string | GuiaStatus | null) => {
     setEditForm((prev) => ({
       ...prev,
       [id]: { ...prev[id], [field]: value },

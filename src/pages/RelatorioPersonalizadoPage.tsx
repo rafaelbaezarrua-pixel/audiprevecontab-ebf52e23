@@ -412,7 +412,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
       let doc: jsPDF | null = null;
       let pageWidth = 0;
       let currentY = 60;
-      let excelAoA: any[][] = []; // Array of Arrays for Excel
+      const excelAoA: any[][] = []; // Array of Arrays for Excel
 
       if (exportFormat === 'pdf') {
         doc = new jsPDF({ orientation: 'landscape' });

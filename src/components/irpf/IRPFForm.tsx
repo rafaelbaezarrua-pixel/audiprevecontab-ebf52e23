@@ -5,7 +5,7 @@ import { IRPFRecord } from "@/types/irpf";
 
 interface IRPFFormProps {
   record: Partial<IRPFRecord>;
-  setRecord: (record: any) => void;
+  setRecord: (record: Partial<IRPFRecord>) => void;
   onSave: () => void;
   onCancel: () => void;
   year: number;

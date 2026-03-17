@@ -3,23 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Save, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { ProcuracaoRecord } from "@/types/administrative";
 
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
 
 const ProcuracoesPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("procuracoes");
-  const [procData, setProcData] = useState<Record<string, any>>({});
+  const [procData, setProcData] = useState<Record<string, ProcuracaoRecord>>({});
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [editForm, setEditForm] = useState<Record<string, Partial<ProcuracaoRecord>>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
 
   useEffect(() => {
     const load = async () => {
       const { data: procs } = await supabase.from("procuracoes").select("*");
-      const map: Record<string, any> = {};
-      procs?.forEach(p => { map[p.empresa_id] = p; });
+      const map: Record<string, ProcuracaoRecord> = {};
+      (procs as unknown as ProcuracaoRecord[])?.forEach(p => { map[p.empresa_id] = p; });
       setProcData(map);
     };
     load();
@@ -78,8 +79,8 @@ const ProcuracoesPage: React.FC = () => {
       toast.success("Procuração atualizada!");
       // Reload
       const { data: procs } = await supabase.from("procuracoes").select("*");
-      const map: Record<string, any> = {};
-      procs?.forEach(p => { map[p.empresa_id] = p; });
+      const map: Record<string, ProcuracaoRecord> = {};
+      (procs as unknown as ProcuracaoRecord[])?.forEach(p => { map[p.empresa_id] = p; });
       setProcData(map);
     } catch (err: any) { toast.error(err.message); }
   };

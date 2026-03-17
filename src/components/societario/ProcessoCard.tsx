@@ -13,7 +13,7 @@ interface ProcessoCardProps {
   onDelete: (id: string, nome: string) => void;
   activeTab: 'timeline' | 'historico';
   onTabChange: (tab: 'timeline' | 'historico') => void;
-  onUpdatePasso: (id: string, campo: string, value: any) => void;
+  onUpdatePasso: (id: string, campo: string, value: string | number | boolean | null) => void;
   onUpdateDetalhePasso: (id: string, stepId: string, field: string, value: string) => void;
   onFinalize: (processo: Processo) => void;
 }
