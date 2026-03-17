@@ -73,6 +73,11 @@ const SocietarioEmpresaPage: React.FC = () => {
   const [telefoneRfb, setTelefoneRfb] = useState("");
   const [qsa, setQsa] = useState<any[]>([]);
   const [infoRfbCompleta, setInfoRfbCompleta] = useState<any>(null);
+  const [opcaoSimples, setOpcaoSimples] = useState<boolean>(false);
+  const [dataOpcaoSimples, setDataOpcaoSimples] = useState("");
+  const [opcaoMei, setOpcaoMei] = useState<boolean>(false);
+  const [dataOpcaoMei, setDataOpcaoMei] = useState("");
+  const [porteRfb, setPorteRfb] = useState("");
   const [consultingRFB, setConsultingRFB] = useState(false);
 
   // Config params
@@ -136,6 +141,11 @@ const SocietarioEmpresaPage: React.FC = () => {
         setTelefoneRfb(emp.telefone_rfb || "");
         setQsa(emp.qsa || []);
         setInfoRfbCompleta(emp.info_rfb_completa || null);
+        setOpcaoSimples(emp.opcao_pelo_simples || false);
+        setDataOpcaoSimples(emp.data_opcao_pelo_simples || "");
+        setOpcaoMei(emp.opcao_pelo_mei || false);
+        setDataOpcaoMei(emp.data_opcao_pelo_mei || "");
+        setPorteRfb(emp.porte_rfb || "");
       }
 
       // Load acessos só se for admin
@@ -180,7 +190,12 @@ const SocietarioEmpresaPage: React.FC = () => {
         email_rfb: emailRfb || null,
         telefone_rfb: telefoneRfb || null,
         qsa: qsa,
-        info_rfb_completa: infoRfbCompleta
+        info_rfb_completa: infoRfbCompleta,
+        opcao_pelo_simples: opcaoSimples,
+        data_opcao_pelo_simples: dataOpcaoSimples || null,
+        opcao_pelo_mei: opcaoMei,
+        data_opcao_pelo_mei: dataOpcaoMei || null,
+        porte_rfb: porteRfb || null
       };
 
       let empresaId = id;
@@ -270,17 +285,26 @@ const SocietarioEmpresaPage: React.FC = () => {
       if (data.data_inicio_atividade) setDataAbertura(data.data_inicio_atividade);
       if (data.capital_social) setCapitalSocial(data.capital_social);
       
+      // Simples e MEI
+      setOpcaoSimples(data.opcao_pelo_simples || false);
+      setDataOpcaoSimples(data.data_opcao_pelo_simples || "");
+      setOpcaoMei(data.opcao_pelo_mei || false);
+      setDataOpcaoMei(data.data_opcao_pelo_mei || "");
+      
       // CNAE
       if (data.cnae_fiscal) setCnaeFiscal(data.cnae_fiscal);
       if (data.cnae_fiscal_descricao) setCnaeFiscalDescricao(data.cnae_fiscal_descricao);
       
       // Contact
       if (data.email) setEmailRfb(data.email);
+      // BrasilAPI sometimes has 'telefone' or ddd_telefone_1
+      let fullTelefone = "";
       if (data.ddd_telefone_1) {
-        setTelefoneRfb(data.ddd_telefone_1);
-      } else if (data.ddd_telefone_2) {
-        setTelefoneRfb(data.ddd_telefone_2);
+        fullTelefone = `(${data.ddd_telefone_1.substring(0, 2)}) ${data.ddd_telefone_1.substring(2)}`;
+      } else if (data.telefone) {
+        fullTelefone = data.telefone;
       }
+      if (fullTelefone) setTelefoneRfb(fullTelefone);
 
       // Address
       setEndereco({
@@ -296,23 +320,22 @@ const SocietarioEmpresaPage: React.FC = () => {
       if (data.qsa && Array.isArray(data.qsa)) {
         setQsa(data.qsa);
         const autoSocios: Socio[] = data.qsa.map((s: any) => ({
-          nome: s.nome_socio || s.nome_fantasia || "",
-          cpf: s.cnpj_cpf_do_socio || "",
-          administrador: s.qualificacao_socio?.toLowerCase().includes("administrador") || s.codigo_qualificacao_socio === 10 || s.codigo_qualificacao_socio === 16
+          nome: s.nome_socio || s.nome_fantasia || s.nome_completo || "",
+          cpf: s.cnpj_cpf_do_socio || s.cpf_cnpj || "",
+          administrador: s.qualificacao_socio?.toLowerCase().includes("administrador") || 
+                         [10, 16, 5, 49].includes(s.codigo_qualificacao_socio)
         }));
         
-        // Merging logic: keep existing if any, or replace? User says "preencher automaticamente"
-        // Let's replace only if current socios is empty to avoid overwriting manual changes, or just add them?
-        // Usually, a "Consult" should refresh the list.
         if (autoSocios.length > 0) {
           setSocios(autoSocios);
         }
       }
 
-      // MEI Logic
-      // BrazilAPI often has nature_juridica and sometimes choice for MEI
-      const isMEIByNature = data.codigo_natureza_juridica === 2135 || data.natureza_juridica?.toLowerCase().includes("individual");
+      // Porte Logic
+      if (data.porte) setPorteRfb(data.porte);
+      
       const isMEIByOption = data.opcao_pelo_mei === true;
+      const isMEIByNature = data.codigo_natureza_juridica === 2135;
       
       if (isMEIByOption || (isMEIByNature && data.porte?.toLowerCase().includes("mei"))) {
         setPorteEmpresa("mei");
@@ -321,14 +344,19 @@ const SocietarioEmpresaPage: React.FC = () => {
         setSituacao("mei");
       } else {
          // Map porte
-         if (data.porte?.toLowerCase().includes("me")) setPorteEmpresa("me");
-         else if (data.porte?.toLowerCase().includes("epp")) setPorteEmpresa("epp");
+         const porteLabel = data.porte?.toLowerCase() || "";
+         if (porteLabel.includes("me") || data.codigo_porte === 1) setPorteEmpresa("me");
+         else if (porteLabel.includes("epp") || data.codigo_porte === 3) setPorteEmpresa("epp");
          else if (data.codigo_porte === 5) setPorteEmpresa("grande");
          
          // Natureza
-         if (data.natureza_juridica?.toLowerCase().includes("unipessoal")) setNaturezaJuridica("slu");
-         else if (data.natureza_juridica?.toLowerCase().includes("limitada")) setNaturezaJuridica("ltda");
-         else if (data.natureza_juridica?.toLowerCase().includes("individual")) setNaturezaJuridica("ei");
+         const natureLabel = data.natureza_juridica?.toLowerCase() || "";
+         if (natureLabel.includes("unipessoal")) setNaturezaJuridica("slu");
+         else if (natureLabel.includes("limitada")) setNaturezaJuridica("ltda");
+         else if (natureLabel.includes("individual")) setNaturezaJuridica("ei");
+         
+         // Regime
+         if (data.opcao_pelo_simples) setRegimeTributario("simples");
       }
 
       setInfoRfbCompleta(data);
@@ -464,10 +492,50 @@ const SocietarioEmpresaPage: React.FC = () => {
               <div><label className={labelCls}>Descrição CNAE</label><input value={cnaeFiscalDescricao} onChange={e => setCnaeFiscalDescricao(e.target.value)} className={inputCls} placeholder="Descrição da atividade principal" /></div>
               <div><label className={labelCls}>E-mail RFB</label><input type="email" value={emailRfb} onChange={e => setEmailRfb(e.target.value)} className={inputCls} placeholder="email@rfb.com" /></div>
               <div><label className={labelCls}>Telefone RFB</label><input value={telefoneRfb} onChange={e => setTelefoneRfb(e.target.value)} className={inputCls} placeholder="(00) 0000-0000" /></div>
-              <div><label className={labelCls}>Porte da Empresa</label><select value={porteEmpresa} onChange={e => setPorteEmpresa(e.target.value)} className={inputCls}><option value="">Selecione</option><option value="mei">MEI</option><option value="me">Microempresa (ME)</option><option value="epp">Empresa de Pequeno Porte (EPP)</option><option value="medio">Médio Porte</option><option value="grande">Grande Porte</option></select></div>
+              <div><label className={labelCls}>Porte da Empresa</label>
+                <div className="space-y-2">
+                  <select value={porteEmpresa} onChange={e => setPorteEmpresa(e.target.value)} className={inputCls}>
+                    <option value="">Selecione</option>
+                    <option value="mei">MEI</option>
+                    <option value="me">Microempresa (ME)</option>
+                    <option value="epp">Empresa de Pequeno Porte (EPP)</option>
+                    <option value="medio">Médio Porte</option>
+                    <option value="grande">Grande Porte</option>
+                  </select>
+                  {porteRfb && <p className="text-[10px] text-muted-foreground ml-1 italic">RFB: {porteRfb}</p>}
+                </div>
+              </div>
               <div><label className={labelCls}>Regime Tributário</label><select value={regimeTributario} onChange={e => setRegimeTributario(e.target.value)} className={inputCls}><option value="simples">Simples Nacional</option><option value="lucro_presumido">Lucro Presumido</option><option value="lucro_real">Lucro Real</option><option value="mei">MEI</option></select></div>
               <div><label className={labelCls}>Natureza Jurídica</label><select value={naturezaJuridica} onChange={e => setNaturezaJuridica(e.target.value)} className={inputCls}><option value="">Selecione</option><option value="ei">Empresário Individual (EI)</option><option value="eireli">EIRELI</option><option value="ltda">Sociedade Limitada (LTDA)</option><option value="slu">Sociedade Limitada Unipessoal (SLU)</option><option value="sa">Sociedade Anônima (S.A.)</option><option value="ss">Sociedade Simples</option><option value="mei">MEI</option></select></div>
               <div><label className={labelCls}>Situação</label><select value={situacao} onChange={e => setSituacao(e.target.value)} className={inputCls}><option value="ativa">Ativa</option><option value="paralisada">Paralisada</option><option value="baixada">Baixada</option><option value="mei">MEI</option><option value="entregue">Empresa Entregue</option></select></div>
+              
+              <div className="md:col-span-2 p-4 bg-primary/5 rounded-xl border border-primary/10 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="opt-simples" checked={opcaoSimples} onChange={e => setOpcaoSimples(e.target.checked)} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" />
+                    <label htmlFor="opt-simples" className="text-sm font-semibold text-card-foreground">Optante pelo Simples Nacional</label>
+                  </div>
+                  {opcaoSimples && (
+                    <div className="ml-6 shrink-0">
+                      <label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Data de Opção</label>
+                      <input type="date" value={dataOpcaoSimples} onChange={e => setDataOpcaoSimples(e.target.value)} className={inputCls + " h-9 text-xs"} />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="opt-mei" checked={opcaoMei} onChange={e => setOpcaoMei(e.target.checked)} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" />
+                    <label htmlFor="opt-mei" className="text-sm font-semibold text-card-foreground">Optante pelo SIMEI (MEI)</label>
+                  </div>
+                  {opcaoMei && (
+                    <div className="ml-6 shrink-0">
+                      <label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Data de Opção MEI</label>
+                      <input type="date" value={dataOpcaoMei} onChange={e => setDataOpcaoMei(e.target.value)} className={inputCls + " h-9 text-xs"} />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}
