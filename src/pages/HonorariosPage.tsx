@@ -8,7 +8,7 @@ import { useSocietario } from "@/hooks/useSocietario";
 import { useAuth } from "@/contexts/AuthContext";
 import { HonorariosGeralView } from "@/components/honorarios/HonorariosGeralView";
 import { HonorariosEmpresasView } from "@/components/honorarios/HonorariosEmpresasView";
-import { HonorarioConfig, HonorarioMensal } from "@/types/honorarios";
+import { HonorarioConfig, HonorarioMensal, ServicoEsporadico } from "@/types/honorarios";
 import { Empresa } from "@/types/societario";
 
 const HonorariosPage: React.FC = () => {
@@ -89,12 +89,12 @@ const HonorariosPage: React.FC = () => {
     
     // Load local data for the company
     const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
-    const finalConfig: Partial<HonorarioConfig> = config || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
+    const finalConfig: Partial<HonorarioConfig> = (config as unknown as Partial<HonorarioConfig>) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
     setConfigs(prev => ({ ...prev, [empresaId]: finalConfig }));
     setConfigForms(prev => ({ ...prev, [empresaId]: { ...finalConfig } }));
 
     const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empresaId).order('competencia', { ascending: false });
-    setMensalData(prev => ({ ...prev, [empresaId]: (mensal as HonorarioMensal[]) || [] }));
+    setMensalData(prev => ({ ...prev, [empresaId]: (mensal as unknown as HonorarioMensal[]) || [] }));
   };
 
   const parseCurrency = (val: any): number => {
@@ -181,11 +181,11 @@ const HonorariosPage: React.FC = () => {
           todasEmpresas={todasEmpresas as any}
           globalCompetencia={globalCompetencia}
           setGlobalCompetencia={setGlobalCompetencia}
-          onToggleMensalPago={(id, current) => saveMensal.mutate({ id, pago: !current } as any)}
-          onToggleMensalStatus={(id, current) => saveMensal.mutate({ id, status: current === "enviada" ? "gerada" : "enviada" } as any)}
-          onToggleEsporadicoPago={(id, current) => saveEsporadico.mutate({ id, pago: !current } as any)}
+          onToggleMensalPago={(id, current) => saveMensal.mutate({ id, pago: !current })}
+          onToggleMensalStatus={(id, current) => saveMensal.mutate({ id, status: current === "enviada" ? "gerada" : "enviada" })}
+          onToggleEsporadicoPago={(id, current) => saveEsporadico.mutate({ id, pago: !current } as ServicoEsporadico)}
           onDeleteEsporadico={(id) => deleteEsporadico.mutate(id)}
-          onSaveEsporadico={(data) => saveEsporadico.mutate({ ...data, competencia: globalCompetencia })}
+          onSaveEsporadico={(data) => saveEsporadico.mutate({ ...data, competencia: globalCompetencia } as ServicoEsporadico)}
           onActionGerar={async (empresaId) => {
             // 1. Identify correct sub-tab for the company
             const empresa = todasEmpresas.find(e => e.id === empresaId);
@@ -204,13 +204,13 @@ const HonorariosPage: React.FC = () => {
             
             // 3. Load config and generate (mimic toggleExpand + handleGenerateMonth)
             const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
-            const finalConfig: Partial<HonorarioConfig> = config || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
+            const finalConfig: Partial<HonorarioConfig> = (config as unknown as Partial<HonorarioConfig>) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
             
             setConfigs(prev => ({ ...prev, [empresaId]: finalConfig }));
             setConfigForms(prev => ({ ...prev, [empresaId]: { ...finalConfig } }));
 
             const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empresaId).order('competencia', { ascending: false });
-            setMensalData(prev => ({ ...prev, [empresaId]: (mensal as HonorarioMensal[]) || [] }));
+            setMensalData(prev => ({ ...prev, [empresaId]: (mensal as unknown as HonorarioMensal[]) || [] }));
 
             // 4. Trigger generation with the loaded config
             const { data: pessoalData } = await supabase.from("pessoal").select("*").eq("empresa_id", empresaId).eq("competencia", globalCompetencia).maybeSingle();
@@ -235,7 +235,7 @@ const HonorariosPage: React.FC = () => {
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          onUpdateValor={(id, val) => saveMensal.mutate({ id, valor_total: val } as any)}
+          onUpdateValor={(id, val) => saveMensal.mutate({ id, valor_total: val })}
         />
       ) : (
         <div className="space-y-4 animate-fade-in">
@@ -294,7 +294,7 @@ const HonorariosPage: React.FC = () => {
               });
             }}
             mensalData={mensalData}
-            mensalForms={mensalForms}
+            mensalForms={mensalForms as any}
             onUpdateMensalField={(id, f, v) => setMensalForms(prev => ({ ...prev, [id]: { ...prev[id], [f]: v } }))}
             onSaveMensal={async (id) => {
               const form = mensalForms[id];
@@ -306,7 +306,7 @@ const HonorariosPage: React.FC = () => {
               } as any);
               setMensalForms(prev => { const n = { ...prev }; delete n[id]; return n; });
               const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", id).order('competencia', { ascending: false });
-              setMensalData(prev => ({ ...prev, [id]: (mensal as HonorarioMensal[]) || [] }));
+              setMensalData(prev => ({ ...prev, [id]: (mensal as unknown as HonorarioMensal[]) || [] }));
             }}
             onGenerateMonth={handleGenerateMonth}
             onStartEditMensal={(id, record) => {
@@ -323,7 +323,7 @@ const HonorariosPage: React.FC = () => {
             onUpdateMensalValor={async (empId, recId, val) => {
               await saveMensal.mutateAsync({ id: recId, valor_total: val } as any);
               const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empId).order('competencia', { ascending: false });
-              setMensalData(prev => ({ ...prev, [empId]: (mensal as HonorarioMensal[]) || [] }));
+              setMensalData(prev => ({ ...prev, [empId]: (mensal as unknown as HonorarioMensal[]) || [] }));
             }}
           />
         </div>

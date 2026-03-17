@@ -1174,6 +1174,98 @@ export type Database = {
           },
         ]
       }
+      controle_irpf: {
+        Row: {
+          id: string
+          nome_completo: string
+          ano_exercicio: number
+          valor_a_pagar: number | null
+          status_pago: boolean | null
+          data_pagamento: string | null
+          status_transmissao: string | null
+          data_transmissao: string | null
+          transmitido_por: string | null
+          cpf: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          nome_completo: string
+          ano_exercicio: number
+          valor_a_pagar?: number | null
+          status_pago?: boolean | null
+          data_pagamento?: string | null
+          status_transmissao?: string | null
+          data_transmissao?: string | null
+          transmitido_por?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          nome_completo?: string
+          ano_exercicio?: number
+          valor_a_pagar?: number | null
+          status_pago?: boolean | null
+          data_pagamento?: string | null
+          status_transmissao?: string | null
+          data_transmissao?: string | null
+          transmitido_por?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      servicos_esporadicos: {
+        Row: {
+          id: string
+          nome_cliente: string
+          cpf_cnpj: string | null
+          tipo_servico: string
+          valor: number | null
+          competencia: string
+          pago: boolean | null
+          irpf_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          nome_cliente: string
+          cpf_cnpj?: string | null
+          tipo_servico: string
+          valor?: number | null
+          competencia: string
+          pago?: boolean | null
+          irpf_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          nome_cliente?: string
+          cpf_cnpj?: string | null
+          tipo_servico?: string
+          valor?: number | null
+          competencia?: string
+          pago?: boolean | null
+          irpf_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servicos_esporadicos_irpf_id_fkey"
+            columns: ["irpf_id"]
+            isOneToOne: false
+            referencedRelation: "controle_irpf"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       user_module_permissions: {
         Row: {
           id: string

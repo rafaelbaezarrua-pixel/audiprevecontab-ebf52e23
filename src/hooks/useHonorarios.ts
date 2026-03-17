@@ -71,6 +71,7 @@ export const useHonorarios = (competencia?: string) => {
     mutationFn: async (payload: HonorarioConfig) => {
       const { id, ...data } = payload;
       if (id) {
+        // Assume jsonb compatible format for outros_servicos
         const { error } = await supabase.from("honorarios_config").update(data as any).eq("id", id);
         if (error) throw error;
       } else {
@@ -87,15 +88,20 @@ export const useHonorarios = (competencia?: string) => {
 
   const saveMensal = useMutation({
     mutationFn: async (payload: Partial<HonorarioMensal>) => {
-      const { id, ...data } = payload;
-      // Ensure status is correctly typed for Supabase if it's a constrained string
-      const updateData = { ...data } as any;
+      const { id, empresas, detalhes_calculo, observacoes, ...data } = payload;
+      
+      // Keep exact DB structure, removing nested objects like 'empresas' before sending
+      const updateData = {
+          ...data,
+          detalhes_calculo: detalhes_calculo as unknown as any,
+          observacoes: observacoes as unknown as any
+      };
       
       if (id) {
-        const { error } = await supabase.from("honorarios_mensal").update(updateData).eq("id", id);
+        const { error } = await supabase.from("honorarios_mensal").update(updateData as any).eq("id", id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("honorarios_mensal").insert([updateData]);
+        const { error } = await supabase.from("honorarios_mensal").insert([updateData as any]);
         if (error) throw error;
       }
     },
@@ -112,10 +118,10 @@ export const useHonorarios = (competencia?: string) => {
     mutationFn: async (payload: ServicoEsporadico) => {
       const { id, ...data } = payload;
       if (id) {
-        const { error } = await (supabase as any).from("servicos_esporadicos").update(data).eq("id", id);
+        const { error } = await supabase.from("servicos_esporadicos").update(data).eq("id", id);
         if (error) throw error;
       } else {
-        const { error } = await (supabase as any).from("servicos_esporadicos").insert([data]);
+        const { error } = await supabase.from("servicos_esporadicos").insert([data]);
         if (error) throw error;
       }
     },
@@ -128,7 +134,7 @@ export const useHonorarios = (competencia?: string) => {
 
   const deleteEsporadico = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase as any).from("servicos_esporadicos").delete().eq("id", id);
+      const { error } = await supabase.from("servicos_esporadicos").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

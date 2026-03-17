@@ -108,12 +108,15 @@ CREATE POLICY "Users access assigned parcelamentos" ON public.parcelamentos FOR 
 
 -- PROCESSOS SOCIETARIOS (assuming they have empresa_id)
 DROP POLICY IF EXISTS "Authenticated users access processos" ON public.processos_societarios;
+DROP POLICY IF EXISTS "Users access assigned processos" ON public.processos_societarios;
 CREATE POLICY "Users access assigned processos" ON public.processos_societarios FOR ALL USING (public.can_access_empresa(auth.uid(), empresa_id));
 
 -- OCORRENCIAS (assuming they have empresa_id)
 DROP POLICY IF EXISTS "Authenticated users access ocorrencias" ON public.ocorrencias;
+DROP POLICY IF EXISTS "Users access assigned ocorrencias" ON public.ocorrencias;
 CREATE POLICY "Users access assigned ocorrencias" ON public.ocorrencias FOR ALL USING (public.can_access_empresa(auth.uid(), empresa_id));
 
 -- HONORARIOS (recalculos)
 DROP POLICY IF EXISTS "Authenticated users access recalculos" ON public.recalculos;
+DROP POLICY IF EXISTS "Users access assigned recalculos" ON public.recalculos;
 CREATE POLICY "Users access assigned recalculos" ON public.recalculos FOR ALL USING (public.can_access_empresa(auth.uid(), empresa_id));
