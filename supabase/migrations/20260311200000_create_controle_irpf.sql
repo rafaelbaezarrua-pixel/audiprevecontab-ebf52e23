@@ -17,10 +17,12 @@ CREATE TABLE IF NOT EXISTS public.controle_irpf (
 ALTER TABLE public.controle_irpf ENABLE ROW LEVEL SECURITY;
 
 -- Create policy for authenticated users (simplified for now as per admin requirements)
+DROP POLICY IF EXISTS "Authenticated users can manage IRPF" ON public.controle_irpf;
 CREATE POLICY "Authenticated users can manage IRPF" ON public.controle_irpf
     FOR ALL USING (auth.uid() IS NOT NULL);
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS trg_controle_irpf_updated ON public.controle_irpf;
 CREATE TRIGGER trg_controle_irpf_updated 
     BEFORE UPDATE ON public.controle_irpf 
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();

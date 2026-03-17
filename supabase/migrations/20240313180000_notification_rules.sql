@@ -14,6 +14,7 @@ create table if not exists public.notification_rules (
 alter table public.notification_rules enable row level security;
 
 -- Policies
+drop policy if exists "Admins can manage notification rules" on public.notification_rules;
 create policy "Admins can manage notification rules"
     on public.notification_rules
     for all
@@ -25,6 +26,7 @@ create policy "Admins can manage notification rules"
         )
     );
 
+drop policy if exists "Users can view notification rules" on public.notification_rules;
 create policy "Users can view notification rules"
     on public.notification_rules
     for select

@@ -19,10 +19,12 @@ CREATE TABLE IF NOT EXISTS public.servicos_esporadicos (
 ALTER TABLE public.servicos_esporadicos ENABLE ROW LEVEL SECURITY;
 
 -- Policy for authenticated users
+DROP POLICY IF EXISTS "Authenticated users can manage servicos_esporadicos" ON public.servicos_esporadicos;
 CREATE POLICY "Authenticated users can manage servicos_esporadicos" ON public.servicos_esporadicos
     FOR ALL USING (auth.uid() IS NOT NULL);
 
 -- Trigger for update_updated_at
+DROP TRIGGER IF EXISTS trg_servicos_esporadicos_updated ON public.servicos_esporadicos;
 CREATE TRIGGER trg_servicos_esporadicos_updated 
     BEFORE UPDATE ON public.servicos_esporadicos 
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();

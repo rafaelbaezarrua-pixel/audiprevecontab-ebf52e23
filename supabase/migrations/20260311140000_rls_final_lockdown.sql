@@ -41,14 +41,14 @@ DROP POLICY IF EXISTS "Users can view declaracoes_anuais" ON public.declaracoes_
 DROP POLICY IF EXISTS "Users can insert declaracoes_anuais" ON public.declaracoes_anuais;
 DROP POLICY IF EXISTS "Users can update declaracoes_anuais" ON public.declaracoes_anuais;
 DROP POLICY IF EXISTS "Users can delete declaracoes_anuais" ON public.declaracoes_anuais;
-
+DROP POLICY IF EXISTS "Users access assigned declaracoes_anuais" ON public.declaracoes_anuais;
 CREATE POLICY "Users access assigned declaracoes_anuais" ON public.declaracoes_anuais FOR ALL USING (public.can_access_empresa(auth.uid(), empresa_id));
 
 -- 4. OCORRENCIAS
 ALTER TABLE public.ocorrencias ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Authenticated users access ocorrencias" ON public.ocorrencias;
 DROP POLICY IF EXISTS "Enable view for users with access" ON public.ocorrencias;
-
+DROP POLICY IF EXISTS "Users access assigned ocorrencias" ON public.ocorrencias;
 CREATE POLICY "Users access assigned ocorrencias" ON public.ocorrencias FOR ALL USING (public.can_access_empresa(auth.uid(), empresa_id));
 
 -- 5. PROCESSOS SOCIETARIOS
@@ -56,6 +56,7 @@ ALTER TABLE public.processos_societarios ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Authenticated users access processos" ON public.processos_societarios;
 DROP POLICY IF EXISTS "Users access assigned processos" ON public.processos_societarios;
 
+DROP POLICY IF EXISTS "Users access assigned processos" ON public.processos_societarios;
 CREATE POLICY "Users access assigned processos" ON public.processos_societarios FOR ALL USING (
     empresa_id IS NULL OR public.can_access_empresa(auth.uid(), empresa_id)
 );
