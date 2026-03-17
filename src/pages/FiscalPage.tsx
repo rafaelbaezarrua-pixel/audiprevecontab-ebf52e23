@@ -13,8 +13,9 @@ const FiscalPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, Partial<FiscalRecord> & Record<string, any>>>({});
+  const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
+  const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
 
   useEffect(() => {
     const load = async () => {
@@ -31,9 +32,9 @@ const FiscalPage: React.FC = () => {
 
     let matchTab = false;
     if (activeTab === "ativas") {
-      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa !== "mei";
+      matchTab = (e.situacao === "ativa" || !e.situacao) && e.porte_empresa !== "mei";
     } else if (activeTab === "mei") {
-      matchTab = (!e.situacao || e.situacao === "ativa") && e.porte_empresa === "mei";
+      matchTab = e.situacao === "mei" || ((e.situacao === "ativa" || !e.situacao) && e.porte_empresa === "mei");
     } else if (activeTab === "paralisadas") {
       matchTab = e.situacao === "paralisada";
     } else if (activeTab === "baixadas") {
@@ -42,13 +43,29 @@ const FiscalPage: React.FC = () => {
       matchTab = e.situacao === "entregue";
     }
 
-    return matchSearch && matchTab;
+    let matchStatus = true;
+    if (filterStatus !== "todos") {
+      const record = fiscalData[e.id];
+      const items = e.regime_tributario === 'simples' ? ['status_guia'] : 
+                    e.regime_tributario === 'lucro_presumido' || e.regime_tributario === 'lucro_real' ? 
+                    ['irpj_csll_status', 'pis_cofins_status', 'icms_status', 'iss_status'] : [];
+      
+      if (items.length > 0) {
+        const statuses = items.map(field => record?.[field as keyof FiscalRecord] || 'pendente');
+        const isAllConcluido = statuses.every(s => s === 'concluido' || s === 'isento');
+        matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
+      } else {
+        matchStatus = filterStatus === 'pendente'; // For MEI or undefined regime, default to pendente if no record
+      }
+    }
+
+    return matchSearch && matchTab && matchStatus;
   });
 
   const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
-    const existing = fiscalData[id] || {};
+    const existing = (fiscalData[id] || {}) as Partial<FiscalRecord>;
     let fixedFields = {
       tipo_nota: "", recebimento_arquivos: "", aliquota: "", ramo_empresarial: "",
       aliquota_irpj: "", aliquota_csll: "", aliquota_pis: "", aliquota_cofins: "",
@@ -92,39 +109,39 @@ const FiscalPage: React.FC = () => {
   };
 
   const handleSave = async (empresaId: string) => {
-    const form = editForm[empresaId];
-    const existing = fiscalData[empresaId];
+    const form = (editForm[empresaId] || {}) as Partial<FiscalRecord> & Record<string, any>;
+    const existing = (fiscalData[empresaId] || {}) as Partial<FiscalRecord>;
     try {
       const payload = {
         empresa_id: empresaId, competencia, tipo_nota: form.tipo_nota || null,
         recebimento_arquivos: form.recebimento_arquivos || null, forma_envio: form.forma_envio || null,
-        aliquota: form.aliquota ? parseFloat(form.aliquota) : null,
+        aliquota: form.aliquota ? parseFloat(String(form.aliquota)) : null,
         status_guia: form.status_guia || "pendente", data_envio: form.data_envio || null,
         observacoes: form.observacoes || {}, ramo_empresarial: form.ramo_empresarial || null,
 
-        aliquota_irpj: form.aliquota_irpj ? parseFloat(form.aliquota_irpj) : null,
-        aliquota_csll: form.aliquota_csll ? parseFloat(form.aliquota_csll) : null,
+        aliquota_irpj: form.aliquota_irpj ? parseFloat(String(form.aliquota_irpj)) : null,
+        aliquota_csll: form.aliquota_csll ? parseFloat(String(form.aliquota_csll)) : null,
         irpj_csll_status: form.irpj_csll_status || "pendente",
         irpj_csll_data_envio: form.irpj_csll_data_envio || null,
 
-        aliquota_pis: form.aliquota_pis ? parseFloat(form.aliquota_pis) : null,
-        aliquota_cofins: form.aliquota_cofins ? parseFloat(form.aliquota_cofins) : null,
+        aliquota_pis: form.aliquota_pis ? parseFloat(String(form.aliquota_pis)) : null,
+        aliquota_cofins: form.aliquota_cofins ? parseFloat(String(form.aliquota_cofins)) : null,
         pis_cofins_status: form.pis_cofins_status || "pendente",
         pis_cofins_data_envio: form.pis_cofins_data_envio || null,
 
-        aliquota_icms: form.aliquota_icms ? parseFloat(form.aliquota_icms) : null,
+        aliquota_icms: form.aliquota_icms ? parseFloat(String(form.aliquota_icms)) : null,
         icms_status: form.icms_status || "pendente",
         icms_data_envio: form.icms_data_envio || null,
 
-        aliquota_iss: form.aliquota_iss ? parseFloat(form.aliquota_iss) : null,
+        aliquota_iss: form.aliquota_iss ? parseFloat(String(form.aliquota_iss)) : null,
         iss_status: form.iss_status || "pendente",
         iss_data_envio: form.iss_data_envio || null,
 
-        aliquota_cbs: form.aliquota_cbs ? parseFloat(form.aliquota_cbs) : null,
+        aliquota_cbs: form.aliquota_cbs ? parseFloat(String(form.aliquota_cbs)) : null,
         cbs_status: form.cbs_status || "pendente",
         cbs_data_envio: form.cbs_data_envio || null,
 
-        aliquota_ibs: form.aliquota_ibs ? parseFloat(form.aliquota_ibs) : null,
+        aliquota_ibs: form.aliquota_ibs ? parseFloat(String(form.aliquota_ibs)) : null,
         ibs_status: form.ibs_status || "pendente",
         ibs_data_envio: form.ibs_data_envio || null,
       };
@@ -156,15 +173,52 @@ const FiscalPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
-        <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Empresas</p><p className="text-2xl font-bold text-primary mt-1">{filtered.length}</p></div>
+          <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Concluídas</p><p className="text-2xl font-bold text-success mt-1">{completedCount}</p></div>
+          <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Pendentes</p><p className="text-2xl font-bold text-warning mt-1">{filtered.length - completedCount}</p></div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <input
+              type="text"
+              placeholder="Buscar empresa..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm w-full sm:w-64"
+            />
+          </div>
+          <input
+            type="month"
+            value={competencia}
+            onChange={(e) => setCompetencia(e.target.value)}
+            className="px-4 py-2 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm"
+          />
+        </div>
+
+        <div className="flex bg-muted/50 p-1 rounded-lg self-end">
+          <button 
+            onClick={() => setFilterStatus("todos")}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "todos" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Todos
+          </button>
+          <button 
+            onClick={() => setFilterStatus("pendente")}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "pendente" ? "bg-card text-orange-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Pendentes
+          </button>
+          <button 
+            onClick={() => setFilterStatus("concluido")}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "concluido" ? "bg-card text-green-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Concluídos
+          </button>
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Empresas</p><p className="text-2xl font-bold text-primary mt-1">{filtered.length}</p></div>
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Concluídas</p><p className="text-2xl font-bold text-success mt-1">{completedCount}</p></div>
-        <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Pendentes</p><p className="text-2xl font-bold text-warning mt-1">{filtered.length - completedCount}</p></div>
-      </div>
-      <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
 
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
         <button

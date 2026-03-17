@@ -16,6 +16,8 @@ const CertidoesPage: React.FC = () => {
   const [newCert, setNewCert] = useState({ tipo_certidao: "CND Federal", vencimento: "", observacao: "" });
   const [newFile, setNewFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [consulting, setConsulting] = useState<string | null>(null);
+  const [cndTipoPessoa, setCndTipoPessoa] = useState<"PJ" | "PF">("PJ");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const newFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,6 +67,83 @@ const CertidoesPage: React.FC = () => {
     }
     setNewCert({ tipo_certidao: "CND Federal", vencimento: "", observacao: "" });
     load();
+  };
+
+  const handleConsultaCND = async (empresaId: string, cnpj: string | undefined) => {
+    setConsulting(empresaId);
+    const tid = toast.loading(`Consultando CND Federal ${cndTipoPessoa}...`);
+
+    try {
+      let identificador = "";
+      let tipoContribuinte = 1; // Default 1 (PJ)
+
+      if (cndTipoPessoa === "PJ") {
+        if (!cnpj) throw new Error("CNPJ da empresa não disponível.");
+        identificador = cnpj.replace(/\D/g, "");
+        tipoContribuinte = 1;
+      } else {
+        // PF - Buscar sócio administrador
+        const { data: socios, error: socError } = await supabase.from("socios").select("*").eq("empresa_id", empresaId).eq("administrador", true);
+        if (socError) throw socError;
+        if (!socios || socios.length === 0) throw new Error("A empresa não possui um Sócio Administrador cadastrado para consulta PF.");
+        
+        const admin = socios[0];
+        if (!admin.cpf) throw new Error(`O sócio administrador (${admin.nome}) não possui CPF cadastrado.`);
+        identificador = admin.cpf.replace(/\D/g, "");
+        tipoContribuinte = 2; // Serpro enum: 2 - CPF
+      }
+
+      const response = await fetch("https://apigateway.conectagov.estaleiro.serpro.gov.br/api-cnd/v1/ConsultaCnd/certidao", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          TipoContribuinte: tipoContribuinte,
+          ContribuinteConsulta: identificador,
+          GerarCertidaoPdf: true
+        })
+      });
+
+      if (!response.ok) throw new Error("Erro na comunicação com a API de Certidões.");
+
+      const data = await response.json();
+
+      if (data.Status !== 1 && data.Status !== 2) {
+        throw new Error(data.Mensagem || "Não foi possível obter a certidão.");
+      }
+
+      const certData = data.Certidao;
+      if (!certData) throw new Error("Dados da certidão não retornados.");
+
+      const { data: newRecord, error: insertError } = await supabase.from("certidoes").insert({
+        empresa_id: empresaId,
+        tipo_certidao: "CND Federal",
+        vencimento: certData.DataValidade ? new Date(certData.DataValidade).toISOString().split('T')[0] : null,
+        observacao: `Cód. Controle: ${certData.CodigoControle}${cndTipoPessoa === "PF" ? " (Sócio Admin)" : ""}`
+      }).select().single();
+
+      if (insertError) throw insertError;
+
+      if (certData.DocumentoPdf) {
+        const binStr = atob(certData.DocumentoPdf);
+        const len = binStr.length;
+        const arr = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          arr[i] = binStr.charCodeAt(i);
+        }
+        const blob = new Blob([arr], { type: "application/pdf" });
+        const fileName = `CND_Federal_${cndTipoPessoa}_${identificador}.pdf`;
+        const file = new File([blob], fileName, { type: "application/pdf" });
+        
+        await uploadFile(newRecord.id, file);
+      }
+
+      toast.success(`CND Federal (${cndTipoPessoa}) consultada com sucesso!`, { id: tid });
+      load();
+    } catch (err: any) {
+      toast.error(`Falha na consulta (${cndTipoPessoa}): ${err.message}`, { id: tid });
+    } finally {
+      setConsulting(null);
+    }
   };
 
   const removeCertidao = async (certId: string) => {
@@ -168,7 +247,32 @@ const CertidoesPage: React.FC = () => {
                   <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-3">
                     <p className="text-sm font-medium text-card-foreground">Adicionar Certidão</p>
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                      <div><label className={labelCls}>Tipo</label><select value={newCert.tipo_certidao} onChange={e => setNewCert({ ...newCert, tipo_certidao: e.target.value })} className={inputCls}>{tiposCertidao.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                      <div>
+                        <label className={labelCls}>Tipo</label>
+                        <select value={newCert.tipo_certidao} onChange={e => setNewCert({ ...newCert, tipo_certidao: e.target.value })} className={inputCls}>{tiposCertidao.map(t => <option key={t} value={t}>{t}</option>)}</select>
+                      </div>
+                      {newCert.tipo_certidao === "CND Federal" && (
+                        <div>
+                          <label className={labelCls}>Consultar como</label>
+                          <div className="flex gap-2">
+                            <select 
+                              value={cndTipoPessoa} 
+                              onChange={e => setCndTipoPessoa(e.target.value as "PJ" | "PF")} 
+                              className={inputCls}
+                            >
+                              <option value="PJ">Empresa (PJ)</option>
+                              <option value="PF">Sócio Titular (PF)</option>
+                            </select>
+                            <button 
+                              onClick={() => handleConsultaCND(emp.id, emp.cnpj)}
+                              disabled={consulting === emp.id}
+                              className="px-3 py-2 bg-info/10 text-info rounded-lg text-xs font-semibold hover:bg-info/20 whitespace-nowrap transition-all flex items-center gap-2"
+                            >
+                              {consulting === emp.id ? "Consultando..." : <><Search size={14} /> Consultar CND</>}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       <div><label className={labelCls}>Data de Validade</label><input type="date" value={newCert.vencimento} onChange={e => setNewCert({ ...newCert, vencimento: e.target.value })} className={inputCls} /></div>
                       <div><label className={labelCls}>Observação</label><input value={newCert.observacao} onChange={e => setNewCert({ ...newCert, observacao: e.target.value })} className={inputCls} /></div>
                       <div>

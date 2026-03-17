@@ -64,6 +64,17 @@ const SocietarioEmpresaPage: React.FC = () => {
   const [licencas, setLicencas] = useState<LicencaRow[]>([]);
   const [newSocio, setNewSocio] = useState<Socio>({ nome: "", cpf: "", administrador: false });
 
+  // New RFB fields
+  const [nomeFantasia, setNomeFantasia] = useState("");
+  const [capitalSocial, setCapitalSocial] = useState<number | null>(null);
+  const [cnaeFiscal, setCnaeFiscal] = useState<number | null>(null);
+  const [cnaeFiscalDescricao, setCnaeFiscalDescricao] = useState("");
+  const [emailRfb, setEmailRfb] = useState("");
+  const [telefoneRfb, setTelefoneRfb] = useState("");
+  const [qsa, setQsa] = useState<any[]>([]);
+  const [infoRfbCompleta, setInfoRfbCompleta] = useState<any>(null);
+  const [consultingRFB, setConsultingRFB] = useState(false);
+
   // Config params
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin || false;
@@ -115,6 +126,16 @@ const SocietarioEmpresaPage: React.FC = () => {
         const addr = (emp.endereco as any) || {};
         setEndereco({ ...emptyEndereco, ...addr });
         setModulosAtivos(emp.modulos_ativos || AVAILABLE_MODULES.map(m => m.id));
+        
+        // Set new RFB fields
+        setNomeFantasia(emp.nome_fantasia || "");
+        setCapitalSocial(emp.capital_social || null);
+        setCnaeFiscal(emp.cnae_fiscal || null);
+        setCnaeFiscalDescricao(emp.cnae_fiscal_descricao || "");
+        setEmailRfb(emp.email_rfb || "");
+        setTelefoneRfb(emp.telefone_rfb || "");
+        setQsa(emp.qsa || []);
+        setInfoRfbCompleta(emp.info_rfb_completa || null);
       }
 
       // Load acessos só se for admin
@@ -151,7 +172,15 @@ const SocietarioEmpresaPage: React.FC = () => {
         data_abertura: dataAbertura || null, porte_empresa: porteEmpresa || null,
         regime_tributario: regimeTributario as any, natureza_juridica: naturezaJuridica || null,
         situacao: situacao as any, endereco: endereco as any,
-        modulos_ativos: modulosAtivos
+        modulos_ativos: modulosAtivos,
+        nome_fantasia: nomeFantasia || null,
+        capital_social: capitalSocial,
+        cnae_fiscal: cnaeFiscal,
+        cnae_fiscal_descricao: cnaeFiscalDescricao || null,
+        email_rfb: emailRfb || null,
+        telefone_rfb: telefoneRfb || null,
+        qsa: qsa,
+        info_rfb_completa: infoRfbCompleta
       };
 
       let empresaId = id;
@@ -216,6 +245,99 @@ const SocietarioEmpresaPage: React.FC = () => {
       toast.error("Erro ao salvar: " + err.message);
     }
     setSaving(false);
+  };
+
+  const handleConsultaRFB = async () => {
+    if (!cnpj) { toast.error("Informe o CNPJ para consulta"); return; }
+    const cleanCNPJ = cnpj.replace(/\D/g, "");
+    if (cleanCNPJ.length !== 14) { toast.error("CNPJ inválido"); return; }
+
+    setConsultingRFB(true);
+    const tid = toast.loading("Consultando RFB via BrazilAPI...");
+
+    try {
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCNPJ}`);
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "Erro na consulta");
+      }
+
+      const data = await response.json();
+
+      // Basic Fill
+      if (data.razao_social) setNomeEmpresa(data.razao_social);
+      if (data.nome_fantasia) setNomeFantasia(data.nome_fantasia);
+      if (data.data_inicio_atividade) setDataAbertura(data.data_inicio_atividade);
+      if (data.capital_social) setCapitalSocial(data.capital_social);
+      
+      // CNAE
+      if (data.cnae_fiscal) setCnaeFiscal(data.cnae_fiscal);
+      if (data.cnae_fiscal_descricao) setCnaeFiscalDescricao(data.cnae_fiscal_descricao);
+      
+      // Contact
+      if (data.email) setEmailRfb(data.email);
+      if (data.ddd_telefone_1) {
+        setTelefoneRfb(data.ddd_telefone_1);
+      } else if (data.ddd_telefone_2) {
+        setTelefoneRfb(data.ddd_telefone_2);
+      }
+
+      // Address
+      setEndereco({
+        logradouro: `${data.descricao_tipo_de_logradouro || ""} ${data.logradouro || ""}`.trim(),
+        numero: data.numero || "",
+        bairro: data.bairro || "",
+        cidade: data.municipio || "",
+        estado: data.uf || "",
+        cep: data.cep || ""
+      });
+
+      // Partners (QSA)
+      if (data.qsa && Array.isArray(data.qsa)) {
+        setQsa(data.qsa);
+        const autoSocios: Socio[] = data.qsa.map((s: any) => ({
+          nome: s.nome_socio || s.nome_fantasia || "",
+          cpf: s.cnpj_cpf_do_socio || "",
+          administrador: s.qualificacao_socio?.toLowerCase().includes("administrador") || s.codigo_qualificacao_socio === 10 || s.codigo_qualificacao_socio === 16
+        }));
+        
+        // Merging logic: keep existing if any, or replace? User says "preencher automaticamente"
+        // Let's replace only if current socios is empty to avoid overwriting manual changes, or just add them?
+        // Usually, a "Consult" should refresh the list.
+        if (autoSocios.length > 0) {
+          setSocios(autoSocios);
+        }
+      }
+
+      // MEI Logic
+      // BrazilAPI often has nature_juridica and sometimes choice for MEI
+      const isMEIByNature = data.codigo_natureza_juridica === 2135 || data.natureza_juridica?.toLowerCase().includes("individual");
+      const isMEIByOption = data.opcao_pelo_mei === true;
+      
+      if (isMEIByOption || (isMEIByNature && data.porte?.toLowerCase().includes("mei"))) {
+        setPorteEmpresa("mei");
+        setRegimeTributario("mei");
+        setNaturezaJuridica("mei");
+        setSituacao("mei");
+      } else {
+         // Map porte
+         if (data.porte?.toLowerCase().includes("me")) setPorteEmpresa("me");
+         else if (data.porte?.toLowerCase().includes("epp")) setPorteEmpresa("epp");
+         else if (data.codigo_porte === 5) setPorteEmpresa("grande");
+         
+         // Natureza
+         if (data.natureza_juridica?.toLowerCase().includes("unipessoal")) setNaturezaJuridica("slu");
+         else if (data.natureza_juridica?.toLowerCase().includes("limitada")) setNaturezaJuridica("ltda");
+         else if (data.natureza_juridica?.toLowerCase().includes("individual")) setNaturezaJuridica("ei");
+      }
+
+      setInfoRfbCompleta(data);
+      toast.success("Dados preenchidos com sucesso!", { id: tid });
+    } catch (err: any) {
+      toast.error(`Falha na consulta: ${err.message}`, { id: tid });
+    } finally {
+      setConsultingRFB(false);
+    }
   };
 
   const addSocio = () => {
@@ -321,12 +443,31 @@ const SocietarioEmpresaPage: React.FC = () => {
             <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2"><Building2 size={20} className="text-primary" /> Dados Gerais</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="md:col-span-2"><label className={labelCls}>Nome da Empresa *</label><input value={nomeEmpresa} onChange={e => setNomeEmpresa(e.target.value)} className={inputCls} placeholder="Razão Social" /></div>
-              <div><label className={labelCls}>CNPJ</label><input value={cnpj} onChange={e => setCnpj(maskCNPJ(e.target.value))} className={inputCls} placeholder="00.000.000/0000-00" /></div>
+              <div>
+                <label className={labelCls}>CNPJ</label>
+                <div className="flex gap-2">
+                  <input value={cnpj} onChange={e => setCnpj(maskCNPJ(e.target.value))} className={inputCls} placeholder="00.000.000/0000-00" />
+                  <button 
+                    onClick={handleConsultaRFB} 
+                    disabled={consultingRFB}
+                    type="button"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-sm whitespace-nowrap"
+                  >
+                    <Eye size={16} /> {consultingRFB ? "Consultando..." : "Consulta RFB"}
+                  </button>
+                </div>
+              </div>
               <div><label className={labelCls}>Data de Abertura</label><input type="date" value={dataAbertura} onChange={e => setDataAbertura(e.target.value)} className={inputCls} /></div>
+              <div><label className={labelCls}>Nome Fantasia</label><input value={nomeFantasia} onChange={e => setNomeFantasia(e.target.value)} className={inputCls} placeholder="Nome Fantasia" /></div>
+              <div><label className={labelCls}>Capital Social</label><input type="number" value={capitalSocial || ""} onChange={e => setCapitalSocial(parseFloat(e.target.value) || null)} className={inputCls} placeholder="0.00" /></div>
+              <div><label className={labelCls}>CNAE Principal</label><input value={cnaeFiscal || ""} onChange={e => setCnaeFiscal(parseInt(e.target.value) || null)} className={inputCls} placeholder="Código CNAE" /></div>
+              <div><label className={labelCls}>Descrição CNAE</label><input value={cnaeFiscalDescricao} onChange={e => setCnaeFiscalDescricao(e.target.value)} className={inputCls} placeholder="Descrição da atividade principal" /></div>
+              <div><label className={labelCls}>E-mail RFB</label><input type="email" value={emailRfb} onChange={e => setEmailRfb(e.target.value)} className={inputCls} placeholder="email@rfb.com" /></div>
+              <div><label className={labelCls}>Telefone RFB</label><input value={telefoneRfb} onChange={e => setTelefoneRfb(e.target.value)} className={inputCls} placeholder="(00) 0000-0000" /></div>
               <div><label className={labelCls}>Porte da Empresa</label><select value={porteEmpresa} onChange={e => setPorteEmpresa(e.target.value)} className={inputCls}><option value="">Selecione</option><option value="mei">MEI</option><option value="me">Microempresa (ME)</option><option value="epp">Empresa de Pequeno Porte (EPP)</option><option value="medio">Médio Porte</option><option value="grande">Grande Porte</option></select></div>
               <div><label className={labelCls}>Regime Tributário</label><select value={regimeTributario} onChange={e => setRegimeTributario(e.target.value)} className={inputCls}><option value="simples">Simples Nacional</option><option value="lucro_presumido">Lucro Presumido</option><option value="lucro_real">Lucro Real</option><option value="mei">MEI</option></select></div>
               <div><label className={labelCls}>Natureza Jurídica</label><select value={naturezaJuridica} onChange={e => setNaturezaJuridica(e.target.value)} className={inputCls}><option value="">Selecione</option><option value="ei">Empresário Individual (EI)</option><option value="eireli">EIRELI</option><option value="ltda">Sociedade Limitada (LTDA)</option><option value="slu">Sociedade Limitada Unipessoal (SLU)</option><option value="sa">Sociedade Anônima (S.A.)</option><option value="ss">Sociedade Simples</option><option value="mei">MEI</option></select></div>
-              <div><label className={labelCls}>Situação</label><select value={situacao} onChange={e => setSituacao(e.target.value)} className={inputCls}><option value="ativa">Ativa</option><option value="paralisada">Paralisada</option><option value="baixada">Baixada</option><option value="entregue">Empresa Entregue</option></select></div>
+              <div><label className={labelCls}>Situação</label><select value={situacao} onChange={e => setSituacao(e.target.value)} className={inputCls}><option value="ativa">Ativa</option><option value="paralisada">Paralisada</option><option value="baixada">Baixada</option><option value="mei">MEI</option><option value="entregue">Empresa Entregue</option></select></div>
             </div>
           </div>
         )}

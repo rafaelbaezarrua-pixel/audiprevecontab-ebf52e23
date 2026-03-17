@@ -266,6 +266,14 @@ export type Database = {
             | null
           situacao: Database["public"]["Enums"]["empresa_situacao"] | null
           updated_at: string | null
+          nome_fantasia: string | null
+          capital_social: number | null
+          cnae_fiscal: number | null
+          cnae_fiscal_descricao: string | null
+          email_rfb: string | null
+          telefone_rfb: string | null
+          qsa: Json | null
+          info_rfb_completa: Json | null
         }
         Insert: {
           cnpj?: string | null
@@ -282,6 +290,14 @@ export type Database = {
             | null
           situacao?: Database["public"]["Enums"]["empresa_situacao"] | null
           updated_at?: string | null
+          nome_fantasia?: string | null
+          capital_social?: number | null
+          cnae_fiscal?: number | null
+          cnae_fiscal_descricao?: string | null
+          email_rfb?: string | null
+          telefone_rfb?: string | null
+          qsa?: Json | null
+          info_rfb_completa?: Json | null
         }
         Update: {
           cnpj?: string | null
@@ -298,6 +314,14 @@ export type Database = {
             | null
           situacao?: Database["public"]["Enums"]["empresa_situacao"] | null
           updated_at?: string | null
+          nome_fantasia?: string | null
+          capital_social?: number | null
+          cnae_fiscal?: number | null
+          cnae_fiscal_descricao?: string | null
+          email_rfb?: string | null
+          telefone_rfb?: string | null
+          qsa?: Json | null
+          info_rfb_completa?: Json | null
         }
         Relationships: []
       }
@@ -1211,7 +1235,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "client"
-      empresa_situacao: "ativa" | "paralisada" | "baixada"
+      empresa_situacao: "ativa" | "paralisada" | "baixada" | "mei" | "entregue"
       guia_status: "pendente" | "gerada" | "enviada"
       licenca_tipo:
         | "definitiva"
