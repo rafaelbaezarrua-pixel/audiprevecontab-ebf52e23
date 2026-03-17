@@ -222,13 +222,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserData(null);
   };
 
-  const loginAsClient = async (cnpj: string, password: string) => {
-    const cleanCNPJ = cnpj.replace(/\D/g, "");
-    if (!cleanCNPJ || cleanCNPJ.length !== 14) {
-      throw new Error("CNPJ inválido. Digite os 14 números.");
+  const loginAsClient = async (email: string, password: string) => {
+    if (!email || !email.includes("@")) {
+      throw new Error("E-mail inválido.");
     }
 
-    const email = `${cleanCNPJ}@audipreve.com`;
     const cleanPassword = password.replace(/\D/g, "");
 
     // Tenta primeiro com a senha como digitada
@@ -246,7 +244,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) {
       console.error("Login Error:", error);
       if (error.message === "Invalid login credentials" || error.message === "Invalid credentials") {
-        throw new Error("CNPJ ou senha inválidos. Utilize o CNPJ (apenas números) como senha inicial.");
+        throw new Error("E-mail ou senha inválidos. Utilize o E-mail RFB da empresa e o CNPJ (apenas números) como senha inicial.");
       }
       if (error.message.includes("Email not confirmed")) {
         throw new Error("O e-mail deste acesso ainda não foi confirmado. Por favor, solicite ao administrador para sincronizar os acessos.");

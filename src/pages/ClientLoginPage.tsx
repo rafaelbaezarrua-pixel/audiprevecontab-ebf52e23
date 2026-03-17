@@ -9,18 +9,17 @@ import { useFormHelpers } from "@/hooks/useFormHelpers";
 import { toast } from "sonner";
 
 const ClientLoginPage: React.FC = () => {
-    const [cnpj, setCnpj] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const { loginAsClient } = useAuth();
-    const { maskCNPJ } = useFormHelpers();
     const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
-            await loginAsClient(cnpj, password);
+            await loginAsClient(email, password);
             toast.success("Login realizado com sucesso!");
             navigate("/portal");
         } catch (error: any) {
@@ -55,13 +54,13 @@ const ClientLoginPage: React.FC = () => {
                     <form id="client-login-form" onSubmit={handleLogin} className="space-y-6">
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                                <Building2 size={14} /> CNPJ da Empresa
+                                <Building2 size={14} /> E-mail (Cadastrado na RFB)
                             </label>
                             <Input
-                                type="text"
-                                placeholder="00.000.000/0000-00"
-                                value={cnpj}
-                                onChange={(e) => setCnpj(maskCNPJ(e.target.value))}
+                                type="email"
+                                placeholder="Seu E-mail"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="h-12 bg-background/50 border-border/50 focus:border-primary transition-all text-lg font-medium"
                                 required
                             />

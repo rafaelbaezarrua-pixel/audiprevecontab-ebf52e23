@@ -406,8 +406,8 @@ const SocietarioEmpresaPage: React.FC = () => {
             <button
               onClick={async () => {
                 if (!cnpj) { toast.error("CNPJ é necessário para criar acesso."); return; }
+                if (!emailRfb) { toast.error("E-mail RFB é necessário para criar acesso."); return; }
                 const cleanCNPJ = cnpj.replace(/\D/g, "");
-                const email = `${cleanCNPJ}@audipreve.com`;
 
                 toast.loading("Criando acesso...", { id: "sync" });
 
@@ -417,7 +417,7 @@ const SocietarioEmpresaPage: React.FC = () => {
 
                   const { data, error } = await supabase.functions.invoke("create-user", {
                     body: {
-                      email,
+                      email: emailRfb,
                       nome: nomeEmpresa,
                       password: cleanCNPJ,
                       role: 'client',
