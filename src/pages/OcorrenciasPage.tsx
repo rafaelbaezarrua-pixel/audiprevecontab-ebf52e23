@@ -7,7 +7,6 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import logoCaduceu from "@/assets/logo-caduceu.png";
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
-import { OcorrenciasKanban } from "@/components/ocorrencias/OcorrenciasKanban";
 
 interface HeaderConfig {
     logoUrl: string;
@@ -54,7 +53,6 @@ interface Ocorrencia {
     cidade: string;
     estado: string;
     data_ocorrencia: string;
-    status: string; // pendente, em_andamento, concluido
     created_at: string;
     empresas: {
         nome_empresa: string;
@@ -78,7 +76,6 @@ const OcorrenciasPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<"geral" | "config">("geral");
-    const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
     const [headerConfig, setHeaderConfig] = useState<HeaderConfig>(DEFAULT_HEADER);
     const [savingConfig, setSavingConfig] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -134,7 +131,6 @@ const OcorrenciasPage: React.FC = () => {
                     cidade,
                     estado,
                     data_ocorrencia: dataOcorrencia,
-                    status: 'pendente',
                     usuario_id: userData?.userId
                 }
             ]).select("*, empresas(nome_empresa, cnpj)").single();
@@ -603,30 +599,8 @@ const OcorrenciasPage: React.FC = () => {
                            <h3 className="text-lg font-bold text-card-foreground flex items-center gap-2">
                                <HistoryIcon size={20} className="text-primary" /> Board de Ocorrências
                            </h3>
-                           <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50 border border-border/50">
-                                <button 
-                                  onClick={() => setViewMode("kanban")}
-                                  className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                                >
-                                  <LayoutGrid size={18} />
-                                </button>
-                                <button 
-                                  onClick={() => setViewMode("list")}
-                                  className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                                >
-                                  <List size={18} />
-                                </button>
-                           </div>
                         </div>
 
-                        {viewMode === "kanban" ? (
-                            <OcorrenciasKanban 
-                               ocorrencias={ocorrencias}
-                               onUpdateStatus={handleUpdateStatus}
-                               onGeneratePdf={handleGeneratePdf}
-                               onDelete={handleDelete}
-                            />
-                        ) : (
                         <div className="module-card">
                             <div className="space-y-3">
                                 {ocorrencias.length === 0 && !loading && (
@@ -670,7 +644,6 @@ const OcorrenciasPage: React.FC = () => {
                                 ))}
                             </div>
                         </div>
-                        )}
                     </div>
                 </div>
             )}

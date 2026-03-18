@@ -43,22 +43,22 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --ring: 221 83% 53%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 215 25% 27%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 91% 97%;
-    --sidebar-accent-foreground: 217 91% 45%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 221 83% 53%;
     --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 221 83% 53%;
     --sidebar-muted: 215 16% 40%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(221, 83%, 53%) 100%);
-    --gradient-bg: linear-gradient(135deg, hsl(210, 20%, 98%) 0%, hsl(214, 32%, 91%) 100%);
+    --gradient-primary: linear-gradient(180deg, hsl(221, 83%, 53%) 0%, hsl(222, 47%, 40%) 100%);
+    --gradient-bg: none;
   }
 
   .dark {
@@ -136,12 +136,12 @@
 
 @layer components {
   .nav-item {
-    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer;
-    @apply text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent;
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer;
+    @apply text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50;
   }
 
   .nav-item.active {
-    @apply bg-sidebar-accent text-sidebar-accent-foreground font-semibold;
+    @apply bg-sidebar-accent/30 text-sidebar-foreground font-semibold;
     border-left: 3px solid hsl(var(--primary));
   }
 
@@ -150,7 +150,7 @@
   }
 
   .stat-card {
-    @apply bg-card rounded-xl shadow-sm border border-border p-6 transition-all duration-300 hover:shadow-md;
+    @apply bg-card rounded-xl border border-border p-6 transition-all duration-150;
   }
 
   .badge-status {
@@ -194,33 +194,28 @@
   }
 
   .module-card {
-    @apply bg-card rounded-2xl border border-border/50 shadow-sm p-6 transition-all duration-300;
-    @apply hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-1;
-    background-image: radial-gradient(at top right, hsl(var(--primary) / 0.03), transparent 70%);
+    @apply bg-card rounded-2xl border border-border/60 p-6 transition-all duration-150;
   }
 
   .card-premium {
-    @apply bg-card rounded-2xl border border-border/50 shadow-sm p-6 transition-all duration-300;
-    @apply hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-1;
-    background-image: radial-gradient(at top right, hsl(var(--primary) / 0.03), transparent 70%);
+    @apply bg-card rounded-2xl border border-border/60 p-6 transition-all duration-150;
   }
 
   .glass-morphism {
-    @apply bg-background/70 backdrop-blur-md border border-white/20 dark:border-white/10;
+    @apply bg-background border border-border/40;
   }
 
   .header-title {
-    @apply text-2xl font-bold tracking-tight text-card-foreground;
+    @apply text-2xl font-bold tracking-tight text-foreground;
   }
 
   .button-action {
-    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all;
-    @apply shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-150;
+    @apply active:scale-[0.98] disabled:opacity-50;
   }
 
   .button-premium {
-    @apply button-action bg-primary text-primary-foreground;
-    background: var(--gradient-primary);
+    @apply button-action bg-primary text-primary-foreground hover:bg-primary/90;
   }
 
   .button-secondary-premium {

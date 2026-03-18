@@ -15,8 +15,7 @@ import { TableSkeleton, PageHeaderSkeleton } from "@/components/PageSkeleton";
 import { syncCompanyClients } from "@/lib/sync-clients";
 import { tipoProcessoLabels, passosConfig } from "@/constants/societario";
 import { Empresa, Processo } from "@/types/societario";
-import { SocietarioKanban } from "@/components/societario/SocietarioKanban";
-import { LayoutGrid, List } from "lucide-react";
+import { List } from "lucide-react";
 
 const SocietarioPage: React.FC = () => {
   const navigate = useNavigate();
@@ -36,7 +35,6 @@ const SocietarioPage: React.FC = () => {
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [processTab, setProcessTab] = useState<Record<string, 'timeline' | 'historico'>>({});
   const [processoToDelete, setProcessoToDelete] = useState<{ id: string, nome: string } | null>(null);
-  const [processViewMode, setProcessViewMode] = useState<"list" | "kanban">("kanban");
 
   const [novoProcessoData, setNovoProcessoData] = useState({ 
     tipo: 'abertura', 
@@ -313,20 +311,6 @@ const SocietarioPage: React.FC = () => {
               </h3>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50 border border-border/50">
-                <button 
-                  onClick={() => setProcessViewMode("kanban")}
-                  className={`p-2 rounded-lg transition-all ${processViewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <LayoutGrid size={18} />
-                </button>
-                <button 
-                  onClick={() => setProcessViewMode("list")}
-                  className={`p-2 rounded-lg transition-all ${processViewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <List size={18} />
-                </button>
-              </div>
               <button onClick={() => setShowNovoProcesso(true)} className="button-premium">
                 <Plus size={20} /> Novo Processo
               </button>
@@ -345,22 +329,6 @@ const SocietarioPage: React.FC = () => {
 
           {processos.length === 0 ? (
             <div className="card-premium text-center py-24 text-muted-foreground">Nenhum processo em andamento</div>
-          ) : processViewMode === "kanban" ? (
-            <SocietarioKanban 
-              processos={processos} 
-              onViewDetails={(p) => setExpandedProcesso(p.id)}
-              onUpdateStatus={(id, status) => {
-                if (status === "foi_arquivado") {
-                  updateProcesso.mutate({ id, updates: { foi_arquivado: true, arquivamento_junta_at: new Date().toISOString() } });
-                } else if (status === "pending") {
-                  const reset: Record<string, string | null> = {};
-                  passosConfig.forEach(p => reset[p.id] = null);
-                  updateProcesso.mutate({ id, updates: { ...reset, foi_arquivado: false } });
-                } else {
-                  updateProcesso.mutate({ id, updates: { [status]: new Date().toISOString() } });
-                }
-              }}
-            />
           ) : (
             <div className="space-y-6">
               {processos.map(p => (

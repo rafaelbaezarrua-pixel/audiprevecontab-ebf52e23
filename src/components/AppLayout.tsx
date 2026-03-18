@@ -80,13 +80,13 @@ const AppLayout: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed lg:relative z-40 h-full flex flex-col bg-sidebar border-r border-sidebar-border shadow-lg transition-all duration-300
-          ${collapsed ? "w-20" : "w-64"}
+          fixed lg:relative z-40 h-full flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300
+          ${collapsed ? "w-20" : "w-[220px]"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-sidebar-border flex items-center justify-between bg-sidebar/50 backdrop-blur-sm">
+        <div className="p-6 border-b border-sidebar-border flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center gap-3">
               <img src={logoAudipreve} alt="Audipreve" className="w-9 h-9 object-contain" />
@@ -121,7 +121,7 @@ const AppLayout: React.FC = () => {
                 {showSection && !collapsed && <div className="menu-header">{item.section}</div>}
                 <button
                   onClick={() => accessible && handleNav(item.path)}
-                  className={`nav-item w-full group relative ${active ? "active shadow-sm" : ""} ${!accessible ? "opacity-30 cursor-not-allowed" : ""} ${collapsed ? "justify-center px-0 h-11 w-11 mx-auto" : ""}`}
+                  className={`nav-item w-full group relative ${active ? "active" : ""} ${!accessible ? "opacity-30 cursor-not-allowed" : ""} ${collapsed ? "justify-center px-0 h-11 w-11 mx-auto" : ""}`}
                   aria-label={item.label}
                   title={collapsed ? item.label : undefined}
                 >
@@ -212,7 +212,7 @@ const AppLayout: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-background/80 backdrop-blur-md border-b border-border px-4 lg:px-8 py-4 flex items-center justify-between flex-shrink-0 sticky top-0 z-30">
+        <header className="bg-background border-b border-border px-4 lg:px-8 py-4 flex items-center justify-between flex-shrink-0 sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setMobileOpen(true)}
