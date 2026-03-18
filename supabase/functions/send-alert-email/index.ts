@@ -66,17 +66,15 @@ serve(async (req: Request) => {
       })
     }
 
-    console.log(`--- STEP 1.5: Fetching templates ---`)
-    const { data: templates } = await supabaseClient.from('email_templates').select('*')
-    const companyTemplate = templates?.find((t: any) => t.template_type === 'company_alert') || {
+    console.log(`--- STEP 1.5: Using hardcoded templates ---`)
+    const companyTemplate = {
       subject: 'Aviso de Vencimento de Documentos - {{nome_empresa}}',
       body_html: 'Olá, informamos que os seguintes documentos da empresa <strong>{{nome_empresa}}</strong> estão próximos ao vencimento:'
     }
-    const userTemplate = templates?.find((t: any) => t.template_type === 'user_summary') || {
+    const userTemplate = {
       subject: 'Resumo Diário de Vencimentos - Audipreve',
       body_html: 'Confira os documentos das empresas sob sua gestão que vencem em breve:'
     }
-    console.log(`Loaded ${templates?.length || 0} templates.`)
 
     const expirations = alerts as ExpirationAlert[]
     console.log(`Found ${expirations.length} total expirations.`)
@@ -146,6 +144,9 @@ serve(async (req: Request) => {
 
       const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="https://jnqwvysjpbcpbwhlwgqq.supabase.co/storage/v1/object/public/documentos/logo-audipreve.png" alt="Audipreve" style="width: 80px; height: auto;" />
+          </div>
           ${customIntro}
           <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
             <thead style="background-color: #f9fafb;">
@@ -157,8 +158,8 @@ serve(async (req: Request) => {
             </thead>
             <tbody>${rows}</tbody>
           </table>
-          <p style="margin-top: 30px;">Esse email é um aviso automatico, as providencias para a renovação já forma tomas! Entre em contato para quais dúvidas
-          Atenciosamente, 
+          <p style="margin-top: 30px;">Este e-mail é um aviso automático. As providências para a renovação já foram tomadas! <br>Entre em contato em caso de dúvidas.<br>
+          Atenciosamente, <br>
           Audipreve Contabilidade.</p>
           <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
           <p style="font-size: 12px; color: #9ca3af;">Este é um e-mail automático. Não responder!</p>
