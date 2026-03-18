@@ -105,11 +105,12 @@ const HonorariosPage: React.FC = () => {
     return parseFloat(str) || 0;
   };
 
-  const calculateTotal = (config: Partial<HonorarioConfig>, qtdFunc: number, qtdRecalculos: number, teveTrabalhista: boolean) => {
+  const calculateTotal = (config: Partial<HonorarioConfig>, qtdFunc: number, qtdRecalculos: number, teveTrabalhista: boolean, qtdRecibos: number) => {
     const honorario = Number(config?.valor_honorario || 0);
     const funcVlr = Number(config?.valor_por_funcionario || 0) * qtdFunc;
     const recVlr = Number(config?.valor_por_recalculo || 0) * qtdRecalculos;
     const trabVlr = teveTrabalhista ? Number(config?.valor_trabalhista || 0) : 0;
+    const reciboVlr = Number(config?.valor_por_recibo || 0) * qtdRecibos;
     const outrosVlr = (config?.outros_servicos || []).reduce((sum: number, item: any) => sum + Number(item.valor || 0), 0);
 
     const detalhes = [
@@ -117,10 +118,11 @@ const HonorariosPage: React.FC = () => {
       ...(qtdFunc > 0 ? [{ rotulo: "Funcionários/Pró-labore", qtd: qtdFunc, vlrUnit: Number(config?.valor_por_funcionario || 0), vlrTotal: funcVlr }] : []),
       ...(qtdRecalculos > 0 ? [{ rotulo: "Recálculos", qtd: qtdRecalculos, vlrUnit: Number(config?.valor_por_recalculo || 0), vlrTotal: recVlr }] : []),
       ...(teveTrabalhista ? [{ rotulo: "Encargos Trabalhistas", qtd: 1, vlrUnit: Number(config?.valor_trabalhista || 0), vlrTotal: trabVlr }] : []),
+      ...(qtdRecibos > 0 ? [{ rotulo: "Recibos (Pessoal)", qtd: qtdRecibos, vlrUnit: Number(config?.valor_por_recibo || 0), vlrTotal: reciboVlr }] : []),
       ...(config?.outros_servicos || []).map((s: any) => ({ rotulo: s.descricao || "Serviço Adicional", qtd: 1, vlrUnit: Number(s.valor || 0), vlrTotal: Number(s.valor || 0) }))
     ];
 
-    return { total: honorario + funcVlr + recVlr + trabVlr + outrosVlr, detalhes };
+    return { total: honorario + funcVlr + recVlr + trabVlr + reciboVlr + outrosVlr, detalhes };
   };
 
   const handleGenerateMonth = async (empresaId: string, compOverride?: string) => {
@@ -134,14 +136,16 @@ const HonorariosPage: React.FC = () => {
       }
       const { data: pessoalData } = await supabase.from("pessoal").select("*").eq("empresa_id", empresaId).eq("competencia", comp).maybeSingle();
       const qtdFunc = (pessoalData?.qtd_funcionarios || 0) + (pessoalData?.qtd_pro_labore || 0);
+      const qtdRecibos = (pessoalData?.qtd_recibos || 0);
       const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
       const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", comp);
 
-      const { total: valorTotal, detalhes } = calculateTotal(config, qtdFunc, (qtdRecalculos as number) || 0, teveTrabalhista || false);
+      const { total: valorTotal, detalhes } = calculateTotal(config, qtdFunc, (qtdRecalculos as number) || 0, teveTrabalhista || false, qtdRecibos);
 
       setMensalForms(prev => ({
         ...prev, [empresaId]: {
           competencia: comp, qtd_funcionarios: qtdFunc, qtd_recalculos: (qtdRecalculos as number) || 0,
+          qtd_recibos: qtdRecibos,
           teve_encargo_trabalhista: teveTrabalhista || false, valor_total: valorTotal,
           detalhes_calculo: detalhes, empresa_id: empresaId,
           data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: { texto: "" }
@@ -215,16 +219,18 @@ const HonorariosPage: React.FC = () => {
             // 4. Trigger generation with the loaded config
             const { data: pessoalData } = await supabase.from("pessoal").select("*").eq("empresa_id", empresaId).eq("competencia", globalCompetencia).maybeSingle();
             const qtdFunc = (pessoalData?.qtd_funcionarios || 0) + (pessoalData?.qtd_pro_labore || 0);
+            const qtdRecibos = (pessoalData?.qtd_recibos || 0);
             const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
             const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", globalCompetencia);
 
-            const { total: valorTotal, detalhes } = calculateTotal(finalConfig, qtdFunc, (qtdRecalculos as number) || 0, teveTrabalhista || false);
+            const { total: valorTotal, detalhes } = calculateTotal(finalConfig, qtdFunc, (qtdRecalculos as number) || 0, teveTrabalhista || false, qtdRecibos);
 
             setMensalForms(prev => ({
               ...prev, [empresaId]: {
                 competencia: globalCompetencia,
                 qtd_funcionarios: qtdFunc,
                 qtd_recalculos: (qtdRecalculos as number) || 0,
+                qtd_recibos: qtdRecibos,
                 teve_encargo_trabalhista: teveTrabalhista || false,
                 valor_total: valorTotal,
                 detalhes_calculo: detalhes,
@@ -283,6 +289,7 @@ const HonorariosPage: React.FC = () => {
                 valor_por_funcionario: parseCurrency(form?.valor_por_funcionario),
                 valor_por_recalculo: parseCurrency(form?.valor_por_recalculo),
                 valor_trabalhista: parseCurrency(form?.valor_trabalhista),
+                valor_por_recibo: parseCurrency(form?.valor_por_recibo),
                 outros_servicos: (form?.outros_servicos || []).map((s: any) => ({ ...s, valor: parseCurrency(s.valor) }))
               };
               const payload = { ...form, ...finalizedFields };

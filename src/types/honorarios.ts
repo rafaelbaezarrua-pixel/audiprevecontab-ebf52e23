@@ -6,6 +6,7 @@ export interface HonorarioConfig {
   valor_por_funcionario: number;
   valor_por_recalculo: number;
   valor_trabalhista: number;
+  valor_por_recibo: number;
   outros_servicos: Array<{ descricao: string; valor: number }>;
 }
 
@@ -15,6 +16,7 @@ export interface HonorarioMensal {
   competencia: string;
   qtd_funcionarios: number;
   qtd_recalculos: number;
+  qtd_recibos: number;
   teve_encargo_trabalhista: boolean;
   valor_total: number;
   data_vencimento: string | null;

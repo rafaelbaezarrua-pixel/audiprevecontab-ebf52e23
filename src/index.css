@@ -45,7 +45,7 @@
     --input: 214 32% 91%;
     --ring: 221 83% 53%;
 
-    --radius: 0.75rem;
+    --radius: 0.3rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 215 25% 27%;
@@ -57,7 +57,7 @@
     --sidebar-ring: 221 83% 53%;
     --sidebar-muted: 215 16% 40%;
 
-    --gradient-primary: linear-gradient(180deg, hsl(221, 83%, 53%) 0%, hsl(222, 47%, 40%) 100%);
+    --gradient-primary: hsl(217, 91%, 60%);
     --gradient-bg: none;
   }
 
@@ -108,7 +108,7 @@
     --sidebar-ring: 217 91% 60%;
     --sidebar-muted: 215 20% 65%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(221, 83%, 53%) 100%);
+    --gradient-primary: hsl(217, 91%, 60%);
     --gradient-bg: linear-gradient(135deg, hsl(222, 47%, 11%) 0%, hsl(215, 28%, 17%) 100%);
   }
 }

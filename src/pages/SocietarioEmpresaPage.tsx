@@ -296,7 +296,24 @@ const SocietarioEmpresaPage: React.FC = () => {
       if (data.cnae_fiscal_descricao) setCnaeFiscalDescricao(data.cnae_fiscal_descricao);
       
       // Contact
-      setEmailRfb(data.email || "");
+      let finalEmail = data.email || "";
+      
+      // Fallback for email: BrasilAPI frequently returns null due to open data sanitization
+      if (!finalEmail) {
+        try {
+          const wsResponse = await fetch(`https://publica.cnpj.ws/cnpj/${cleanCNPJ}`);
+          if (wsResponse.ok) {
+            const wsData = await wsResponse.json();
+            if (wsData?.estabelecimento?.email) {
+              finalEmail = wsData.estabelecimento.email;
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to fetch fallback email:", e);
+        }
+      }
+      
+      setEmailRfb(finalEmail);
       
       // BrasilAPI sometimes has 'telefone' or ddd_telefone_1
       let fullTelefone = "";

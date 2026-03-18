@@ -32,36 +32,36 @@ export const ProcessoCard = ({
   return (
     <div className={`card-premium !p-0 border-l-8 transition-all duration-500 overflow-hidden ${isExpanded ? "border-l-primary shadow-2xl ring-1 ring-primary/20 scale-[1.01]" : "border-l-muted hover:border-l-primary/40 hover:shadow-md"}`}>
       <div
-        className={`p-6 flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer transition-colors ${isExpanded ? "bg-primary/[0.02]" : "hover:bg-muted/30"}`}
+        className={`p-4 flex flex-col md:flex-row items-center justify-between gap-4 cursor-pointer transition-colors ${isExpanded ? "bg-primary/[0.02]" : "hover:bg-muted/30"}`}
         onClick={onToggleExpand}
       >
-        <div className="flex items-center gap-5 flex-1 w-full">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${isExpanded ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30" : "bg-primary/10 text-primary"}`}>
-            <Building2 size={28} />
+        <div className="flex items-center gap-4 flex-1 w-full">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${isExpanded ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30" : "bg-primary/10 text-primary"}`}>
+            <Building2 size={20} />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <h4 className="font-black text-card-foreground text-xl group-hover:text-primary transition-colors">{processo.nome_empresa || "Sem Nome"}</h4>
-              {processo.status === 'concluido' && <span className="badge-status badge-success text-[10px] font-black px-3 py-1">CONCLUÍDO</span>}
+              <h4 className="font-bold text-card-foreground text-base group-hover:text-primary transition-colors">{processo.nome_empresa || "Sem Nome"}</h4>
+              {processo.status === 'concluido' && <span className="badge-status badge-success text-[10px] font-black px-2 py-0.5">CONCLUÍDO</span>}
             </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 mt-2">
-              <span className="text-xs font-black text-primary uppercase tracking-[0.15em]">{tipoProcessoLabels[processo.tipo] || processo.tipo}</span>
-              {processo.numero_processo && <span className="text-xs text-muted-foreground font-mono font-bold opacity-60"># {processo.numero_processo}</span>}
-              <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-bold"><Clock size={14} className="text-primary/60" /> {new Date(processo.data_inicio).toLocaleDateString()}</span>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+              <span className="text-[10px] font-black text-primary uppercase tracking-widest">{tipoProcessoLabels[processo.tipo] || processo.tipo}</span>
+              {processo.numero_processo && <span className="text-[10px] text-muted-foreground font-mono font-bold opacity-60"># {processo.numero_processo}</span>}
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-bold"><Clock size={12} className="text-primary/60" /> {new Date(processo.data_inicio).toLocaleDateString()}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-4 md:pt-0 border-border/50">
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-border/50">
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(processo.id, processo.nome_empresa || "Sem Nome"); }}
-            className="p-3 rounded-2xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all border border-transparent hover:border-destructive/20"
+            className="p-2 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all border border-transparent hover:border-destructive/20"
             title="Excluir Processo"
           >
-            <Trash2 size={20} />
+            <Trash2 size={16} />
           </button>
-          <div className={`p-2.5 rounded-2xl transition-all duration-500 ${isExpanded ? "bg-primary text-primary-foreground rotate-180" : "bg-muted text-primary"}`}>
-            <ChevronDown size={28} />
+          <div className={`p-1.5 rounded-xl transition-all duration-500 ${isExpanded ? "bg-primary text-primary-foreground rotate-180" : "bg-muted text-card-foreground"}`}>
+            <ChevronDown size={20} />
           </div>
         </div>
       </div>

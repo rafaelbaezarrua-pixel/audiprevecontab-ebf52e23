@@ -107,7 +107,7 @@ const AgendamentosPage: React.FC = () => {
                             hasChanges = true;
                             // Optionally push the update to Supabase
                             supabase.from("agendamentos" as any).update({ status: "pendente" } as any).eq("id", a.id).then();
-                            return { ...a, status: "pendente" };
+                            return { ...a, status: "pendente" as const };
                         }
                     }
                     return a;
@@ -323,8 +323,7 @@ const AgendamentosPage: React.FC = () => {
                 />
                 <button
                     onClick={() => navigate("/agendamentos/novo")}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground shadow-md transition-all hover:scale-105"
-                    style={{ background: "var(--gradient-primary)" }}
+                    className="button-premium shadow-md"
                 >
                     <Plus size={18} /> Novo Agendamento
                 </button>

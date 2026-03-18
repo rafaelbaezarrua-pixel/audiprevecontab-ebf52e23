@@ -200,8 +200,7 @@ const AgendamentoFormPage: React.FC = () => {
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-primary-foreground shadow-lg transition-all hover:scale-[1.02] disabled:opacity-50"
-                        style={{ background: "var(--gradient-primary)" }}
+                        className="flex-1 button-premium flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
                     >
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

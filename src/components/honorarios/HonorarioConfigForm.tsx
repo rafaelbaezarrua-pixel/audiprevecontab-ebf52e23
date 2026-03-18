@@ -54,6 +54,13 @@ export const HonorarioConfigForm = ({
             <input type="number" step="0.01" value={config.valor_trabalhista || ""} onChange={e => onUpdateField("valor_trabalhista", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" />
           </div>
         </div>
+        <div>
+          <label className={labelCls}>Valor Adicion. por Recibo</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+            <input type="number" step="0.01" value={config.valor_por_recibo || ""} onChange={e => onUpdateField("valor_por_recibo", e.target.value)} className={`${inputCls} pl-9`} placeholder="0.00" />
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 pt-6 border-t border-border">

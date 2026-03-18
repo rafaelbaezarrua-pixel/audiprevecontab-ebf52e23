@@ -54,7 +54,7 @@ const PessoalPage: React.FC = () => {
         checks.push(record.inss_status);
         checks.push(record.fgts_status);
         
-        const isAllConcluido = checks.every(s => s === 'concluido' || s === 'isento') && record.dctf_web_gerada;
+        const isAllConcluido = checks.every(s => s === 'enviada' || s === 'gerada' || s === 'isento') && record.dctf_web_gerada;
         matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
       }
     }
@@ -159,22 +159,37 @@ const PessoalPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+        <div className="flex bg-card border border-border/60 rounded-xl shadow-sm overflow-hidden h-12">
+          <div className="px-4 flex items-center gap-2 border-r border-border/60">
+            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Empresas</span>
+            <span className="text-lg font-black text-primary">{filtered.length}</span>
+          </div>
+          <div className="px-4 flex items-center gap-2 border-r border-border/60">
+            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Concluídas</span>
+            <span className="text-lg font-black text-emerald-500">{completedCount}</span>
+          </div>
+          <div className="px-4 flex items-center gap-2 bg-warning/5">
+            <span className="text-[10px] text-warning font-bold uppercase tracking-wider">Pendentes</span>
+            <span className="text-lg font-black text-warning">{filtered.length - completedCount}</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <input
               type="text"
               placeholder="Buscar empresa..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm w-full sm:w-64"
+              className="pl-9 pr-4 h-10 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-[13px] w-full sm:w-56"
             />
           </div>
           <input
             type="month"
             value={competencia}
             onChange={(e) => setCompetencia(e.target.value)}
-            className="px-4 py-2 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm"
+            className="px-4 h-10 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-[13px] font-medium"
           />
         </div>
 

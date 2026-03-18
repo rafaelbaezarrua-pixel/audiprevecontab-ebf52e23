@@ -61,64 +61,84 @@ export const IRPFRecordCard = ({
       </div>
 
       {isExpanded && (
-        <div className="p-6 border-t border-border/50 bg-background/40 space-y-6 animate-in slide-in-from-top-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="p-6 border-t border-border/50 bg-background/40 space-y-8 animate-in slide-in-from-top-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Dados Básicos */}
             <div className="space-y-4">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2"><DollarSign size={14} /> Informações de Pagamento</h4>
-              <div className="space-y-3 p-4 bg-muted/30 rounded-xl border border-border/50">
-                <div className="space-y-1.5 pt-2">
-                  <label className="text-xs font-medium text-muted-foreground">Nome Completo</label>
-                  <input type="text" value={record.nome_completo} onChange={e => onUpdateField(record.id, "nome_completo", e.target.value)} className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary" />
+              <h3 className="text-xs font-black text-primary/60 uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary pl-2">Dados Básicos</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">Nome Completo</label>
+                  <input type="text" value={record.nome_completo} onChange={e => onUpdateField(record.id, "nome_completo", e.target.value)} className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">CPF</label>
-                  <input type="text" value={record.cpf || ''} onChange={e => onUpdateField(record.id, "cpf", e.target.value)} className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="000.000.000-00" />
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">CPF</label>
+                  <input type="text" value={record.cpf || ''} onChange={e => onUpdateField(record.id, "cpf", e.target.value)} className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" placeholder="000.000.000-00" />
                 </div>
-                <div className="space-y-1.5 pt-2">
-                  <label className="text-xs font-medium text-muted-foreground">Valor a Pagar</label>
+              </div>
+            </div>
+
+            {/* Financeiro */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black text-emerald-500/60 uppercase tracking-widest flex items-center gap-2 border-l-2 border-emerald-500 pl-2">Financeiro</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">Valor a Pagar (R$)</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</span>
-                    <input type="number" value={record.valor_a_pagar} onChange={e => onUpdateField(record.id, "valor_a_pagar", Number(e.target.value))} className="w-full pl-9 pr-3 py-1.5 bg-background border border-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary" />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">R$</span>
+                    <input type="number" step="0.01" value={record.valor_a_pagar} onChange={e => onUpdateField(record.id, "valor_a_pagar", Number(e.target.value))} className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" />
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Data do Pagamento</label>
-                  <input type="date" value={record.data_pagamento || ''} onChange={e => onUpdateField(record.id, "data_pagamento", e.target.value)} className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2"><FileText size={14} /> Status de Transmissão</h4>
-              <div className="space-y-3 p-4 bg-muted/30 rounded-xl border border-border/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Transmissão</span>
-                  <button onClick={() => onQuickToggleTransmissao(record)} className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${record.status_transmissao === 'transmitida' ? 'bg-blue-500 text-white' : 'bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500 hover:text-white'}`}>
-                    {record.status_transmissao === 'transmitida' ? 'TRANSMITIDA' : 'PENDENTE'}
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
+                  <span className="text-xs font-bold text-muted-foreground uppercase">Status Pago?</span>
+                  <button
+                    onClick={() => onUpdateField(record.id, "status_pago", !record.status_pago)}
+                    className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest transition-all ${record.status_pago ? 'bg-emerald-500 text-white shadow-lg' : 'bg-muted text-muted-foreground'}`}
+                  >
+                    {record.status_pago ? 'SIM' : 'NÃO'}
                   </button>
                 </div>
-                <div className="space-y-1.5 pt-2">
-                  <label className="text-xs font-medium text-muted-foreground">Data de Transmissão</label>
-                  <input type="date" value={record.data_transmissao || ''} onChange={e => onUpdateField(record.id, "data_transmissao", e.target.value)} className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Transmitido por</label>
-                  <input type="text" value={record.transmitido_por || ''} onChange={e => onUpdateField(record.id, "transmitido_por", e.target.value)} className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Nome do responsável" />
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">Data de Pagamento</label>
+                  <input type="date" value={record.data_pagamento || ''} onChange={e => onUpdateField(record.id, "data_pagamento", e.target.value)} className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" />
                 </div>
               </div>
             </div>
 
+            {/* Transmissão */}
             <div className="space-y-4">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2"><Plus size={14} /> Ações Disponíveis</h4>
-              <div className="flex flex-col gap-2">
-                <button onClick={() => onSave(record)} className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition-all font-medium"><Save size={18} /> Salvar Alterações</button>
-                <button onClick={() => onDelete(record.id)} className="w-full flex items-center justify-center gap-2 bg-destructive/10 text-destructive py-2 rounded-lg hover:bg-destructive hover:text-white transition-all font-medium"><Trash2 size={18} /> Excluir Registro</button>
-              </div>
-              <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
-                <p className="text-[10px] text-primary/60 font-medium uppercase tracking-tighter mb-1 font-bold">Resumo Financeiro</p>
-                <p className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-500 bg-clip-text text-transparent">{formatCurrency(record.valor_a_pagar)}</p>
+              <h3 className="text-xs font-black text-blue-500/60 uppercase tracking-widest flex items-center gap-2 border-l-2 border-blue-500 pl-2">Transmissão</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">Status Transmissão</label>
+                  <select
+                    value={record.status_transmissao || "pendente"}
+                    onChange={e => onUpdateField(record.id, "status_transmissao", e.target.value)}
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+                  >
+                    <option value="pendente">Pendente</option>
+                    <option value="transmitida">Transmitida</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">Data de Transmissão</label>
+                  <input type="date" value={record.data_transmissao || ''} onChange={e => onUpdateField(record.id, "data_transmissao", e.target.value)} className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">Transmitido por</label>
+                  <input type="text" value={record.transmitido_por || ''} onChange={e => onUpdateField(record.id, "transmitido_por", e.target.value)} className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" placeholder="Nome do responsável" />
+                </div>
               </div>
             </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-border mt-6">
+            <button onClick={() => onDelete(record.id)} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-destructive hover:bg-destructive/10 transition-all">
+              <Trash2 size={16} /> Excluir Registro
+            </button>
+            <button onClick={() => onSave(record)} className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-10 py-3 rounded-xl hover:scale-105 transition-all font-black uppercase tracking-widest shadow-lg">
+              <Save size={18} /> Finalizar Edição
+            </button>
           </div>
         </div>
       )}

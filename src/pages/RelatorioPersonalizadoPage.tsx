@@ -56,7 +56,12 @@ const MODULES_CONFIG: ModuleConfig[] = [
     icon: <Building2 size={18} />,
     color: "bg-blue-500",
     fields: [
-      { id: "situacao", label: "Situação" },
+      { id: "situacao", label: "Situação", accessor: (i) => {
+          if (i.regime_tributario?.toLowerCase() === 'mei') return "MEI";
+          if (!i.situacao) return "—";
+          const s = i.situacao.toLowerCase();
+          return s.charAt(0).toUpperCase() + s.slice(1);
+      } },
       { id: "opcao_pelo_simples", label: "Optante Simples", accessor: (i) => i.opcao_pelo_simples ? "Sim" : "Não" },
       { id: "data_opcao_pelo_simples", label: "Data Opção Simples", accessor: (i) => safeFormatDate(i.data_opcao_pelo_simples) },
       { id: "opcao_pelo_mei", label: "Optante MEI", accessor: (i) => i.opcao_pelo_mei ? "Sim" : "Não" },
@@ -375,14 +380,15 @@ const RelatorioPersonalizadoPage: React.FC = () => {
   };
 
   const toggleSituation = (id: string) => {
-    if (selectedSituations.includes(id)) {
+    const lowerId = id.toLowerCase();
+    if (selectedSituations.includes(lowerId)) {
       if (selectedSituations.length > 1) {
-        setSelectedSituations(prev => prev.filter(s => s !== id));
+        setSelectedSituations(prev => prev.filter(s => s !== lowerId));
       } else {
         toast.error("Selecione pelo menos uma situação");
       }
     } else {
-      setSelectedSituations(prev => [...prev, id]);
+      setSelectedSituations(prev => [...prev, lowerId]);
     }
   };
 
@@ -421,17 +427,20 @@ const RelatorioPersonalizadoPage: React.FC = () => {
     setLoadingType(exportFormat);
     try {
       // 1. Fetch All Companies First (Filtered by Situation)
+      const isMeiSelected = selectedSituations.includes("mei");
       const situacoesWithoutMei = selectedSituations.filter(s => s !== "mei");
+      
       let query = supabase
         .from("empresas")
         .select("*")
         .order("nome_empresa");
 
-      if (selectedSituations.includes("mei")) {
+      if (isMeiSelected) {
         if (situacoesWithoutMei.length > 0) {
-          query = query.or(`situacao.in.(${situacoesWithoutMei.join(",")}),regime_tributario.eq.mei`);
+          const situacaoEqs = situacoesWithoutMei.map(s => `situacao.eq.${s}`).join(',');
+          query = query.or(`${situacaoEqs},regime_tributario.eq.mei,regime_tributario.eq.MEI`);
         } else {
-          query = query.eq("regime_tributario", "mei");
+          query = query.or("regime_tributario.eq.mei,regime_tributario.eq.MEI");
         }
       } else {
         query = query.in("situacao", situacoesWithoutMei as any);
@@ -692,11 +701,12 @@ const RelatorioPersonalizadoPage: React.FC = () => {
 
         // Merge logic: ensure every company is present grouped by situation
         for (const sit of SITUATIONS) {
-          if (!selectedSituations.includes(sit.id)) continue;
+          if (!selectedSituations.some(s => s.toLowerCase() === sit.id.toLowerCase())) continue;
 
           const situationCompanies = allCompanies.filter(c => {
-            if (sit.id === "mei") return c.regime_tributario === "mei";
-            return c.situacao === sit.id && c.regime_tributario !== "mei";
+            const isMei = c.regime_tributario?.toLowerCase() === "mei";
+            if (sit.id.toLowerCase() === "mei") return isMei;
+            return c.situacao?.toLowerCase() === sit.id.toLowerCase() && !isMei;
           });
 
           if (situationCompanies.length === 0) continue;
@@ -908,7 +918,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                   <button
                     key={sit.id}
                     onClick={() => toggleSituation(sit.id)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedSituations.includes(sit.id)
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedSituations.includes(sit.id.toLowerCase())
                         ? "bg-primary/10 border-primary/30 text-primary shadow-sm"
                         : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/20"
                       }`}
