@@ -128,7 +128,7 @@ const AppLayout: React.FC = () => {
                   <div className={`transition-transform duration-300 group-hover:scale-110 ${active ? "text-primary" : ""}`}>
                     {item.icon}
                   </div>
-                  {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                  {!collapsed && <span className="flex-1 text-left whitespace-nowrap truncate">{item.label}</span>}
                   {active && !collapsed && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-l-full" />}
                 </button>
               </React.Fragment>
@@ -145,7 +145,7 @@ const AppLayout: React.FC = () => {
                 aria-label="Configurações"
               >
                 <Settings size={18} />
-                {!collapsed && <span>Configurações</span>}
+                {!collapsed && <span className="whitespace-nowrap truncate">Configurações</span>}
               </button>
               <button
                 onClick={() => handleNav("/configuracoes/alertas")}
@@ -154,7 +154,7 @@ const AppLayout: React.FC = () => {
                 aria-label="Gestor de Alertas"
               >
                 <Bell size={18} />
-                {!collapsed && <span>Gestor de Alertas</span>}
+                {!collapsed && <span className="whitespace-nowrap truncate">Gestor de Alertas</span>}
               </button>
               <button
                 onClick={() => handleNav("/configuracoes/auditoria")}
@@ -163,7 +163,7 @@ const AppLayout: React.FC = () => {
                 aria-label="Auditoria do Sistema"
               >
                 <Database size={18} />
-                {!collapsed && <span>Auditoria do Sistema</span>}
+                {!collapsed && <span className="whitespace-nowrap truncate">Auditoria</span>}
               </button>
             </>
           )}
@@ -184,7 +184,7 @@ const AppLayout: React.FC = () => {
             title={collapsed ? "Meu Perfil" : undefined}
           >
             <User size={18} />
-            {!collapsed && <span>Meu Perfil</span>}
+            {!collapsed && <span className="whitespace-nowrap truncate">Meu Perfil</span>}
           </button>
           <div className={`flex items-center gap-3 p-2 rounded-lg ${collapsed ? "justify-center" : ""}`}>
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50">

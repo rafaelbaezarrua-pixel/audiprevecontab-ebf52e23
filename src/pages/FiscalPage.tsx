@@ -52,10 +52,10 @@ const FiscalPage: React.FC = () => {
       
       if (items.length > 0) {
         const statuses = items.map(field => record?.[field as keyof FiscalRecord] || 'pendente');
-        const isAllConcluido = statuses.every(s => s === 'concluido' || s === 'isento');
+        const isAllConcluido = statuses.every(s => s === 'enviada' || s === 'gerada' || s === 'isento');
         matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
       } else {
-        matchStatus = filterStatus === 'pendente'; // For MEI or undefined regime, default to pendente if no record
+        matchStatus = filterStatus === 'pendente';
       }
     }
 
@@ -165,7 +165,14 @@ const FiscalPage: React.FC = () => {
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
-  const completedCount = filtered.filter(e => fiscalData[e.id]?.status_guia === "enviada" || fiscalData[e.id]?.status_guia === "gerada").length;
+  const completedCount = filtered.filter(e => {
+    const record = fiscalData[e.id];
+    if (!record) return false;
+    if (e.regime_tributario === "lucro_real") {
+      return (record.irpj_csll_status === "enviada" || record.irpj_csll_status === "gerada");
+    }
+    return (record.status_guia === "enviada" || record.status_guia === "gerada");
+  }).length;
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -174,27 +181,36 @@ const FiscalPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="grid grid-cols-3 gap-4">
-          <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Empresas</p><p className="text-2xl font-bold text-primary mt-1">{filtered.length}</p></div>
-          <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Concluídas</p><p className="text-2xl font-bold text-success mt-1">{completedCount}</p></div>
-          <div className="stat-card"><p className="text-xs text-muted-foreground uppercase">Pendentes</p><p className="text-2xl font-bold text-warning mt-1">{filtered.length - completedCount}</p></div>
+        <div className="flex bg-card border border-border/60 rounded-xl shadow-sm overflow-hidden h-12">
+          <div className="px-4 flex items-center gap-2 border-r border-border/60">
+            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Empresas</span>
+            <span className="text-lg font-black text-primary">{filtered.length}</span>
+          </div>
+          <div className="px-4 flex items-center gap-2 border-r border-border/60">
+            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Concluídas</span>
+            <span className="text-lg font-black text-emerald-500">{completedCount}</span>
+          </div>
+          <div className="px-4 flex items-center gap-2 bg-warning/5">
+            <span className="text-[10px] text-warning font-bold uppercase tracking-wider">Pendentes</span>
+            <span className="text-lg font-black text-warning">{filtered.length - completedCount}</span>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <input
               type="text"
               placeholder="Buscar empresa..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm w-full sm:w-64"
+              className="pl-9 pr-4 h-10 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-[13px] w-full sm:w-56"
             />
           </div>
           <input
             type="month"
             value={competencia}
             onChange={(e) => setCompetencia(e.target.value)}
-            className="px-4 py-2 bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm"
+            className="px-4 h-10 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-[13px] font-medium"
           />
         </div>
 

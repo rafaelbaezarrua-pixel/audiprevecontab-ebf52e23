@@ -44,6 +44,10 @@ export const HonorarioMensalForm = ({
           <p className="text-sm text-card-foreground font-medium">{form.teve_encargo_trabalhista ? "Sim" : "Não"}</p>
         </div>
         <div>
+          <label className="block text-[10px] uppercase text-muted-foreground font-semibold mb-1">Qtd. Recibos</label>
+          <p className="text-sm text-card-foreground font-medium">{form.qtd_recibos || 0}</p>
+        </div>
+        <div>
           <label className="block text-[10px] uppercase text-primary font-bold mb-1">Valor Total Calculado</label>
           <p className="text-lg text-primary font-bold">{formatCurrency(form.valor_total)}</p>
         </div>
