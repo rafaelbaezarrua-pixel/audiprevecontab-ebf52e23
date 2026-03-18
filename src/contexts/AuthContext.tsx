@@ -91,9 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Robust state derivation
       const profileData = profile as any;
-      const profileCompleted = profileData ? (profileData.profile_completed ?? true) : true;
-      const termsAccepted = profileData ? !!profileData.terms_accepted_at : true;
-      const firstAccessDone = profileData ? (profileData.first_access_done ?? true) : true;
+      const profileCompleted = !!profileData?.profile_completed;
+      const termsAccepted = !!profileData?.terms_accepted_at;
+      const firstAccessDone = !!profileData?.first_access_done;
 
       const metadata = currentUser.user_metadata || {};
       const isAdmin = (roles?.some(r => r.role === "admin") || profileData?.role === "admin" || metadata.role === "admin") || false;

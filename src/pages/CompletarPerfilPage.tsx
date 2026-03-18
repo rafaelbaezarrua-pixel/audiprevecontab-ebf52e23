@@ -18,7 +18,7 @@ interface Endereco {
 }
 
 const CompletarPerfilPage: React.FC = () => {
-  const { user, refreshUserData } = useAuth();
+  const { user, userData, logout, refreshUserData } = useAuth();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -79,10 +79,16 @@ const CompletarPerfilPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4" style={{ background: "var(--gradient-bg)" }}>
       <div className="w-full max-w-2xl bg-card rounded-2xl shadow-xl border border-border p-8">
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-8 relative">
+          <button 
+            onClick={logout}
+            className="absolute top-0 right-0 p-2 text-muted-foreground hover:text-destructive transition-colors text-xs font-bold flex items-center gap-1"
+          >
+            Sair
+          </button>
           <img src={logoAudipreve} alt="Audipreve" className="w-16 h-16 object-contain mb-4" />
           <h1 className="text-2xl font-bold text-card-foreground">Complete seu Cadastro</h1>
-          <p className="text-sm text-muted-foreground mt-1">Preencha suas informações pessoais para acessar o sistema</p>
+          <p className="text-sm text-muted-foreground mt-1 text-center">Preencha suas informações pessoais para acessar o sistema</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

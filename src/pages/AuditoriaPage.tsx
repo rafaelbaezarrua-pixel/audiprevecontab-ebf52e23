@@ -45,6 +45,38 @@ const AuditoriaPage: React.FC = () => {
 
     useEffect(() => {
         fetchLogs();
+
+        // Subscribe to real-time changes
+        const channel = supabase
+            .channel('audit_log_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'audit_logs'
+                },
+                (payload) => {
+                    console.log('New audit log received:', payload);
+                    const newLog = payload.new as unknown as AuditLog;
+                    
+                    // Fetch profile for the new log to show name
+                    supabase
+                        .from("profiles")
+                        .select("nome_completo, email")
+                        .eq("user_id", newLog.user_id)
+                        .maybeSingle()
+                        .then(({ data: profile }) => {
+                            const logWithProfile = { ...newLog, profile: profile as any };
+                            setLogs(prev => [logWithProfile, ...prev].slice(0, 500));
+                        });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const tables = Array.from(new Set(logs.map(l => l.table_name)));
@@ -52,7 +84,13 @@ const AuditoriaPage: React.FC = () => {
     const filteredLogs = logs.filter(log => {
         const searchLower = search.toLowerCase();
         const userName = log.profile?.nome_completo?.toLowerCase() || "";
-        const matchesSearch = userName.includes(searchLower) || log.table_name.includes(searchLower) || log.action.toLowerCase().includes(searchLower);
+        const email = log.profile?.email?.toLowerCase() || "";
+        const matchesSearch = 
+            userName.includes(searchLower) || 
+            email.includes(searchLower) ||
+            log.table_name.toLowerCase().includes(searchLower) || 
+            log.action.toLowerCase().includes(searchLower);
+        
         const matchesTable = filterTable === "all" || log.table_name === filterTable;
         const matchesAction = filterAction === "all" || log.action === filterAction;
 
@@ -76,9 +114,20 @@ const AuditoriaPage: React.FC = () => {
             </div>
         );
     }
-
     return (
         <div className="space-y-6 animate-fade-in">
+            <div className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                    <Database size={20} className="text-primary" />
+                    <h1 className="text-2xl font-black text-card-foreground tracking-tight">Registro de Auditoria</h1>
+                </div>
+                <div className="flex items-center gap-2 bg-success/10 text-success text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-success/20 shadow-sm animate-pulse-slow">
+                    <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                    Live Feed Ativo
+                </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between module-card">
                 <div className="relative flex-1 w-full max-w-md">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -241,7 +290,8 @@ const AuditoriaPage: React.FC = () => {
                 </div>
             )}
         </div>
-    );
+    </div>
+);
 };
 
 export default AuditoriaPage;

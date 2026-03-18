@@ -77,7 +77,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (userData && !userData.isClient && !userData.profileCompleted) {
     return <Navigate to="/completar-perfil" replace />;
   }
-
+  
   if (userData && !userData.isClient && userData.profileCompleted && !userData.termsAccepted) {
     return <Navigate to="/termos" replace />;
   }
