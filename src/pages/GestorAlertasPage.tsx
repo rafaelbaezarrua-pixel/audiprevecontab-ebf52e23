@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Mail, Clock, Shield, Plus, ArrowRight, Trash2, CalendarDays, Key, X } from "lucide-react";
+import { Bell, Mail, Clock, Shield, Plus, ArrowRight, Trash2, CalendarDays, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -35,7 +35,7 @@ const GestorAlertasPage: React.FC = () => {
   const [triggerLoading, setTriggerLoading] = useState(false);
   const [testMode, setTestMode] = useState(false);
   const [showAddRule, setShowAddRule] = useState(false);
-  const [showAddRule, setShowAddRule] = useState(false);
+  const [newRule, setNewRule] = useState({ module_id: "licencas", trigger_name: "", days_before: 7 });
 
 
   const fetchAlertTypes = async () => {
@@ -66,7 +66,6 @@ const GestorAlertasPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchAlertTypes();
     fetchAlertTypes();
     fetchRules();
   }, []);
@@ -277,19 +276,6 @@ const GestorAlertasPage: React.FC = () => {
               ))}
             </div>
 
-            <div className="mt-6 pt-5 border-t border-border/50">
-              <div className="bg-info/10 border border-info/20 p-4 rounded-xl flex gap-3">
-                <Mail className="text-info shrink-0 mt-0.5" size={18} />
-                <div>
-                  <p className="text-xs font-semibold text-info mb-1">Como funcionam os clientes?</p>
-                  <p className="text-xs text-info/80 leading-relaxed">
-                    Quando uma regra atinge a data (ex: 7 dias antes do vencimento do e-CNPJ),
-                    o sistema buscará na tabela de Usuários o campo <strong>"E-mail de Alertas"</strong>
-                    configurado para a empresa vinculada e fará o envio por SMTP usando a Edge Function agendada.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -329,13 +315,6 @@ const GestorAlertasPage: React.FC = () => {
           </div>
 
           <div className="card-premium p-6 bg-gradient-to-br from-background to-muted/30 border-primary/20">
-            <h2 className="text-sm font-bold flex items-center gap-2 mb-2">
-              <Key className="text-primary" size={16} /> Edge Function do Provedor
-            </h2>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-              Utilize o botão abaixo para forçar o processamento de todos os vencimentos de hoje e enviar os e-mails imediatamente para empresas e gestores.
-            </p>
-
             <div className="flex items-center justify-between p-3 mb-4 rounded-xl border border-primary/20 bg-primary/5">
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-primary">Modo de Teste (Forçar Todos)</span>
