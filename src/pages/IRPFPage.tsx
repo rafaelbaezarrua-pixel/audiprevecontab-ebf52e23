@@ -7,8 +7,7 @@ import { useIRPF } from "@/hooks/useIRPF";
 import { IRPFForm } from "@/components/irpf/IRPFForm";
 import { IRPFRecordCard } from "@/components/irpf/IRPFRecordCard";
 import { IRPFRecord } from "@/types/irpf";
-import { IRPFKanban } from "@/components/irpf/IRPFKanban";
-import { LayoutGrid, List } from "lucide-react";
+import { List } from "lucide-react";
 
 const IRPFPage = () => {
     const { user } = useAuth();
@@ -16,7 +15,6 @@ const IRPFPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
-    const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
     
     const { records: originalRecords, isLoading, saveRecord, deleteRecord } = useIRPF(selectedYear);
     const [records, setRecords] = useState<IRPFRecord[]>([]);
@@ -92,21 +90,6 @@ const IRPFPage = () => {
                         className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all" 
                     />
                 </div>
-
-                <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50 border border-border/50">
-                    <button 
-                        onClick={() => setViewMode("kanban")}
-                        className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                        <LayoutGrid size={18} />
-                    </button>
-                    <button 
-                        onClick={() => setViewMode("list")}
-                        className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                        <List size={18} />
-                    </button>
-                </div>
             </div>
 
             {isAdding && (
@@ -136,21 +119,6 @@ const IRPFPage = () => {
                     <div className="bg-card border border-dashed border-border rounded-xl py-12 text-center text-muted-foreground">
                         Nenhum registro encontrado para o ano de {selectedYear}.
                     </div>
-                ) : viewMode === "kanban" ? (
-                    <IRPFKanban 
-                        records={filteredRecords}
-                        onViewDetails={(r) => setExpandedId(r.id)}
-                        onUpdateStatus={(id, status) => {
-                            const record = records.find(r => r.id === id);
-                            if (record) {
-                                saveRecord.mutate({ 
-                                    ...record, 
-                                    status_transmissao: status,
-                                    data_transmissao: status === 'transmitida' ? new Date().toISOString().split('T')[0] : record.data_transmissao
-                                });
-                            }
-                        }}
-                    />
                 ) : (
                     <div className="space-y-3">
                         {filteredRecords.map(record => (

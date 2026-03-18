@@ -8,9 +8,9 @@ import { maskCNPJ, maskCPF } from "@/lib/utils";
 
 interface Socio { id?: string; nome: string; cpf: string; administrador: boolean; }
 interface LicencaRow { id?: string; tipo_licenca: string; status: string | null; vencimento: string | null; numero_processo: string | null; }
-interface Endereco { logradouro: string; numero: string; bairro: string; cidade: string; estado: string; cep: string; }
+interface Endereco { logradouro: string; numero: string; complemento?: string; bairro: string; cidade: string; estado: string; cep: string; }
 
-const emptyEndereco: Endereco = { logradouro: "", numero: "", bairro: "", cidade: "", estado: "", cep: "" };
+const emptyEndereco: Endereco = { logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", cep: "" };
 
 const tabs = [
   { id: "dados", label: "Dados Gerais", icon: <Building2 size={16} /> },
@@ -296,7 +296,8 @@ const SocietarioEmpresaPage: React.FC = () => {
       if (data.cnae_fiscal_descricao) setCnaeFiscalDescricao(data.cnae_fiscal_descricao);
       
       // Contact
-      if (data.email) setEmailRfb(data.email);
+      setEmailRfb(data.email || "");
+      
       // BrasilAPI sometimes has 'telefone' or ddd_telefone_1
       let fullTelefone = "";
       if (data.ddd_telefone_1) {
@@ -304,12 +305,13 @@ const SocietarioEmpresaPage: React.FC = () => {
       } else if (data.telefone) {
         fullTelefone = data.telefone;
       }
-      if (fullTelefone) setTelefoneRfb(fullTelefone);
+      setTelefoneRfb(fullTelefone);
 
       // Address
       setEndereco({
         logradouro: `${data.descricao_tipo_de_logradouro || ""} ${data.logradouro || ""}`.trim(),
         numero: data.numero || "",
+        complemento: data.complemento || "",
         bairro: data.bairro || "",
         cidade: data.municipio || "",
         estado: data.uf || "",
@@ -546,6 +548,7 @@ const SocietarioEmpresaPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="md:col-span-2"><label className={labelCls}>Logradouro</label><input value={endereco.logradouro} onChange={e => setEndereco({ ...endereco, logradouro: e.target.value })} className={inputCls} placeholder="Rua, Avenida..." /></div>
               <div><label className={labelCls}>Número</label><input value={endereco.numero} onChange={e => setEndereco({ ...endereco, numero: e.target.value })} className={inputCls} /></div>
+              <div><label className={labelCls}>Complemento</label><input value={endereco.complemento || ""} onChange={e => setEndereco({ ...endereco, complemento: e.target.value })} className={inputCls} placeholder="Apto, Sala..." /></div>
               <div><label className={labelCls}>Bairro</label><input value={endereco.bairro} onChange={e => setEndereco({ ...endereco, bairro: e.target.value })} className={inputCls} /></div>
               <div><label className={labelCls}>Cidade</label><input value={endereco.cidade} onChange={e => setEndereco({ ...endereco, cidade: e.target.value })} className={inputCls} /></div>
               <div><label className={labelCls}>Estado</label><select value={endereco.estado} onChange={e => setEndereco({ ...endereco, estado: e.target.value })} className={inputCls}><option value="">Selecione</option>{estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}</select></div>
