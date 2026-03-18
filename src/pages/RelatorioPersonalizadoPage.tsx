@@ -15,6 +15,37 @@ import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
 import { tipoProcessoLabels } from "@/constants/societario";
+import logoCaduceu from "@/assets/logo-caduceu.png";
+
+interface HeaderConfig {
+    logoUrl: string;
+    title: string;
+    subtitle: string;
+    address: string;
+    contact: string;
+    titleFontSize: number;
+    subtitleFontSize: number;
+    infoFontSize: number;
+    logoWidth: number;
+    logoHeight: number;
+    logoX: number;
+    logoY: number;
+}
+
+const DEFAULT_HEADER: HeaderConfig = {
+    logoUrl: "", // Use asset by default if empty
+    title: "Audipreve Contabilidade",
+    subtitle: "CRC-PR nº. 01.0093/O - 6",
+    address: "Rua Jequitibá, n.º 789, 1º andar, sala 01, Bairro Nações, CEP 83823-004,",
+    contact: "Fazenda Rio Grande/PR. Fone: (41) 3604-8059 | E-mail: societario@audiprevecontabilidade.com.br",
+    titleFontSize: 22,
+    subtitleFontSize: 10,
+    infoFontSize: 8,
+    logoWidth: 20,
+    logoHeight: 20,
+    logoX: 20,
+    logoY: 10
+};
 
 interface ModuleConfig {
   id: string;
@@ -237,7 +268,7 @@ const MODULES_CONFIG: ModuleConfig[] = [
   {
     id: "irpf",
     label: "IRPF",
-    table: "irpf",
+    table: "controle_irpf",
     icon: <Calculator size={18} />,
     color: "bg-emerald-600",
     fields: [
@@ -398,24 +429,63 @@ const RelatorioPersonalizadoPage: React.FC = () => {
     doc.addFileToVFS("Ubuntu-Bold.ttf", UbuntuBold);
     doc.addFont("Ubuntu-Bold.ttf", "Ubuntu", "bold");
 
-    const config = headerConfig || {
-      title: "Audipreve Contabilidade",
-      subtitle: "CRC-PR nº. 01.0093/O - 6",
-      address: "Rua Jequitibá, n.º 789, 1º andar, sala 01, Bairro Nações, Fazenda Rio Grande/PR",
-      contact: "Fone: (41) 3604-8059 | societario@audiprevecontabilidade.com.br"
-    };
-
+    const config: HeaderConfig = headerConfig || DEFAULT_HEADER;
     const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header - Logo and Text
+    try {
+        const logoToUse = config.logoUrl || logoCaduceu;
+
+        // Safe image loading via DOM Image
+        const imgData = await new Promise<HTMLImageElement | string>((resolve, reject) => {
+            if (logoToUse.startsWith('data:')) {
+                resolve(logoToUse);
+            } else {
+                const img = new Image();
+                if (logoToUse.startsWith('http')) {
+                    img.crossOrigin = 'Anonymous';
+                }
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error("Image failed to load (CORS or Invalid URL)"));
+                img.src = logoToUse;
+            }
+        });
+
+        let format = 'PNG';
+        if (typeof imgData === 'string') {
+            if (imgData.startsWith('data:image/jpeg') || imgData.startsWith('data:image/jpg')) format = 'JPEG';
+            else if (imgData.startsWith('data:image/webp')) format = 'WEBP';
+        }
+
+        doc.addImage(imgData, format, config.logoX, config.logoY, config.logoWidth, config.logoHeight);
+    } catch (e) {
+        console.warn("Logo blocked by CORS or invalid. Generating PDF without custom logo.", e);
+        // Fallback to default if custom url failed
+        try {
+            if (config.logoUrl) {
+                doc.addImage(logoCaduceu, 'PNG', config.logoX, config.logoY, config.logoWidth, config.logoHeight);
+            }
+        } catch (fallbackError) {
+            console.warn("Fallback logo failed", fallbackError);
+        }
+    }
+
     doc.setFont("Ubuntu", "bold");
-    doc.setFontSize(20);
-    doc.text(config.title, pageWidth / 2, 20, { align: "center" });
-    doc.setFontSize(10);
+    doc.setFontSize(config.titleFontSize);
+    doc.text(config.title, pageWidth / 2 + 10, 20, { align: "center" });
+
+    doc.setFontSize(config.subtitleFontSize);
     doc.setFont("Ubuntu", "normal");
-    doc.text(config.subtitle, pageWidth / 2, 26, { align: "center" });
-    doc.setFontSize(8);
-    doc.text(config.address, pageWidth / 2, 32, { align: "center" });
-    doc.text(config.contact, pageWidth / 2, 36, { align: "center" });
-    doc.line(10, 40, pageWidth - 10, 40);
+    doc.text(config.subtitle, pageWidth / 2 + 10, 26, { align: "center" });
+
+    doc.setFontSize(config.infoFontSize);
+    doc.text(config.address, pageWidth / 2, 34, { align: "center" });
+    doc.text(config.contact, pageWidth / 2, 38, { align: "center" });
+
+    // Separator line
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.5);
+    doc.line(10, 42, pageWidth - 10, 42);
   };
 
   const handleGenerate = async (exportFormat: 'pdf' | 'excel' = 'pdf') => {
@@ -563,7 +633,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
             query = query.eq("competencia", competencia);
           } else if (modId === "irpf") {
             const ano = competencia.split('-')[0];
-            const { data: irpfClientes } = await (supabase.from("irpf" as any).select("*").eq("ano_exercicio", ano) as any);
+            const { data: irpfClientes } = await (supabase.from("controle_irpf" as any).select("*").eq("ano_exercicio", ano) as any);
             const { data: irpfSocios } = await supabase.from("declaracoes_irpf" as any).select(`*, socios(nome, cpf, empresas(nome_empresa))`).eq("ano", ano);
 
             const unified: any[] = [];

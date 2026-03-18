@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 
 const TermosPage: React.FC = () => {
-  const { user, refreshUserData } = useAuth();
+  const { user, logout, refreshUserData } = useAuth();
   const navigate = useNavigate();
   const [accepted, setAccepted] = useState(false);
   const [acceptedLgpd, setAcceptedLgpd] = useState(false);
@@ -36,10 +36,16 @@ const TermosPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4" style={{ background: "var(--gradient-bg)" }}>
       <div className="w-full max-w-3xl bg-card rounded-2xl shadow-xl border border-border">
-        <div className="flex flex-col items-center p-8 border-b border-border">
+        <div className="flex flex-col items-center p-8 border-b border-border relative">
+          <button 
+            onClick={logout}
+            className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-destructive transition-colors text-xs font-bold flex items-center gap-1"
+          >
+            Sair
+          </button>
           <img src={logoAudipreve} alt="Audipreve" className="w-16 h-16 object-contain mb-4" />
           <h1 className="text-2xl font-bold text-card-foreground">Termos de Uso e Responsabilidade</h1>
-          <p className="text-sm text-muted-foreground mt-1">Leia e aceite os termos abaixo para acessar o sistema</p>
+          <p className="text-sm text-muted-foreground mt-1 text-center">Leia e aceite os termos abaixo para acessar o sistema</p>
         </div>
 
         <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
