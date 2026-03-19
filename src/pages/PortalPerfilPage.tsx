@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { formatDateBR } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserCircle, Building2, MapPin, Scale, FileSignature, Briefcase, Zap, Save, Lock, ArrowRight } from "lucide-react";
@@ -99,7 +100,7 @@ const PortalPerfilPage: React.FC = () => {
                             </div>
                             <div className="space-y-1">
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Data de Abertura</p>
-                                <p className="font-semibold">{empresa?.data_abertura ? new Date(empresa.data_abertura).toLocaleDateString("pt-BR") : "—"}</p>
+                                <p className="font-semibold">{empresa?.data_abertura ? formatDateBR(empresa.data_abertura) : "—"}</p>
                             </div>
                             <div className="space-y-1">
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Porte</p>

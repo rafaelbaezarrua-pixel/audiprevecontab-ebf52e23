@@ -31,3 +31,46 @@ export function formatCurrency(value: number | string) {
     currency: "BRL",
   }).format(numericValue || 0);
 }
+
+/**
+ * Formata uma data para o padrão brasileiro (dd/mm/aaaa)
+ */
+export function formatDateBR(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  try {
+    const d = typeof date === "string" 
+      ? new Date(date + (date.includes("T") ? "" : "T12:00:00")) 
+      : date;
+    
+    if (isNaN(d.getTime())) return "—";
+    return new Intl.DateTimeFormat("pt-BR").format(d);
+  } catch (e) {
+    return "—";
+  }
+}
+
+/**
+ * Formata uma competência (YYYY-MM) para o padrão brasileiro (MM/YYYY)
+ */
+export function formatMonthYearBR(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
+  if (typeof dateStr !== 'string') return "—";
+  
+  // Se já estiver no formato brasileiro ou similar, retorna como está ou tenta tratar
+  if (dateStr.includes("/")) return dateStr;
+  
+  const parts = dateStr.split("-");
+  if (parts.length === 2) {
+    // YYYY-MM
+    const [year, month] = parts;
+    return `${month}/${year}`;
+  }
+  
+  if (parts.length === 3) {
+    // YYYY-MM-DD
+    const [year, month] = parts;
+    return `${month}/${year}`;
+  }
+
+  return dateStr;
+}

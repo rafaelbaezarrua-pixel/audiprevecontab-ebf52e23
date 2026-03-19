@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 import { Search, Plus, Trash2, ChevronDown, ChevronUp, Building2, FileText, Upload, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
@@ -213,7 +214,7 @@ const CertidoesPage: React.FC = () => {
                               <div>
                                 <p className="text-sm font-medium text-card-foreground">{c.tipo_certidao}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {c.vencimento ? `Venc: ${new Date(c.vencimento).toLocaleDateString("pt-BR")}` : "Sem vencimento"}
+                                  {c.vencimento ? `Venc: ${formatDateBR(c.vencimento)}` : "Sem vencimento"}
                                   {dias !== 999 && ` (${dias}d)`}
                                 </p>
                               </div>

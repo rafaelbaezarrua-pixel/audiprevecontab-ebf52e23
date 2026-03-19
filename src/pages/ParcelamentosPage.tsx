@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 import {
   Search,
   ChevronDown,
@@ -387,17 +388,15 @@ const ParcelamentosPage: React.FC = () => {
                         </span>
                         <span className="font-medium text-foreground">
                           {p.data_inicio
-                            ? new Date(p.data_inicio).toLocaleDateString(
-                              "pt-BR"
-                            )
+                            ? formatDateBR(p.data_inicio)
                             : "—"}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground block mb-1">Previsão Término</span>
-                        <span className={`font-medium ${calcIsEncerrado(p) ? 'text-destructive' : 'text-foreground'}`}>
-                          {p.previsao_termino ? format(new Date(p.previsao_termino), 'dd/MM/yyyy') : "—"}
-                        </span>
+                      <div className="space-y-1">
+                        <p className="description-label">Término Estimado</p>
+                        <p className="description-value">
+                          {p.previsao_termino ? formatDateBR(p.previsao_termino) : "—"}
+                        </p>
                       </div>
                       <div>
                         <span className="text-muted-foreground block mb-1">

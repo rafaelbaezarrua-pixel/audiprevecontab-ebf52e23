@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { CalendarClock, ShieldAlert, History, ArrowRight, Building2, UserCircle, MapPin, Scale, FileSignature, Briefcase, Zap } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -83,7 +84,7 @@ const PortalVencimentosPage: React.FC = () => {
                                     </div>
                                     <div className="text-right">
                                         <p className={`font-bold ${isVencido ? "text-destructive" : isCritico ? "text-amber-500" : "text-card-foreground"}`}>
-                                            {new Date(v.data).toLocaleDateString("pt-BR")}
+                                            {formatDateBR(v.data)}
                                         </p>
                                         <p className="text-[10px] text-muted-foreground">
                                             {isVencido ? `Vencido há ${Math.abs(dias)} dias` : `${dias} dias restantes`}

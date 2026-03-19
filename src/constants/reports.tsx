@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { tipoProcessoLabels } from "@/constants/societario";
 import { format } from "date-fns";
+import { formatDateBR, formatMonthYearBR } from "@/lib/utils";
 
 export interface HeaderConfig {
     logoUrl: string;
@@ -83,14 +84,7 @@ export const licencaLabels: Record<string, string> = {
 };
 
 export const safeFormatDate = (dateStr: string | null | undefined) => {
-  if (!dateStr) return "—";
-  try {
-    const d = new Date(dateStr + (dateStr.includes("T") ? "" : "T12:00:00"));
-    if (isNaN(d.getTime())) return "—";
-    return format(d, "dd/MM/yyyy");
-  } catch (e) {
-    return "—";
-  }
+  return formatDateBR(dateStr);
 };
 
 export const MODULES_CONFIG: ModuleConfig[] = [

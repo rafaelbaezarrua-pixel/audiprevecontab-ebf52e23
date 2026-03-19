@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings, Shield, CheckCircle, Upload, Eye } from "lucide-react";
@@ -630,7 +631,7 @@ const SocietarioEmpresaPage: React.FC = () => {
                   {licenca.status && (
                     <div className="flex items-center gap-2">
                       <span className={`badge-status ${licenca.status === "definitiva" ? "badge-success" : licenca.status === "dispensada" ? "badge-gray" : licenca.status === "com_vencimento" ? "badge-warning" : "badge-info"}`}>{licencaTipoLabels[licenca.status]}</span>
-                      {licenca.status === "com_vencimento" && licenca.vencimento && <span className="text-xs text-muted-foreground flex items-center gap-1"><CalendarIcon size={12} /> {new Date(licenca.vencimento).toLocaleDateString("pt-BR")}</span>}
+                      {licenca.status === "com_vencimento" && licenca.vencimento && <span className="text-xs text-muted-foreground flex items-center gap-1"><CalendarIcon size={12} /> {formatDateBR(licenca.vencimento)}</span>}
                     </div>
                   )}
                 </div>

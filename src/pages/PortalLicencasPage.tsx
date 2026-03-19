@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { formatDateBR } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ScrollText, FileText, Download, Eye, Clock, ShieldCheck, AlertCircle } from "lucide-react";
@@ -102,7 +103,7 @@ const PortalLicencasPage: React.FC = () => {
                                                     <Clock size={14} /> Vencimento:
                                                 </span>
                                                 <span className={`font-semibold ${isVencido ? "text-destructive" : isVencendo ? "text-amber-500" : ""}`}>
-                                                    {new Date(lic.vencimento).toLocaleDateString("pt-BR")}
+                                                    {formatDateBR(lic.vencimento)}
                                                     {dias !== 999 && ` (${dias}d)`}
                                                 </span>
                                             </div>

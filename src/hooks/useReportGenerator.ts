@@ -7,6 +7,7 @@ import {
   MODULES_CONFIG, SITUATIONS, COMPANY_FIELDS, 
   ModuleConfig, HeaderConfig, licencaLabels, safeFormatDate 
 } from "@/constants/reports";
+import { formatMonthYearBR, formatDateBR } from "@/lib/utils";
 import { generatePDFHeader, applyAutoTable } from "@/lib/pdf-generator";
 import { tipoProcessoLabels } from "@/constants/societario";
 
@@ -86,10 +87,10 @@ export function useReportGenerator() {
       let query = supabase.from("empresas").select("*").order("nome_empresa");
       if (isMeiSelected) {
         if (situacoesWithoutMei.length > 0) {
-          const situacaoEqs = situacoesWithoutMei.map(s => `situacao.eq.${s}`).join(',');
-          query = query.or(`${situacaoEqs},regime_tributario.eq.mei,regime_tributario.eq.MEI`);
-        } else query = query.or("regime_tributario.eq.mei,regime_tributario.eq.MEI");
-      } else query = query.in("situacao", situacoesWithoutMei as any);
+          const situacaoEqs = situacoesWithoutMei.map(s => `situacao.eq.${s.toLowerCase()}`).join(',');
+          query = query.or(`${situacaoEqs},regime_tributario.eq.mei`);
+        } else query = query.or("regime_tributario.eq.mei");
+      } else query = query.in("situacao", situacoesWithoutMei.map(s => s.toLowerCase()) as any);
 
       const { data: allCompanies, error: companiesError } = await query;
       if (companiesError) throw companiesError;
@@ -103,7 +104,7 @@ export function useReportGenerator() {
         await generatePDFHeader(doc, headerConfig);
         doc.setFontSize(14);
         doc.setFont("Ubuntu", "bold");
-        doc.text(`RELATÓRIO PERSONALIZADO - ${competencia}`, doc.internal.pageSize.getWidth() / 2, 50, { align: "center" });
+        doc.text(`RELATÓRIO PERSONALIZADO - ${formatMonthYearBR(competencia)}`, doc.internal.pageSize.getWidth() / 2, 50, { align: "center" });
       }
 
       // 3. Modules Loop
@@ -188,12 +189,12 @@ export function useReportGenerator() {
       }
 
       // 4. Save
-      if (format === 'pdf' && doc) doc.save(`Relatorio_${competencia}.pdf`);
+      if (format === 'pdf' && doc) doc.save(`Relatorio_${formatMonthYearBR(competencia).replace('/', '-')}.pdf`);
       else if (format === 'excel') {
         const ws = XLSX.utils.aoa_to_sheet(excelAoA);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
-        XLSX.writeFile(wb, `Relatorio_${competencia}.xlsx`);
+        XLSX.writeFile(wb, `Relatorio_${formatMonthYearBR(competencia).replace('/', '-')}.xlsx`);
       }
       toast.success("Relatório gerado!");
     } catch (e) {
