@@ -27,7 +27,7 @@ const estados = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT
 
 const AVAILABLE_MODULES = [
   { id: 'societario', label: 'Societário' },
-  { id: 'agendamentos', label: 'Agendamentos' },
+  { id: 'agendamentos', label: 'Tarefas' },
   { id: 'fiscal', label: 'Fiscal' },
   { id: 'pessoal', label: 'Pessoal' },
   { id: 'licencas', label: 'Licenças' },

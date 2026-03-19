@@ -50,10 +50,10 @@ export const AlertsSidebar: React.FC<AlertsSidebarProps> = ({ alerts }) => {
           </div>
 
           <button 
-            onClick={() => window.location.href = '/agendamentos'}
+            onClick={() => window.location.href = '/tarefas'}
             className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-sm"
           >
-            Ver Todos os Agendamentos
+            Ver Todas as Tarefas
           </button>
         </div>
 

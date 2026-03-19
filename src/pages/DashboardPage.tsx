@@ -10,7 +10,7 @@ import { Sparkles, ArrowUpRight } from "lucide-react";
 
 const DashboardPage: React.FC = () => {
   const { userData } = useAuth();
-  const { stats, analytics, alerts, loading } = useDashboard();
+  const { stats, analytics, alerts, loading } = useDashboard(userData?.userId);
 
   if (loading) {
     return (
