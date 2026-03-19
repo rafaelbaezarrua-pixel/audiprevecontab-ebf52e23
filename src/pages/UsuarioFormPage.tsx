@@ -89,7 +89,7 @@ const UsuarioFormPage: React.FC = () => {
 
             if (data?.error) throw new Error(data.error);
 
-            toast.success("Usuário criado com sucesso! Senha temporária: Mudar@Audipreve123");
+            toast.success("Usuário criado com sucesso! Um e-mail com link para definição de senha foi enviado.");
             navigate("/configuracoes");
         } catch (err: any) {
             console.error("Erro no cadastro:", err);

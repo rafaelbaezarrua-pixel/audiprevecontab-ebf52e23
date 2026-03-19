@@ -31,6 +31,19 @@ serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders, status: 200 })
   }
 
+  const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+  // @ts-ignore: Deno
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  // Only allow execution if the service key is provided in the header
+  // This secures the function against public triggers while allowing Cron/CLI to work
+  if (authHeader !== `Bearer ${serviceKey}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { 
+      status: 401, 
+      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    });
+  }
+
   try {
     const { test = false } = await req.json().catch(() => ({ test: false }))
     console.log(`Working in ${test ? 'TEST' : 'NORMAL'} mode`)

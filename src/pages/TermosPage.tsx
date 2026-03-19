@@ -51,34 +51,34 @@ const TermosPage: React.FC = () => {
         <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
           {/* Termos de Uso */}
           <div>
-            <h2 className="text-lg font-bold text-card-foreground mb-3">1. Termos de Uso do Sistema</h2>
+            <h2 className="text-lg font-bold text-card-foreground mb-3 uppercase">1. Termos de Uso e Acesso ao Sistema</h2>
             <div className="bg-muted/30 rounded-lg p-4 text-sm text-foreground space-y-3 border border-border">
-              <p><strong>1.1. Natureza do Sistema:</strong> Este sistema é uma ferramenta de trabalho de propriedade exclusiva e confidencial da Audipreve Contabilidade, destinado estritamente a colaboradores e parceiros devidamente autorizados.</p>
-              <p><strong>1.2. Credenciais de Acesso:</strong> O acesso é pessoal, nominal e intransferível. O usuário é o único e integral responsável por toda e qualquer operação realizada sob suas credenciais (login e senha).</p>
-              <p><strong>1.3. Proibição de Compartilhamento:</strong> É terminantemente proibido o compartilhamento de credenciais com terceiros, inclusive outros colaboradores, sob qualquer pretexto. A guarda da senha é de responsabilidade exclusiva do usuário.</p>
-              <p><strong>1.4. Finalidade Profissional:</strong> O usuário compromete-se a utilizar o sistema e seus recursos exclusivamente para a execução de suas atividades profissionais em prol da Audipreve Contabilidade, sendo vedado o uso para fins pessoais ou estranhos ao serviço.</p>
-              <p><strong>1.5. Sanções por Uso Indevido:</strong> Qualquer tentativa de violação, acesso não autorizado ou uso em desacordo com estes termos resultará na suspensão imediata das credenciais, sem prejuízo da aplicação de sanções disciplinares (conforme a CLT) e medidas judiciais cabíveis.</p>
-              <p><strong>1.6. Monitoramento e Auditoria:</strong> A Audipreve Contabilidade reserva-se o direito de monitorar, registrar e auditar os logs de acesso e as atividades realizadas no sistema. O usuário declara ciência de que não há expectativa de privacidade quanto às ações executadas em ambiente corporativo.</p>
-              <p><strong>1.7. Manutenção e Alterações:</strong> O sistema poderá sofrer atualizações, modificações ou interrupções para manutenção, buscando sempre a melhoria da segurança e funcionalidade.</p>
+              <p><strong>1.1. Natureza e Propriedade Intelectual:</strong> O sistema constitui ferramenta de trabalho de licenciamento exclusivo da AUDIPREVE CONTABILIDADE, sendo ativo imaterial estritamente confidencial, destinado ao uso exclusivo de colaboradores e parceiros formalmente autorizados no exercício de suas funções.</p>
+              <p><strong>1.2. Inalienabilidade das Credenciais:</strong> O acesso dar-se-á mediante credenciais (login e senha) de natureza pessoal, nominal, intransferível e sigilosa. O usuário assume a responsabilidade civil e integral por toda e qualquer operação, consulta ou transação efetuada sob sua autenticação.</p>
+              <p><strong>1.3. Dever de Custódia:</strong> É terminantemente vedado o compartilhamento, a cessão ou a exposição de credenciais a terceiros, independentemente do nível hierárquico ou pretexto de urgência. A guarda e o sigilo da senha são obrigações personalíssimas do usuário.</p>
+              <p><strong>1.4. Destinação Adstrita à Finalidade Profissional:</strong> O usuário obriga-se a utilizar o ecossistema digital e seus recursos exclusivamente para a consecução do objeto social da AUDIPREVE CONTABILIDADE, sendo vedada qualquer utilização para fins particulares, recreativos ou alheios às atribuições laborais.</p>
+              <p><strong>1.5. Poder Diretivo e Sanções:</strong> A violação de qualquer diretriz deste termo, bem como tentativas de intrusão ou uso anômalo, ensejará o bloqueio imediato dos acessos, sem prejuízo da aplicação das sanções disciplinares previstas no Artigo 482 da CLT (Justa Causa) e das medidas judiciais de natureza reparatória.</p>
+              <p><strong>1.6. Inexistência de Expectativa de Privacidade e Auditoria:</strong> A AUDIPREVE CONTABILIDADE, no exercício de seu poder de fiscalização, reserva-se o direito de monitorar, registrar e auditar integralmente os logs de acesso, tráfego de dados e atividades sistêmicas. O usuário declara ciência inequívoca de que não há expectativa de privacidade em ambiente corporativo e sistêmico fornecido pela empresa.</p>
+              <p><strong>1.7. Disponibilidade e Manutenção:</strong> O sistema poderá ser objeto de atualizações, suspensões programadas para manutenção ou modificações estruturais, visando a segurança da informação e o aprimoramento das funcionalidades, sem que isso gere direito a pleitos compensatórios pelo usuário.</p>
             </div>
           </div>
 
           {/* Termos LGPD */}
           <div>
-            <h2 className="text-lg font-bold text-card-foreground mb-3">2. Termo de Responsabilidade — LGPD e Sigilo de Informações</h2>
+            <h2 className="text-lg font-bold text-card-foreground mb-3 uppercase">2. Termo de Responsabilidade, Sigilo e Conformidade (LGPD)</h2>
             <div className="bg-muted/30 rounded-lg p-4 text-sm text-foreground space-y-3 border border-border">
-              <p><strong>2.1. Conformidade Legal:</strong> O usuário declara ciência e obriga-se a cumprir as disposições da Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 — LGPD), bem como as normas éticas do Conselho Federal de Contabilidade (CFC).</p>
-              <p><strong>2.2. Dever de Sigilo e Confidencialidade:</strong> Todas as informações acessadas — dados pessoais, dados sensíveis, segredos de negócio, dados financeiros, fiscais e societários de clientes — são estritamente confidenciais. Este dever de sigilo permanece em vigor mesmo após o término do vínculo (trabalhista ou contratual) com a Audipreve Contabilidade, sob pena de responsabilização civil e criminal.</p>
-              <p><strong>2.3. Princípios da LGPD:</strong> O tratamento de dados deve observar rigorosamente os princípios da finalidade, necessidade e adequação. O acesso a dados de clientes só deve ocorrer quando indispensável para o cumprimento da obrigação profissional específica.</p>
-              <p><strong>2.4. Vedação de Extração de Dados:</strong> É expressamente proibido copiar, fotografar, imprimir, transferir ou transmitir qualquer dado confidencial para dispositivos externos (pen drives, e-mails pessoais, nuvens privadas ou aplicativos de mensagens) sem autorização prévia e formal da diretoria.</p>
-              <p><strong>2.5. Notificação de Incidentes:</strong> O usuário deve comunicar imediatamente ao Encarregado de Dados (DPO) ou à administração qualquer suspeita de vazamento, perda de dados ou acesso indevido por terceiros.</p>
-              <p><strong>2.6. Responsabilidade e Penalidades:</strong> O descumprimento das obrigações aqui previstas sujeitará o infrator a:</p>
+              <p><strong>2.1. Estrita Observância Legal e Ética:</strong> O usuário obriga-se a pautar sua conduta em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 - LGPD), o Código de Ética Profissional do Contador (NBC PG 01) e as resoluções do Conselho Federal de Contabilidade (CFC).</p>
+              <p><strong>2.2. Dever de Confidencialidade Perpétua:</strong> Todas as informações custodiadas — incluindo, mas não se limitando a: dados pessoais, dados sensíveis, segredos de negócio, dados financeiros, fiscais e societários de clientes — gozam de proteção por sigilo profissional. Este dever de confidencialidade subsiste de forma perene, mantendo-se íntegro mesmo após a extinção do vínculo jurídico (trabalhista ou contratual) com a AUDIPREVE CONTABILIDADE.</p>
+              <p><strong>2.3. Princípios do Tratamento de Dados:</strong> O acesso e o tratamento de dados de clientes deverão observar os princípios da finalidade, necessidade e adequação, limitando-se ao mínimo indispensável para o cumprimento da obrigação profissional específica designada ao usuário.</p>
+              <p><strong>2.4. Vedação à Exfiltração de Dados:</strong> É expressamente proibida a reprodução, extração, fotografia, impressão ou transmissão de dados para dispositivos ou ambientes externos (unidades de armazenamento removíveis, e-mails particulares, repositórios em nuvem pessoal ou aplicativos de mensageria instantânea) sem autorização prévia, formal e específica da Diretoria.</p>
+              <p><strong>2.5. Protocolo de Incidentes:</strong> O usuário deverá reportar imediatamente ao Encarregado de Dados (DPO) ou à Administração qualquer evidência ou suspeita de vulnerabilidade, vazamento, perda de integridade ou acesso não autorizado por terceiros.</p>
+              <p><strong>2.6. Regime de Responsabilidade e Cominações:</strong> A inobservância das obrigações de sigilo e proteção de dados sujeitará o infrator às seguintes esferas de punibilidade:</p>
               <ul className="list-disc list-inside pl-4 space-y-1">
-                <li><strong>Esfera Trabalhista:</strong> Advertência, suspensão ou dispensa por justa causa (Art. 482 da CLT).</li>
-                <li><strong>Esfera Civil:</strong> Reparação de danos e perdas causadas à empresa ou a terceiros.</li>
-                <li><strong>Esfera Criminal:</strong> Penalidades previstas no Código Penal (Violação de sigilo profissional).</li>
+                <li><strong>Esfera Laboral:</strong> Aplicação de medidas disciplinares, culminando na dispensa por justa causa;</li>
+                <li><strong>Esfera Civil:</strong> Responsabilização por perdas e danos, danos morais e regressividade em caso de condenações da empresa perante terceiros ou a ANPD;</li>
+                <li><strong>Esfera Criminal:</strong> Persecução penal pelos crimes de violação de sigilo profissional (Art. 154 do CP) e invasão de dispositivo informático (Art. 154-A do CP).</li>
               </ul>
-              <p><strong>2.7. Consentimento e Tratamento de Dados do Usuário:</strong> Ao acessar o sistema, o usuário consente com a coleta e tratamento de seus próprios dados (nome, CPF, logs de IP e geolocalização) pela Audipreve Contabilidade, necessários para a segurança da informação, controle de acesso e cumprimento de obrigações legais.</p>
+              <p><strong>2.7. Tratamento de Dados do Usuário:</strong> Para fins de segurança, auditoria e cumprimento de obrigações legais, o usuário consente com a coleta e o tratamento de seus dados identificadores (Nome, CPF, IP, Geolocalização e Biometria de acesso) pela AUDIPREVE CONTABILIDADE, nos termos do Art. 7º, incisos II e V da LGPD.</p>
             </div>
           </div>
         </div>
@@ -86,11 +86,11 @@ const TermosPage: React.FC = () => {
         <div className="p-8 border-t border-border space-y-4">
           <label className="flex items-start gap-3 cursor-pointer">
             <input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} className="mt-1 rounded border-border" />
-            <span className="text-sm text-card-foreground">Li e aceito os <strong>Termos de Uso do Sistema</strong> descritos acima.</span>
+            <span className="text-sm text-card-foreground">Li e aceito os <strong>Termos de Uso e Acesso ao Sistema</strong> descritos acima.</span>
           </label>
           <label className="flex items-start gap-3 cursor-pointer">
             <input type="checkbox" checked={acceptedLgpd} onChange={e => setAcceptedLgpd(e.target.checked)} className="mt-1 rounded border-border" />
-            <span className="text-sm text-card-foreground">Li e aceito o <strong>Termo de Responsabilidade — LGPD e Sigilo de Informações</strong>, comprometendo-me com o sigilo e a proteção dos dados acessados.</span>
+            <span className="text-sm text-card-foreground">Li e aceito o <strong>Termo de Responsabilidade, Sigilo e Conformidade (LGPD)</strong>, comprometendo-me com o sigilo e a proteção dos dados acessados.</span>
           </label>
 
           <button onClick={handleAccept} disabled={saving || !accepted || !acceptedLgpd} className="w-full py-3 rounded-lg text-sm font-semibold text-primary-foreground shadow-md disabled:opacity-50 transition-all" style={{ background: "var(--gradient-primary)" }}>

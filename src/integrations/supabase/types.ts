@@ -1022,6 +1022,7 @@ export type Database = {
           departamento: string | null
           email_alertas: string | null
           endereco: Json | null
+          favoritos: string[] | null
           first_access_done: boolean | null
           foto_url: string | null
           full_name: string | null
@@ -1043,6 +1044,7 @@ export type Database = {
           departamento?: string | null
           email_alertas?: string | null
           endereco?: Json | null
+          favoritos?: string[] | null
           first_access_done?: boolean | null
           foto_url?: string | null
           full_name?: string | null
@@ -1064,6 +1066,7 @@ export type Database = {
           departamento?: string | null
           email_alertas?: string | null
           endereco?: Json | null
+          favoritos?: string[] | null
           first_access_done?: boolean | null
           foto_url?: string | null
           full_name?: string | null

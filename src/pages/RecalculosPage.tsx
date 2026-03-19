@@ -4,6 +4,7 @@ import { Search, Plus, ChevronDown, ChevronUp, Save, CheckCircle, Circle, Users,
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { RecalculoRecord, ParcelamentoRecord, GuiaStatus } from "@/types/administrative";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI" };
 
@@ -161,7 +162,14 @@ const RecalculosPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full sm:w-auto">
+          <FavoriteToggleButton moduleId="recalculos" />
+          <div>
+            <h2 className="text-lg font-bold text-card-foreground">Recálculos</h2>
+            <p className="text-xs text-muted-foreground">Gestão de recálculo de guias.</p>
+          </div>
+        </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <label className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Mês:</label>
           <input

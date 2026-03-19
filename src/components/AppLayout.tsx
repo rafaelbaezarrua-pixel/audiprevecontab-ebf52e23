@@ -12,7 +12,7 @@ import { useTheme } from "@/components/theme-provider";
 import NotificationHeader from "./NotificationHeader";
 import { GlobalSearch } from "./GlobalSearch";
 import { ThemeToggle } from "./ThemeToggle";
-import { Star } from "lucide-react";
+
 import { AlertasInteligentesProvider } from "@/contexts/AlertasInteligentesProvider";
 
 interface NavItemConfig {
@@ -46,7 +46,7 @@ const navItems: NavItemConfig[] = [
 ];
 
 const AppLayout: React.FC = () => {
-  const { user, userData, logout } = useAuth();
+  const { user, userData, logout, toggleFavorito } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -110,6 +110,35 @@ const AppLayout: React.FC = () => {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
+          {/* Favoritos Section */}
+          {!collapsed && userData && userData.favoritos && userData.favoritos.length > 0 && (
+            <div className="mb-4">
+              <div className="menu-header flex items-center gap-2">
+                FAVORITOS
+              </div>
+              {navItems
+                .filter(item => (userData.favoritos || []).includes(item.id) && hasAccess(item.moduleKey))
+                .map((item) => {
+                  const active = location.pathname === item.path;
+                  return (
+                    <div className="relative group/nav w-full mb-0.5" key={`fav-${item.id}`}>
+                      <button
+                        onClick={() => handleNav(item.path)}
+                        className={`nav-item w-full group relative ${active ? "active" : ""}`}
+                        aria-label={item.label}
+                      >
+                        <div className={`transition-transform duration-300 group-hover:scale-110 ${active ? "text-primary" : ""}`}>
+                          {item.icon}
+                        </div>
+                        <span className="flex-1 text-left whitespace-nowrap truncate">{item.label}</span>
+                        {active && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-l-full" />}
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
           {navItems.map((item) => {
             const showSection = item.section && item.section !== lastSection;
             if (item.section) lastSection = item.section;
@@ -168,12 +197,6 @@ const AppLayout: React.FC = () => {
             </>
           )}
 
-          {!collapsed && (
-            <>
-              <div className="menu-header">Favoritos</div>
-              <p className="px-4 py-2 text-[0.65rem] text-sidebar-muted/60 italic">Nenhum favorito ainda.</p>
-            </>
-          )}
         </nav>
 
         {/* User footer */}

@@ -1,7 +1,11 @@
+// @ts-ignore
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+// @ts-ignore
+import { decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 
 const allowedModules = ["societario", "fiscal", "pessoal", "certidoes", "certificados", "licencas", "procuracoes", "honorarios", "obrigacoes", "parcelamentos", "recalculos", "vencimentos"];
 
+// @ts-ignore: Deno
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
   const corsHeaders = {
@@ -23,7 +27,9 @@ Deno.serve(async (req) => {
       }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // @ts-ignore: Deno
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    // @ts-ignore: Deno
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -34,15 +40,29 @@ Deno.serve(async (req) => {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader.replace("Bearer ", "").trim();
 
-    const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    // Decode JWT for caller ID (more resilient than getUser)
+    let callerId: string;
+    try {
+      const [_header, payload, _signature] = decode(token);
+      callerId = (payload as any).sub;
+      if (!callerId) throw new Error("ID do chamador não encontrado");
+    } catch (err) {
+      console.error("Erro ao decodificar token:", err);
+      return new Response(JSON.stringify({ error: "Token inválido ou malformado", code: "auth_token_invalid" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
-    if (authError || !caller) {
-      return new Response(JSON.stringify({
-        error: "Sessão inválida",
-        code: "auth_token_invalid"
-      }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // MANDATORY: Check if the caller is an admin
+    const { data: roles, error: rolesError } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", callerId);
+    if (rolesError) throw rolesError;
+    const isAdminCaller = roles?.some((r: any) => r.role === 'admin');
+    if (!isAdminCaller) {
+      return new Response(JSON.stringify({ error: "Apenas administradores podem gerenciar usuários." }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     const body = await req.json();
@@ -103,6 +123,18 @@ Deno.serve(async (req) => {
     if (profileError) {
       console.error("Profile upsert error:", profileError);
       // We continue anyway as the user is created
+    }
+
+    // Disparar e-mail de redefinição de senha para definir a senha do novo usuário
+    // Redireciona para /reset-password (suportado pela app e o link da rota padrão)
+    const resetRedirectUrl = origin ? `${origin}/reset-password` : undefined;
+    const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+      redirectTo: resetRedirectUrl
+    });
+
+    if (resetError) {
+      console.error("Error sending reset password email:", resetError);
+      // O usuário foi criado, então não falharemos a rota, mas logaremos o erro
     }
 
     // Role assignment

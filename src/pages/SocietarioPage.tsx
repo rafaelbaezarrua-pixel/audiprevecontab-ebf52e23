@@ -1,10 +1,11 @@
 import { RealtimeChannel } from "@supabase/supabase-js";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
   Building2, Search, Filter, ChevronDown, 
   Plus, History, Activity, Star, RefreshCw
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 import { toast } from "sonner";
 import { useSocietario } from "@/hooks/useSocietario";
 import { EmpresaTable } from "@/components/societario/EmpresaTable";
@@ -12,6 +13,7 @@ import { SocietarioStats } from "@/components/societario/SocietarioStats";
 import { NovoProcessoForm } from "@/components/societario/NovoProcessoForm";
 import { ProcessoCard } from "@/components/societario/ProcessoCard";
 import { TableSkeleton, PageHeaderSkeleton } from "@/components/PageSkeleton";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { syncCompanyClients } from "@/lib/sync-clients";
 import { tipoProcessoLabels, passosConfig } from "@/constants/societario";
 import { Empresa, Processo } from "@/types/societario";
@@ -24,13 +26,13 @@ const SocietarioPage: React.FC = () => {
     deleteProcesso, updateProcesso, getPaginatedEmpresas
   } = useSocietario();
 
-  const [activeMainTab, setActiveMainTab] = useState<"empresas" | "processos">("empresas");
-  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas" | "mei" | "entregue">("ativas");
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [activeMainTab, setActiveMainTab] = useState<"empresas" | "processos">((searchParams.get("view") as any) || "empresas");
+  const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas" | "mei" | "entregue">((searchParams.get("aba") as any) || "ativas");
   const [search, setSearch] = useState("");
-  const [filterSituacao, setFilterSituacao] = useState("todas");
-  const [filterRegime, setFilterRegime] = useState("todos");
-  const [showFilters, setShowFilters] = useState(false);
+  const [filterSituacao, setFilterSituacao] = useState(searchParams.get("situacao") || "todas");
+  const [filterRegime, setFilterRegime] = useState(searchParams.get("regime") || "todos");
+  const [showFilters, setShowFilters] = useState(!!searchParams.get("regime") || !!searchParams.get("situacao"));
   const [showNovoProcesso, setShowNovoProcesso] = useState(false);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [processTab, setProcessTab] = useState<Record<string, 'timeline' | 'historico'>>({});
@@ -52,6 +54,27 @@ const SocietarioPage: React.FC = () => {
 
   const [paginatedData, setPaginatedData] = useState<{ data: Empresa[]; count: number }>({ data: [], count: 0 });
   const [isFetchingPage, setIsFetchingPage] = useState(false);
+
+  useEffect(() => {
+    // Sync URL params to state if they change externally (e.g. clicking dashboard chart)
+    const view = searchParams.get("view");
+    if (view === "empresas" || view === "processos") setActiveMainTab(view);
+    
+    const regime = searchParams.get("regime");
+    if (regime) {
+      setFilterRegime(regime);
+      setShowFilters(true);
+    }
+    
+    const situacao = searchParams.get("situacao");
+    if (situacao) {
+      setFilterSituacao(situacao);
+      setShowFilters(true);
+    }
+
+    const aba = searchParams.get("aba");
+    if (aba) setActiveTab(aba as any);
+  }, [searchParams]);
 
   React.useEffect(() => {
     // Reset to page 0 if filters change
@@ -200,12 +223,7 @@ const SocietarioPage: React.FC = () => {
               <p className="text-muted-foreground mt-1">Gestão de empresas e processos de constituição/alteração.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setIsFavorite(!isFavorite)}
-                className={`p-2.5 rounded-xl border transition-all ${isFavorite ? "bg-amber-500/10 border-amber-500/50 text-amber-500 shadow-sm shadow-amber-500/10" : "bg-card border-border text-muted-foreground hover:bg-muted hover:border-border/80"}`}
-              >
-                <Star size={20} fill={isFavorite ? "currentColor" : "none"} />
-              </button>
+              <FavoriteToggleButton moduleId="societario" />
               <button
                 onClick={async () => {
                   const confirmed = window.confirm("Sincronizar todos os acessos do portal?");

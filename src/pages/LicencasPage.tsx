@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { LicencaRecord, LicencaTaxaRecord, GuiaStatus } from "@/types/administrative";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const licencaLabels: Record<string, string> = {
   alvara: "Alvará de Funcionamento",
@@ -178,7 +179,13 @@ const LicencasPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-
+      <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full">
+        <FavoriteToggleButton moduleId="licencas" />
+        <div>
+          <h2 className="text-lg font-bold text-card-foreground">Licenças e Taxas</h2>
+          <p className="text-xs text-muted-foreground">Gestão de alvarás e taxas municipais/estaduais.</p>
+        </div>
+      </div>
 
       {/* Tabs */}
       <div className="flex border-b border-border">

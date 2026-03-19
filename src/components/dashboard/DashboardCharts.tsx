@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import { Building2, Activity } from 'lucide-react';
 
 interface ChartData {
@@ -26,6 +27,24 @@ interface DashboardChartsProps {
 const COLORS = ['#2563EB', '#10B981', '#F59E0B', '#6366F1', '#8B5CF6'];
 
 export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
+  const navigate = useNavigate();
+
+  const handleRegimeClick = (entry: any) => {
+    const regimeMap: Record<string, string> = {
+      'Simples Nacional': 'simples',
+      'Lucro Presumido': 'lucro_presumido',
+      'Lucro Real': 'lucro_real',
+      'MEI': 'mei',
+      'Outros': 'todos'
+    };
+    const regime = regimeMap[entry.name] || 'todos';
+    navigate(`/societario?view=empresas&regime=${regime}&aba=${regime === 'mei' ? 'mei' : 'ativas'}`);
+  };
+
+  const handleProcessoClick = (entry: any) => {
+    navigate(`/societario?view=processos`);
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
       {/* Donut Chart: Regimes Tributários */}
@@ -39,7 +58,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
              Sem dados suficientes
            </div>
         ) : (
-          <div className="h-72 w-full">
+          <div className="h-72 w-full cursor-pointer">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -51,9 +70,14 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
                   paddingAngle={5}
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  onClick={handleRegimeClick}
                 >
                   {data.regimes.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={COLORS[index % COLORS.length]} 
+                      className="hover:opacity-80 transition-opacity outline-none"
+                    />
                   ))}
                 </Pie>
                 <Tooltip 
@@ -78,11 +102,16 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
              Sem dados suficientes
            </div>
         ) : (
-          <div className="h-72 w-full">
+          <div className="h-72 w-full cursor-pointer">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={data.processos}
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                onClick={(data) => {
+                  if (data && data.activePayload) {
+                    handleProcessoClick(data.activePayload[0].payload);
+                  }
+                }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dy={10} />
@@ -94,7 +123,11 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
                 />
                 <Bar dataKey="value" fill="#2563EB" radius={[4, 4, 0, 0]} maxBarSize={50}>
                   {data.processos.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.name === 'Concluídos' ? '#10B981' : entry.name === 'Em Exigência' ? '#EF4444' : '#2563EB'} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.name === 'Concluídos' ? '#10B981' : entry.name === 'Em Exigência' ? '#EF4444' : '#2563EB'} 
+                      className="hover:opacity-80 transition-opacity"
+                    />
                   ))}
                 </Bar>
               </BarChart>
@@ -105,3 +138,4 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
     </div>
   );
 };
+

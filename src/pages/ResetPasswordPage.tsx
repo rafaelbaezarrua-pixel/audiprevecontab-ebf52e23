@@ -59,7 +59,7 @@ const ResetPasswordPage: React.FC = () => {
 
             setSuccess(true);
             toast.success("Senha alterada com sucesso!");
-            setTimeout(() => navigate("/login"), 3000);
+            setTimeout(() => navigate("/"), 3000);
         } catch (err: any) {
             setError(err.message);
         } finally {

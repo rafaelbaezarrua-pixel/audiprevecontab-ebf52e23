@@ -42,6 +42,32 @@ const CompletarPerfilPage: React.FC = () => {
     return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
   };
 
+  const handleCepBlur = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, "");
+    if (cleanCep.length === 8) {
+      try {
+        const response = await fetch(`https://brasilapi.com.br/api/cep/v1/${cleanCep}`);
+        if (!response.ok) throw new Error("CEP não encontrado");
+        const data = await response.json();
+        
+        setForm(prev => ({
+          ...prev,
+          endereco: {
+            ...prev.endereco,
+            logradouro: data.street || prev.endereco.logradouro,
+            bairro: data.neighborhood || prev.endereco.bairro,
+            cidade: data.city || prev.endereco.cidade,
+            estado: data.state || prev.endereco.estado,
+          }
+        }));
+        toast.info("Endereço preenchido automaticamente");
+      } catch (err: any) {
+        console.error("Erro ao buscar CEP:", err);
+        // Opcional: toast.error("CEP não encontrado");
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nome_completo.trim() || !form.cpf.trim() || !form.data_nascimento || !form.endereco.cep.trim() || !form.endereco.logradouro.trim() || !form.endereco.cidade.trim() || !form.endereco.estado.trim()) {
@@ -117,7 +143,13 @@ const CompletarPerfilPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-1">CEP</label>
-                <input value={form.endereco.cep} onChange={e => updateEndereco("cep", formatCEP(e.target.value))} className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="00000-000" />
+                <input 
+                  value={form.endereco.cep} 
+                  onChange={e => updateEndereco("cep", formatCEP(e.target.value))} 
+                  onBlur={e => handleCepBlur(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" 
+                  placeholder="00000-000" 
+                />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-card-foreground mb-1">Logradouro</label>

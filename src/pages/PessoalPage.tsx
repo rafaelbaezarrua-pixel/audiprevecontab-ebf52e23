@@ -3,11 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { usePessoal } from "@/hooks/usePessoal";
 import { PessoalRecord, GuiaStatus } from "@/types/pessoal";
+import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const PessoalPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("pessoal");
-  const [pessoalData, setPessoalData] = useState<Record<string, PessoalRecord>>({});
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -15,52 +17,46 @@ const PessoalPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
 
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase.from("pessoal").select("*").eq("competencia", competencia);
-      const map: Record<string, PessoalRecord> = {};
-      data?.forEach(p => { map[p.empresa_id] = p as unknown as PessoalRecord; });
-      setPessoalData(map);
-    };
-    load();
-  }, [competencia]);
+  const { pessoalData, loading: pessoalLoading, savePessoalRecord } = usePessoal(competencia);
 
-  const filtered = empresas.filter(e => {
-    const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
+  const filtered = React.useMemo(() => {
+    return empresas.filter(e => {
+      const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
 
-    let matchTab = false;
-    if (activeTab === "ativas") {
-      matchTab = (e.situacao === "ativa" || !e.situacao) && e.porte_empresa !== "mei";
-    } else if (activeTab === "mei") {
-      matchTab = e.situacao === "mei" || ((e.situacao === "ativa" || !e.situacao) && e.porte_empresa === "mei");
-    } else if (activeTab === "paralisadas") {
-      matchTab = e.situacao === "paralisada";
-    } else if (activeTab === "baixadas") {
-      matchTab = e.situacao === "baixada";
-    } else if (activeTab === "entregue") {
-      matchTab = e.situacao === "entregue";
-    }
-
-    let matchStatus = true;
-    if (filterStatus !== "todos") {
-      const record = pessoalData[e.id];
-      if (!record) {
-        matchStatus = filterStatus === 'pendente';
-      } else {
-        const checks = [];
-        if (record.possui_vt) checks.push(record.vt_status);
-        if (record.possui_va) checks.push(record.va_status);
-        if (record.possui_vc) checks.push(record.vc_status);
-        checks.push(record.inss_status);
-        checks.push(record.fgts_status);
-        
-        const isAllConcluido = checks.every(s => s === 'enviada' || s === 'gerada' || s === 'isento') && record.dctf_web_gerada;
-        matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
+      let matchTab = false;
+      if (activeTab === "ativas") {
+        matchTab = (e.situacao === "ativa" || !e.situacao) && e.porte_empresa !== "mei";
+      } else if (activeTab === "mei") {
+        matchTab = e.situacao === "mei" || ((e.situacao === "ativa" || !e.situacao) && e.porte_empresa === "mei");
+      } else if (activeTab === "paralisadas") {
+        matchTab = e.situacao === "paralisada";
+      } else if (activeTab === "baixadas") {
+        matchTab = e.situacao === "baixada";
+      } else if (activeTab === "entregue") {
+        matchTab = e.situacao === "entregue";
       }
-    }
 
-    return matchSearch && matchTab && matchStatus;
-  });
+      let matchStatus = true;
+      if (filterStatus !== "todos") {
+        const record = pessoalData[e.id];
+        if (!record) {
+          matchStatus = filterStatus === 'pendente';
+        } else {
+          const checks = [];
+          if (record.possui_vt) checks.push(record.vt_status);
+          if (record.possui_va) checks.push(record.va_status);
+          if (record.possui_vc) checks.push(record.vc_status);
+          checks.push(record.inss_status);
+          checks.push(record.fgts_status);
+          
+          const isAllConcluido = checks.every(s => s === 'enviada' || s === 'gerada' || s === 'isento') && record.dctf_web_gerada;
+          matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
+        }
+      }
+
+      return matchSearch && matchTab && matchStatus;
+    });
+  }, [empresas, pessoalData, search, activeTab, filterStatus]);
 
   const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
@@ -131,16 +127,11 @@ const PessoalPage: React.FC = () => {
         fgts_status: form.fgts_status as GuiaStatus, fgts_data_envio: form.fgts_data_envio || null,
         dctf_web_gerada: !!form.dctf_web_gerada, dctf_web_data_envio: form.dctf_web_data_envio || null,
       };
-      if (existing?.id) {
-        await supabase.from("pessoal").update(payload).eq("id", existing.id);
-      } else {
-        await supabase.from("pessoal").insert(payload);
+      const success = await savePessoalRecord(payload);
+      if (success) {
+        toast.success("Dados salvos com sucesso!");
+        setExpanded(null);
       }
-      toast.success("Dados do pessoal salvos!");
-      const { data } = await supabase.from("pessoal").select("*").eq("competencia", competencia);
-      const map: Record<string, PessoalRecord> = {};
-      data?.forEach(p => { map[p.empresa_id] = p as unknown as PessoalRecord; });
-      setPessoalData(map);
     } catch (err: any) { toast.error(err.message); }
   };
 
@@ -152,8 +143,13 @@ const PessoalPage: React.FC = () => {
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
   const completedCount = filtered.filter(e => pessoalData[e.id]?.dctf_web_gerada).length;
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading || pessoalLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <PageHeaderSkeleton />
+        <TableSkeleton rows={8} />
+      </div>
+    );
   }
 
   return (
@@ -174,7 +170,8 @@ const PessoalPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
+          <FavoriteToggleButton moduleId="pessoal" />
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <input

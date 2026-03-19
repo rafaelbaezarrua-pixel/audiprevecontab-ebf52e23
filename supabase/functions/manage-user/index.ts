@@ -1,5 +1,7 @@
-// @ts-ignore: Deno
+// @ts-ignore
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+// @ts-ignore
+import { decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 
 // @ts-ignore: Deno
 Deno.serve(async (req: Request) => {
@@ -17,9 +19,8 @@ Deno.serve(async (req: Request) => {
   try {
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      console.error("Missing Authorization header");
-      return new Response(JSON.stringify({ error: "Não autenticado", status: 'error' }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      return new Response(JSON.stringify({ error: "Cabeçalho de autorização ausente", status: 'error' }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
@@ -33,16 +34,38 @@ Deno.serve(async (req: Request) => {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader.replace("Bearer ", "").trim();
 
-    // Get the caller user securely
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !user) throw new Error("Unauthorized Token");
+    // Decode JWT to get user_id (sub) without hitting Auth database for session
+    // Since we trust the Gateway (or we can verify secret), this is more resilient
+    let userId: string;
+    try {
+      const [_header, payload, _signature] = decode(token);
+      userId = (payload as any).sub;
+      if (!userId) throw new Error("ID do usuário não encontrado no token");
+    } catch (err) {
+      console.error("Erro ao decodificar token:", err);
+      return new Response(JSON.stringify({ error: "Token inválido ou malformado", status: 'error' }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
-    // Check if the caller is an admin
-    const { data: roles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", user.id);
+    // Check if the caller is an admin in the database
+    const { data: roles, error: rolesError } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId);
+    
+    if (rolesError) {
+      console.error("Erro ao buscar roles:", rolesError);
+      return new Response(JSON.stringify({ error: "Falha ao verificar permissões do usuário.", status: 'error' }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     const isAdmin = roles?.some((r: any) => r.role === 'admin');
-    if (!isAdmin) throw new Error("Apenas administradores podem gerenciar usuários.");
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Apenas administradores podem gerenciar usuários.", status: 'error' }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
     // Parse payload
     const body = await req.json();

@@ -31,6 +31,7 @@ export interface UserPermissions {
   termsAccepted?: boolean;
   firstAccessDone?: boolean;
   foto_url?: string;
+  favoritos?: string[];
 }
 
 interface AuthContextType {
@@ -42,6 +43,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUserData: () => Promise<void>;
   loginAsClient: (cnpj: string, password: string) => Promise<void>;
+  toggleFavorito: (moduleId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -117,6 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           termsAccepted,
           firstAccessDone,
           foto_url: profileData?.foto_url || currentUser.user_metadata?.avatar_url || "",
+          favoritos: profileData?.favoritos || [],
         });
       } else {
         const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", currentUser.id);
@@ -150,6 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           termsAccepted,
           firstAccessDone,
           foto_url: profileData?.foto_url || currentUser.user_metadata?.avatar_url || "",
+          favoritos: profileData?.favoritos || [],
         });
       }
     } catch (err) {
@@ -161,6 +165,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUserData = async () => {
     if (user) await loadUserData(user);
+  };
+
+  const toggleFavorito = async (moduleId: string) => {
+    if (!user || !userData) return;
+
+    const currentFavoritos = userData.favoritos || [];
+    let newFavoritos;
+
+    if (currentFavoritos.includes(moduleId)) {
+      newFavoritos = currentFavoritos.filter((id) => id !== moduleId);
+    } else {
+      newFavoritos = [...currentFavoritos, moduleId];
+    }
+
+    // Otimista local
+    setUserData({ ...userData, favoritos: newFavoritos });
+
+    // Salvar no banco de dados
+    const { error } = await supabase
+      .from("profiles")
+      .update({ favoritos: newFavoritos })
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Erro ao salvar favoritos:", error);
+      // Reverter em caso de erro
+      setUserData({ ...userData, favoritos: currentFavoritos });
+    }
   };
 
   // Decoupled effect to fetch user data whenever `user` state changes.
@@ -254,7 +286,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, userData, loading, login, logout, refreshUserData, loginAsClient }}>
+    <AuthContext.Provider value={{ user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito }}>
       {children}
     </AuthContext.Provider>
   );

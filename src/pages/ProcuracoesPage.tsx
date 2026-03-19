@@ -4,6 +4,7 @@ import { Search, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Save
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { ProcuracaoRecord } from "@/types/administrative";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
 
@@ -94,7 +95,13 @@ const ProcuracoesPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-
+      <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full">
+        <FavoriteToggleButton moduleId="procuracoes" />
+        <div>
+          <h2 className="text-lg font-bold text-card-foreground">Procurações Eletrônicas</h2>
+          <p className="text-xs text-muted-foreground">Controle de validade e renovação de procurações.</p>
+        </div>
+      </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[{ label: "Ativas", count: counts.ativas, cls: "text-success", bg: "bg-success/10", icon: <CheckCircle size={20} /> }, { label: "Próximas", count: counts.proximas, cls: "text-warning", bg: "bg-warning/10", icon: <Clock size={20} /> }, { label: "Vencidas", count: counts.vencidas, cls: "text-destructive", bg: "bg-destructive/10", icon: <AlertTriangle size={20} /> }, { label: "Sem Dados", count: counts.semDados, cls: "text-muted-foreground", bg: "bg-muted", icon: <AlertTriangle size={20} /> }].map(s => (
           <div key={s.label} className="stat-card flex items-center justify-between"><div><p className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</p><p className={`text-2xl font-bold mt-1 ${s.cls}`}>{s.count}</p></div><div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.bg} ${s.cls}`}>{s.icon}</div></div>
