@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import React, { Suspense, lazy } from "react";
 
 // Layouts
@@ -126,6 +127,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <SpeedInsights />
+        <Analytics />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AuthProvider>
             <Suspense fallback={<PageLoader />}>
