@@ -1,9 +1,9 @@
-// @ts-ignore
+// @ts-expect-error
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
-// @ts-ignore
+// @ts-expect-error
 import { decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 
-// @ts-ignore: Deno
+// @ts-expect-error: Deno
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
   const corsHeaders = {
@@ -24,9 +24,9 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // @ts-ignore: Deno
+    // @ts-expect-error: Deno
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    // @ts-ignore: Deno
+    // @ts-expect-error: Deno
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
