@@ -118,15 +118,22 @@ export const useDashboard = (userId?: string) => {
       let agendamentosQuery = supabase.from("agendamentos")
         .select("*")
         .eq("data", todayStr)
-        .eq("status", "pendente");
+        .neq("status", "concluido"); // For appointments, show all non-completed today
       
+      let tarefasQuery = supabase.from("tarefas" as any)
+        .select("*")
+        .eq("data", todayStr)
+        .neq("status", "concluido");
+
       if (userId) {
         agendamentosQuery = agendamentosQuery.eq("usuario_id", userId);
+        tarefasQuery = tarefasQuery.eq("usuario_id", userId);
       }
 
-      const [certificados, agendamentos] = await Promise.all([
+      const [certificados, agendamentos, tarefas] = await Promise.all([
         certificatesQuery,
-        agendamentosQuery
+        agendamentosQuery,
+        tarefasQuery as any
       ]);
 
       const combined = [
@@ -140,9 +147,16 @@ export const useDashboard = (userId?: string) => {
         ...(agendamentos.data || []).map(a => ({
           id: a.id,
           type: 'deadline' as const,
-          title: 'Tarefa Hoje',
+          title: 'Agendamento Hoje',
           description: a.assunto,
           date: a.data
+        })),
+        ...(tarefas.data || []).map((t: any) => ({
+          id: t.id,
+          type: 'deadline' as const,
+          title: 'Tarefa Hoje',
+          description: t.assunto,
+          date: t.data
         }))
       ];
 

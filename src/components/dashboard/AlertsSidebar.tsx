@@ -29,7 +29,7 @@ export const AlertsSidebar: React.FC<AlertsSidebarProps> = ({ alerts }) => {
         <div className="card-premium border-l-4 border-l-primary flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-sm font-black text-foreground flex items-center gap-2 uppercase tracking-tighter">
-              <Calendar className="w-4 h-4 text-primary" /> Tarefas de Hoje
+              <Calendar className="w-4 h-4 text-primary" /> Compromissos & Tarefas
             </h4>
             <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded-full">
               {tarefas.length}
@@ -38,10 +38,14 @@ export const AlertsSidebar: React.FC<AlertsSidebarProps> = ({ alerts }) => {
           
           <div className="space-y-3 flex-1 mb-6">
             {tarefas.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-8 text-center italic">Nenhuma tarefa para hoje.</p>
+              <p className="text-xs text-muted-foreground py-8 text-center italic">Nada para hoje.</p>
             ) : (
               tarefas.map(a => (
-                <div key={a.id} className="p-3 rounded-xl bg-muted/30 border border-transparent hover:border-primary/20 transition-all cursor-pointer">
+                <div 
+                  key={a.id} 
+                  onClick={() => window.location.href = a.title.includes('Tarefa') ? '/tarefas' : '/agendamentos'}
+                  className="p-3 rounded-xl bg-muted/30 border border-transparent hover:border-primary/20 transition-all cursor-pointer"
+                >
                   <h5 className="text-xs font-bold truncate">{a.title}</h5>
                   <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{a.description}</p>
                 </div>
@@ -49,12 +53,20 @@ export const AlertsSidebar: React.FC<AlertsSidebarProps> = ({ alerts }) => {
             )}
           </div>
 
-          <button 
-            onClick={() => window.location.href = '/tarefas'}
-            className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-sm"
-          >
-            Ver Todas as Tarefas
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button 
+              onClick={() => window.location.href = '/agendamentos'}
+              className="py-3 rounded-xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm"
+            >
+              Agendas
+            </button>
+            <button 
+              onClick={() => window.location.href = '/tarefas'}
+              className="py-3 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-sm"
+            >
+              Tarefas
+            </button>
+          </div>
         </div>
 
         {/* Coluna de Alertas/Vencimentos */}
