@@ -33,6 +33,8 @@ const DeclaracoesMensaisPage = lazy(() => import("@/pages/DeclaracoesMensaisPage
 const DeclaracoesAnuaisPage = lazy(() => import("@/pages/DeclaracoesAnuaisPage"));
 const AgendamentosPage = lazy(() => import("@/pages/AgendamentosPage"));
 const AgendamentoFormPage = lazy(() => import("@/pages/AgendamentoFormPage"));
+const TarefasPage = lazy(() => import("@/pages/TarefasPage"));
+const TarefaFormPage = lazy(() => import("@/pages/TarefaFormPage"));
 const UsuarioFormPage = lazy(() => import("@/pages/UsuarioFormPage"));
 const OcorrenciasPage = lazy(() => import("@/pages/OcorrenciasPage"));
 const ConfiguracoesPage = lazy(() => import("@/pages/ConfiguracoesPage"));
@@ -156,8 +158,10 @@ const App = () => (
                   <Route path="/declaracoes-anuais" element={<DeclaracoesAnuaisPage />} />
                   <Route path="/irpf" element={<IRPFPage />} />
                   <Route path="/relatorios" element={<RelatorioPersonalizadoPage />} />
-                  <Route path="/tarefas" element={<AgendamentosPage />} />
-                  <Route path="/tarefas/novo" element={<AgendamentoFormPage />} />
+                  <Route path="/agendamentos" element={<AgendamentosPage />} />
+                  <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />
+                  <Route path="/tarefas" element={<TarefasPage />} />
+                  <Route path="/tarefas/novo" element={<TarefaFormPage />} />
                   <Route path="/ocorrencias" element={<OcorrenciasPage />} />
                   <Route path="/configuracoes/usuarios/novo" element={<AdminRoute><UsuarioFormPage /></AdminRoute>} />
                   <Route path="/perfil" element={<PerfilPage />} />

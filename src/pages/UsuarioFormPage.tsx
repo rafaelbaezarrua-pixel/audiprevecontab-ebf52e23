@@ -18,7 +18,7 @@ const moduleLabels: Record<string, string> = {
     parcelamentos: "Parcelamentos",
     recalculos: "Recálculos",
     honorarios: "Honorários",
-    agendamentos: "Tarefas",
+    agendamentos: "Agendamentos",
     declaracoes_anuais: "Declarações Anuais",
     declaracoes_mensais: "Declarações Mensais",
 };

@@ -8,7 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import KanbanBoard, { KanbanColumn, KanbanItem } from "@/components/KanbanBoard";
 
-interface Agendamento {
+interface Tarefa {
     id: string;
     data: string;
     horario: string;
@@ -22,10 +22,10 @@ interface Agendamento {
     arquivado: boolean;
 }
 
-const AgendamentosPage: React.FC = () => {
+const TarefasPage: React.FC = () => {
     const { user, userData } = useAuth();
     const navigate = useNavigate();
-    const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+    const [agendamentos, setAgendamentos] = useState<Tarefa[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
@@ -43,9 +43,9 @@ const AgendamentosPage: React.FC = () => {
                 nome: u.full_name || "Sem Nome"
             }));
 
-            // Carregar agendamentos
+            // Carregar tarefas
             const { data: agendaData } = await (supabase
-                .from("agendamentos" as any)
+                .from("tarefas" as any)
                 .select("*")
                 .eq("competencia", competencia)
                 .order("horario", { ascending: true }) as any);
@@ -73,12 +73,12 @@ const AgendamentosPage: React.FC = () => {
                 };
             });
 
-            // Fire and forget DB updates for newly identified overdue appointments
+            // Fire and forget DB updates for newly identified overdue items
             const overdueItems = enrichedData.filter(item => item._isOverdueDbUpdateNeeded);
             if (overdueItems.length > 0) {
                 Promise.all(overdueItems.map(item =>
-                    supabase.from("agendamentos" as any).update({ status: "pendente" } as any).eq("id", item.id) as any
-                )).catch(e => console.error("Failed to auto-update overdue appointments", e));
+                    supabase.from("tarefas" as any).update({ status: "pendente" } as any).eq("id", item.id) as any
+                )).catch(e => console.error("Failed to auto-update overdue tasks", e));
             }
 
             setAgendamentos(enrichedData);
@@ -106,7 +106,7 @@ const AgendamentosPage: React.FC = () => {
                         if (scheduledDateTime < now) {
                             hasChanges = true;
                             // Optionally push the update to Supabase
-                            supabase.from("agendamentos" as any).update({ status: "pendente" } as any).eq("id", a.id).then();
+                            supabase.from("tarefas" as any).update({ status: "pendente" } as any).eq("id", a.id).then();
                             return { ...a, status: "pendente" as const };
                         }
                     }
@@ -122,7 +122,7 @@ const AgendamentosPage: React.FC = () => {
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
             const { error } = await (supabase
-                .from("agendamentos" as any)
+                .from("tarefas" as any)
                 .update({ status: newStatus } as any)
                 .eq("id", id) as any);
 
@@ -137,12 +137,12 @@ const AgendamentosPage: React.FC = () => {
     const handleUpdateArquivado = async (id: string, arquivado: boolean) => {
         try {
             const { error } = await (supabase
-                .from("agendamentos" as any)
+                .from("tarefas" as any)
                 .update({ arquivado } as any)
                 .eq("id", id) as any);
 
             if (error) throw error;
-            toast.success(arquivado ? "Agendamento arquivado!" : "Agendamento desarquivado!");
+            toast.success(arquivado ? "Tarefa arquivada!" : "Tarefa desarquivada!");
             loadData();
         } catch (error: any) {
             toast.error("Erro ao atualizar: " + error.message);
@@ -150,18 +150,18 @@ const AgendamentosPage: React.FC = () => {
     };
 
     const handleDeleteAgendamento = async (id: string) => {
-        if (!window.confirm("Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.")) {
+        if (!window.confirm("Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.")) {
             return;
         }
 
         try {
             const { error } = await (supabase
-                .from("agendamentos" as any)
+                .from("tarefas" as any)
                 .delete()
                 .eq("id", id) as any);
 
             if (error) throw error;
-            toast.success("Agendamento excluído com sucesso!");
+            toast.success("Tarefa excluída com sucesso!");
             loadData();
         } catch (error: any) {
             toast.error("Erro ao excluir: " + error.message);
@@ -182,12 +182,9 @@ const AgendamentosPage: React.FC = () => {
         const isMine = a.usuario_id === user?.id;
 
         if (activeTab === "geral") {
-            // No modo Geral, se estiver na sub-aba arquivados, mostra todos os arquivados
             if (activeSubTab === "arquivados") return matchSearch;
-            // Caso contrário, mostra tudo que não está arquivado (filtro padrão do Geral)
             return matchSearch;
         } else {
-            // "meus" agendamentos
             const matchUser = isMine;
             if (activeSubTab === "arquivados") {
                 return matchSearch && matchUser;
@@ -199,17 +196,6 @@ const AgendamentosPage: React.FC = () => {
     if (loading && agendamentos.length === 0) {
         return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
     }
-
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "concluido":
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 uppercase">Concluído</span>;
-            case "pendente":
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">Pendente</span>;
-            default:
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20 uppercase">Em Aberto</span>;
-        }
-    };
 
     const kanbanColumns: KanbanColumn[] = [
         { id: 'em_aberto', title: 'A Fazer', colorClass: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
@@ -298,14 +284,6 @@ const AgendamentosPage: React.FC = () => {
                                 <RefreshCw size={13} /> Desarquivar
                             </button>
                         )}
-
-                        <button
-                            onClick={() => handleDeleteAgendamento(a.id)}
-                            className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center gap-1.5"
-                            title="Excluir"
-                        >
-                            <Trash2 size={13} /> Excluir
-                        </button>
                     </div>
                 )}
             </div>
@@ -322,10 +300,10 @@ const AgendamentosPage: React.FC = () => {
                     className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold"
                 />
                 <button
-                    onClick={() => navigate("/agendamentos/novo")}
+                    onClick={() => navigate("/tarefas/novo")}
                     className="button-premium shadow-md"
                 >
-                    <Plus size={18} /> Novo Agendamento
+                    <Plus size={18} /> Nova Tarefa
                 </button>
             </div>
 
@@ -347,7 +325,7 @@ const AgendamentosPage: React.FC = () => {
                             if (activeSubTab !== "arquivados") setActiveSubTab("em_aberto");
                         }}
                     >
-                        Meus Agendamentos
+                        Minhas Tarefas
                     </button>
                 </div>
 
@@ -359,9 +337,7 @@ const AgendamentosPage: React.FC = () => {
                         { id: "arquivados", label: "Arquivados", hideOnGeral: false }
                     ].map(sub => {
                         if (activeTab === "geral" && sub.hideOnGeral && sub.id !== "em_aberto") return null;
-
                         const label = activeTab === "geral" && sub.id === "em_aberto" ? "Ativos" : sub.label;
-
                         return (
                             <button
                                 key={sub.id}
@@ -396,14 +372,13 @@ const AgendamentosPage: React.FC = () => {
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                     type="text"
-                    placeholder="Buscar agendamento ou usuário..."
+                    placeholder="Buscar tarefa ou usuário..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none"
                 />
             </div>
 
-            {/* View Mode Switching */}
             {viewMode === 'kanban' && activeSubTab !== 'arquivados' ? (
                 <div className="flex-1 overflow-hidden min-h-[500px]">
                     <KanbanBoard
@@ -416,7 +391,7 @@ const AgendamentosPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
                     {filtered.length === 0 ? (
                         <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
-                            Nenhum agendamento encontrado para este período.
+                            Nenhuma tarefa encontrada para este período.
                         </div>
                     ) : (
                         filtered.map(a => <React.Fragment key={a.id}>{kanbanItems.find(i => i.id === a.id)?.renderContent()}</React.Fragment>)
@@ -427,4 +402,4 @@ const AgendamentosPage: React.FC = () => {
     );
 };
 
-export default AgendamentosPage;
+export default TarefasPage;
