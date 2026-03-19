@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 import {
   Search, Building2, ChevronDown, ChevronUp,
   Shield, CheckCircle, Clock, AlertTriangle, Save,
@@ -345,7 +346,7 @@ const LicencasPage: React.FC = () => {
                                   )}
                                 </div>
                               </div>
-                              {lic?.status === "com_vencimento" && lic.vencimento && <div className="text-xs text-muted-foreground">Vencimento: {new Date(lic.vencimento).toLocaleDateString("pt-BR")}{dias !== null && <span className={`ml-2 font-medium ${dias < 0 ? "text-destructive" : dias <= 30 ? "text-warning" : "text-success"}`}>({dias}d)</span>}</div>}
+                              {lic?.status === "com_vencimento" && lic.vencimento && <div className="text-xs text-muted-foreground">Vencimento: {formatDateBR(lic.vencimento)}{dias !== null && <span className={`ml-2 font-medium ${dias < 0 ? "text-destructive" : dias <= 30 ? "text-warning" : "text-success"}`}>({dias}d)</span>}</div>}
                               {lic?.status === "em_processo" && lic.numero_processo && <div className="text-xs text-muted-foreground">Processo: {lic.numero_processo}</div>}
                             </div>
                           );

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 import { Search, Plus, ChevronDown, ChevronUp, Save, CheckCircle, Circle, Users, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
@@ -368,7 +369,7 @@ const RecalculosPage: React.FC = () => {
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted-foreground border-t border-border pt-4 mt-2">
                         <span className="bg-background px-3 py-1.5 rounded-md border border-border inline-block">
-                          📆 Data Base do Recálculo: <strong className="text-foreground">{r.data_recalculo ? new Date(r.data_recalculo).toLocaleDateString('pt-BR') : "Não informada"}</strong>
+                          📆 Data Base do Recálculo: <strong className="text-foreground">{r.data_recalculo ? formatDateBR(r.data_recalculo) : "Não informada"}</strong>
                         </span>
                         <button onClick={() => handleSaveUpdate(r.id)} className="flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md transition-all hover:opacity-90 active:scale-95 w-full sm:w-auto" style={{ background: "var(--gradient-primary)" }}>
                           <Save size={14} /> Atualizar Guia

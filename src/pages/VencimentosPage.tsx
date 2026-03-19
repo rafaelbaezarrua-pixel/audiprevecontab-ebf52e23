@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { formatCurrency, formatDateBR } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, AlertTriangle, CheckCircle, Search } from "lucide-react";
 import { useEmpresas } from "@/hooks/useEmpresas";
@@ -231,7 +232,7 @@ const VencimentosPage: React.FC = () => {
       <div className="module-card overflow-x-auto">
         <table className="data-table"><thead><tr><th>Empresa</th><th>Tipo</th><th>Vencimento</th><th>Dias</th><th>Status</th></tr></thead>
           <tbody>{searchFiltered.length === 0 ? <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum vencimento</td></tr> : searchFiltered.map((v, i) => (
-            <tr key={i}><td className="font-medium text-card-foreground">{v.empresa}</td><td className="text-muted-foreground">{v.tipo}</td><td className="text-muted-foreground">{new Date(v.data).toLocaleDateString("pt-BR")}</td><td className="text-card-foreground font-medium">{v.diasRestantes}d</td><td><span className={`badge-status ${v.status === "vencido" ? "badge-danger" : v.status === "próximo" ? "badge-warning" : "badge-success"}`}>{v.status}</span></td></tr>
+            <tr key={i}><td className="font-medium text-card-foreground">{v.empresa}</td><td className="text-muted-foreground">{v.tipo}</td><td className="text-muted-foreground">{formatDateBR(v.data)}</td><td className="text-card-foreground font-medium">{v.diasRestantes}d</td><td><span className={`badge-status ${v.status === "vencido" ? "badge-danger" : v.status === "próximo" ? "badge-warning" : "badge-success"}`}>{v.status}</span></td></tr>
           ))}</tbody>
         </table>
       </div>

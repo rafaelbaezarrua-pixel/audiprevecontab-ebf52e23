@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 import { Search, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Save, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
@@ -168,7 +169,7 @@ const ProcuracoesPage: React.FC = () => {
             <div key={emp.id} className="module-card !p-0 overflow-hidden">
               <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => toggleExpand(emp.id)}>
                 <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"><Building2 size={16} className="text-primary" /></div><div><p className="font-medium text-card-foreground">{emp.nome_empresa}</p><p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p></div></div>
-                <div className="flex items-center gap-3">{emp.proc.data_vencimento && <span className="text-xs text-muted-foreground">Venc: {new Date(emp.proc.data_vencimento).toLocaleDateString("pt-BR")}</span>}<span className={`badge-status ${statusCls}`}>{statusLabel}</span>{isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}</div>
+                <div className="flex items-center gap-3">{emp.proc.data_vencimento && <span className="text-xs text-muted-foreground">Venc: {formatDateBR(emp.proc.data_vencimento)}</span>}<span className={`badge-status ${statusCls}`}>{statusLabel}</span>{isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}</div>
               </div>
               {isOpen && (
                 <div className="border-t border-border p-5 space-y-4 bg-muted/10">
