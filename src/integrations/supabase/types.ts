@@ -104,21 +104,33 @@ export type Database = {
       }
       certidoes: {
         Row: {
+          arquivo_url: string | null
+          created_at: string | null
           empresa_id: string | null
           id: string
+          observacao: string | null
           tipo_certidao: string | null
+          updated_at: string | null
           vencimento: string | null
         }
         Insert: {
+          arquivo_url?: string | null
+          created_at?: string | null
           empresa_id?: string | null
           id?: string
+          observacao?: string | null
           tipo_certidao?: string | null
+          updated_at?: string | null
           vencimento?: string | null
         }
         Update: {
+          arquivo_url?: string | null
+          created_at?: string | null
           empresa_id?: string | null
           id?: string
+          observacao?: string | null
           tipo_certidao?: string | null
+          updated_at?: string | null
           vencimento?: string | null
         }
         Relationships: [

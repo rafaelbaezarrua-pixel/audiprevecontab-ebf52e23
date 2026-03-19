@@ -1,11 +1,11 @@
-// @ts-ignore
+// @ts-expect-error
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
-// @ts-ignore
+// @ts-expect-error
 import { decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 
 const allowedModules = ["societario", "fiscal", "pessoal", "certidoes", "certificados", "licencas", "procuracoes", "honorarios", "obrigacoes", "parcelamentos", "recalculos", "vencimentos"];
 
-// @ts-ignore: Deno
+// @ts-expect-error: Deno
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
   const corsHeaders = {
@@ -27,9 +27,9 @@ Deno.serve(async (req) => {
       }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // @ts-ignore: Deno
+    // @ts-expect-error: Deno
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    // @ts-ignore: Deno
+    // @ts-expect-error: Deno
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -125,16 +125,77 @@ Deno.serve(async (req) => {
       // We continue anyway as the user is created
     }
 
-    // Disparar e-mail de redefinição de senha para definir a senha do novo usuário
-    // Redireciona para /reset-password (suportado pela app e o link da rota padrão)
-    const resetRedirectUrl = origin ? `${origin}/reset-password` : undefined;
-    const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-      redirectTo: resetRedirectUrl
-    });
+    // --- ENVIO DE E-MAIL VIA RESEND ---
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    
+    if (RESEND_API_KEY) {
+      console.log(`Gerando link de recuperação para ${email}...`);
+      
+      const resetRedirectUrl = origin ? `${origin}/reset-password` : undefined;
+      
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'recovery',
+        email,
+        options: { redirectTo: resetRedirectUrl }
+      });
 
-    if (resetError) {
-      console.error("Error sending reset password email:", resetError);
-      // O usuário foi criado, então não falharemos a rota, mas logaremos o erro
+      if (linkError) {
+        console.error("Erro ao gerar link de recuperação:", linkError);
+      } else if (linkData?.properties?.action_link) {
+        const actionLink = linkData.properties.action_link;
+        console.log("Enviando e-mail de boas-vindas via Resend...");
+        
+        try {
+          const res = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${RESEND_API_KEY}`,
+              "X-Entity-Ref-ID": crypto.randomUUID(),
+            },
+            body: JSON.stringify({
+              from: "Audipreve Contabilidade <gestor@audiprevecontabilidade.com.br>",
+              to: [email],
+              subject: "Ativação de Cadastro - Sistema Audipreve",
+              html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #f0f0f0; border-radius: 12px; color: #333;">
+                  <div style="text-align: center; margin-bottom: 30px;">
+                    <img src="https://jnqwvysjpbcpbwhlwgqq.supabase.co/storage/v1/object/public/documentos/logo-audipreve.png" alt="Audipreve" style="width: 140px;" />
+                  </div>
+                  <h2 style="color: #0284c7; text-align: center; margin-bottom: 20px;">Olá, ${nome}!</h2>
+                  <p style="font-size: 16px; line-height: 1.6;">Seja bem-vindo ao <strong>Sistema Audipreve</strong>. Seu cadastro foi concluído com sucesso por um administrador.</p>
+                  <p style="font-size: 16px; line-height: 1.6;">Para ativar seu acesso e definir sua senha de segurança, clique no botão abaixo:</p>
+                  <div style="text-align: center; margin: 35px 0;">
+                    <a href="${actionLink}" style="background-color: #0284c7; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                      Ativar Meu Acesso
+                    </a>
+                  </div>
+                  <p style="font-size: 13px; color: #666; background: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #0284c7;">
+                    <strong>Dica de Segurança:</strong> Este link é exclusivo para o seu e-mail e expira em breve. Não o compartilhe com ninguém.
+                  </p>
+                  <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+                  <p style="font-size: 11px; color: #999; text-align: center; line-height: 1.5;">
+                    <strong>Audipreve Contabilidade</strong><br />
+                    Este é um e-mail transacional automático referente ao seu cadastro no sistema.<br />
+                    Se você não esperava por este e-mail, por favor, ignore-o.
+                  </p>
+                </div>
+              `,
+            }),
+          });
+
+          if (!res.ok) {
+            const errorData = await res.json();
+            console.error("Erro no Resend ao enviar boas-vindas:", errorData);
+          } else {
+            console.log("E-mail de boas-vindas enviado com sucesso!");
+          }
+        } catch (mailErr) {
+          console.error("Exceção ao enviar e-mail via Resend:", mailErr);
+        }
+      }
+    } else {
+      console.warn("RESEND_API_KEY não configurada. E-mail de boas-vindas NÃO enviado.");
     }
 
     // Role assignment

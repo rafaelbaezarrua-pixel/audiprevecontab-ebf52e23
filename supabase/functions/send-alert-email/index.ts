@@ -1,11 +1,11 @@
-// @ts-ignore: Deno
+// @ts-expect-error: Deno
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-// @ts-ignore: Deno
+// @ts-expect-error: Deno
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-// @ts-ignore: Deno
+// @ts-expect-error: Deno
 import { Resend } from "https://esm.sh/resend@3.2.0"
 
-// @ts-ignore: Deno
+// @ts-expect-error: Deno
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
 const corsHeaders = {
@@ -32,7 +32,7 @@ serve(async (req: Request) => {
   }
 
   const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
-  // @ts-ignore: Deno
+  // @ts-expect-error: Deno
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   // Only allow execution if the service key is provided in the header
@@ -49,9 +49,9 @@ serve(async (req: Request) => {
     console.log(`Working in ${test ? 'TEST' : 'NORMAL'} mode`)
 
     const supabaseClient = createClient(
-      // @ts-ignore: Deno
+      // @ts-expect-error: Deno
       Deno.env.get('SUPABASE_URL') ?? '',
-      // @ts-ignore: Deno
+      // @ts-expect-error: Deno
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
@@ -138,8 +138,8 @@ serve(async (req: Request) => {
 
       const template = isUser ? userTemplate : companyTemplate;
 
-      let subject = template.subject.replace(/{{nome_empresa}}/g, alerts[0].nome_empresa)
-      let customIntro = template.body_html.replace(/{{nome_empresa}}/g, alerts[0].nome_empresa)
+      const subject = template.subject.replace(/{{nome_empresa}}/g, alerts[0].nome_empresa)
+      const customIntro = template.body_html.replace(/{{nome_empresa}}/g, alerts[0].nome_empresa)
 
       let rows = ''
       alerts.forEach(a => {
