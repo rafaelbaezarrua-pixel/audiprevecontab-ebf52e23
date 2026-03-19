@@ -3,64 +3,60 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
+import { useFiscal } from "@/hooks/useFiscal";
 import { FiscalRecord, GuiaStatus } from "@/types/fiscal";
+import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI" };
 
 const FiscalPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("fiscal");
-  const [fiscalData, setFiscalData] = useState<Record<string, FiscalRecord>>({});
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
+  
+  const { fiscalData, loading: fiscalLoading, saveFiscalRecord } = useFiscal(competencia);
 
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase.from("fiscal").select("*").eq("competencia", competencia);
-      const map: Record<string, FiscalRecord> = {};
-      data?.forEach(f => { map[f.empresa_id] = f as unknown as FiscalRecord; });
-      setFiscalData(map);
-    };
-    load();
-  }, [competencia]);
+  const filtered = React.useMemo(() => {
+    return empresas.filter(e => {
+      const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
 
-  const filtered = empresas.filter(e => {
-    const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
-
-    let matchTab = false;
-    if (activeTab === "ativas") {
-      matchTab = (e.situacao === "ativa" || !e.situacao) && e.porte_empresa !== "mei";
-    } else if (activeTab === "mei") {
-      matchTab = e.situacao === "mei" || ((e.situacao === "ativa" || !e.situacao) && e.porte_empresa === "mei");
-    } else if (activeTab === "paralisadas") {
-      matchTab = e.situacao === "paralisada";
-    } else if (activeTab === "baixadas") {
-      matchTab = e.situacao === "baixada";
-    } else if (activeTab === "entregue") {
-      matchTab = e.situacao === "entregue";
-    }
-
-    let matchStatus = true;
-    if (filterStatus !== "todos") {
-      const record = fiscalData[e.id];
-      const items = e.regime_tributario === 'simples' ? ['status_guia'] : 
-                    e.regime_tributario === 'lucro_presumido' || e.regime_tributario === 'lucro_real' ? 
-                    ['irpj_csll_status', 'pis_cofins_status', 'icms_status', 'iss_status'] : [];
-      
-      if (items.length > 0) {
-        const statuses = items.map(field => record?.[field as keyof FiscalRecord] || 'pendente');
-        const isAllConcluido = statuses.every(s => s === 'enviada' || s === 'gerada' || s === 'isento');
-        matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
-      } else {
-        matchStatus = filterStatus === 'pendente';
+      let matchTab = false;
+      if (activeTab === "ativas") {
+        matchTab = (e.situacao === "ativa" || !e.situacao) && e.porte_empresa !== "mei";
+      } else if (activeTab === "mei") {
+        matchTab = e.situacao === "mei" || ((e.situacao === "ativa" || !e.situacao) && e.porte_empresa === "mei");
+      } else if (activeTab === "paralisadas") {
+        matchTab = e.situacao === "paralisada";
+      } else if (activeTab === "baixadas") {
+        matchTab = e.situacao === "baixada";
+      } else if (activeTab === "entregue") {
+        matchTab = e.situacao === "entregue";
       }
-    }
 
-    return matchSearch && matchTab && matchStatus;
-  });
+      let matchStatus = true;
+      if (filterStatus !== "todos") {
+        const record = fiscalData[e.id];
+        const items = e.regime_tributario === 'simples' ? ['status_guia'] : 
+                      e.regime_tributario === 'lucro_presumido' || e.regime_tributario === 'lucro_real' ? 
+                      ['irpj_csll_status', 'pis_cofins_status', 'icms_status', 'iss_status'] : [];
+        
+        if (items.length > 0) {
+          const statuses = items.map(field => record?.[field as keyof FiscalRecord] || 'pendente');
+          const isAllConcluido = statuses.every(s => s === 'enviada' || s === 'gerada' || s === 'isento');
+          matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
+        } else {
+          matchStatus = filterStatus === 'pendente';
+        }
+      }
+
+      return matchSearch && matchTab && matchStatus;
+    });
+  }, [empresas, fiscalData, search, activeTab, filterStatus]);
 
   const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
@@ -145,16 +141,11 @@ const FiscalPage: React.FC = () => {
         ibs_status: form.ibs_status || "pendente",
         ibs_data_envio: form.ibs_data_envio || null,
       };
-      if (existing?.id) {
-        await supabase.from("fiscal").update(payload).eq("id", existing.id);
-      } else {
-        await supabase.from("fiscal").insert(payload);
+      const success = await saveFiscalRecord(payload);
+      if (success) {
+        toast.success("Dados salvos com sucesso!");
+        setExpanded(null);
       }
-      toast.success("Dados fiscais salvos!");
-      const { data } = await supabase.from("fiscal").select("*").eq("competencia", competencia);
-      const map: Record<string, FiscalRecord> = {};
-      data?.forEach(f => { map[f.empresa_id] = f as unknown as FiscalRecord; });
-      setFiscalData(map);
     } catch (err: any) { toast.error(err.message); }
   };
 
@@ -174,8 +165,13 @@ const FiscalPage: React.FC = () => {
     return (record.status_guia === "enviada" || record.status_guia === "gerada");
   }).length;
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading || fiscalLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <PageHeaderSkeleton />
+        <TableSkeleton rows={8} />
+      </div>
+    );
   }
 
   return (
@@ -195,7 +191,8 @@ const FiscalPage: React.FC = () => {
             <span className="text-lg font-black text-warning">{filtered.length - completedCount}</span>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
+          <FavoriteToggleButton moduleId="fiscal" />
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <input

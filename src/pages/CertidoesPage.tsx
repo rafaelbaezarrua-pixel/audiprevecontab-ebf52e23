@@ -4,6 +4,7 @@ import { Search, Plus, Trash2, ChevronDown, ChevronUp, Building2, FileText, Uplo
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { CertidaoRecord } from "@/types/administrative";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const tiposCertidao = ["CND Federal", "CND Estadual", "CND Municipal", "CND FGTS", "CND Trabalhista", "CNDT", "Certidão INSS", "Certidão Tributos Federais", "Outra"];
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
@@ -176,6 +177,13 @@ const CertidoesPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full">
+        <FavoriteToggleButton moduleId="certidoes" />
+        <div>
+          <h2 className="text-lg font-bold text-card-foreground">Certidões Federais, Estaduais e Municipais</h2>
+          <p className="text-xs text-muted-foreground">Gestão de emissão e controle de CNDs e afins.</p>
+        </div>
+      </div>
       <input type="file" ref={fileInputRef} accept=".pdf" className="hidden" />
       <div className="relative max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
       <div className="space-y-3">

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock, AlertTriangle, CheckCircle, Search } from "lucide-react";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { LicencaTaxaRecord, CertidaoRecord } from "@/types/administrative";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 interface Vencimento { empresa: string; tipo: string; data: string; diasRestantes: number; status: string; empresa_situacao?: string; empresa_porte?: string; }
 
@@ -148,7 +149,13 @@ const VencimentosPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-
+      <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full">
+        <FavoriteToggleButton moduleId="vencimentos" />
+        <div>
+          <h2 className="text-lg font-bold text-card-foreground">Gestão de Vencimentos</h2>
+          <p className="text-xs text-muted-foreground">Acompanhamento consolidado de todos os despachos próximos ao prazo.</p>
+        </div>
+      </div>
 
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
         <button

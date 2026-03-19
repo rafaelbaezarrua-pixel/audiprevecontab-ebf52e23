@@ -5,6 +5,7 @@ import { Search, Save, CheckCircle, Circle, ChevronLeft, ChevronRight } from "lu
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSocietario } from "@/hooks/useSocietario";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const DeclaracoesMensaisPage: React.FC = () => {
     const { user } = useAuth();
@@ -140,9 +141,12 @@ const DeclaracoesMensaisPage: React.FC = () => {
     return (
         <div className="space-y-6 animate-fade-in">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-card-foreground">Declarações Mensais</h1>
-                    <p className="text-sm text-muted-foreground mt-1">Controle de declarações sincronizado com o Departamento Pessoal</p>
+                <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full sm:w-auto">
+                    <FavoriteToggleButton moduleId="declaracoes-mensais" />
+                    <div>
+                        <h1 className="text-2xl font-bold text-card-foreground">Declarações Mensais</h1>
+                        <p className="text-sm text-muted-foreground mt-1">Controle de declarações sincronizado.</p>
+                    </div>
                 </div>
                 <input
                     type="month"

@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { format, isBefore, isSameDay } from "date-fns";
 import { ParcelamentoRecord, ParcelamentoMensalRecord, GuiaStatus } from "@/types/administrative";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const ParcelamentosPage: React.FC = () => {
   const navigate = useNavigate();
@@ -212,7 +213,14 @@ const ParcelamentosPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full sm:w-auto">
+          <FavoriteToggleButton moduleId="parcelamentos" />
+          <div>
+            <h2 className="text-lg font-bold text-card-foreground">Parcelamentos</h2>
+            <p className="text-xs text-muted-foreground">Gestão de parcelamentos, acompanhamento e emissão de guias mensais.</p>
+          </div>
+        </div>
         <div className="flex gap-3">
           <input
             type="month"

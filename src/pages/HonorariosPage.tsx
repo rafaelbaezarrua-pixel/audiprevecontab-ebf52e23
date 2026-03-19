@@ -10,6 +10,7 @@ import { HonorariosGeralView } from "@/components/honorarios/HonorariosGeralView
 import { HonorariosEmpresasView } from "@/components/honorarios/HonorariosEmpresasView";
 import { HonorarioConfig, HonorarioMensal, ServicoEsporadico } from "@/types/honorarios";
 import { Empresa } from "@/types/societario";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const HonorariosPage: React.FC = () => {
   const { user } = useAuth();
@@ -162,7 +163,15 @@ const HonorariosPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex bg-muted/30 p-1 rounded-xl w-full sm:w-fit">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full sm:w-auto">
+          <FavoriteToggleButton moduleId="honorarios" />
+          <div>
+            <h2 className="text-lg font-bold text-card-foreground">Honorários Extras</h2>
+            <p className="text-xs text-muted-foreground">Gestão de honorários e faturamento.</p>
+          </div>
+        </div>
+        <div className="flex bg-muted/30 p-1 rounded-xl w-full sm:w-fit">
         <button
           className={`flex-1 sm:flex-none uppercase tracking-wider text-xs font-bold px-6 py-2.5 rounded-lg transition-all duration-200 ${mainTab === "empresas" ? "bg-background text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
           onClick={() => setMainTab("empresas")}
@@ -175,6 +184,7 @@ const HonorariosPage: React.FC = () => {
         >
           Controle Geral (Resumo)
         </button>
+      </div>
       </div>
 
       {mainTab === "geral" ? (
