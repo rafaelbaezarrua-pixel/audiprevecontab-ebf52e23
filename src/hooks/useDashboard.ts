@@ -5,7 +5,7 @@ import { subMonths, format, startOfMonth, endOfMonth } from "date-fns";
 
 import { ptBR } from "date-fns/locale";
 
-export const useDashboard = () => {
+export const useDashboard = (userId?: string) => {
   // 1. Basic Stats
   const { data: stats = { totalEmpresas: 0, ativas: 0, processosAtivos: 0 }, isLoading: loadingStats } = useQuery({
     queryKey: ["dashboard_stats"],
@@ -107,14 +107,26 @@ export const useDashboard = () => {
 
   // 4. Alerts (Certificates and Deadlines)
   const { data: alerts = [], isLoading: loadingAlerts } = useQuery({
-    queryKey: ["dashboard_alerts"],
+    queryKey: ["dashboard_alerts", userId],
     queryFn: async () => {
       const today = new Date();
+      const todayStr = format(today, "yyyy-MM-dd");
       const next30Days = format(new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000), "yyyy-MM-dd");
 
+      const certificatesQuery = supabase.from("certificados_digitais").select("*, empresas(nome_empresa)").lte("data_vencimento", next30Days);
+      
+      let agendamentosQuery = supabase.from("agendamentos")
+        .select("*")
+        .eq("data", todayStr)
+        .eq("status", "pendente");
+      
+      if (userId) {
+        agendamentosQuery = agendamentosQuery.eq("usuario_id", userId);
+      }
+
       const [certificados, agendamentos] = await Promise.all([
-        supabase.from("certificados_digitais").select("*, empresas(nome_empresa)").lte("data_vencimento", next30Days),
-        supabase.from("agendamentos").select("*").gte("data", format(today, "yyyy-MM-dd")).lte("data", format(today, "yyyy-MM-dd")).eq("status", "pendente")
+        certificatesQuery,
+        agendamentosQuery
       ]);
 
       const combined = [
@@ -135,7 +147,8 @@ export const useDashboard = () => {
       ];
 
       return combined.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-    }
+    },
+    enabled: !!userId || true // Enable even if no userId (it will just not filter if not passed, but we pass it)
   });
 
   return {

@@ -8,7 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import KanbanBoard, { KanbanColumn, KanbanItem } from "@/components/KanbanBoard";
 
-interface Agendamento {
+interface Tarefa {
     id: string;
     data: string;
     horario: string;
@@ -25,7 +25,7 @@ interface Agendamento {
 const AgendamentosPage: React.FC = () => {
     const { user, userData } = useAuth();
     const navigate = useNavigate();
-    const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+    const [agendamentos, setAgendamentos] = useState<Tarefa[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
@@ -142,7 +142,7 @@ const AgendamentosPage: React.FC = () => {
                 .eq("id", id) as any);
 
             if (error) throw error;
-            toast.success(arquivado ? "Agendamento arquivado!" : "Agendamento desarquivado!");
+            toast.success(arquivado ? "Tarefa arquivada!" : "Tarefa desarquivada!");
             loadData();
         } catch (error: any) {
             toast.error("Erro ao atualizar: " + error.message);
@@ -150,7 +150,7 @@ const AgendamentosPage: React.FC = () => {
     };
 
     const handleDeleteAgendamento = async (id: string) => {
-        if (!window.confirm("Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.")) {
+        if (!window.confirm("Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.")) {
             return;
         }
 
@@ -161,7 +161,7 @@ const AgendamentosPage: React.FC = () => {
                 .eq("id", id) as any);
 
             if (error) throw error;
-            toast.success("Agendamento excluído com sucesso!");
+            toast.success("Tarefa excluída com sucesso!");
             loadData();
         } catch (error: any) {
             toast.error("Erro ao excluir: " + error.message);
@@ -187,7 +187,7 @@ const AgendamentosPage: React.FC = () => {
             // Caso contrário, mostra tudo que não está arquivado (filtro padrão do Geral)
             return matchSearch;
         } else {
-            // "meus" agendamentos
+            // "minhas" tarefas
             const matchUser = isMine;
             if (activeSubTab === "arquivados") {
                 return matchSearch && matchUser;
@@ -322,10 +322,10 @@ const AgendamentosPage: React.FC = () => {
                     className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold"
                 />
                 <button
-                    onClick={() => navigate("/agendamentos/novo")}
+                    onClick={() => navigate("/tarefas/novo")}
                     className="button-premium shadow-md"
                 >
-                    <Plus size={18} /> Novo Agendamento
+                    <Plus size={18} /> Nova Tarefa
                 </button>
             </div>
 
@@ -347,7 +347,7 @@ const AgendamentosPage: React.FC = () => {
                             if (activeSubTab !== "arquivados") setActiveSubTab("em_aberto");
                         }}
                     >
-                        Meus Agendamentos
+                        Minhas Tarefas
                     </button>
                 </div>
 
@@ -396,7 +396,7 @@ const AgendamentosPage: React.FC = () => {
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                     type="text"
-                    placeholder="Buscar agendamento ou usuário..."
+                    placeholder="Buscar tarefa ou usuário..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none"
@@ -416,7 +416,7 @@ const AgendamentosPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
                     {filtered.length === 0 ? (
                         <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
-                            Nenhum agendamento encontrado para este período.
+                            Nenhuma tarefa encontrada para este período.
                         </div>
                     ) : (
                         filtered.map(a => <React.Fragment key={a.id}>{kanbanItems.find(i => i.id === a.id)?.renderContent()}</React.Fragment>)

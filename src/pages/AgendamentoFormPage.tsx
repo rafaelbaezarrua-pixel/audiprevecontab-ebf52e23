@@ -76,10 +76,10 @@ const AgendamentoFormPage: React.FC = () => {
 
                 // 1. Create the notification record
                 const { data: notifData, error: notifErr } = await (supabase as any).from("notifications").insert({
-                    title: "📅 Novo Agendamento Atribuído",
-                    message: `Você tem uma agenda agendada: "${form.assunto}" em ${formattedDate}.`,
+                    title: "📅 Nova Tarefa Atribuída",
+                    message: `Você recebeu uma nova tarefa: "${form.assunto}" em ${formattedDate}.`,
                     type: "agendamento",
-                    link: "/agendamentos",
+                    link: "/tarefas",
                 }).select("id").single();
 
                 if (!notifErr && notifData?.id) {
@@ -96,8 +96,8 @@ const AgendamentoFormPage: React.FC = () => {
                 console.warn("Falha ao enviar notificação de agendamento");
             }
 
-            toast.success("Agendamento criado com sucesso!");
-            navigate("/agendamentos");
+            toast.success("Tarefa criada com sucesso!");
+            navigate("/tarefas");
         } catch (err: any) {
             toast.error("Erro ao salvar: " + err.message);
         } finally {
@@ -112,7 +112,7 @@ const AgendamentoFormPage: React.FC = () => {
         <div className="max-w-2xl mx-auto space-y-6 animate-fade-in pb-10">
             <div className="flex items-center gap-4">
                 <button
-                    onClick={() => navigate("/agendamentos")}
+                    onClick={() => navigate("/tarefas")}
                     className="p-2.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
                     title="Voltar"
                 >
@@ -123,7 +123,7 @@ const AgendamentoFormPage: React.FC = () => {
             <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden p-6 md:p-8 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className={labelCls}>Data do Agendamento *</label>
+                        <label className={labelCls}>Prazo de Entrega *</label>
                         <div className="relative">
                             <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                             <input
@@ -149,7 +149,7 @@ const AgendamentoFormPage: React.FC = () => {
                 </div>
 
                 <div>
-                    <label className={labelCls}>Responsável pelo Agendamento *</label>
+                    <label className={labelCls}>Responsável pela Tarefa *</label>
                     <div className="relative">
                         <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <select
@@ -157,7 +157,7 @@ const AgendamentoFormPage: React.FC = () => {
                             onChange={e => setForm({ ...form, usuario_id: e.target.value })}
                             className={inputCls + " pl-11 appearance-none"}
                         >
-                            <option value="">Selecione quem receberá o agendamento...</option>
+                            <option value="">Selecione quem receberá a tarefa...</option>
                             {usuarios.map(u => (
                                 <option key={u.id} value={u.id}>{u.nome} {u.id === user?.id ? "(Eu)" : ""}</option>
                             ))}
@@ -191,7 +191,7 @@ const AgendamentoFormPage: React.FC = () => {
 
                 <div className="flex gap-4 pt-4 border-t border-border">
                     <button
-                        onClick={() => navigate("/agendamentos")}
+                        onClick={() => navigate("/tarefas")}
                         className="flex-1 px-6 py-3.5 rounded-xl border border-border text-sm font-bold hover:bg-muted transition-colors disabled:opacity-50"
                         disabled={loading}
                     >
@@ -205,7 +205,7 @@ const AgendamentoFormPage: React.FC = () => {
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
-                            <><Save size={20} /> Salvar Agendamento</>
+                            <><Save size={20} /> Salvar Tarefa</>
                         )}
                     </button>
                 </div>

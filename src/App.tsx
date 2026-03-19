@@ -156,8 +156,8 @@ const App = () => (
                   <Route path="/declaracoes-anuais" element={<DeclaracoesAnuaisPage />} />
                   <Route path="/irpf" element={<IRPFPage />} />
                   <Route path="/relatorios" element={<RelatorioPersonalizadoPage />} />
-                  <Route path="/agendamentos" element={<AgendamentosPage />} />
-                  <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />
+                  <Route path="/tarefas" element={<AgendamentosPage />} />
+                  <Route path="/tarefas/novo" element={<AgendamentoFormPage />} />
                   <Route path="/ocorrencias" element={<OcorrenciasPage />} />
                   <Route path="/configuracoes/usuarios/novo" element={<AdminRoute><UsuarioFormPage /></AdminRoute>} />
                   <Route path="/perfil" element={<PerfilPage />} />
