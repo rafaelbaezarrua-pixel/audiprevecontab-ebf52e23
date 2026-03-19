@@ -18,7 +18,10 @@ Deno.serve(async (req: Request) => {
 
   try {
     const authHeader = req.headers.get("authorization");
+    console.log("Authorization Header present:", !!authHeader);
+
     if (!authHeader) {
+      console.error("Erro: Cabeçalho de autorização ausente");
       return new Response(JSON.stringify({ error: "Cabeçalho de autorização ausente", status: 'error' }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -30,14 +33,16 @@ Deno.serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error("Variáveis de ambiente do Supabase ausentes.");
+      console.error("Erro: Variáveis de ambiente SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não configuradas");
+      return new Response(JSON.stringify({ error: "Configuração do servidor incompleta", status: 'error' }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "").trim();
 
     // Decode JWT to get user_id (sub) without hitting Auth database for session
-    // Since we trust the Gateway (or we can verify secret), this is more resilient
     let userId: string;
     try {
       const [_header, payload, _signature] = decode(token);
@@ -46,11 +51,12 @@ Deno.serve(async (req: Request) => {
     } catch (err) {
       console.error("Erro ao decodificar token:", err);
       return new Response(JSON.stringify({ error: "Token inválido ou malformado", status: 'error' }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     // Check if the caller is an admin in the database
+    console.log("Checking admin permissions for user:", userId);
     const { data: roles, error: rolesError } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId);
     
     if (rolesError) {
@@ -62,6 +68,7 @@ Deno.serve(async (req: Request) => {
 
     const isAdmin = roles?.some((r: any) => r.role === 'admin');
     if (!isAdmin) {
+      console.warn("Usuário não tem permissão de admin:", userId);
       return new Response(JSON.stringify({ error: "Apenas administradores podem gerenciar usuários.", status: 'error' }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -70,6 +77,7 @@ Deno.serve(async (req: Request) => {
     // Parse payload
     const body = await req.json();
     const { action, target_user_id, module, enable } = body;
+    console.log("Manage User Action:", action, "Target:", target_user_id);
 
     if (!action || !target_user_id) throw new Error("Action e target_user_id são obrigatórios.");
 
@@ -93,6 +101,7 @@ Deno.serve(async (req: Request) => {
       }
     }
     else if (action === "deleteUser") {
+      console.log("Deletando usuário:", target_user_id);
       // First, we delete the profile. Cascades should handle the rest in public schema.
       const { error: profileError } = await supabaseAdmin.from("profiles").delete().eq("user_id", target_user_id);
       if (profileError) {
@@ -106,6 +115,7 @@ Deno.serve(async (req: Request) => {
         console.error("Error deleting auth user:", deleteError);
         throw deleteError;
       }
+      console.log("Usuário deletado com sucesso.");
     }
     else {
       throw new Error(`Ação desconhecida: ${action}`);
@@ -118,7 +128,7 @@ Deno.serve(async (req: Request) => {
   } catch (err: any) {
     console.error("manage-user error:", err);
     return new Response(JSON.stringify({ error: err.message, status: 'error' }), {
-      status: 200,
+      status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
