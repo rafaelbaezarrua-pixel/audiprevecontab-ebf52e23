@@ -286,6 +286,13 @@ export type Database = {
           telefone_rfb: string | null
           qsa: Json | null
           info_rfb_completa: Json | null
+          data_exclusao_simples: string | null
+          data_exclusao_simei: string | null
+          opcao_pelo_simples: boolean | null
+          data_opcao_pelo_simples: string | null
+          opcao_pelo_mei: boolean | null
+          data_opcao_pelo_mei: string | null
+          porte_rfb: string | null
         }
         Insert: {
           cnpj?: string | null
@@ -310,6 +317,13 @@ export type Database = {
           telefone_rfb?: string | null
           qsa?: Json | null
           info_rfb_completa?: Json | null
+          data_exclusao_simples?: string | null
+          data_exclusao_simei?: string | null
+          opcao_pelo_simples?: boolean | null
+          data_opcao_pelo_simples?: string | null
+          opcao_pelo_mei?: boolean | null
+          data_opcao_pelo_mei?: string | null
+          porte_rfb?: string | null
         }
         Update: {
           cnpj?: string | null
@@ -334,6 +348,13 @@ export type Database = {
           telefone_rfb?: string | null
           qsa?: Json | null
           info_rfb_completa?: Json | null
+          data_exclusao_simples?: string | null
+          data_exclusao_simei?: string | null
+          opcao_pelo_simples?: boolean | null
+          data_opcao_pelo_simples?: string | null
+          opcao_pelo_mei?: boolean | null
+          data_opcao_pelo_mei?: string | null
+          porte_rfb?: string | null
         }
         Relationships: []
       }

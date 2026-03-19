@@ -9,9 +9,9 @@ import { maskCNPJ, maskCPF } from "@/lib/utils";
 
 interface Socio { id?: string; nome: string; cpf: string; administrador: boolean; }
 interface LicencaRow { id?: string; tipo_licenca: string; status: string | null; vencimento: string | null; numero_processo: string | null; }
-interface Endereco { logradouro: string; numero: string; complemento?: string; bairro: string; cidade: string; estado: string; cep: string; }
+interface Endereco { logradouro: string; numero: string; complemento?: string; bairro: string; city: string; state: string; cep: string; }
 
-const emptyEndereco: Endereco = { logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", cep: "" };
+const emptyEndereco = { logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", cep: "" };
 
 const tabs = [
   { id: "dados", label: "Dados Gerais", icon: <Building2 size={16} /> },
@@ -60,7 +60,7 @@ const SocietarioEmpresaPage: React.FC = () => {
   const [regimeTributario, setRegimeTributario] = useState("simples");
   const [naturezaJuridica, setNaturezaJuridica] = useState("");
   const [situacao, setSituacao] = useState("ativa");
-  const [endereco, setEndereco] = useState<Endereco>({ ...emptyEndereco });
+  const [endereco, setEndereco] = useState<any>({ ...emptyEndereco });
   const [socios, setSocios] = useState<Socio[]>([]);
   const [licencas, setLicencas] = useState<LicencaRow[]>([]);
   const [newSocio, setNewSocio] = useState<Socio>({ nome: "", cpf: "", administrador: false });
@@ -79,6 +79,8 @@ const SocietarioEmpresaPage: React.FC = () => {
   const [opcaoMei, setOpcaoMei] = useState<boolean>(false);
   const [dataOpcaoMei, setDataOpcaoMei] = useState("");
   const [porteRfb, setPorteRfb] = useState("");
+  const [dataExclusaoSimples, setDataExclusaoSimples] = useState("");
+  const [dataExclusaoSimei, setDataExclusaoSimei] = useState("");
   const [consultingRFB, setConsultingRFB] = useState(false);
 
   // Config params
@@ -92,30 +94,23 @@ const SocietarioEmpresaPage: React.FC = () => {
   useEffect(() => {
     const fetchProfiles = async () => {
       if (!isAdmin) return;
-
       const { data: profiles } = await supabase.from("profiles").select("*").eq("ativo", true);
       if (!profiles) return;
-
       const userIds = profiles.map(p => p.user_id);
       const [{ data: roles }, { data: access }] = await Promise.all([
         supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
         supabase.from("empresa_acessos").select("user_id").in("user_id", userIds)
       ]);
-
       const clientIds = new Set([
         ...(roles?.filter(r => (r.role as any) === 'client').map(r => r.user_id) || []),
       ]);
-
       const internalProfiles = profiles.filter(p => !clientIds.has(p.user_id));
       setProfiles(internalProfiles);
     };
     fetchProfiles();
 
     if (isNew) {
-      if (state?.nome) {
-        setNomeEmpresa(state.nome);
-      }
-      // Initialize default licencas
+      if (state?.nome) setNomeEmpresa(state.nome);
       setLicencas(Object.keys(licencaLabels).map(tipo => ({ tipo_licenca: tipo, status: null, vencimento: null, numero_processo: null })));
       return;
     }
@@ -129,33 +124,29 @@ const SocietarioEmpresaPage: React.FC = () => {
         setRegimeTributario(emp.regime_tributario || "simples");
         setNaturezaJuridica(emp.natureza_juridica || "");
         setSituacao(emp.situacao || "ativa");
-        const addr = (emp.endereco as any) || {};
-        setEndereco({ ...emptyEndereco, ...addr });
+        setEndereco(emp.endereco || { ...emptyEndereco });
         setModulosAtivos(emp.modulos_ativos || AVAILABLE_MODULES.map(m => m.id));
-        
-        // Set new RFB fields
         setNomeFantasia(emp.nome_fantasia || "");
         setCapitalSocial(emp.capital_social || null);
         setCnaeFiscal(emp.cnae_fiscal || null);
         setCnaeFiscalDescricao(emp.cnae_fiscal_descricao || "");
         setEmailRfb(emp.email_rfb || "");
         setTelefoneRfb(emp.telefone_rfb || "");
-        setQsa(emp.qsa || []);
+        setQsa((emp.qsa as any[]) || []);
         setInfoRfbCompleta(emp.info_rfb_completa || null);
         setOpcaoSimples(emp.opcao_pelo_simples || false);
         setDataOpcaoSimples(emp.data_opcao_pelo_simples || "");
         setOpcaoMei(emp.opcao_pelo_mei || false);
         setDataOpcaoMei(emp.data_opcao_pelo_mei || "");
         setPorteRfb(emp.porte_rfb || "");
+        setDataExclusaoSimples(emp.data_exclusao_simples || "");
+        setDataExclusaoSimei(emp.data_exclusao_simei || "");
       }
 
-      // Load acessos só se for admin
       if (isAdmin) {
         const { data: acessos } = await supabase.from("empresa_acessos").select("*").eq("empresa_id", id);
         const acessosMap: Record<string, string[]> = {};
-        if (acessos) {
-          acessos.forEach(a => { acessosMap[a.user_id] = a.modulos_permitidos; });
-        }
+        if (acessos) acessos.forEach(a => { acessosMap[a.user_id] = a.modulos_permitidos; });
         setUserAcessos(acessosMap);
       }
 
@@ -196,67 +187,46 @@ const SocietarioEmpresaPage: React.FC = () => {
         data_opcao_pelo_simples: dataOpcaoSimples || null,
         opcao_pelo_mei: opcaoMei,
         data_opcao_pelo_mei: dataOpcaoMei || null,
-        porte_rfb: porteRfb || null
+        porte_rfb: porteRfb || null,
+        data_exclusao_simples: dataExclusaoSimples || null,
+        data_exclusao_simei: dataExclusaoSimei || null
       };
 
       let empresaId = id;
       if (isNew) {
-        const { data, error } = await supabase.from("empresas").insert(empresaData).select("id").single();
+        const { data, error } = await supabase.from("empresas").insert(empresaData as any).select("id").single();
         if (error) throw error;
         empresaId = data.id;
       } else {
-        const { error } = await supabase.from("empresas").update(empresaData).eq("id", id);
+        const { error } = await supabase.from("empresas").update(empresaData as any).eq("id", id);
         if (error) throw error;
       }
 
-      // Save socios - delete all and re-insert
-      if (!isNew) {
-        await supabase.from("socios").delete().eq("empresa_id", empresaId!);
-      }
+      if (!isNew) await supabase.from("socios").delete().eq("empresa_id", empresaId!);
       if (socios.length > 0) {
-        const { error: socError } = await supabase.from("socios").insert(
-          socios.map(s => ({ empresa_id: empresaId!, nome: s.nome, cpf: s.cpf || null, administrador: s.administrador }))
-        );
+        const { error: socError } = await supabase.from("socios").insert(socios.map(s => ({ empresa_id: empresaId!, nome: s.nome, cpf: s.cpf || null, administrador: s.administrador })));
         if (socError) throw socError;
       }
 
-      // Save licencas - delete all and re-insert
-      if (!isNew) {
-        await supabase.from("licencas").delete().eq("empresa_id", empresaId!);
-      }
+      if (!isNew) await supabase.from("licencas").delete().eq("empresa_id", empresaId!);
       const licToInsert = licencas.filter(l => l.status);
       if (licToInsert.length > 0) {
-        const { error: licError } = await supabase.from("licencas").insert(
-          licToInsert.map(l => ({
-            empresa_id: empresaId!, tipo_licenca: l.tipo_licenca,
-            status: l.status as any, vencimento: l.vencimento || null, numero_processo: l.numero_processo || null,
-          }))
-        );
+        const { error: licError } = await supabase.from("licencas").insert(licToInsert.map(l => ({ empresa_id: empresaId!, tipo_licenca: l.tipo_licenca, status: l.status as any, vencimento: l.vencimento || null, numero_processo: l.numero_processo || null })));
         if (licError) throw licError;
       }
 
-      // Save user acessos (Only Admins can do this)
       if (isAdmin) {
-        if (!isNew && empresaId) {
-          await supabase.from("empresa_acessos").delete().eq("empresa_id", empresaId);
-        }
-        const acessosToInsert = Object.entries(userAcessos).map(([uid, mods]) => ({
-          empresa_id: empresaId!, user_id: uid, modulos_permitidos: mods
-        }));
-
+        if (!isNew && empresaId) await supabase.from("empresa_acessos").delete().eq("empresa_id", empresaId);
+        const acessosToInsert = Object.entries(userAcessos).map(([uid, mods]) => ({ empresa_id: empresaId!, user_id: uid, modulos_permitidos: mods }));
         if (acessosToInsert.length > 0) {
           const { error: accError } = await supabase.from("empresa_acessos").insert(acessosToInsert);
           if (accError) throw accError;
         }
       }
 
-      if (isNew && state?.processoId) {
-        await supabase.from("processos_societarios" as any).update({ status: 'concluido' }).eq("id", state.processoId);
-      }
-
+      if (isNew && state?.processoId) await supabase.from("processos_societarios" as any).update({ status: 'concluido' }).eq("id", state.processoId);
       toast.success(isNew ? "Empresa cadastrada com sucesso!" : "Empresa atualizada com sucesso!");
-      if (isNew) navigate(`/societario`);
-      else navigate(`/societario`);
+      navigate(`/societario`);
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
     }
@@ -267,65 +237,42 @@ const SocietarioEmpresaPage: React.FC = () => {
     if (!cnpj) { toast.error("Informe o CNPJ para consulta"); return; }
     const cleanCNPJ = cnpj.replace(/\D/g, "");
     if (cleanCNPJ.length !== 14) { toast.error("CNPJ inválido"); return; }
-
     setConsultingRFB(true);
     const tid = toast.loading("Consultando RFB via BrazilAPI...");
-
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCNPJ}`);
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.message || "Erro na consulta");
       }
-
       const data = await response.json();
-
-      // Basic Fill
       if (data.razao_social) setNomeEmpresa(data.razao_social);
       if (data.nome_fantasia) setNomeFantasia(data.nome_fantasia);
       if (data.data_inicio_atividade) setDataAbertura(data.data_inicio_atividade);
       if (data.capital_social) setCapitalSocial(data.capital_social);
-      
-      // Simples e MEI
       setOpcaoSimples(data.opcao_pelo_simples || false);
       setDataOpcaoSimples(data.data_opcao_pelo_simples || "");
-      setOpcaoMei(data.opcao_pelo_mei || false);
-      setDataOpcaoMei(data.data_opcao_pelo_mei || "");
-      
-      // CNAE
+      setOpcaoMei(data.opcao_pelo_simei || false);
+      setDataOpcaoMei(data.data_opcao_pelo_simei || "");
+      setDataExclusaoSimples(data.data_exclusao_do_simples || "");
+      setDataExclusaoSimei(data.data_exclusao_do_simei || "");
       if (data.cnae_fiscal) setCnaeFiscal(data.cnae_fiscal);
       if (data.cnae_fiscal_descricao) setCnaeFiscalDescricao(data.cnae_fiscal_descricao);
-      
-      // Contact
       let finalEmail = data.email || "";
-      
-      // Fallback for email: BrasilAPI frequently returns null due to open data sanitization
       if (!finalEmail) {
         try {
           const wsResponse = await fetch(`https://publica.cnpj.ws/cnpj/${cleanCNPJ}`);
           if (wsResponse.ok) {
             const wsData = await wsResponse.json();
-            if (wsData?.estabelecimento?.email) {
-              finalEmail = wsData.estabelecimento.email;
-            }
+            if (wsData?.estabelecimento?.email) finalEmail = wsData.estabelecimento.email;
           }
-        } catch (e) {
-          console.warn("Failed to fetch fallback email:", e);
-        }
+        } catch (e) {}
       }
-      
       setEmailRfb(finalEmail);
-      
-      // BrasilAPI sometimes has 'telefone' or ddd_telefone_1
       let fullTelefone = "";
-      if (data.ddd_telefone_1) {
-        fullTelefone = `(${data.ddd_telefone_1.substring(0, 2)}) ${data.ddd_telefone_1.substring(2)}`;
-      } else if (data.telefone) {
-        fullTelefone = data.telefone;
-      }
+      if (data.ddd_telefone_1) fullTelefone = `(${data.ddd_telefone_1.substring(0, 2)}) ${data.ddd_telefone_1.substring(2)}`;
+      else if (data.telefone) fullTelefone = data.telefone;
       setTelefoneRfb(fullTelefone);
-
-      // Address
       setEndereco({
         logradouro: `${data.descricao_tipo_de_logradouro || ""} ${data.logradouro || ""}`.trim(),
         numero: data.numero || "",
@@ -335,57 +282,36 @@ const SocietarioEmpresaPage: React.FC = () => {
         estado: data.uf || "",
         cep: data.cep || ""
       });
-
-      // Partners (QSA)
       if (data.qsa && Array.isArray(data.qsa)) {
         setQsa(data.qsa);
         const autoSocios: Socio[] = data.qsa.map((s: any) => ({
           nome: s.nome_socio || s.nome_fantasia || s.nome_completo || "",
           cpf: s.cnpj_cpf_do_socio || s.cpf_cnpj || "",
-          administrador: s.qualificacao_socio?.toLowerCase().includes("administrador") || 
-                         [10, 16, 5, 49].includes(s.codigo_qualificacao_socio)
+          administrador: s.qualificacao_socio?.toLowerCase().includes("administrador") || [10, 16, 5, 49].includes(s.codigo_qualificacao_socio)
         }));
-        
-        if (autoSocios.length > 0) {
-          setSocios(autoSocios);
-        }
+        if (autoSocios.length > 0) setSocios(autoSocios);
       }
-
-      // Porte Logic
       if (data.porte) setPorteRfb(data.porte);
-      
       const isMEIByOption = data.opcao_pelo_mei === true;
       const isMEIByNature = data.codigo_natureza_juridica === 2135;
-      
       if (isMEIByOption || (isMEIByNature && data.porte?.toLowerCase().includes("mei"))) {
-        setPorteEmpresa("mei");
-        setRegimeTributario("mei");
-        setNaturezaJuridica("mei");
-        setSituacao("mei");
+        setPorteEmpresa("mei"); setRegimeTributario("mei"); setNaturezaJuridica("mei"); setSituacao("mei");
       } else {
-         // Map porte
          const porteLabel = data.porte?.toLowerCase() || "";
          if (porteLabel.includes("me") || data.codigo_porte === 1) setPorteEmpresa("me");
          else if (porteLabel.includes("epp") || data.codigo_porte === 3) setPorteEmpresa("epp");
          else if (data.codigo_porte === 5) setPorteEmpresa("grande");
-         
-         // Natureza
          const natureLabel = data.natureza_juridica?.toLowerCase() || "";
          if (natureLabel.includes("unipessoal")) setNaturezaJuridica("slu");
          else if (natureLabel.includes("limitada")) setNaturezaJuridica("ltda");
          else if (natureLabel.includes("individual")) setNaturezaJuridica("ei");
-         
-         // Regime
          if (data.opcao_pelo_simples) setRegimeTributario("simples");
       }
-
       setInfoRfbCompleta(data);
       toast.success("Dados preenchidos com sucesso!", { id: tid });
     } catch (err: any) {
       toast.error(`Falha na consulta: ${err.message}`, { id: tid });
-    } finally {
-      setConsultingRFB(false);
-    }
+    } finally { setConsultingRFB(false); }
   };
 
   const addSocio = () => {
@@ -409,7 +335,12 @@ const SocietarioEmpresaPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">Carregando dados da empresa...</p>
+      </div>
+    );
   }
 
   const inputCls = "w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none transition-colors";
@@ -425,46 +356,16 @@ const SocietarioEmpresaPage: React.FC = () => {
           {!isNew && (
             <button
               onClick={async () => {
-                if (!cnpj) { toast.error("CNPJ é necessário para criar acesso."); return; }
-                if (!emailRfb) { toast.error("E-mail RFB é necessário para criar acesso."); return; }
+                if (!cnpj || !emailRfb) { toast.error("Dados incompletos para criar acesso."); return; }
                 const cleanCNPJ = cnpj.replace(/\D/g, "");
-
                 toast.loading("Criando acesso...", { id: "sync" });
-
                 try {
-                  const { data: { session } } = await supabase.auth.getSession();
-                  if (!session?.access_token) throw new Error("Não autenticado");
-
-                  const { data, error } = await supabase.functions.invoke("create-user", {
-                    body: {
-                      email: emailRfb,
-                      nome: nomeEmpresa,
-                      password: cleanCNPJ,
-                      role: 'client',
-                      empresa_id: id
-                    }
+                  const { error } = await supabase.functions.invoke("create-user", {
+                    body: { email: emailRfb, nome: nomeEmpresa, password: cleanCNPJ, role: 'client', empresa_id: id }
                   });
-
-                  if (error) {
-                    // Check if error is "already registered"
-                    let msg = error.message;
-                    try {
-                      const body = await (error as any).context?.json();
-                      if (body?.code === "user_already_exists") {
-                        toast.success("Acesso já existe para esta empresa.", { id: "sync" });
-                        return;
-                      }
-                      if (body?.error) msg = body.error;
-                    } catch (e) {
-                      // Ignore parsing errors for error body
-                    }
-                    throw new Error(msg);
-                  }
-
+                  if (error) throw error;
                   toast.success("Acesso criado com sucesso!", { id: "sync" });
-                } catch (err: any) {
-                  toast.error("Erro: " + err.message, { id: "sync" });
-                }
+                } catch (err: any) { toast.error("Erro: " + err.message, { id: "sync" }); }
               }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-info/10 text-info hover:bg-info/20 transition-all shadow-sm"
             >
@@ -495,32 +396,22 @@ const SocietarioEmpresaPage: React.FC = () => {
                 <label className={labelCls}>CNPJ</label>
                 <div className="flex gap-2">
                   <input value={cnpj} onChange={e => setCnpj(maskCNPJ(e.target.value))} className={inputCls} placeholder="00.000.000/0000-00" />
-                  <button 
-                    onClick={handleConsultaRFB} 
-                    disabled={consultingRFB}
-                    type="button"
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-sm whitespace-nowrap"
-                  >
+                  <button onClick={handleConsultaRFB} disabled={consultingRFB} type="button" className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-sm whitespace-nowrap">
                     <Eye size={16} /> {consultingRFB ? "Consultando..." : "Consulta RFB"}
                   </button>
                 </div>
               </div>
               <div><label className={labelCls}>Data de Abertura</label><input type="date" value={dataAbertura} onChange={e => setDataAbertura(e.target.value)} className={inputCls} /></div>
               <div><label className={labelCls}>Nome Fantasia</label><input value={nomeFantasia} onChange={e => setNomeFantasia(e.target.value)} className={inputCls} placeholder="Nome Fantasia" /></div>
-              <div><label className={labelCls}>Capital Social</label><input type="number" value={capitalSocial || ""} onChange={e => setCapitalSocial(parseFloat(e.target.value) || null)} className={inputCls} placeholder="0.00" /></div>
               <div><label className={labelCls}>CNAE Principal</label><input value={cnaeFiscal || ""} onChange={e => setCnaeFiscal(parseInt(e.target.value) || null)} className={inputCls} placeholder="Código CNAE" /></div>
-              <div><label className={labelCls}>Descrição CNAE</label><input value={cnaeFiscalDescricao} onChange={e => setCnaeFiscalDescricao(e.target.value)} className={inputCls} placeholder="Descrição da atividade principal" /></div>
+              <div><label className={labelCls}>Descrição CNAE</label><input value={cnaeFiscalDescricao} onChange={e => setCnaeFiscalDescricao(e.target.value)} className={inputCls} placeholder="Atividade principal" /></div>
               <div><label className={labelCls}>E-mail RFB</label><input type="email" value={emailRfb} onChange={e => setEmailRfb(e.target.value)} className={inputCls} placeholder="email@rfb.com" /></div>
               <div><label className={labelCls}>Telefone RFB</label><input value={telefoneRfb} onChange={e => setTelefoneRfb(e.target.value)} className={inputCls} placeholder="(00) 0000-0000" /></div>
-              <div><label className={labelCls}>Porte da Empresa</label>
+              <div>
+                <label className={labelCls}>Porte da Empresa</label>
                 <div className="space-y-2">
                   <select value={porteEmpresa} onChange={e => setPorteEmpresa(e.target.value)} className={inputCls}>
-                    <option value="">Selecione</option>
-                    <option value="mei">MEI</option>
-                    <option value="me">Microempresa (ME)</option>
-                    <option value="epp">Empresa de Pequeno Porte (EPP)</option>
-                    <option value="medio">Médio Porte</option>
-                    <option value="grande">Grande Porte</option>
+                    <option value="">Selecione</option><option value="mei">MEI</option><option value="me">Microempresa (ME)</option><option value="epp">Empresa de Pequeno Porte (EPP)</option><option value="medio">Médio Porte</option><option value="grande">Grande Porte</option>
                   </select>
                   {porteRfb && <p className="text-[10px] text-muted-foreground ml-1 italic">RFB: {porteRfb}</p>}
                 </div>
@@ -535,25 +426,26 @@ const SocietarioEmpresaPage: React.FC = () => {
                     <input type="checkbox" id="opt-simples" checked={opcaoSimples} onChange={e => setOpcaoSimples(e.target.checked)} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" />
                     <label htmlFor="opt-simples" className="text-sm font-semibold text-card-foreground">Optante pelo Simples Nacional</label>
                   </div>
-                  {opcaoSimples && (
-                    <div className="ml-6 shrink-0">
-                      <label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Data de Opção</label>
-                      <input type="date" value={dataOpcaoSimples} onChange={e => setDataOpcaoSimples(e.target.value)} className={inputCls + " h-9 text-xs"} />
+                  {opcaoSimples ? (
+                    <div className="ml-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="shrink-0"><label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Data de Opção</label><input type="date" value={dataOpcaoSimples} onChange={e => setDataOpcaoSimples(e.target.value)} className={inputCls + " h-9 text-xs"} /></div>
                     </div>
-                  )}
+                  ) : dataExclusaoSimples ? (
+                    <div className="ml-6 shrink-0"><label className="text-[10px] uppercase font-bold text-destructive mb-1 block">Data de Exclusão</label><input type="date" value={dataExclusaoSimples} onChange={e => setDataExclusaoSimples(e.target.value)} className={inputCls + " h-9 text-xs border-destructive/30"} /></div>
+                  ) : null}
                 </div>
-                
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="opt-mei" checked={opcaoMei} onChange={e => setOpcaoMei(e.target.checked)} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" />
                     <label htmlFor="opt-mei" className="text-sm font-semibold text-card-foreground">Optante pelo SIMEI (MEI)</label>
                   </div>
-                  {opcaoMei && (
-                    <div className="ml-6 shrink-0">
-                      <label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Data de Opção MEI</label>
-                      <input type="date" value={dataOpcaoMei} onChange={e => setDataOpcaoMei(e.target.value)} className={inputCls + " h-9 text-xs"} />
+                  {opcaoMei ? (
+                    <div className="ml-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="shrink-0"><label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Data de Opção MEI</label><input type="date" value={dataOpcaoMei} onChange={e => setDataOpcaoMei(e.target.value)} className={inputCls + " h-9 text-xs"} /></div>
                     </div>
-                  )}
+                  ) : dataExclusaoSimei ? (
+                    <div className="ml-6 shrink-0"><label className="text-[10px] uppercase font-bold text-destructive mb-1 block">Data de Exclusão MEI</label><input type="date" value={dataExclusaoSimei} onChange={e => setDataExclusaoSimei(e.target.value)} className={inputCls + " h-9 text-xs border-destructive/30"} /></div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -577,13 +469,21 @@ const SocietarioEmpresaPage: React.FC = () => {
 
         {activeTab === "socios" && (
           <div className="space-y-6">
-            <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2"><Users size={20} className="text-primary" /> Quadro Societário</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2"><Users size={20} className="text-primary" /> Quadro Societário</h2>
+              <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-border">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Capital Social:</span>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-primary">R$</span>
+                  <input type="number" value={capitalSocial || ""} onChange={e => setCapitalSocial(parseFloat(e.target.value) || null)} className={inputCls + " h-9 pl-9 w-40 font-bold text-primary bg-background/50 border-primary/20"} placeholder="0,00" />
+                </div>
+              </div>
+            </div>
             <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-4">
               <p className="text-sm font-medium text-card-foreground">Adicionar Sócio</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                 <div><label className={labelCls}>Nome Completo *</label><input value={newSocio.nome} onChange={e => setNewSocio({ ...newSocio, nome: e.target.value })} className={inputCls} placeholder="Nome do sócio" /></div>
                 <div><label className={labelCls}>CPF</label><input value={newSocio.cpf} onChange={e => setNewSocio({ ...newSocio, cpf: maskCPF(e.target.value) })} className={inputCls} placeholder="000.000.000-00" /></div>
-
                 <div className="flex items-center gap-3">
                   <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={newSocio.administrador} onChange={e => setNewSocio({ ...newSocio, administrador: e.target.checked })} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" /> Administrador</label>
                   <button onClick={addSocio} className="flex items-center gap-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-primary-foreground" style={{ background: "var(--gradient-primary)" }}><Plus size={14} /> Adicionar</button>
@@ -597,13 +497,8 @@ const SocietarioEmpresaPage: React.FC = () => {
                 {socios.map((socio, idx) => (
                   <div key={idx} className="flex items-center justify-between p-4 bg-card rounded-xl border border-border hover:shadow-sm transition-shadow">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${socio.administrador ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground"}`}>
-                        {socio.administrador ? <Crown size={18} /> : <Users size={18} />}
-                      </div>
-                      <div>
-                        <p className="font-medium text-card-foreground">{socio.nome}</p>
-                        <p className="text-xs text-muted-foreground">CPF: {socio.cpf || "—"} {socio.administrador && <span className="ml-2 badge-status badge-warning text-[10px]">Administrador</span>}</p>
-                      </div>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${socio.administrador ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground"}`}>{socio.administrador ? <Crown size={18} /> : <Users size={18} />}</div>
+                      <div><p className="font-medium text-card-foreground">{socio.nome}</p><p className="text-xs text-muted-foreground">CPF: {socio.cpf || "—"} {socio.administrador && <span className="ml-2 badge-status badge-warning text-[10px]">Administrador</span>}</p></div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => toggleAdmin(idx)} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-warning" title="Alternar administrador"><Crown size={15} /></button>
@@ -628,12 +523,6 @@ const SocietarioEmpresaPage: React.FC = () => {
                     {licenca.status === "com_vencimento" && <div><label className={labelCls}>Data de Vencimento</label><input type="date" value={licenca.vencimento || ""} onChange={e => updateLicenca(licenca.tipo_licenca, "vencimento", e.target.value)} className={inputCls} /></div>}
                     {licenca.status === "em_processo" && <div><label className={labelCls}>Nº do Processo</label><input value={licenca.numero_processo || ""} onChange={e => updateLicenca(licenca.tipo_licenca, "numero_processo", e.target.value)} className={inputCls} placeholder="Número do processo" /></div>}
                   </div>
-                  {licenca.status && (
-                    <div className="flex items-center gap-2">
-                      <span className={`badge-status ${licenca.status === "definitiva" ? "badge-success" : licenca.status === "dispensada" ? "badge-gray" : licenca.status === "com_vencimento" ? "badge-warning" : "badge-info"}`}>{licencaTipoLabels[licenca.status]}</span>
-                      {licenca.status === "com_vencimento" && licenca.vencimento && <span className="text-xs text-muted-foreground flex items-center gap-1"><CalendarIcon size={12} /> {formatDateBR(licenca.vencimento)}</span>}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -643,98 +532,15 @@ const SocietarioEmpresaPage: React.FC = () => {
         {activeTab === "configuracoes" && (
           <div className="space-y-8">
             <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2"><Settings size={20} className="text-primary" /> Configurações Gerais</h2>
-
             <div className="space-y-4">
               <h3 className="font-medium text-card-foreground">Módulos Ativos</h3>
-              <p className="text-sm text-muted-foreground">Selecione em quais módulos esta empresa deve aparecer.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-xl border border-border">
                 {AVAILABLE_MODULES.map(mod => (
                   <label key={mod.id} className="flex items-center gap-2 text-sm cursor-pointer p-2 hover:bg-muted rounded-lg transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={modulosAtivos.includes(mod.id)}
-                      onChange={e => {
-                        if (e.target.checked) setModulosAtivos(prev => [...prev, mod.id]);
-                        else setModulosAtivos(prev => prev.filter(m => m !== mod.id));
-                      }}
-                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                    />
+                    <input type="checkbox" checked={modulosAtivos.includes(mod.id)} onChange={e => { if (e.target.checked) setModulosAtivos(prev => [...prev, mod.id]); else setModulosAtivos(prev => prev.filter(m => m !== mod.id)); }} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" />
                     {mod.label}
                   </label>
                 ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-medium text-card-foreground">Restrição de Acesso por Usuário</h3>
-              <p className="text-sm text-muted-foreground">Oculte módulos específicos para determinados perfis. Por padrão, todos os usuários possuem acesso a todos os módulos ativos da empresa.</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-1 space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                  {profiles.map(prof => (
-                    <button
-                      key={prof.id}
-                      onClick={() => setSelectedUserId(prof.user_id)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all ${selectedUserId === prof.user_id ? "bg-primary/10 border-primary/30 text-primary" : "bg-card border-border hover:border-primary/30 text-card-foreground"}`}
-                    >
-                      <p className="font-medium text-sm">{prof.nome_completo || "Usuário"}</p>
-                      <p className="text-xs opacity-70 mt-0.5">{prof.cpf || "Sem CPF"}</p>
-                    </button>
-                  ))}
-                  {profiles.length === 0 && <p className="text-sm text-muted-foreground">Nenhum usuário ativo carregado.</p>}
-                </div>
-
-                <div className="md:col-span-2">
-                  {selectedUserId ? (
-                    <div className="p-5 bg-card rounded-xl border border-border space-y-4">
-                      {(() => {
-                        const selectedProf = profiles.find(p => p.user_id === selectedUserId);
-                        return <h4 className="font-semibold text-card-foreground mb-4">Permissões para {selectedProf?.nome_completo}</h4>;
-                      })()}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {AVAILABLE_MODULES.map(mod => {
-                          const userMods = userAcessos[selectedUserId] || modulosAtivos;
-                          const isAllowed = userMods.includes(mod.id);
-                          const isModActive = modulosAtivos.includes(mod.id);
-
-                          return (
-                            <label key={mod.id} className={`flex items-center gap-2 text-sm p-3 rounded-lg border transition-all ${!isModActive ? "opacity-50 cursor-not-allowed bg-muted/50" : "cursor-pointer hover:bg-muted bg-background"}`}>
-                              <input
-                                type="checkbox"
-                                disabled={!isModActive}
-                                checked={isAllowed && isModActive}
-                                onChange={e => {
-                                  const currentMods = userAcessos[selectedUserId] || [...modulosAtivos];
-                                  let newMods = [];
-                                  if (e.target.checked) {
-                                    newMods = [...currentMods, mod.id];
-                                  } else {
-                                    newMods = currentMods.filter(m => m !== mod.id);
-                                  }
-                                  setUserAcessos(prev => ({ ...prev, [selectedUserId]: newMods }));
-                                }}
-                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary disabled:opacity-50"
-                              />
-                              <span className={!isModActive ? "line-through text-muted-foreground" : "text-foreground"}>{mod.label}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                      <div className="bg-info/10 text-info p-3 rounded-lg text-xs mt-4 flex gap-2 items-start opacity-80">
-                        <span className="mt-0.5">ℹ️</span>
-                        <p>Módulos desativados na aba "Módulos Ativos" ficarão inacessíveis independentemente desta configuração individual.</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="h-[250px] flex items-center justify-center bg-muted/30 rounded-xl border border-dashed border-border p-6 text-center text-muted-foreground">
-                      <div>
-                        <Users size={32} className="mx-auto mb-3 opacity-30" />
-                        <p className="font-medium">Selecione um usuário ao lado</p>
-                        <p className="text-sm opacity-70 mt-1">Para configurar permissões específicas</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </div>
