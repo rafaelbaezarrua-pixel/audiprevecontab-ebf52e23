@@ -28,7 +28,7 @@ const AuditoriaPage: React.FC = () => {
     const fetchLogs = async () => {
         setLoading(true);
         // Join with profiles to get the user name
-        const { data: logsData, error } = await supabase
+        const { data: logsData, error } = await (supabase as any)
             .from("audit_logs")
             .select(`
         *,
@@ -61,7 +61,7 @@ const AuditoriaPage: React.FC = () => {
                     const newLog = payload.new as unknown as AuditLog;
                     
                     // Fetch profile for the new log to show name
-                    supabase
+                    (supabase as any)
                         .from("profiles")
                         .select("nome_completo, email")
                         .eq("user_id", newLog.user_id)
