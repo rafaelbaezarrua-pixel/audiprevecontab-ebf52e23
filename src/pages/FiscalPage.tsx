@@ -167,7 +167,7 @@ const FiscalPage: React.FC = () => {
 
   if (loading || fiscalLoading) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6">
         <PageHeaderSkeleton />
         <TableSkeleton rows={8} />
       </div>
@@ -175,7 +175,7 @@ const FiscalPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex bg-card border border-border/60 rounded-xl shadow-sm overflow-hidden h-12">
           <div className="px-4 flex items-center gap-2 border-r border-border/60">

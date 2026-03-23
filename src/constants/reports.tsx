@@ -224,6 +224,19 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     ]
   },
   {
+    id: "servicos_esporadicos",
+    label: "Serviços Esporádicos",
+    table: "servicos_esporadicos",
+    icon: <Calculator size={18} />,
+    color: "bg-amber-600",
+    fields: [
+      { id: "descricao", label: "Descrição" },
+      { id: "valor", label: "Valor", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor || 0) },
+      { id: "status_pago", label: "Status", accessor: (i) => i.status_pago ? "Pago" : "Pendente" },
+      { id: "data_vencimento", label: "Vencimento", accessor: (i) => safeFormatDate(i.data_vencimento) },
+    ]
+  },
+  {
     id: "recalculos",
     label: "Recálculos",
     table: "recalculos",
@@ -289,7 +302,8 @@ export const MODULES_CONFIG: ModuleConfig[] = [
       { id: "data_pagamento", label: "Data de Pgto", accessor: (i) => safeFormatDate(i.data_pagamento) },
       { id: "status_transmissao", label: "Transmissão", accessor: (i) => i.status_transmissao ? i.status_transmissao.charAt(0).toUpperCase() + i.status_transmissao.slice(1) : "Pendente" },
       { id: "data_transmissao", label: "Data Transmissão", accessor: (i) => safeFormatDate(i.data_transmissao) },
-      { id: "transmitido_por", label: "Transmitido Por" }
+      { id: "feito_por", label: "Feito Por" },
+      { id: "forma_pagamento", label: "Forma de Pagamento" }
     ]
   },
   {

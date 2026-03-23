@@ -9,6 +9,7 @@ interface AlertsSidebarProps {
     title: string;
     description: string;
     date?: string;
+    horario?: string;
   }[];
 }
 
@@ -44,9 +45,16 @@ export const AlertsSidebar: React.FC<AlertsSidebarProps> = ({ alerts }) => {
                 <div 
                   key={a.id} 
                   onClick={() => window.location.href = a.title.includes('Tarefa') ? '/tarefas' : '/agendamentos'}
-                  className="p-3 rounded-xl bg-muted/30 border border-transparent hover:border-primary/20 transition-all cursor-pointer"
+                  className="p-3 rounded-xl bg-muted/30 border border-transparent hover:border-primary/20 cursor-pointer"
                 >
-                  <h5 className="text-xs font-bold truncate">{a.title}</h5>
+                  <div className="flex items-center justify-between gap-2">
+                    <h5 className="text-xs font-bold truncate flex-1">{a.title}</h5>
+                    {a.horario && (
+                      <span className="text-[10px] font-mono font-bold text-primary shrink-0 bg-primary/5 px-1.5 py-0.5 rounded">
+                        {a.horario.slice(0, 5)}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{a.description}</p>
                 </div>
               ))
@@ -56,13 +64,13 @@ export const AlertsSidebar: React.FC<AlertsSidebarProps> = ({ alerts }) => {
           <div className="grid grid-cols-2 gap-2">
             <button 
               onClick={() => window.location.href = '/agendamentos'}
-              className="py-3 rounded-xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm"
+              className="py-3 rounded-xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white shadow-sm"
             >
               Agendas
             </button>
             <button 
               onClick={() => window.location.href = '/tarefas'}
-              className="py-3 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-sm"
+              className="py-3 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] shadow-sm"
             >
               Tarefas
             </button>
@@ -85,7 +93,7 @@ export const AlertsSidebar: React.FC<AlertsSidebarProps> = ({ alerts }) => {
               <p className="text-xs text-muted-foreground py-8 text-center italic">Nenhum alerta pendente.</p>
             ) : (
               vencimentos.map(a => (
-                <div key={a.id} className="p-3 rounded-xl bg-muted/30 border border-transparent hover:border-amber-500/20 transition-all cursor-pointer">
+                <div key={a.id} className="p-3 rounded-xl bg-muted/30 border border-transparent hover:border-amber-500/20 cursor-pointer">
                   <h5 className="text-xs font-bold truncate">{a.title}</h5>
                   <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{a.description}</p>
                 </div>

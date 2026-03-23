@@ -155,7 +155,7 @@ const GestorAlertasPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in pb-10">
+    <div className="space-y-8 pb-10">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="header-title text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
@@ -176,7 +176,7 @@ const GestorAlertasPage: React.FC = () => {
 
 
       {showAddRule && (
-        <div className="card-premium p-6 animate-scale-in border-primary/30">
+        <div className="card-premium p-6 border-primary/30">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             <Plus className="text-primary" size={20} /> Adicionar Nova Regra
           </h2>

@@ -62,7 +62,7 @@ export function useReportGenerator() {
 
     const unified: any[] = [];
     if (irpfClientes) {
-      (irpfClientes as any[]).forEach(c => unified.push({ categoria: "IRPF Clientes", nome_completo: c.nome_completo, cpf: c.cpf, empresa: "—", ano_exercicio: c.ano_exercicio, valor_a_pagar: c.valor_a_pagar, status_pago: c.status_pago, data_pagamento: c.data_pagamento, status_transmissao: c.status_transmissao, data_transmissao: c.data_transmissao, transmitido_por: c.transmitido_por }));
+      (irpfClientes as any[]).forEach(c => unified.push({ categoria: "IRPF Clientes", nome_completo: c.nome_completo, cpf: c.cpf, empresa: "—", ano_exercicio: c.ano_exercicio, valor_a_pagar: c.valor_a_pagar, status_pago: c.status_pago, data_pagamento: c.data_pagamento, status_transmissao: c.status_transmissao, data_transmissao: c.data_transmissao, feito_por: c.feito_por, forma_pagamento: c.forma_pagamento }));
     }
     if (irpfSocios) {
       (irpfSocios as any[]).forEach((s: any) => unified.push({ categoria: "IRPF Clientes Empresa", nome_completo: s.socios?.nome || "—", cpf: s.socios?.cpf || "—", empresa: s.socios?.empresas?.nome_empresa || "—", ano_exercicio: s.ano, valor_a_pagar: null, status_pago: null, data_pagamento: null, status_transmissao: s.transmitida ? "transmitida" : "pendente", data_transmissao: s.data_transmissao, transmitido_por: s.quem_transmitiu }));
@@ -119,7 +119,7 @@ export function useReportGenerator() {
         else if (modId === "irpf") moduleData = await fetchIRPF(competencia);
         else {
           let mQuery = supabase.from(mod.table as any).select("*");
-          if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos"].includes(modId)) mQuery = mQuery.eq("competencia", competencia);
+          if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos", "servicos_esporadicos"].includes(modId)) mQuery = mQuery.eq("competencia", competencia);
           const { data } = await mQuery;
           moduleData = data || [];
         }

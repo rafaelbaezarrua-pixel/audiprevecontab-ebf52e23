@@ -14,21 +14,21 @@ const DashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-8">
         <PageHeaderSkeleton />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => <div key={i} className="h-32 rounded-3xl bg-muted animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-32 rounded-3xl bg-muted" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-[400px] rounded-3xl bg-muted animate-pulse" />
-          <div className="h-[400px] rounded-3xl bg-muted animate-pulse" />
+          <div className="lg:col-span-2 h-[400px] rounded-3xl bg-muted" />
+          <div className="h-[400px] rounded-3xl bg-muted" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-10">
+    <div className="space-y-8 pb-10">
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
@@ -36,7 +36,7 @@ const DashboardPage: React.FC = () => {
             <h1 className="text-3xl font-black tracking-tight text-foreground">
               Dashboard <span className="text-primary">Audipreve</span>
             </h1>
-            <div className="p-1 rounded-lg bg-primary/10 text-primary animate-pulse">
+            <div className="p-1 rounded-lg bg-primary/10 text-primary">
               <Sparkles size={16} />
             </div>
           </div>
@@ -47,7 +47,7 @@ const DashboardPage: React.FC = () => {
 
         <div className="flex items-center gap-2 p-1 rounded-2xl bg-muted/50 border border-border/50">
           <button className="px-4 py-2 text-xs font-bold rounded-xl bg-card text-foreground shadow-sm">Vista Geral</button>
-          <button className="px-4 py-2 text-xs font-bold rounded-xl text-muted-foreground hover:text-foreground transition-all">Relatórios</button>
+          <button className="px-4 py-2 text-xs font-bold rounded-xl text-muted-foreground hover:text-foreground">Relatórios</button>
         </div>
       </div>
 

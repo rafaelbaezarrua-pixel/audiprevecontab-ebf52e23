@@ -136,7 +136,7 @@
 
 @layer components {
   .nav-item {
-    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer;
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer;
     @apply text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50;
   }
 
@@ -150,7 +150,7 @@
   }
 
   .stat-card {
-    @apply bg-card rounded-xl border border-border p-6 transition-all duration-150;
+    @apply bg-card rounded-xl border border-border p-6;
   }
 
   .badge-status {
@@ -190,15 +190,15 @@
   }
 
   .data-table tbody tr {
-    @apply transition-colors hover:bg-muted/30;
+    @apply hover:bg-muted/30;
   }
 
   .module-card {
-    @apply bg-card rounded-2xl border border-border/60 p-6 transition-all duration-150;
+    @apply bg-card rounded-2xl border border-border/60 p-6;
   }
 
   .card-premium {
-    @apply bg-card rounded-2xl border border-border/60 p-6 transition-all duration-150;
+    @apply bg-card rounded-2xl border border-border/60 p-6;
   }
 
   .glass-morphism {
@@ -210,7 +210,7 @@
   }
 
   .button-action {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-150;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium;
     @apply active:scale-[0.98] disabled:opacity-50;
   }
 

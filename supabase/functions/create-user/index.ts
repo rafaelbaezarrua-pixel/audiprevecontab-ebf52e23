@@ -1,6 +1,7 @@
-// @ts-expect-error
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-expect-error: Deno imports
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
-// @ts-expect-error
+// @ts-expect-error: Deno imports
 import { decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 
 const allowedModules = ["societario", "fiscal", "pessoal", "certidoes", "certificados", "licencas", "procuracoes", "honorarios", "obrigacoes", "parcelamentos", "recalculos", "vencimentos"];

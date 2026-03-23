@@ -68,7 +68,7 @@ const PortalPerfilPage: React.FC = () => {
     const endereco = empresa?.endereco as any || {};
 
     return (
-        <div className="space-y-8 animate-fade-in pb-12">
+        <div className="space-y-8 pb-12">
             <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
                     <UserCircle size={24} />

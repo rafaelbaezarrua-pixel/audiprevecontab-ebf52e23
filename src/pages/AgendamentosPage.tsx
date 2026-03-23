@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import KanbanBoard, { KanbanColumn, KanbanItem } from "@/components/KanbanBoard";
+
 
 interface Agendamento {
     id: string;
@@ -31,7 +31,7 @@ const AgendamentosPage: React.FC = () => {
     const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
     const [activeTab, setActiveTab] = useState<"geral" | "meus">("geral");
     const [activeSubTab, setActiveSubTab] = useState<"em_aberto" | "concluido" | "pendente" | "arquivados">("em_aberto");
-    const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
+    const [viewMode, setViewMode] = useState<"list">("list");
 
     const loadData = async () => {
         setLoading(true);
@@ -197,7 +197,9 @@ const AgendamentosPage: React.FC = () => {
     });
 
     if (loading && agendamentos.length === 0) {
-        return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+    if (loading && agendamentos.length === 0) {
+        return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
+    }
     }
 
     const getStatusBadge = (status: string) => {
@@ -211,18 +213,11 @@ const AgendamentosPage: React.FC = () => {
         }
     };
 
-    const kanbanColumns: KanbanColumn[] = [
-        { id: 'em_aberto', title: 'A Fazer', colorClass: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
-        { id: 'pendente', title: 'Pendente', colorClass: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-        { id: 'concluido', title: 'Concluído', colorClass: 'bg-green-500/10 text-green-500 border-green-500/20' }
-    ];
 
-    const kanbanItems: KanbanItem[] = filtered.map(a => ({
-        id: a.id,
-        status: a.status,
-        renderContent: () => (
+
+    const renderItemContent = (a: Agendamento) => (
             <div className={`
-                p-4 space-y-3 transition-all h-full bg-card group relative
+                p-4 space-y-3 h-full bg-card group relative
                 border-l-4 ${a.status === 'concluido' ? 'border-l-green-500 opacity-90' : a.status === 'pendente' ? 'border-l-amber-500' : 'border-l-primary'}
             `}>
                 <div className="flex items-start justify-between">
@@ -309,11 +304,10 @@ const AgendamentosPage: React.FC = () => {
                     </div>
                 )}
             </div>
-        )
-    }));
+    );
 
     return (
-        <div className="space-y-6 animate-fade-in flex flex-col min-h-[calc(100vh-100px)]">
+        <div className="space-y-6 flex flex-col min-h-[calc(100vh-100px)]">
             <div className="flex items-center gap-3 justify-end shrink-0">
                 <input
                     type="month"
@@ -374,22 +368,7 @@ const AgendamentosPage: React.FC = () => {
                     })}
                 </div>
 
-                <div className="flex bg-muted p-1 rounded-lg shrink-0">
-                    <button
-                        onClick={() => setViewMode("list")}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                        title="Ver como Lista"
-                    >
-                        <List size={16} /> <span className="hidden sm:inline">Lista</span>
-                    </button>
-                    <button
-                        onClick={() => setViewMode("kanban")}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === "kanban" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                        title="Ver como Quadro (Kanban)"
-                    >
-                        <LayoutDashboard size={16} /> <span className="hidden sm:inline">Quadro</span>
-                    </button>
-                </div>
+
             </div>
 
             <div className="relative max-w-sm shrink-0">
@@ -403,26 +382,15 @@ const AgendamentosPage: React.FC = () => {
                 />
             </div>
 
-            {/* View Mode Switching */}
-            {viewMode === 'kanban' && activeSubTab !== 'arquivados' ? (
-                <div className="flex-1 overflow-hidden min-h-[500px]">
-                    <KanbanBoard
-                        columns={kanbanColumns}
-                        items={kanbanItems}
-                        onDragEnd={handleUpdateStatus}
-                    />
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
-                    {filtered.length === 0 ? (
-                        <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
-                            Nenhum agendamento encontrado para este período.
-                        </div>
-                    ) : (
-                        filtered.map(a => <React.Fragment key={a.id}>{kanbanItems.find(i => i.id === a.id)?.renderContent()}</React.Fragment>)
-                    )}
-                </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
+                {filtered.length === 0 ? (
+                    <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
+                        Nenhum agendamento encontrado para este período.
+                    </div>
+                ) : (
+                    filtered.map(a => <React.Fragment key={a.id}>{renderItemContent(a)}</React.Fragment>)
+                )}
+            </div>
         </div>
     );
 };

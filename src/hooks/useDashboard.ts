@@ -149,14 +149,16 @@ export const useDashboard = (userId?: string) => {
           type: 'deadline' as const,
           title: 'Agendamento Hoje',
           description: a.assunto,
-          date: a.data
+          date: a.data,
+          horario: a.horario
         })),
         ...(tarefas.data || []).map((t: any) => ({
           id: t.id,
           type: 'deadline' as const,
           title: 'Tarefa Hoje',
           description: t.assunto,
-          date: t.data
+          date: t.data,
+          horario: t.horario
         }))
       ];
 

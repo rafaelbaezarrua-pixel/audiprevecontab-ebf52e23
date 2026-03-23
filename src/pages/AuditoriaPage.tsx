@@ -115,7 +115,7 @@ const AuditoriaPage: React.FC = () => {
         );
     }
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6">
             <div className="space-y-2">
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">

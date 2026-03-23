@@ -112,7 +112,7 @@ const UsuarioFormPage: React.FC = () => {
     const labelCls = "block text-sm font-semibold text-muted-foreground mb-1.5 ml-1";
 
     return (
-        <div className="max-w-3xl mx-auto space-y-6 animate-fade-in pb-10">
+        <div className="max-w-3xl mx-auto space-y-6 pb-10">
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => navigate("/configuracoes")}

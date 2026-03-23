@@ -157,61 +157,30 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
         emitInProcessRef.current.add(signature);
 
         try {
+            const newId = (typeof crypto.randomUUID === 'function') 
+                ? crypto.randomUUID() 
+                : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            const { error: errRpc } = await (supabase as any).rpc('emit_system_alert', {
+                p_notification_id: newId,
+                p_title: title,
+                p_message: message,
+                p_link: link,
+                p_signature: signature,
+                p_user_id: userId
+            });
 
-            
-            // 1. Try to find the existing notification first
-            // We avoid 'upsert' here because onConflict with JSONB expressions is prone to picky syntax errors in the client
-            const { data: existing } = await (supabase as any)
-                .from("notifications")
-                .select("id")
-                .eq("type", "alerta_sistema")
-                .contains("metadata", { signature })
-                .maybeSingle();
-            
-            let notificationId = existing?.id;
-
-            if (!notificationId) {
-                // 2. Not found, try to create it
-                const { data: created, error: errCreate } = await (supabase as any)
-                    .from("notifications")
-                    .insert({ 
-                        title, 
-                        message, 
-                        type: "alerta_sistema", 
-                        link, 
-                        metadata: { signature } 
-                    })
-                    .select("id")
-                    .single();
-                
-                if (errCreate) {
-                    // If insert fails (e.g., race condition where another user created it just now)
-                    // we try one last time to fetch it
-                    const { data: retry } = await (supabase as any)
-                        .from("notifications")
-                        .select("id")
-                        .eq("type", "alerta_sistema")
-                        .contains("metadata", { signature })
-                        .maybeSingle();
-                    
-                    if (retry) {
-                        notificationId = retry.id;
-                    } else {
-                        console.error("Erro ao gerar alerta base:", errCreate);
-                        emitInProcessRef.current.delete(signature);
-                        return;
-                    }
-                } else {
-                    notificationId = created?.id;
-
-                }
+            if (errRpc) {
+                console.error("Erro ao gerar alerta via RPC:", errRpc);
+            } else {
+                // Show a toast only if no error occurred
+                toast.info(title, {
+                    description: message
+                });
             }
-
-            // 3. Link the user to the notification
-            if (notificationId) {
-                await linkUserToNotification(userId, notificationId, title, message, link);
-            }
-
         } catch (e) {
             console.error("Error emitting system alert:", e);
         } finally {
@@ -219,38 +188,6 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
             setTimeout(() => {
                 emitInProcessRef.current.delete(signature);
             }, 10000);
-        }
-    };
-
-    const linkUserToNotification = async (userId: string, notificationId: string, title: string, message: string, link: string) => {
-        // Check if current user is already linked to this notification
-        const { data: existingLink } = await (supabase as any)
-            .from("notification_recipients")
-            .select("id")
-            .eq("notification_id", notificationId)
-            .eq("user_id", userId)
-            .maybeSingle();
-
-        if (existingLink) {
-            return;
-        }
-
-        // Link the user to the notification
-
-        const { error: errLink } = await (supabase as any)
-            .from("notification_recipients")
-            .insert({
-                notification_id: notificationId,
-                user_id: userId,
-                is_read: false
-            });
-
-        if (!errLink) {
-            toast.info(title, {
-                description: message
-            });
-        } else {
-            console.error("Erro ao vincular destinatário:", errLink);
         }
     };
 

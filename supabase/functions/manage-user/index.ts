@@ -1,9 +1,10 @@
-// @ts-expect-error
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-expect-error: Deno imports
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
-// @ts-expect-error
+// @ts-expect-error: Deno imports
 import { decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 
-// @ts-expect-error: Deno
+// @ts-expect-error: Deno env
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
   const corsHeaders = {
@@ -27,9 +28,9 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // @ts-expect-error: Deno
+    // @ts-expect-error: Deno env
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    // @ts-expect-error: Deno
+    // @ts-expect-error: Deno env
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -46,7 +47,7 @@ Deno.serve(async (req: Request) => {
     let userId: string;
     try {
       const [_header, payload, _signature] = decode(token);
-      userId = (payload as any).sub;
+      userId = (payload as { sub: string }).sub;
       if (!userId) throw new Error("ID do usuário não encontrado no token");
     } catch (err) {
       console.error("Erro ao decodificar token:", err);
@@ -66,7 +67,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const isAdmin = roles?.some((r: any) => r.role === 'admin');
+    const isAdmin = roles?.some((r: { role: string }) => r.role === 'admin');
     if (!isAdmin) {
       console.warn("Usuário não tem permissão de admin:", userId);
       return new Response(JSON.stringify({ error: "Apenas administradores podem gerenciar usuários.", status: 'error' }), {
@@ -93,10 +94,10 @@ Deno.serve(async (req: Request) => {
     }
     else if (action === "toggleAdmin") {
       if (enable) {
-        const { error: insErr } = await supabaseAdmin.from("user_roles").insert({ user_id: target_user_id, role: "admin" });
+        const { error: insErr = null } = await supabaseAdmin.from("user_roles").insert({ user_id: target_user_id, role: "admin" });
         if (insErr) throw insErr;
       } else {
-        const { error: delErr } = await supabaseAdmin.from("user_roles").delete().eq("user_id", target_user_id).eq("role", "admin");
+        const { error: delErr = null } = await supabaseAdmin.from("user_roles").delete().eq("user_id", target_user_id).eq("role", "admin");
         if (delErr) throw delErr;
       }
     }

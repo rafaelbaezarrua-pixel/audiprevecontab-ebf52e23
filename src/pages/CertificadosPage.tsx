@@ -122,7 +122,7 @@ const CertificadosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full">
         <FavoriteToggleButton moduleId="certificados" />
         <div>

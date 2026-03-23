@@ -191,7 +191,7 @@ const SocietarioPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6">
         <PageHeaderSkeleton />
         <TableSkeleton rows={8} />
       </div>

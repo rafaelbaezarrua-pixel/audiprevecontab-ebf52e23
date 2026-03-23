@@ -1,5 +1,6 @@
 
 import React from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { User, CheckCircle2, XCircle, ChevronUp, ChevronDown, DollarSign, FileText, Save, Trash2, Plus } from "lucide-react";
 import { IRPFRecord } from "@/types/irpf";
 
@@ -16,6 +17,24 @@ interface IRPFRecordCardProps {
 export const IRPFRecordCard = ({
   record, isExpanded, onToggleExpand, onUpdateField, onSave, onDelete, onQuickToggleTransmissao
 }: IRPFRecordCardProps) => {
+  const [usuarios, setUsuarios] = React.useState<{id: string, nome: string}[]>([]);
+
+  React.useEffect(() => {
+    const loadUsers = async () => {
+      const { data: rolesData } = await (supabase as any).from("user_roles").select("user_id, role");
+      const clientUserIds = rolesData?.filter((r: any) => r.role === 'client').map((r: any) => r.user_id) || [];
+
+      const { data: profilesData } = await (supabase as any).from("profiles").select("user_id, nome_completo");
+      if (profilesData) {
+        const internalMembers = profilesData
+          .filter((p: any) => !clientUserIds.includes(p.user_id))
+          .map((d: any) => ({ id: d.user_id, nome: d.nome_completo || "Sem nome" }));
+        setUsuarios(internalMembers);
+      }
+    };
+    loadUsers();
+  }, []);
+
   const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
   return (
@@ -89,6 +108,16 @@ export const IRPFRecordCard = ({
                     <input type="number" step="0.01" value={record.valor_a_pagar} onChange={e => onUpdateField(record.id, "valor_a_pagar", Number(e.target.value))} className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" />
                   </div>
                 </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">Forma de Pagamento</label>
+                  <input 
+                    type="text" 
+                    value={record.forma_pagamento || ''} 
+                    onChange={e => onUpdateField(record.id, "forma_pagamento", e.target.value)} 
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" 
+                    placeholder="Ex: Pix, Cartão, Dinheiro" 
+                  />
+                </div>
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
                   <span className="text-xs font-bold text-muted-foreground uppercase">Status Pago?</span>
                   <button
@@ -125,8 +154,17 @@ export const IRPFRecordCard = ({
                   <input type="date" value={record.data_transmissao || ''} onChange={e => onUpdateField(record.id, "data_transmissao", e.target.value)} className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">Transmitido por</label>
-                  <input type="text" value={record.transmitido_por || ''} onChange={e => onUpdateField(record.id, "transmitido_por", e.target.value)} className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm" placeholder="Nome do responsável" />
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1">Feito por</label>
+                  <select
+                    value={record.feito_por || ""}
+                    onChange={e => onUpdateField(record.id, "feito_por", e.target.value)}
+                    className="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+                  >
+                    <option value="">Selecione o usuário</option>
+                    {usuarios.map(u => (
+                      <option key={u.id} value={u.nome}>{u.nome}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
