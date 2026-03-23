@@ -266,7 +266,7 @@ const SocietarioEmpresaPage: React.FC = () => {
             const wsData = await wsResponse.json();
             if (wsData?.estabelecimento?.email) finalEmail = wsData.estabelecimento.email;
           }
-        } catch (e) {}
+        } catch (e) { /* ignore cnpj.ws error */ }
       }
       setEmailRfb(finalEmail);
       let fullTelefone = "";
@@ -347,7 +347,7 @@ const SocietarioEmpresaPage: React.FC = () => {
   const labelCls = "block text-sm font-medium text-card-foreground mb-1.5";
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/societario")} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft size={20} /></button>

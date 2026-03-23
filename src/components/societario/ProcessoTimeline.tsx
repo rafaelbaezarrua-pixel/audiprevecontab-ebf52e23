@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Filter, Check, User, MessageSquare } from "lucide-react";
-import { Processo } from "@/types/societario";
+import { Processo, DetalhesPasso } from "@/types/societario";
 import { passosConfig } from "@/constants/societario";
 import { ControlledInput, ControlledTextarea } from "./SocietarioInputs";
 import { toast } from "sonner";
@@ -32,9 +32,9 @@ export const ProcessoTimeline = ({
 
       <div className="space-y-6">
         {passosConfig.map((step, idx) => {
-          const isDone = !!(processo as Record<string, any>)[step.id];
+          const isDone = !!processo[step.id as keyof Processo];
           const prevStepId = idx > 0 ? passosConfig[idx - 1].id : null;
-          const isPrevDone = prevStepId ? !!(processo as Record<string, any>)[prevStepId] : true;
+          const isPrevDone = prevStepId ? !!processo[prevStepId as keyof Processo] : true;
           
           const isDBE = step.id === 'envio_dbe_at';
           const isSignature = step.id === 'assinatura_contrato_at';
@@ -43,7 +43,7 @@ export const ProcessoTimeline = ({
           const isBlockedByExigencia = step.id === 'arquivamento_junta_at' && (processo.tipo === 'abertura' || processo.tipo === 'abertura_mei') && !processo.foi_deferido && !processo.exigencia_respondida;
           const canComplete = !isDone && isPrevDone && !isBlockedByExigencia;
 
-          const detalhes = (processo.detalhes_passos && processo.detalhes_passos[step.id]) || {};
+          const detalhes: DetalhesPasso = (processo.detalhes_passos && processo.detalhes_passos[step.id]) || {};
 
           return (
             <div key={step.id} className="relative pl-10">
@@ -74,7 +74,14 @@ export const ProcessoTimeline = ({
                       >
                         {isDone ? "Concluído" : "Marcar Concluído"}
                       </button>
-                      {isDone && <span className="text-[10px] font-mono text-muted-foreground">{new Date((processo as any)[step.id]).toLocaleString()}</span>}
+                      {isDone && (
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {(() => {
+                            const dateVal = processo[step.id as keyof Processo];
+                            return typeof dateVal === 'string' ? new Date(dateVal).toLocaleString() : '';
+                          })()}
+                        </span>
+                      )}
                     </div>
 
                     {hasApprovalGate && isDBE && !isDone && isPrevDone && (

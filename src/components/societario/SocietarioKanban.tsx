@@ -31,7 +31,7 @@ export const SocietarioKanban: React.FC<SocietarioKanbanProps> = ({
     if (p.foi_arquivado) return "concluido";
     
     // Find the latest completed step
-    const completedSteps = passosConfig.filter(step => !!(p as Record<string, any>)[step.id]);
+    const completedSteps = passosConfig.filter(step => !!p[step.id as keyof Processo]);
     if (completedSteps.length === 0) return "pending";
     
     return completedSteps[completedSteps.length - 1].id;

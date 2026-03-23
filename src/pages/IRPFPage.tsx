@@ -21,7 +21,7 @@ const IRPFPage = () => {
 
     const [newRecord, setNewRecord] = useState<Partial<IRPFRecord>>({
         nome_completo: "", cpf: "", valor_a_pagar: 0, status_pago: false, 
-        status_transmissao: "pendente", data_pagamento: null, data_transmissao: null, transmitido_por: ""
+        status_transmissao: "pendente", data_pagamento: null, data_transmissao: null, feito_por: "", forma_pagamento: ""
     });
 
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
@@ -105,7 +105,7 @@ const IRPFPage = () => {
                         }
                         saveRecord.mutate(newRecord);
                         setIsAdding(false);
-                        setNewRecord({ nome_completo: "", cpf: "", valor_a_pagar: 0, status_pago: false, status_transmissao: "pendente", data_pagamento: null, data_transmissao: null, transmitido_por: "" });
+                        setNewRecord({ nome_completo: "", cpf: "", valor_a_pagar: 0, status_pago: false, status_transmissao: "pendente", data_pagamento: null, data_transmissao: null, feito_por: "", forma_pagamento: "" });
                     }}
                 />
             )}

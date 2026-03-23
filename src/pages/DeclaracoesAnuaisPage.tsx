@@ -277,7 +277,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
     const filteredItems = activeTab === "irpf" ? filterSocios() : filterCompanies();
 
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full sm:w-auto">
                     <FavoriteToggleButton moduleId="declaracoes-anuais" />

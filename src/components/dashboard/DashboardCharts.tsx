@@ -29,7 +29,7 @@ const COLORS = ['#2563EB', '#10B981', '#F59E0B', '#6366F1', '#8B5CF6'];
 export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
   const navigate = useNavigate();
 
-  const handleRegimeClick = (entry: any) => {
+  const handleRegimeClick = (entry: { name: string; value: number }) => {
     const regimeMap: Record<string, string> = {
       'Simples Nacional': 'simples',
       'Lucro Presumido': 'lucro_presumido',
@@ -41,7 +41,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
     navigate(`/societario?view=empresas&regime=${regime}&aba=${regime === 'mei' ? 'mei' : 'ativas'}`);
   };
 
-  const handleProcessoClick = (entry: any) => {
+  const handleProcessoClick = (entry: { name: string; value: number }) => {
     navigate(`/societario?view=processos`);
   };
 
@@ -107,9 +107,10 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
               <BarChart
                 data={data.processos}
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                onClick={(data) => {
-                  if (data && data.activePayload) {
-                    handleProcessoClick(data.activePayload[0].payload);
+                onClick={(chartData) => {
+                  if (chartData && chartData.activePayload && chartData.activePayload.length > 0) {
+                    const payload = chartData.activePayload[0].payload as { name: string; value: number };
+                    handleProcessoClick(payload);
                   }
                 }}
               >

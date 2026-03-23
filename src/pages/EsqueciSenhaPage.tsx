@@ -68,7 +68,7 @@ const EsqueciSenhaPage: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden p-8 space-y-8 animate-fade-in">
+            <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden p-8 space-y-8">
                 <div className="text-center">
                     <img src={logoAudipreve} alt="Audipreve" className="w-20 h-20 object-contain mx-auto mb-6" />
                     <h2 className="text-2xl font-bold text-card-foreground">Recuperar Senha</h2>

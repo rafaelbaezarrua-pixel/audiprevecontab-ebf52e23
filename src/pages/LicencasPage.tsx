@@ -45,6 +45,7 @@ const LicencasPage: React.FC = () => {
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [taxasForm, setTaxasForm] = useState<Record<string, Record<string, Partial<LicencaTaxaRecord>>>>({});
+  const [isConsultandoGuia, setIsConsultandoGuia] = useState<string | null>(null);
 
   const loadBaseData = async () => {
     const { data: lics } = await supabase.from("licencas").select("*");
@@ -171,6 +172,51 @@ const LicencasPage: React.FC = () => {
     }
   };
 
+  const handleConsultarGuiaAlvara = async (cnpj: string | null | undefined) => {
+    if (!cnpj) {
+      toast.error("CNPJ não encontrado para esta empresa.");
+      return;
+    }
+    
+    setIsConsultandoGuia(cnpj);
+    const toastId = toast.loading("Consultando guias no portal da prefeitura (Betha)...", { duration: 30000 });
+    
+    try {
+      // Endpoint that will run the headless browser script
+      // Note: In Vercel, this serverless function requires puppeteer-core and @sparticuz/chromium
+      const res = await fetch('/api/consultar-guia-alvara', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cnpj }),
+      });
+      
+      if (!res.ok) {
+        let errMessage = "Ocorreu um erro no servidor.";
+        try { const errObj = await res.json(); errMessage = errObj.error || errMessage; } catch (e) { /* ignore json parse error */ }
+        throw new Error(errMessage);
+      }
+      
+      const blob = await res.blob();
+      if (blob.size === 0) throw new Error("Documento vazio retornado.");
+      
+      // Create a link and click it to download the file directly, not saving to DB
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `Guias_Alvara_${cnpj.replace(/\D/g, '')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Guias baixadas com sucesso!", { id: toastId });
+    } catch (err: any) {
+      toast.error(`Falha na consulta: ${err.message}`, { id: toastId });
+    } finally {
+      setIsConsultandoGuia(null);
+    }
+  };
+
   const inputCls = "w-full px-3 py-1.5 border border-border rounded-md bg-background text-foreground text-xs focus:ring-1 focus:ring-primary outline-none";
   const labelCls = "block text-[11px] font-semibold text-muted-foreground mb-1 uppercase tracking-wider";
 
@@ -254,7 +300,7 @@ const LicencasPage: React.FC = () => {
       </div>
 
       {activeTab === "licencas" && (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[{ label: "Definitivas", count: counts.definitiva, cls: "text-success", bg: "bg-success/10", icon: <CheckCircle size={20} /> }, { label: "Com Vencimento", count: counts.com_vencimento, cls: "text-warning", bg: "bg-warning/10", icon: <Clock size={20} /> }, { label: "Em Processo", count: counts.em_processo, cls: "text-primary", bg: "bg-primary/10", icon: <Shield size={20} /> }, { label: "Dispensadas", count: counts.dispensada, cls: "text-muted-foreground", bg: "bg-muted", icon: <AlertTriangle size={20} /> }].map(s => (
               <div key={s.label} className="stat-card flex items-center justify-between"><div><p className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</p><p className={`text-2xl font-bold mt-1 ${s.cls}`}>{s.count}</p></div><div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.bg} ${s.cls}`}>{s.icon}</div></div>
@@ -362,7 +408,7 @@ const LicencasPage: React.FC = () => {
       )}
 
       {activeTab === "taxas" && (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="relative max-w-sm w-full">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -404,11 +450,27 @@ const LicencasPage: React.FC = () => {
 
                           return (
                             <div key={key} className="p-4 rounded-xl border border-border bg-card flex flex-col gap-3">
-                              <h4 className="text-sm font-bold text-primary flex items-center gap-2">
-                                <Shield size={14} /> {label}
+                              <h4 className="text-sm font-bold text-primary flex items-center justify-between gap-2 w-full">
+                                <span className="flex items-center gap-2">
+                                  <Shield size={14} /> {label}
+                                </span>
+                                {key === 'alvara' && (
+                                  <button
+                                    onClick={() => handleConsultarGuiaAlvara(emp.cnpj)}
+                                    disabled={isConsultandoGuia === emp.cnpj}
+                                    className="px-3 py-1 bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs rounded-md flex items-center gap-1 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {isConsultandoGuia === emp.cnpj ? (
+                                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                      <Search size={12} />
+                                    )} 
+                                    {isConsultandoGuia === emp.cnpj ? 'Consultando...' : 'Consultar Guia'}
+                                  </button>
+                                )}
                               </h4>
 
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                                 <div>
                                   <label className={labelCls}>Status Atual</label>
                                   <select

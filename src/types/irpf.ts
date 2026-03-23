@@ -9,5 +9,6 @@ export interface IRPFRecord {
   data_pagamento: string | null;
   status_transmissao: string;
   data_transmissao: string | null;
-  transmitido_por: string | null;
+  feito_por: string | null;
+  forma_pagamento: string | null;
 }

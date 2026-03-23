@@ -31,7 +31,8 @@ export const useIRPF = (year: number) => {
         cpf: data.cpf || null,
         data_pagamento: data.data_pagamento || null,
         data_transmissao: data.data_transmissao || null,
-        transmitido_por: data.transmitido_por || null,
+        feito_por: data.feito_por || null,
+        forma_pagamento: data.forma_pagamento || null,
         valor_a_pagar: Number(data.valor_a_pagar || 0)
       };
 

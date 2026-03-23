@@ -12,6 +12,25 @@ interface IRPFFormProps {
 }
 
 export const IRPFForm = ({ record, setRecord, onSave, onCancel, year }: IRPFFormProps) => {
+  const [usuarios, setUsuarios] = React.useState<{id: string, nome: string}[]>([]);
+
+  React.useEffect(() => {
+    const loadUsers = async () => {
+      // Fetch both profiles and roles to filter out clients
+      const { data: rolesData } = await supabase.from("user_roles").select("user_id, role");
+      const clientUserIds = rolesData?.filter(r => r.role === 'client').map(r => r.user_id) || [];
+      
+      const { data: profilesData } = await supabase.from("profiles").select("user_id, nome_completo");
+      if (profilesData) {
+        const internalMembers = profilesData
+          .filter(p => !clientUserIds.includes(p.user_id))
+          .map(d => ({ id: d.user_id, nome: d.nome_completo || "Sem nome" }));
+        setUsuarios(internalMembers);
+      }
+    };
+    loadUsers();
+  }, []);
+
   const inputCls = "w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all";
   const labelCls = "text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block ml-1";
 
@@ -65,6 +84,16 @@ export const IRPFForm = ({ record, setRecord, onSave, onCancel, year }: IRPFForm
               />
             </div>
           </div>
+          <div>
+            <label className={labelCls}>Forma de Pagamento</label>
+            <input
+              type="text"
+              value={record.forma_pagamento || ""}
+              onChange={e => setRecord({ ...record, forma_pagamento: e.target.value })}
+              className={inputCls}
+              placeholder="Ex: Pix, Cartão, Dinheiro"
+            />
+          </div>
           <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
             <span className="text-sm font-bold text-muted-foreground uppercase">Status Pago?</span>
             <button
@@ -108,14 +137,17 @@ export const IRPFForm = ({ record, setRecord, onSave, onCancel, year }: IRPFForm
             />
           </div>
           <div>
-            <label className={labelCls}>Transmitido por</label>
-            <input
-              type="text"
-              value={record.transmitido_por || ""}
-              onChange={e => setRecord({ ...record, transmitido_por: e.target.value })}
+            <label className={labelCls}>Feito por</label>
+            <select
+              value={record.feito_por || ""}
+              onChange={e => setRecord({ ...record, feito_por: e.target.value })}
               className={inputCls}
-              placeholder="Nome do responsável"
-            />
+            >
+              <option value="">Selecione o usuário</option>
+              {usuarios.map(u => (
+                <option key={u.id} value={u.nome}>{u.nome}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

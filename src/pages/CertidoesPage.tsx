@@ -48,7 +48,7 @@ const CertidoesPage: React.FC = () => {
   const handleFileUpload = (certId: string) => {
     const input = fileInputRef.current;
     if (!input) return;
-    input.onchange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    input.onchange = (e: any) => {
       const file = e.target.files?.[0];
       if (file) uploadFile(certId, file);
       input.value = "";
@@ -177,7 +177,7 @@ const CertidoesPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full">
         <FavoriteToggleButton moduleId="certidoes" />
         <div>

@@ -1,11 +1,12 @@
-// @ts-expect-error: Deno
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-expect-error: Deno imports
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-// @ts-expect-error: Deno
+// @ts-expect-error: Deno imports
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-// @ts-expect-error: Deno
+// @ts-expect-error: Deno imports
 import { Resend } from "https://esm.sh/resend@3.2.0"
 
-// @ts-expect-error: Deno
+// @ts-expect-error: Deno env
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
 const corsHeaders = {
@@ -32,11 +33,10 @@ serve(async (req: Request) => {
   }
 
   const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
-  // @ts-expect-error: Deno
+  // @ts-expect-error: Deno env
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   // Only allow execution if the service key is provided in the header
-  // This secures the function against public triggers while allowing Cron/CLI to work
   if (authHeader !== `Bearer ${serviceKey}`) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { 
       status: 401, 
@@ -49,9 +49,9 @@ serve(async (req: Request) => {
     console.log(`Working in ${test ? 'TEST' : 'NORMAL'} mode`)
 
     const supabaseClient = createClient(
-      // @ts-expect-error: Deno
+      // @ts-expect-error: Deno env
       Deno.env.get('SUPABASE_URL') ?? '',
-      // @ts-expect-error: Deno
+      // @ts-expect-error: Deno env
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
@@ -59,7 +59,7 @@ serve(async (req: Request) => {
     const { count: accessCount } = await supabaseClient.from('empresa_acessos').select('*', { count: 'exact', head: true })
     console.log(`Total rows in empresa_acessos: ${accessCount}`)
 
-    console.log(`--- STEP 1: Fetching expirations (force_all: ${test}) ---`)
+    console.log(`--- STEP 1: Fetching expirations ---`)
     const { data: alerts, error: alertsError } = await supabaseClient.rpc('get_daily_expirations', { p_force_all: test })
 
     if (alertsError) {
@@ -68,79 +68,39 @@ serve(async (req: Request) => {
     }
 
     if (!alerts || alerts.length === 0) {
-      console.log('No expirations found for today (using 30, 15, 7, 1, 0 days filter).')
-      return new Response(JSON.stringify({
-        success: true,
-        message: 'No alerts today',
-        debug: { expirationsFound: 0 }
-      }), {
+      return new Response(JSON.stringify({ success: true, message: 'No alerts today' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200
       })
     }
 
-    console.log(`--- STEP 1.5: Using hardcoded templates ---`)
-    const companyTemplate = {
-      subject: 'Aviso de Vencimento de Documentos - {{nome_empresa}}',
-      body_html: 'Olá, informamos que os seguintes documentos da empresa <strong>{{nome_empresa}}</strong> estão próximos ao vencimento:'
-    }
-    const userTemplate = {
-      subject: 'Resumo Diário de Vencimentos - Audipreve',
-      body_html: 'Confira os documentos das empresas sob sua gestão que vencem em breve:'
-    }
-
     const expirations = alerts as ExpirationAlert[]
-    console.log(`Found ${expirations.length} total expirations.`)
 
-    // 1. Group by Company (for email_rfb)
-    console.log('--- STEP 2: Grouping by Company (Direct Email) ---')
+    // Group by Company
     const companyGroups: Record<string, ExpirationAlert[]> = {}
     expirations.forEach(alert => {
       if (alert.email_rfb && alert.email_rfb.includes('@')) {
         if (!companyGroups[alert.email_rfb]) companyGroups[alert.email_rfb] = []
         companyGroups[alert.email_rfb].push(alert)
-      } else {
-        console.log(`Company "${alert.nome_empresa}" has no valid contact email: "${alert.email_rfb}"`)
       }
     })
 
-    // 2. Group by User (mapping company_id to user emails)
-    console.log('--- STEP 3: Grouping by System User (get_company_user_emails) ---')
+    // Group by User
     const userGroups: Record<string, ExpirationAlert[]> = {}
     for (const alert of expirations) {
-      console.log(`Checking users for company: ${alert.nome_empresa} (${alert.empresa_id})`)
-      const { data: userEmails, error: rpcError } = await supabaseClient.rpc('get_company_user_emails', { p_empresa_id: alert.empresa_id })
-
-      if (rpcError) {
-        console.error(`Error fetching users for company ${alert.empresa_id}:`, rpcError)
-        continue
-      }
-
+      const { data: userEmails } = await supabaseClient.rpc('get_company_user_emails', { p_empresa_id: alert.empresa_id })
       if (userEmails && userEmails.length > 0) {
-        console.log(`Found ${userEmails.length} users linked to ${alert.nome_empresa}:`, userEmails.map((u: any) => u.email).join(', '))
         userEmails.forEach((ue: { email: string }) => {
           if (!userGroups[ue.email]) userGroups[ue.email] = []
-          // Check if this alert is already in the user's list (to avoid duplicates if company has multiple docs)
           const alreadyExists = userGroups[ue.email].some(a => a.empresa_id === alert.empresa_id && a.documento_tipo === alert.documento_tipo)
           if (!alreadyExists) userGroups[ue.email].push(alert)
         })
-      } else {
-        console.log(`No system users found with access to company ${alert.nome_empresa}`)
       }
     }
 
-    console.log(`--- SUMMARY ---`)
-    console.log(`Unique Companies to notify: ${Object.keys(companyGroups).length}`)
-    console.log(`Unique Users to notify: ${Object.keys(userGroups).length}`)
-
     const sendEmail = async (to: string, alerts: ExpirationAlert[], isUser: boolean) => {
-      console.log(`Attempting to send ${isUser ? 'USER' : 'COMPANY'} email to: ${to}`)
-
-      const template = isUser ? userTemplate : companyTemplate;
-
-      const subject = template.subject.replace(/{{nome_empresa}}/g, alerts[0].nome_empresa)
-      const customIntro = template.body_html.replace(/{{nome_empresa}}/g, alerts[0].nome_empresa)
-
+      const subject = isUser ? 'Resumo Diário de Vencimentos - Audipreve' : `Aviso de Vencimento de Documentos - ${alerts[0].nome_empresa}`;
+      
       let rows = ''
       alerts.forEach(a => {
         const color = a.dias_restantes === 0 ? '#ef4444' : a.dias_restantes <= 7 ? '#f97316' : '#3b82f6'
@@ -160,7 +120,7 @@ serve(async (req: Request) => {
           <div style="text-align: center; margin-bottom: 20px;">
             <img src="https://jnqwvysjpbcpbwhlwgqq.supabase.co/storage/v1/object/public/documentos/logo-audipreve.png" alt="Audipreve" style="width: 80px; height: auto;" />
           </div>
-          ${customIntro}
+          <p>Olá, confira os avisos de vencimento:</p>
           <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
             <thead style="background-color: #f9fafb;">
               <tr>
@@ -171,11 +131,7 @@ serve(async (req: Request) => {
             </thead>
             <tbody>${rows}</tbody>
           </table>
-          <p style="margin-top: 30px;">Este e-mail é um aviso automático. As providências para a renovação já foram tomadas! <br>Entre em contato em caso de dúvidas.<br>
-          Atenciosamente, <br>
-          Audipreve Contabilidade.</p>
-          <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
-          <p style="font-size: 12px; color: #9ca3af;">Este é um e-mail automático. Não responder!</p>
+          <p style="margin-top: 30px;">Atenciosamente, <br>Audipreve Contabilidade.</p>
         </div>
       `
 
@@ -186,62 +142,38 @@ serve(async (req: Request) => {
           subject: `[Audipreve] ${subject}`,
           html: html
         })
-
-        if (error) {
-          console.error(`Resend error sending to ${to}:`, error)
-          return { to, success: false, error }
-        }
-
-        console.log(`Email sent successfully to ${to}. ID: ${data?.id}`)
-        return { to, success: true }
+        if (error) return { to, success: false, error }
+        return { to, success: true, id: data?.id }
       } catch (err) {
-        console.error(`Exception sending to ${to}:`, err)
         return { to, success: false, error: err }
       }
     }
 
-    // Execution
     const results = []
-
-    // Helper for minor delay to respect 5 req/sec limit
     const delay = (ms: number) => new Promise(res => setTimeout(res, ms))
 
-    // Company Emails
     for (const [email, companyAlerts] of Object.entries(companyGroups)) {
       results.push(await sendEmail(email, companyAlerts, false))
-      await delay(250) // 250ms delay -> roughly 4 emails per second
+      await delay(250)
     }
 
-    // User Emails
     for (const [email, userAlerts] of Object.entries(userGroups)) {
       results.push(await sendEmail(email, userAlerts, true))
       await delay(250)
     }
 
-    const successCount = results.filter(r => r.success).length
-    const failCount = results.length - successCount
-    const errors = results.filter(r => !r.success).map(r => ({ to: r.to, error: r.error }))
-
     return new Response(JSON.stringify({
       success: true,
-      companiesNotified: Object.keys(companyGroups).length,
-      usersNotified: Object.keys(userGroups).length,
       totalEmailsAttempted: results.length,
-      successCount,
-      failCount,
-      debug: {
-        expirationsFound: expirations.length,
-        accessRowsFound: accessCount,
-        testMode: test,
-        errors: errors
-      }
+      successCount: results.filter(r => r.success).length,
+      failCount: results.filter(r => !r.success).length,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200
     })
 
   } catch (error: any) {
-    console.error("Critical Error in Edge Function:", error)
+    console.error("Critical Error:", error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400

@@ -135,7 +135,7 @@ const PerfilPage: React.FC = () => {
   if (loading) return <div className="flex items-center justify-center p-8"><p className="text-muted-foreground">Carregando...</p></div>;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto py-8">
+    <div className="space-y-6 max-w-4xl mx-auto py-8">
       <div className="flex flex-col items-center gap-4 mb-8 text-center">
         <div className="relative group">
           <div className="w-32 h-32 rounded-full border-4 border-background shadow-xl overflow-hidden bg-primary/10 flex items-center justify-center relative">
