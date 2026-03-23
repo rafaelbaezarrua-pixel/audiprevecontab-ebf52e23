@@ -78,8 +78,8 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
 
 
 
-                        // Generate unique signature for this alert
-                        const signature = `alert_cert_${cert.id}`;
+                        // Generate unique signature for this alert - includes date for once-a-day recurrence
+                        const signature = `alert_cert_${cert.id}_${today.toISOString().split('T')[0]}`;
                         await emitSystemAlert(user.id, title, message, "/certificados", signature);
                     }
                 }
@@ -137,7 +137,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                             ? `A licença de ${licenca.tipo_licenca} da empresa ${razaoSocial} venceu.`
                             : `A licença de ${licenca.tipo_licenca} da empresa ${razaoSocial} vencerá em ${diasRestantes} dias.`;
 
-                        const signature = `alert_licenca_${licenca.id}`;
+                        const signature = `alert_licenca_${licenca.id}_${today.toISOString().split('T')[0]}`;
                         await emitSystemAlert(user.id, title, message, "/licencas", signature);
                     }
                 }
@@ -164,7 +164,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                     const v = c === 'x' ? r : (r & 0x3 | 0x8);
                     return v.toString(16);
                 });
-            const { error: errRpc } = await (supabase as any).rpc('emit_system_alert', {
+            const { data: dataRpc, error: errRpc } = await (supabase as any).rpc('emit_system_alert', {
                 p_notification_id: newId,
                 p_title: title,
                 p_message: message,
@@ -175,8 +175,8 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
 
             if (errRpc) {
                 console.error("Erro ao gerar alerta via RPC:", errRpc);
-            } else {
-                // Show a toast only if no error occurred
+            } else if (dataRpc === true) {
+                // Show a toast only if a NEW notification was actually created for the user
                 toast.info(title, {
                     description: message
                 });
