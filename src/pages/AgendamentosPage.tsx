@@ -119,6 +119,108 @@ const AgendamentosPage: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case "concluido":
+                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 uppercase">Concluído</span>;
+            case "pendente":
+                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">Pendente</span>;
+            default:
+                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20 uppercase">Em Aberto</span>;
+        }
+    };
+
+    const renderItemContent = (a: Agendamento) => (
+        <div className={`
+            p-4 space-y-3 h-full bg-card group relative
+            border-l-4 ${a.status === 'concluido' ? 'border-l-green-500 opacity-90' : a.status === 'pendente' ? 'border-l-amber-500' : 'border-l-primary'}
+        `}>
+            <div className="flex items-start justify-between">
+                <div className="space-y-1 w-full">
+                    <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-bold text-card-foreground leading-tight text-sm flex-1">{a.assunto}</h3>
+                        <button
+                            onClick={() => handleDeleteAgendamento(a.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                            title="Excluir"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
+                        <User size={12} className="text-primary/70" /> Para: <span className="text-foreground font-medium">{a.usuario_nome}</span>
+                    </p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar size={14} className="text-primary" />
+                    {format(new Date(a.data + 'T00:00:00'), "dd 'de' MMM", { locale: ptBR })}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock size={14} className="text-primary" />
+                    {a.horario.slice(0, 5)}
+                </div>
+            </div>
+
+            {a.informacoes_adicionais && (
+                <div className="bg-muted/40 p-2.5 rounded-lg text-xs tracking-tight text-foreground/80 border border-border italic line-clamp-3">
+                    {a.informacoes_adicionais}
+                </div>
+            )}
+
+            {(a.usuario_id === user?.id || userData?.isAdmin) && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border mt-auto">
+                    {!a.arquivado && (
+                        <>
+                            {a.status !== 'concluido' ? (
+                                <button
+                                    onClick={() => handleUpdateStatus(a.id, 'concluido')}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-green-500/10 text-green-500 text-xs font-bold hover:bg-green-500 hover:text-white transition-all"
+                                >
+                                    <CheckCircle size={14} /> Concluir
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => handleUpdateStatus(a.id, 'em_aberto')}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-muted-foreground text-xs font-bold hover:bg-muted-foreground hover:text-white transition-all"
+                                >
+                                    <Circle size={14} /> Reabrir
+                                </button>
+                            )}
+                        </>
+                    )}
+
+                    {!a.arquivado ? (
+                        <button
+                            onClick={() => handleUpdateArquivado(a.id, true)}
+                            className="flex-1 px-3 py-1.5 rounded-md bg-muted/50 text-muted-foreground text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center justify-center gap-1.5"
+                            title="Arquivar"
+                        >
+                            <X size={13} /> Arquivar
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => handleUpdateArquivado(a.id, false)}
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary hover:text-white transition-all"
+                        >
+                            <RefreshCw size={13} /> Desarquivar
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => handleDeleteAgendamento(a.id)}
+                        className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center gap-1.5"
+                        title="Excluir"
+                    >
+                        <Trash2 size={13} /> Excluir
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
             const { error } = await (supabase
@@ -182,129 +284,20 @@ const AgendamentosPage: React.FC = () => {
         const isMine = a.usuario_id === user?.id;
 
         if (activeTab === "geral") {
-            // No modo Geral, se estiver na sub-aba arquivados, mostra todos os arquivados
             if (activeSubTab === "arquivados") return matchSearch;
-            // Caso contrário, mostra tudo que não está arquivado (filtro padrão do Geral)
-            return matchSearch;
+            return matchSearch && a.status === activeSubTab;
         } else {
             // "meus" agendamentos
-            const matchUser = isMine;
-            if (activeSubTab === "arquivados") {
-                return matchSearch && matchUser;
-            }
-            return matchSearch && matchUser && a.status === activeSubTab;
+            if (activeSubTab === "arquivados") return matchSearch && isMine;
+            return matchSearch && isMine && a.status === activeSubTab;
         }
     });
 
     if (loading && agendamentos.length === 0) {
-    if (loading && agendamentos.length === 0) {
         return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
     }
-    }
-
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "concluido":
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 uppercase">Concluído</span>;
-            case "pendente":
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">Pendente</span>;
-            default:
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20 uppercase">Em Aberto</span>;
-        }
-    };
 
 
-
-    const renderItemContent = (a: Agendamento) => (
-            <div className={`
-                p-4 space-y-3 h-full bg-card group relative
-                border-l-4 ${a.status === 'concluido' ? 'border-l-green-500 opacity-90' : a.status === 'pendente' ? 'border-l-amber-500' : 'border-l-primary'}
-            `}>
-                <div className="flex items-start justify-between">
-                    <div className="space-y-1 w-full">
-                        <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-bold text-card-foreground leading-tight text-sm flex-1">{a.assunto}</h3>
-                            <button
-                                onClick={() => handleDeleteAgendamento(a.id)}
-                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
-                                title="Excluir"
-                            >
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
-                            <User size={12} className="text-primary/70" /> Para: <span className="text-foreground font-medium">{a.usuario_nome}</span>
-                        </p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar size={14} className="text-primary" />
-                        {format(new Date(a.data + 'T00:00:00'), "dd 'de' MMM", { locale: ptBR })}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock size={14} className="text-primary" />
-                        {a.horario.slice(0, 5)}
-                    </div>
-                </div>
-
-                {a.informacoes_adicionais && (
-                    <div className="bg-muted/40 p-2.5 rounded-lg text-xs tracking-tight text-foreground/80 border border-border italic line-clamp-3">
-                        {a.informacoes_adicionais}
-                    </div>
-                )}
-
-                {(a.usuario_id === user?.id || userData?.isAdmin) && (
-                    <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border mt-auto">
-                        {!a.arquivado && (
-                            <>
-                                {a.status !== 'concluido' ? (
-                                    <button
-                                        onClick={() => handleUpdateStatus(a.id, 'concluido')}
-                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-green-500/10 text-green-500 text-xs font-bold hover:bg-green-500 hover:text-white transition-all"
-                                    >
-                                        <CheckCircle size={14} /> Concluir
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => handleUpdateStatus(a.id, 'em_aberto')}
-                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-muted-foreground text-xs font-bold hover:bg-muted-foreground hover:text-white transition-all"
-                                    >
-                                        <Circle size={14} /> Reabrir
-                                    </button>
-                                )}
-                            </>
-                        )}
-
-                        {!a.arquivado ? (
-                            <button
-                                onClick={() => handleUpdateArquivado(a.id, true)}
-                                className="flex-1 px-3 py-1.5 rounded-md bg-muted/50 text-muted-foreground text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center justify-center gap-1.5"
-                                title="Arquivar"
-                            >
-                                <X size={13} /> Arquivar
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => handleUpdateArquivado(a.id, false)}
-                                className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary hover:text-white transition-all"
-                            >
-                                <RefreshCw size={13} /> Desarquivar
-                            </button>
-                        )}
-
-                        <button
-                            onClick={() => handleDeleteAgendamento(a.id)}
-                            className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center gap-1.5"
-                            title="Excluir"
-                        >
-                            <Trash2 size={13} /> Excluir
-                        </button>
-                    </div>
-                )}
-            </div>
-    );
 
     return (
         <div className="space-y-6 flex flex-col min-h-[calc(100vh-100px)]">
@@ -347,22 +340,18 @@ const AgendamentosPage: React.FC = () => {
 
                 <div className="flex gap-2 p-1 bg-muted/30 rounded-lg w-fit">
                     {[
-                        { id: "em_aberto", label: "Em Aberto", hideOnGeral: true },
-                        { id: "concluido", label: "Concluído", hideOnGeral: true },
-                        { id: "pendente", label: "Pendente", hideOnGeral: true },
-                        { id: "arquivados", label: "Arquivados", hideOnGeral: false }
+                        { id: "em_aberto", label: "Em Aberto" },
+                        { id: "concluido", label: "Concluído" },
+                        { id: "pendente", label: "Pendente" },
+                        { id: "arquivados", label: "Arquivados" }
                     ].map(sub => {
-                        if (activeTab === "geral" && sub.hideOnGeral && sub.id !== "em_aberto") return null;
-
-                        const label = activeTab === "geral" && sub.id === "em_aberto" ? "Ativos" : sub.label;
-
                         return (
                             <button
                                 key={sub.id}
                                 onClick={() => setActiveSubTab(sub.id as any)}
                                 className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${activeSubTab === sub.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                             >
-                                {label}
+                                {sub.label}
                             </button>
                         );
                     })}
