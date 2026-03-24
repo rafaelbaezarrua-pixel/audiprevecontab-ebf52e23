@@ -159,7 +159,7 @@ const FiscalPage: React.FC = () => {
   const completedCount = filtered.filter(e => {
     const record = fiscalData[e.id];
     if (!record) return false;
-    if (e.regime_tributario === "lucro_real") {
+    if (e.regime_tributario === "lucro_real" || e.regime_tributario === "lucro_presumido") {
       return (record.irpj_csll_status === "enviada" || record.irpj_csll_status === "gerada");
     }
     return (record.status_guia === "enviada" || record.status_guia === "gerada");
@@ -285,7 +285,7 @@ const FiscalPage: React.FC = () => {
         {filtered.map(emp => {
           const isOpen = expanded === emp.id;
           const form = editForm[emp.id] || {};
-          const done = emp.regime_tributario === "lucro_real"
+          const done = (emp.regime_tributario === "lucro_real" || emp.regime_tributario === "lucro_presumido")
             ? (fiscalData[emp.id]?.irpj_csll_status === "enviada" || fiscalData[emp.id]?.irpj_csll_status === "gerada")
             : (fiscalData[emp.id]?.status_guia === "enviada" || fiscalData[emp.id]?.status_guia === "gerada");
           return (
@@ -304,7 +304,7 @@ const FiscalPage: React.FC = () => {
                     <div><label className={labelCls}>Ramo Empresarial</label><input value={form.ramo_empresarial || ""} onChange={e => updateForm(emp.id, "ramo_empresarial", e.target.value)} className={inputCls} placeholder="Ex: Comércio, Serviços..." /></div>
                   </div>
 
-                  {emp.regime_tributario === "lucro_real" ? (
+                  {emp.regime_tributario === "lucro_real" || emp.regime_tributario === "lucro_presumido" ? (
                     <div className="space-y-6">
                       {/* Impostos Federais */}
                       <div className="bg-card p-4 rounded-xl border border-border shadow-sm space-y-4">
