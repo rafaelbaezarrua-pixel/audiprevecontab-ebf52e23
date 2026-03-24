@@ -11,4 +11,5 @@ export interface IRPFRecord {
   data_transmissao: string | null;
   feito_por: string | null;
   forma_pagamento: string | null;
+  observacoes?: string | null;
 }

@@ -170,6 +170,17 @@ export const IRPFRecordCard = ({
             </div>
           </div>
 
+          {/* Observações */}
+          <div className="pt-6 border-t border-border mt-6">
+            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-3">Observações</h3>
+            <textarea
+              value={record.observacoes || ''}
+              onChange={e => onUpdateField(record.id, "observacoes", e.target.value)}
+              placeholder="Adicione observações adicionais aqui..."
+              className="w-full px-4 py-3 bg-background/50 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary transition-all text-sm min-h-[100px] resize-y"
+            />
+          </div>
+
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-border mt-6">
             <button onClick={() => onDelete(record.id)} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-destructive hover:bg-destructive/10 transition-all">
               <Trash2 size={16} /> Excluir Registro

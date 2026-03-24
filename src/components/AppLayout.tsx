@@ -29,6 +29,7 @@ const navItems: NavItemConfig[] = [
   { id: "agendamentos", label: "Agendamentos", icon: <Calendar size={18} />, path: "/agendamentos", moduleKey: "agendamentos", section: "GERAL" },
   { id: "tarefas", label: "Tarefas", icon: <ClipboardList size={18} />, path: "/tarefas", section: "GERAL" },
   { id: "ocorrencias", label: "Ocorrências", icon: <FileText size={18} />, path: "/ocorrencias", section: "GERAL" },
+  { id: "recibos", label: "Recibos", icon: <Receipt size={18} />, path: "/recibos", section: "GERAL" },
   { id: "societario", label: "Societário", icon: <Building2 size={18} />, path: "/societario", moduleKey: "societario", section: "DEPARTAMENTOS" },
   { id: "fiscal", label: "Fiscal", icon: <Receipt size={18} />, path: "/fiscal", moduleKey: "fiscal" },
   { id: "pessoal", label: "Pessoal", icon: <Users size={18} />, path: "/pessoal", moduleKey: "pessoal" },
