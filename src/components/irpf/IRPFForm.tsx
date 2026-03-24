@@ -1,7 +1,7 @@
-
 import React from "react";
 import { Plus, XCircle, Save } from "lucide-react";
 import { IRPFRecord } from "@/types/irpf";
+import { supabase } from "@/integrations/supabase/client";
 
 interface IRPFFormProps {
   record: Partial<IRPFRecord>;
