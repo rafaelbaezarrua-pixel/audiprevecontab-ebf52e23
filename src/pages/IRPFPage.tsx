@@ -10,9 +10,10 @@ import { IRPFRecord } from "@/types/irpf";
 import { List } from "lucide-react";
 
 const IRPFPage = () => {
-    const { user } = useAuth();
+    const { user, userData } = useAuth();
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeTab, setActiveTab] = useState<"geral" | "minhas">("geral");
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     
@@ -33,10 +34,15 @@ const IRPFPage = () => {
         }
     }, [originalRecords, isLoading]);
 
-    const filteredRecords = records.filter(r =>
-        r.nome_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (r.cpf && r.cpf.includes(searchTerm))
-    );
+    const filteredRecords = records.filter(r => {
+        const matchSearch = r.nome_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (r.cpf && r.cpf.includes(searchTerm));
+        
+        if (activeTab === "minhas") {
+            return matchSearch && r.feito_por === userData?.nome;
+        }
+        return matchSearch;
+    });
 
     const handleQuickToggleTransmissao = (record: IRPFRecord) => {
         const isTransmitida = record.status_transmissao === 'transmitida';
@@ -80,6 +86,20 @@ const IRPFPage = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex border-b border-border w-full sm:w-auto overflow-x-auto no-scrollbar">
+                    <button
+                        className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === "geral" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                        onClick={() => setActiveTab("geral")}
+                    >
+                        Geral
+                    </button>
+                    <button
+                        className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === "minhas" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                        onClick={() => setActiveTab("minhas")}
+                    >
+                        Minhas Declarações
+                    </button>
+                </div>
                 <div className="relative max-w-sm flex-1">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <input 

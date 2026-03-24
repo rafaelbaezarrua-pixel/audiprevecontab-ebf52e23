@@ -345,13 +345,23 @@ const AgendamentosPage: React.FC = () => {
                         { id: "pendente", label: "Pendente" },
                         { id: "arquivados", label: "Arquivados" }
                     ].map(sub => {
+                        const isPendente = sub.id === "pendente";
+                        const count = isPendente 
+                            ? agendamentos.filter(a => !a.arquivado && a.status === "pendente" && (activeTab === "geral" || a.usuario_id === user?.id)).length 
+                            : 0;
+
                         return (
                             <button
                                 key={sub.id}
                                 onClick={() => setActiveSubTab(sub.id as any)}
-                                className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${activeSubTab === sub.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                                className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${activeSubTab === sub.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                             >
                                 {sub.label}
+                                {isPendente && count > 0 && (
+                                    <span className="flex items-center justify-center bg-red-500 text-white text-[10px] min-w-[16px] h-[16px] px-1 rounded-full font-bold">
+                                        {count}
+                                    </span>
+                                )}
                             </button>
                         );
                     })}
