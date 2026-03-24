@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings, Shield, CheckCircle, Upload, Eye } from "lucide-react";
+import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings, Shield, CheckCircle, Upload, Eye, Briefcase } from "lucide-react";
 import { maskCNPJ, maskCPF } from "@/lib/utils";
 
 interface Socio { id?: string; nome: string; cpf: string; administrador: boolean; }
@@ -18,6 +18,7 @@ const tabs = [
   { id: "endereco", label: "Endereço", icon: <MapPin size={16} /> },
   { id: "socios", label: "Sócios", icon: <Users size={16} /> },
   { id: "licencas", label: "Licenças Municipais", icon: <ScrollText size={16} /> },
+  { id: "depto_pessoal", label: "Departamento Pessoal", icon: <Briefcase size={16} /> },
   { id: "configuracoes", label: "Configurações", icon: <Settings size={16} /> },
 ];
 
@@ -82,6 +83,10 @@ const SocietarioEmpresaPage: React.FC = () => {
   const [dataExclusaoSimples, setDataExclusaoSimples] = useState("");
   const [dataExclusaoSimei, setDataExclusaoSimei] = useState("");
   const [consultingRFB, setConsultingRFB] = useState(false);
+  
+  // Pessoal config
+  const [possuiFuncionarios, setPossuiFuncionarios] = useState(false);
+  const [somenteProlabore, setSomenteProlabore] = useState(false);
 
   // Config params
   const { userData } = useAuth();
@@ -141,6 +146,8 @@ const SocietarioEmpresaPage: React.FC = () => {
         setPorteRfb(emp.porte_rfb || "");
         setDataExclusaoSimples(emp.data_exclusao_simples || "");
         setDataExclusaoSimei(emp.data_exclusao_simei || "");
+        setPossuiFuncionarios(emp.possui_funcionarios || false);
+        setSomenteProlabore(emp.somente_pro_labore || false);
       }
 
       if (isAdmin) {
@@ -189,7 +196,9 @@ const SocietarioEmpresaPage: React.FC = () => {
         data_opcao_pelo_mei: dataOpcaoMei || null,
         porte_rfb: porteRfb || null,
         data_exclusao_simples: dataExclusaoSimples || null,
-        data_exclusao_simei: dataExclusaoSimei || null
+        data_exclusao_simei: dataExclusaoSimei || null,
+        possui_funcionarios: possuiFuncionarios,
+        somente_pro_labore: somenteProlabore
       };
 
       let empresaId = id;
@@ -529,6 +538,56 @@ const SocietarioEmpresaPage: React.FC = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "depto_pessoal" && (
+          <div className="space-y-6 animate-fade-in">
+            <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2"><Briefcase size={20} className="text-primary" /> Departamento Pessoal</h2>
+            
+            <div className="p-5 bg-muted/30 rounded-xl border border-border space-y-4 max-w-2xl">
+              <p className="text-sm text-muted-foreground mb-4">
+                Configurações que definem como a empresa será listada no módulo Pessoal. Caso a empresa não tenha movimentação no departamento, deixe ambas as opções desmarcadas.
+              </p>
+              
+              <div className="space-y-4">
+                <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl border border-border/50 bg-background/50 hover:bg-muted/50 transition-colors">
+                  <div className="mt-0.5">
+                    <input 
+                      type="checkbox" 
+                      checked={possuiFuncionarios} 
+                      onChange={e => {
+                        setPossuiFuncionarios(e.target.checked);
+                        if (e.target.checked) setSomenteProlabore(false);
+                      }} 
+                      className="w-5 h-5 rounded border-border text-primary focus:ring-primary" 
+                    />
+                  </div>
+                  <div>
+                    <span className="block font-medium text-card-foreground">Folha de Pagamento</span>
+                    <span className="text-sm text-muted-foreground">A empresa possui funcionários e folha de pagamento ativa. Ela aparecerá na aba "Folha" do módulo Pessoal, com todos os encargos exigidos.</span>
+                  </div>
+                </label>
+                
+                <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl border border-border/50 bg-background/50 hover:bg-muted/50 transition-colors">
+                  <div className="mt-0.5">
+                    <input 
+                      type="checkbox" 
+                      checked={somenteProlabore} 
+                      onChange={e => {
+                        setSomenteProlabore(e.target.checked);
+                        if (e.target.checked) setPossuiFuncionarios(false);
+                      }} 
+                      className="w-5 h-5 rounded border-border text-primary focus:ring-primary" 
+                    />
+                  </div>
+                  <div>
+                    <span className="block font-medium text-card-foreground">Somente Pró-labore</span>
+                    <span className="text-sm text-muted-foreground">A empresa só tem retirada de sócios (sem folha CLT). Ela aparecerá numa aba simplificada onde basta marcar se foi gerada ou não.</span>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
         )}

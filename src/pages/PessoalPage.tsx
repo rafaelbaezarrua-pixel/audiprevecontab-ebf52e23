@@ -14,7 +14,8 @@ const PessoalPage: React.FC = () => {
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
-  const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
+  const [activeTab, setActiveTab] = useState<"ativas" | "mei">("ativas");
+  const [activeSubTab, setActiveSubTab] = useState<"folha" | "prolabore">("folha");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
 
   const { pessoalData, loading: pessoalLoading, savePessoalRecord } = usePessoal(competencia);
@@ -28,12 +29,13 @@ const PessoalPage: React.FC = () => {
         matchTab = (e.situacao === "ativa" || !e.situacao) && e.porte_empresa !== "mei";
       } else if (activeTab === "mei") {
         matchTab = e.situacao === "mei" || ((e.situacao === "ativa" || !e.situacao) && e.porte_empresa === "mei");
-      } else if (activeTab === "paralisadas") {
-        matchTab = e.situacao === "paralisada";
-      } else if (activeTab === "baixadas") {
-        matchTab = e.situacao === "baixada";
-      } else if (activeTab === "entregue") {
-        matchTab = e.situacao === "entregue";
+      }
+
+      let matchSubTab = false;
+      if (activeSubTab === "folha") {
+        matchSubTab = !!e.possui_funcionarios;
+      } else if (activeSubTab === "prolabore") {
+        matchSubTab = !!e.somente_pro_labore && !e.possui_funcionarios;
       }
 
       let matchStatus = true;
@@ -42,21 +44,26 @@ const PessoalPage: React.FC = () => {
         if (!record) {
           matchStatus = filterStatus === 'pendente';
         } else {
-          const checks = [];
-          if (record.possui_vt) checks.push(record.vt_status);
-          if (record.possui_va) checks.push(record.va_status);
-          if (record.possui_vc) checks.push(record.vc_status);
-          checks.push(record.inss_status);
-          checks.push(record.fgts_status);
-          
-          const isAllConcluido = checks.every(s => s === 'enviada' || s === 'gerada' || s === 'isento') && record.dctf_web_gerada;
-          matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
+          if (activeSubTab === "prolabore") {
+            const isAllConcluido = !!record.dctf_web_gerada;
+            matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
+          } else {
+            const checks = [];
+            if (record.possui_vt) checks.push(record.vt_status);
+            if (record.possui_va) checks.push(record.va_status);
+            if (record.possui_vc) checks.push(record.vc_status);
+            checks.push(record.inss_status);
+            checks.push(record.fgts_status);
+            
+            const isAllConcluido = checks.every(s => s === 'enviada' || s === 'gerada' || s === 'isento') && record.dctf_web_gerada;
+            matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
+          }
         }
       }
 
-      return matchSearch && matchTab && matchStatus;
+      return matchSearch && matchTab && matchSubTab && matchStatus;
     });
-  }, [empresas, pessoalData, search, activeTab, filterStatus]);
+  }, [empresas, pessoalData, search, activeTab, activeSubTab, filterStatus]);
 
   const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
@@ -231,32 +238,28 @@ const PessoalPage: React.FC = () => {
         >
           Empresas MEI
         </button>
+      </div>
+
+      <div className="flex gap-2 mb-2">
         <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "paralisadas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("paralisadas")}
+          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${
+            activeSubTab === "folha"
+              ? "bg-primary/10 text-primary"
+              : "bg-muted/50 text-muted-foreground hover:bg-muted"
+          }`}
+          onClick={() => setActiveSubTab("folha")}
         >
-          Empresas Paralisadas
+          Folha de Pagamento
         </button>
         <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "baixadas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("baixadas")}
+          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${
+            activeSubTab === "prolabore"
+              ? "bg-primary/10 text-primary"
+              : "bg-muted/50 text-muted-foreground hover:bg-muted"
+          }`}
+          onClick={() => setActiveSubTab("prolabore")}
         >
-          Empresas Baixadas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "entregue"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("entregue")}
-        >
-          Empresas Entregues
+          Pró-labore
         </button>
       </div>
 
@@ -273,74 +276,102 @@ const PessoalPage: React.FC = () => {
               </div>
               {isOpen && (
                 <div className="border-t border-border p-5 space-y-5 bg-muted/10">
-                  {/* Informações */}
-                  <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} /></div>
-                      <div><label className={labelCls}>Qtd Funcionários</label><input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className={inputCls} /></div>
-                      <div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div>
-                    </div>
-                  </div>
-
-                  {/* Trabalhistas */}
-                  <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Trabalhistas - {competencia}</h3>
-                    <div className="space-y-3">
-                      {/* Recibos - campo de quantidade */}
-                      <div className="grid grid-cols-3 gap-3 items-center">
-                        <label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer">
-                          <input type="checkbox" checked={form.possui_recibos || false} onChange={e => updateForm(emp.id, "possui_recibos", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> Recibos
-                        </label>
-                        {form.possui_recibos ? (
-                          <div><label className={labelCls}>Qtd Recibos</label><input type="number" value={form.qtd_recibos || 0} onChange={e => updateForm(emp.id, "qtd_recibos", e.target.value)} className={inputCls} /></div>
-                        ) : <div />}
-                        <div />
+                  {activeSubTab === "prolabore" && (
+                    <>
+                      {/* Informações Simplificadas para Pró-labore */}
+                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3>
+                        <div className="grid grid-cols-1 gap-4">
+                          <div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div>
+                        </div>
                       </div>
-                      {/* VT, VA, VC - checkbox + status + data */}
-                      {[
-                        { label: "VT", checkKey: "possui_vt", statusKey: "vt_status", dateKey: "vt_data_envio" },
-                        { label: "VA", checkKey: "possui_va", statusKey: "va_status", dateKey: "va_data_envio" },
-                        { label: "VC", checkKey: "possui_vc", statusKey: "vc_status", dateKey: "vc_data_envio" },
-                      ].map((item: { label: string; checkKey: keyof PessoalRecord; statusKey: keyof PessoalRecord; dateKey: keyof PessoalRecord }) => (
-                        <div key={item.label} className="grid grid-cols-3 gap-3 items-center">
-                          <label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer">
-                            <input type="checkbox" checked={form[item.checkKey] || false} onChange={e => updateForm(emp.id, item.checkKey, e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> {item.label}
-                          </label>
-                          {form[item.checkKey] ? (
-                            <>
-                              <select value={form[item.statusKey] || "pendente"} onChange={e => updateForm(emp.id, item.statusKey, e.target.value)} className={inputCls}>
+
+                      {/* Apenas DCTF Web para Pró-labore */}
+                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Obrigações - {competencia}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                          <span className="text-sm font-medium text-card-foreground">DCTF Web (Pró-labore)</span>
+                          <select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}>
+                            <option value="nao">Não Gerada</option><option value="sim">Gerada</option>
+                          </select>
+                          {form.dctf_web_gerada ? (
+                            <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} />
+                          ) : <div />}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {activeSubTab === "folha" && (
+                    <>
+                      {/* Informações */}
+                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} /></div>
+                          <div><label className={labelCls}>Qtd Funcionários</label><input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className={inputCls} /></div>
+                          <div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div>
+                        </div>
+                      </div>
+
+                      {/* Trabalhistas */}
+                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Trabalhistas - {competencia}</h3>
+                        <div className="space-y-3">
+                          {/* Recibos - campo de quantidade */}
+                          <div className="grid grid-cols-3 gap-3 items-center">
+                            <label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer">
+                              <input type="checkbox" checked={form.possui_recibos || false} onChange={e => updateForm(emp.id, "possui_recibos", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> Recibos
+                            </label>
+                            {form.possui_recibos ? (
+                              <div><label className={labelCls}>Qtd Recibos</label><input type="number" value={form.qtd_recibos || 0} onChange={e => updateForm(emp.id, "qtd_recibos", e.target.value)} className={inputCls} /></div>
+                            ) : <div />}
+                            <div />
+                          </div>
+                          {/* VT, VA, VC - checkbox + status + data */}
+                          {[
+                            { label: "VT", checkKey: "possui_vt", statusKey: "vt_status", dateKey: "vt_data_envio" },
+                            { label: "VA", checkKey: "possui_va", statusKey: "va_status", dateKey: "va_data_envio" },
+                            { label: "VC", checkKey: "possui_vc", statusKey: "vc_status", dateKey: "vc_data_envio" },
+                          ].map((item: { label: string; checkKey: keyof PessoalRecord; statusKey: keyof PessoalRecord; dateKey: keyof PessoalRecord }) => (
+                            <div key={item.label} className="grid grid-cols-3 gap-3 items-center">
+                              <label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer">
+                                <input type="checkbox" checked={form[item.checkKey] || false} onChange={e => updateForm(emp.id, item.checkKey, e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> {item.label}
+                              </label>
+                              {form[item.checkKey] ? (
+                                <>
+                                  <select value={form[item.statusKey] || "pendente"} onChange={e => updateForm(emp.id, item.statusKey, e.target.value)} className={inputCls}>
+                                    <option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option>
+                                  </select>
+                                  <input type="date" value={form[item.dateKey] || ""} onChange={e => updateForm(emp.id, item.dateKey, e.target.value)} className={inputCls} />
+                                </>
+                              ) : (<><div /><div /></>)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Encargos */}
+                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Encargos - {competencia}</h3>
+                        <div className="space-y-3">
+                          {([{ label: "INSS", statusKey: "inss_status", dateKey: "inss_data_envio" }, { label: "FGTS", statusKey: "fgts_status", dateKey: "fgts_data_envio" }] as const).map((enc) => (
+                            <div key={enc.label} className="grid grid-cols-3 gap-3 items-center">
+                              <span className="text-sm font-medium text-card-foreground">{enc.label}</span>
+                              <select value={form[enc.statusKey] || "pendente"} onChange={e => updateForm(emp.id, enc.statusKey, e.target.value)} className={inputCls}>
                                 <option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option>
                               </select>
-                              <input type="date" value={form[item.dateKey] || ""} onChange={e => updateForm(emp.id, item.dateKey, e.target.value)} className={inputCls} />
-                            </>
-                          ) : (<><div /><div /></>)}
+                              <input type="date" value={form[enc.dateKey] || ""} onChange={e => updateForm(emp.id, enc.dateKey, e.target.value)} className={inputCls} />
+                            </div>
+                          ))}
+                          <div className="grid grid-cols-3 gap-3 items-center">
+                            <span className="text-sm font-medium text-card-foreground">DCTF Web</span>
+                            <select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}>
+                              <option value="nao">Não Gerada</option><option value="sim">Gerada</option>
+                            </select>
+                            {form.dctf_web_gerada ? (
+                              <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} />
+                            ) : <div />}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Encargos */}
-                  <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Encargos - {competencia}</h3>
-                    <div className="space-y-3">
-                      {([{ label: "INSS", statusKey: "inss_status", dateKey: "inss_data_envio" }, { label: "FGTS", statusKey: "fgts_status", dateKey: "fgts_data_envio" }] as const).map((enc) => (
-                        <div key={enc.label} className="grid grid-cols-3 gap-3 items-center">
-                          <span className="text-sm font-medium text-card-foreground">{enc.label}</span>
-                          <select value={form[enc.statusKey] || "pendente"} onChange={e => updateForm(emp.id, enc.statusKey, e.target.value)} className={inputCls}>
-                            <option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option>
-                          </select>
-                          <input type="date" value={form[enc.dateKey] || ""} onChange={e => updateForm(emp.id, enc.dateKey, e.target.value)} className={inputCls} />
-                        </div>
-                      ))}
-                      <div className="grid grid-cols-3 gap-3 items-center">
-                        <span className="text-sm font-medium text-card-foreground">DCTF Web</span>
-                        <select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}>
-                          <option value="nao">Não Gerada</option><option value="sim">Gerada</option>
-                        </select>
-                        {form.dctf_web_gerada ? (
-                          <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} />
-                        ) : <div />}
                       </div>
-                    </div>
-                  </div>
+                    </>
+                  )}
 
                   <div className="flex justify-end"><button onClick={() => handleSave(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Save size={14} /> Salvar</button></div>
                 </div>
