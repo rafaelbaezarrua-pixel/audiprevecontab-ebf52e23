@@ -33,7 +33,8 @@ export const useIRPF = (year: number) => {
         data_transmissao: data.data_transmissao || null,
         feito_por: data.feito_por || null,
         forma_pagamento: data.forma_pagamento || null,
-        valor_a_pagar: Number(data.valor_a_pagar || 0)
+        valor_a_pagar: Number(data.valor_a_pagar || 0),
+        observacoes: data.observacoes || null
       };
 
       if (id) {
