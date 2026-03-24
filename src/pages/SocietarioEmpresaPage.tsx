@@ -292,7 +292,7 @@ const SocietarioEmpresaPage: React.FC = () => {
         if (autoSocios.length > 0) setSocios(autoSocios);
       }
       if (data.porte) setPorteRfb(data.porte);
-      const isMEIByOption = data.opcao_pelo_mei === true;
+      const isMEIByOption = data.opcao_pelo_simei === true;
       const isMEIByNature = data.codigo_natureza_juridica === 2135;
       if (isMEIByOption || (isMEIByNature && data.porte?.toLowerCase().includes("mei"))) {
         setPorteEmpresa("mei"); setRegimeTributario("mei"); setNaturezaJuridica("mei"); setSituacao("mei");
@@ -305,7 +305,11 @@ const SocietarioEmpresaPage: React.FC = () => {
          if (natureLabel.includes("unipessoal")) setNaturezaJuridica("slu");
          else if (natureLabel.includes("limitada")) setNaturezaJuridica("ltda");
          else if (natureLabel.includes("individual")) setNaturezaJuridica("ei");
-         if (data.opcao_pelo_simples) setRegimeTributario("simples");
+         if (data.opcao_pelo_simples) {
+           setRegimeTributario("simples");
+         } else {
+           setRegimeTributario("lucro_presumido");
+         }
       }
       setInfoRfbCompleta(data);
       toast.success("Dados preenchidos com sucesso!", { id: tid });
