@@ -24,7 +24,7 @@ const AgendamentoFormPage: React.FC = () => {
                 const { data: profiles } = await supabase.from("profiles").select("id, full_name, nome_completo, user_id").eq("ativo", true);
                 if (!profiles) return;
 
-                const userIds = profiles.map(p => p.user_id || p.id);
+                const userIds = profiles.filter(p => p.user_id).map(p => p.user_id);
 
                 const [{ data: roles }, { data: access }] = await Promise.all([
                     supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
@@ -37,9 +37,9 @@ const AgendamentoFormPage: React.FC = () => {
                 ]);
 
                 const mapped = profiles
-                    .filter(u => !clientIds.has(u.user_id || u.id))
+                    .filter(u => u.user_id && !clientIds.has(u.user_id))
                     .map((u: any) => ({
-                        id: u.user_id || u.id,
+                        id: u.user_id,
                         nome: u.nome_completo || u.full_name || "Sem Nome"
                     }));
 
@@ -68,33 +68,7 @@ const AgendamentoFormPage: React.FC = () => {
             const { error } = await (supabase.from("agendamentos" as any).insert(payload) as any);
             if (error) throw error;
 
-            // --- Send notification to assigned user ---
-            try {
-                const assignedUser = usuarios.find(u => u.id === form.usuario_id);
-                const assignedName = assignedUser?.nome || "você";
-                const formattedDate = new Date(form.data + "T" + form.horario).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-
-                // 1. Create the notification record
-                const { data: notifData, error: notifErr } = await (supabase as any).from("notifications").insert({
-                    title: "📅 Novo Agendamento Atribuído",
-                    message: `Você tem uma agenda agendada: "${form.assunto}" em ${formattedDate}.`,
-                    type: "agendamento",
-                    link: "/agendamentos",
-                }).select("id").single();
-
-                if (!notifErr && notifData?.id) {
-                    // 2. Create recipient entry for the assigned user
-                    const recipients = [{ notification_id: notifData.id, user_id: form.usuario_id }];
-                    // 3. Also notify creator if different
-                    if (user?.id && user.id !== form.usuario_id) {
-                        recipients.push({ notification_id: notifData.id, user_id: user.id });
-                    }
-                    await (supabase as any).from("notification_recipients").insert(recipients);
-                }
-            } catch {
-                // Notification failure should not block the main flow
-                console.warn("Falha ao enviar notificação de agendamento");
-            }
+            // Notification is handled by the DB trigger `handle_agendamento_notification`
 
             toast.success("Agendamento criado com sucesso!");
             navigate("/agendamentos");

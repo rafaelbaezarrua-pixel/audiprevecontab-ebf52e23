@@ -38,8 +38,8 @@ const TarefasPage: React.FC = () => {
         try {
             // Carregar usuários para mapear nomes
             const { data: usersData } = await (supabase.from("profiles").select("id, full_name, user_id") as any);
-            const mappedUsers = (usersData || []).map((u: any) => ({
-                id: u.user_id || u.id,
+            const mappedUsers = (usersData || []).filter((u: any) => u.user_id).map((u: any) => ({
+                id: u.user_id,
                 nome: u.full_name || "Sem Nome"
             }));
 
