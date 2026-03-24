@@ -79,9 +79,12 @@ serve(async (req: Request) => {
     // Group by Company
     const companyGroups: Record<string, ExpirationAlert[]> = {}
     expirations.forEach(alert => {
-      if (alert.email_rfb && alert.email_rfb.includes('@')) {
-        if (!companyGroups[alert.email_rfb]) companyGroups[alert.email_rfb] = []
-        companyGroups[alert.email_rfb].push(alert)
+      // Filter: only "Certificado Digital" for company emails
+      if (alert.documento_tipo === 'Certificado Digital') {
+        if (alert.email_rfb && alert.email_rfb.includes('@')) {
+          if (!companyGroups[alert.email_rfb]) companyGroups[alert.email_rfb] = []
+          companyGroups[alert.email_rfb].push(alert)
+        }
       }
     })
 

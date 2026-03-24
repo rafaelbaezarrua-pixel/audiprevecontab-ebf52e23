@@ -140,6 +140,7 @@ const SocietarioPage: React.FC = () => {
     };
   }, []);
 
+
   const handleCreateProcesso = async () => {
     // Basic validation
     if (novoProcessoData.tipo === 'alteracao' && !novoProcessoData.empresa_id) {

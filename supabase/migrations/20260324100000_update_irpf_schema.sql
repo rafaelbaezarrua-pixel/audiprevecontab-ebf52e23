@@ -14,6 +14,8 @@ END $$;
 DROP POLICY IF EXISTS "Admins full access controle_irpf" ON public.controle_irpf;
 DROP POLICY IF EXISTS "Authenticated users can manage IRPF" ON public.controle_irpf;
 
+DROP POLICY IF EXISTS "All authenticated users manage IRPF" ON public.controle_irpf;
+
 CREATE POLICY "All authenticated users manage IRPF" 
 ON public.controle_irpf FOR ALL 
 USING (auth.uid() IS NOT NULL);
