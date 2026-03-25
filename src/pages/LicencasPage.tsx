@@ -177,10 +177,10 @@ const LicencasPage: React.FC = () => {
       toast.error("CNPJ não encontrado para esta empresa.");
       return;
     }
-    
+
     setIsConsultandoGuia(cnpj);
     const toastId = toast.loading("Consultando guias no portal da prefeitura (Betha)...", { duration: 30000 });
-    
+
     try {
       // Endpoint that will run the headless browser script
       // Note: In Vercel, this serverless function requires puppeteer-core and @sparticuz/chromium
@@ -189,16 +189,16 @@ const LicencasPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cnpj }),
       });
-      
+
       if (!res.ok) {
         let errMessage = "Ocorreu um erro no servidor.";
         try { const errObj = await res.json(); errMessage = errObj.error || errMessage; } catch (e) { /* ignore json parse error */ }
         throw new Error(errMessage);
       }
-      
+
       const blob = await res.blob();
       if (blob.size === 0) throw new Error("Documento vazio retornado.");
-      
+
       // Create a link and click it to download the file directly, not saving to DB
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -208,7 +208,7 @@ const LicencasPage: React.FC = () => {
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      
+
       toast.success("Guias baixadas com sucesso!", { id: toastId });
     } catch (err: any) {
       toast.error(`Falha na consulta: ${err.message}`, { id: toastId });
@@ -464,7 +464,7 @@ const LicencasPage: React.FC = () => {
                                       <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                                     ) : (
                                       <Search size={12} />
-                                    )} 
+                                    )}
                                     {isConsultandoGuia === emp.cnpj ? 'Consultando...' : 'Consultar Guia'}
                                   </button>
                                 )}

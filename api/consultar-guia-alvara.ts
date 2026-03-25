@@ -1,5 +1,34 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import puppeteer, { Browser, Page, Target } from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
+import type { Browser, Page } from 'puppeteer-core';
+import * as https from 'https';
+import * as http from 'http';
+
+/** Faz download de uma URL mantendo cookies via HTTP nativo */
+async function downloadWithCookies(pdfUrl: string, cookieHeader: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const lib = pdfUrl.startsWith('https') ? https : http;
+    const options = {
+      headers: { 
+        Cookie: cookieHeader,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36',
+      }
+    };
+    lib.get(pdfUrl, options, (res) => {
+      // Segue redirecionamentos (302)
+      if (res.statusCode === 301 || res.statusCode === 302) {
+        const redirectUrl = res.headers.location!;
+        console.log('[DOWNLOAD] Redirecionando para:', redirectUrl);
+        return downloadWithCookies(redirectUrl, cookieHeader).then(resolve).catch(reject);
+      }
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks)));
+      res.on('error', reject);
+    }).on('error', reject);
+  });
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -7,21 +36,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const { cnpj } = req.body;
-  
-  if (!cnpj) {
-    return res.status(400).json({ error: 'CNPJ é obrigatório' });
-  }
+  if (!cnpj) return res.status(400).json({ error: 'CNPJ é obrigatório' });
 
-  // Sanitiza e valida o CNPJ (deve ter 14 dígitos e formato válido)
   const sanitizedCnpj = cnpj.replace(/\D/g, '');
-  
-  // Regras de validação: 14 dígitos e não ser sequência repetida
   const invalidPatterns = [
-    '00000000000000', '11111111111111', '22222222222222', '33333333333333',
-    '44444444444444', '55555555555555', '66666666666666', '77777777777777',
-    '88888888888888', '99999999999999'
+    '00000000000000','11111111111111','22222222222222','33333333333333',
+    '44444444444444','55555555555555','66666666666666','77777777777777',
+    '88888888888888','99999999999999'
   ];
-
   if (sanitizedCnpj.length !== 14 || invalidPatterns.includes(sanitizedCnpj)) {
     return res.status(400).json({ error: 'CNPJ inválido. Verifique os dados informados.' });
   }
@@ -29,123 +51,206 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let browser: Browser | undefined;
 
   try {
-    // Nota: Em ambiente de produção Vercel, recomenda-se o uso de puppeteer-core + @sparticuz/chromium
-    // devido às limitações de tamanho de 50MB do Serverless Function.
-    // Para rodar localmente, o puppeteer padrão funciona.
+    const isLocal = process.env.NODE_ENV === 'development' || !process.env.VERCEL;
+    
     browser = await puppeteer.launch({ 
+      args: isLocal 
+        ? ['--no-sandbox', '--disable-setuid-sandbox'] 
+        : chromium.args,
+      defaultViewport: { width: 1280, height: 900 },
+      executablePath: isLocal 
+        ? (process.platform === 'win32' 
+            ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' 
+            : '/usr/bin/google-chrome')
+        : await chromium.executablePath(),
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'] 
-    });
+    }) as any;
     
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
+    const page: Page = await (browser as Browser).newPage();
 
-    // 1. Acessa o portal da prefeitura de Fazenda Rio Grande (Entidade 66, Estado 21)
-    await page.goto('https://e-gov.betha.com.br/cdweb/03114-546/contribuinte/con_situacaocontribuinte.faces', { waitUntil: 'networkidle2' });
-    
-    // Verifica se já está na página de consulta ou se precisa selecionar a entidade
-    const isLoginPage = await page.$('select[name="mainForm:estados"]');
-    if (isLoginPage) {
-      // Seleciona o estado PR (21)
+    // ─────────────────────────────────────────────────────────────────────────
+    // INTERCEPTAÇÃO VIA CDP (captura requisições de TODOS os frames/iframes)
+    // ─────────────────────────────────────────────────────────────────────────
+    const cdpClient = await (page as any).target().createCDPSession();
+    await cdpClient.send('Network.enable');
+
+    const pdfUrlPromise = new Promise<string>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Timeout (60s) aguardando geração do PDF.')), 60000);
+
+      cdpClient.on('Network.requestWillBeSent', (params: any) => {
+        const url: string = params.request.url;
+
+        // Estratégia 1: Visualizador PDF.js com parâmetro file=
+        if (url.includes('viewer.html') && url.includes('file=')) {
+          try {
+            const viewerUrl = new URL(url);
+            const filePath = viewerUrl.searchParams.get('file');
+            if (filePath) {
+              // filePath pode ser relativo como ../../reportasync.faces/...pdf
+              const base = viewerUrl.origin + viewerUrl.pathname.replace(/\/web\/viewer\.html$/, '/');
+              const absolutePdfUrl = new URL(filePath, base).href;
+              console.log('[CDP] viewer.html detectado. PDF URL:', absolutePdfUrl);
+              clearTimeout(timeout);
+              resolve(absolutePdfUrl);
+            }
+          } catch (e) {
+            console.warn('[CDP] Erro ao parsear viewer URL:', e);
+          }
+        }
+
+        // Estratégia 2: URL direta do relatório PDF (reportasync.faces/*.pdf)
+        if (url.includes('reportasync.faces') && url.toLowerCase().includes('.pdf')) {
+          console.log('[CDP] reportasync PDF URL detectado:', url);
+          clearTimeout(timeout);
+          resolve(url);
+        }
+      });
+
+      // Estratégia 3 (fallback): response com content-type application/pdf
+      cdpClient.on('Network.responseReceived', (params: any) => {
+        const contentType: string = params.response.mimeType || '';
+        const url: string = params.response.url;
+        if (contentType === 'application/pdf' || contentType.includes('pdf')) {
+          console.log('[CDP] Resposta PDF por content-type em:', url);
+          clearTimeout(timeout);
+          resolve(url);
+        }
+      });
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PASSO 1: Navegar para o portal
+    // ─────────────────────────────────────────────────────────────────────────
+    console.log('[1] Acessando portal Betha...');
+    await page.goto(
+      'https://e-gov.betha.com.br/cdweb/03114-546/contribuinte/con_situacaocontribuinte.faces',
+      { waitUntil: 'networkidle2', timeout: 30000 }
+    );
+
+    if (await page.$('select[name="mainForm:estados"]')) {
+      console.log('[1] Selecionando entidade...');
       await page.select('select[name="mainForm:estados"]', '21');
-      
-      // Aguarda o combobox de cidades ser habilitado
       await page.waitForFunction(() => {
         const el = document.querySelector('select[name="mainForm:municipios"]');
         return el && !(el as HTMLSelectElement).disabled;
-      });
+      }, { timeout: 10000 });
       
-      // Pega o ID da Fazenda Rio Grande dinamicamente
       const cityId = await page.evaluate(() => {
-        const options = Array.from(document.querySelectorAll('select[name="mainForm:municipios"] option'));
-        const prOption = options.find(o => o.textContent?.includes('Fazenda Rio Grande'));
-        return prOption ? (prOption as HTMLOptionElement).value : null;
+        const opts = Array.from(document.querySelectorAll('select[name="mainForm:municipios"] option'));
+        const opt = opts.find(o => o.textContent?.includes('Fazenda Rio Grande'));
+        return opt ? (opt as HTMLOptionElement).value : null;
       });
-
-      if (!cityId) throw new Error("Não foi possível encontrar a entidade Fazenda Rio Grande.");
-
-      await page.select('select[name="mainForm:municipios"]', cityId);
-      await page.evaluate((id) => (window as any).verifyCity(document.querySelector('select[name="mainForm:municipios"]')), cityId);
-      await new Promise(r => setTimeout(r, 1000));
+      if (!cityId) throw new Error('Não foi possível encontrar Fazenda Rio Grande.');
       
-      const btnAcessar = await page.$('a#mainForm\\:selecionar');
-      if (btnAcessar) {
-        await btnAcessar.click();
-        await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {});
+      await page.select('select[name="mainForm:municipios"]', cityId);
+      await page.evaluate(() => {
+        const sel = document.querySelector('select[name="mainForm:municipios"]') as HTMLSelectElement;
+        if (sel && (window as any).verifyCity) (window as any).verifyCity(sel);
+      });
+      await new Promise(r => setTimeout(r, 800));
+      
+      const btn = await page.$('a#mainForm\\:selecionar');
+      if (btn) {
+        await btn.click();
+        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() => {});
       }
     }
 
-    // 2. Vai para a página de situação do contribuinte (se já não estiver nela)
     if (!page.url().includes('con_situacaocontribuinte.faces')) {
-      await page.goto('https://e-gov.betha.com.br/cdweb/03114-546/contribuinte/con_situacaocontribuinte.faces', { waitUntil: 'networkidle2' });
+      await page.goto(
+        'https://e-gov.betha.com.br/cdweb/03114-546/contribuinte/con_situacaocontribuinte.faces',
+        { waitUntil: 'networkidle2', timeout: 30000 }
+      );
     }
 
-    // Fecha popups de pesquisa se existirem
     await page.evaluate(() => {
-      const closeBtn = document.querySelector('button[title="Não responder"]') as HTMLButtonElement;
-      if (closeBtn) closeBtn.click();
+      const btn = document.querySelector('button[title="Não responder"]') as HTMLButtonElement;
+      if (btn) btn.click();
     }).catch(() => {});
 
-    // 3. Seleciona CNPJ e preenche
-    await page.click('.cnpj.btModo'); // Clica no rádio CNPJ (que é um link no Betha)
-    await page.waitForSelector('#mainForm\\:cnpj', { visible: true });
+    // ─────────────────────────────────────────────────────────────────────────
+    // PASSO 2: Preencher CNPJ
+    // ─────────────────────────────────────────────────────────────────────────
+    console.log('[2] Preenchendo CNPJ:', sanitizedCnpj);
+    await page.click('.cnpj.btModo').catch(() => {});
+    await page.waitForSelector('#mainForm\\:cnpj', { visible: true, timeout: 10000 });
     await page.type('#mainForm\\:cnpj', sanitizedCnpj);
     await page.click('#mainForm\\:btCnpj');
-    
-    await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {});
+    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 20000 }).catch(() => {});
 
-    // 4. Seleciona as guias em aberto
-    // Verifica se existem débitos
-    const hasDebits = await page.evaluate(() => {
-      return document.querySelectorAll('input[id^="P"]').length > 0;
-    });
+    // ─────────────────────────────────────────────────────────────────────────
+    // PASSO 3: Verificar e selecionar débitos
+    // ─────────────────────────────────────────────────────────────────────────
+    console.log('[3] Verificando débitos...');
+    const hasDebits = await page.evaluate(() => document.querySelectorAll('input[id^="P"]').length > 0);
+    if (!hasDebits) throw new Error('Não foram encontrados débitos em aberto para este CNPJ.');
 
-    if (!hasDebits) {
-      throw new Error("Não foram encontrados débitos em aberto para este CNPJ.");
-    }
-
-    // Seleciona todos os débitos (geralmente o checkbox P0 seleciona o grupo)
     await page.evaluate(() => {
-      const checks = document.querySelectorAll('input[id^="P"]') as NodeListOf<HTMLInputElement>;
-      checks.forEach(c => { if (!c.checked) c.click(); });
-    });
-
-    // O Betha abre o PDF em uma nova aba. Vamos interceptar isso.
-    const newPagePromise = new Promise<Page | null>((x) => {
-      if (browser) {
-        browser.once('targetcreated', async (target: Target) => {
-          x(await target.page());
-        });
+      const marcarTodas = Array.from(document.querySelectorAll('a')).find(a => a.textContent?.trim() === 'Marcar todas');
+      if (marcarTodas) {
+        (marcarTodas as HTMLElement).click();
       } else {
-        x(null);
+        document.querySelectorAll<HTMLInputElement>('input[id^="P"]').forEach(c => { if (!c.checked) c.click(); });
       }
     });
-    
-    await page.click('#mainForm\\:emitirUnificada');
-    
-    const popup = await newPagePromise;
-    if (!popup) {
-      throw new Error("Não foi possível gerar o PDF das guias.");
+    await new Promise(r => setTimeout(r, 500));
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PASSO 4: Clicar no botão de emissão
+    // ─────────────────────────────────────────────────────────────────────────
+    console.log('[4] Clicando em Emissão individual...');
+    const emitSelectors = ['#mainForm\\:emitir', '#mainForm\\:emitirIndividual', '#mainForm\\:emitirUnificada'];
+    let clicked = false;
+    for (const sel of emitSelectors) {
+      const el = await page.$(sel);
+      if (el) {
+        console.log('[4] Clicando em:', sel);
+        await el.click();
+        clicked = true;
+        break;
+      }
+    }
+    if (!clicked) throw new Error('Botão de emissão não encontrado.');
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PASSO 5: Aguardar URL do PDF via CDP e baixar com cookies
+    // ─────────────────────────────────────────────────────────────────────────
+    console.log('[5] Aguardando URL do PDF via CDP...');
+    const pdfUrl = await pdfUrlPromise;
+
+    // Obtém cookies da sessão para download autenticado
+    const cookies = await page.cookies();
+    const cookieHeader = cookies.map((c: any) => `${c.name}=${c.value}`).join('; ');
+
+    console.log('[5] Baixando PDF de:', pdfUrl);
+    const pdfBuffer = await downloadWithCookies(pdfUrl, cookieHeader);
+
+    if (!pdfBuffer || pdfBuffer.length < 500) {
+      throw new Error('PDF gerado está vazio ou corrompido.');
     }
 
-    await popup.waitForNetworkIdle();
-    const pdfBuffer = await popup.pdf({ format: 'A4', printBackground: true });
+    // Valida magic bytes do PDF
+    const pdfMagic = pdfBuffer.slice(0, 4).toString('ascii');
+    if (pdfMagic !== '%PDF') {
+      const preview = pdfBuffer.slice(0, 200).toString('utf8');
+      console.error('[5] Resposta não é PDF. Preview:', preview);
+      throw new Error('O servidor da prefeitura não retornou um PDF válido.');
+    }
 
-    await browser.close();
+    console.log(`[5] PDF válido! Tamanho: ${pdfBuffer.length} bytes`);
+    await (browser as Browser).close();
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="Guias_Alvara_${sanitizedCnpj}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="Guia_Alvara_${sanitizedCnpj}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length.toString());
     return res.end(pdfBuffer);
 
   } catch (error: any) {
-    if (browser) await browser.close();
-    console.error("Erro na automação Betha:", error);
-    
-    // Tratamento específico para erros esperados de negócio
+    if (browser) await (browser as Browser).close();
+    console.error('Erro na automação Betha:', error);
     if (error.message?.includes('Não foram encontrados débitos')) {
       return res.status(400).json({ error: error.message });
     }
-
     return res.status(500).json({ error: 'Falha na comunicação com a prefeitura: ' + error.message });
   }
 }

@@ -18,10 +18,10 @@ const HonorariosPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [mainTab, setMainTab] = useState<"empresas" | "geral">("empresas");
   const [globalCompetencia, setGlobalCompetencia] = useState(new Date().toISOString().slice(0, 7));
-  
-  const { 
+
+  const {
     listGeral, listEsporadicos, revenueTrend, loading: loadingHonorarios,
-    saveConfig, saveMensal, saveEsporadico, deleteEsporadico 
+    saveConfig, saveMensal, saveEsporadico, deleteEsporadico
   } = useHonorarios(globalCompetencia);
 
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -87,7 +87,7 @@ const HonorariosPage: React.FC = () => {
     setExpanded(empresaId);
     if (!activeTabs[empresaId]) setActiveTabs(prev => ({ ...prev, [empresaId]: "mensal" }));
     if (!competenciaSelecionada[empresaId]) setCompetenciaSelecionada(prev => ({ ...prev, [empresaId]: new Date().toISOString().slice(0, 7) }));
-    
+
     // Load local data for the company
     const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
     const finalConfig: Partial<HonorarioConfig> = (config as unknown as Partial<HonorarioConfig>) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
@@ -167,28 +167,28 @@ const HonorariosPage: React.FC = () => {
         <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full sm:w-auto">
           <FavoriteToggleButton moduleId="honorarios" />
           <div>
-            <h2 className="text-lg font-bold text-card-foreground">Honorários Extras</h2>
+            <h2 className="text-lg font-bold text-card-foreground">Honorários</h2>
             <p className="text-xs text-muted-foreground">Gestão de honorários e faturamento.</p>
           </div>
         </div>
         <div className="flex bg-muted/30 p-1 rounded-xl w-full sm:w-fit">
-        <button
-          className={`flex-1 sm:flex-none uppercase tracking-wider text-xs font-bold px-6 py-2.5 rounded-lg transition-all duration-200 ${mainTab === "empresas" ? "bg-background text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
-          onClick={() => setMainTab("empresas")}
-        >
-          Painel de Empresas
-        </button>
-        <button
-          className={`flex-1 sm:flex-none uppercase tracking-wider text-xs font-bold px-6 py-2.5 rounded-lg transition-all duration-200 ${mainTab === "geral" ? "bg-background text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
-          onClick={() => setMainTab("geral")}
-        >
-          Controle Geral (Resumo)
-        </button>
-      </div>
+          <button
+            className={`flex-1 sm:flex-none uppercase tracking-wider text-xs font-bold px-6 py-2.5 rounded-lg transition-all duration-200 ${mainTab === "empresas" ? "bg-background text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+            onClick={() => setMainTab("empresas")}
+          >
+            Painel de Empresas
+          </button>
+          <button
+            className={`flex-1 sm:flex-none uppercase tracking-wider text-xs font-bold px-6 py-2.5 rounded-lg transition-all duration-200 ${mainTab === "geral" ? "bg-background text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+            onClick={() => setMainTab("geral")}
+          >
+            Controle Geral (Resumo)
+          </button>
+        </div>
       </div>
 
       {mainTab === "geral" ? (
-        <HonorariosGeralView 
+        <HonorariosGeralView
           geralData={listGeral}
           esporadicosData={listEsporadicos}
           revenueTrend={revenueTrend}
@@ -215,11 +215,11 @@ const HonorariosPage: React.FC = () => {
             setExpanded(empresaId);
             setActiveTabs(prev => ({ ...prev, [empresaId]: "mensal" }));
             setCompetenciaSelecionada(prev => ({ ...prev, [empresaId]: globalCompetencia }));
-            
+
             // 3. Load config and generate (mimic toggleExpand + handleGenerateMonth)
             const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
             const finalConfig: Partial<HonorarioConfig> = (config as unknown as Partial<HonorarioConfig>) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
-            
+
             setConfigs(prev => ({ ...prev, [empresaId]: finalConfig }));
             setConfigForms(prev => ({ ...prev, [empresaId]: { ...finalConfig } }));
 
@@ -272,7 +272,7 @@ const HonorariosPage: React.FC = () => {
             <input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className={inputCls + " pl-9"} />
           </div>
 
-          <HonorariosEmpresasView 
+          <HonorariosEmpresasView
             empresas={paginatedData as any}
             expanded={expanded}
             onToggleExpand={toggleExpand}
@@ -303,7 +303,7 @@ const HonorariosPage: React.FC = () => {
                 outros_servicos: (form?.outros_servicos || []).map((s: any) => ({ ...s, valor: parseCurrency(s.valor) }))
               };
               const payload = { ...form, ...finalizedFields };
-              
+
               saveConfig.mutate(payload as any, {
                 onSuccess: () => {
                   setConfigs(prev => ({ ...prev, [id]: payload }));
