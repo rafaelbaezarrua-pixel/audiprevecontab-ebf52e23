@@ -118,7 +118,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
       { id: "tipo_nota", label: "Tipo de Nota" },
       { id: "status_guia", label: "Status da Guia" },
       { id: "competencia", label: "Competência" },
-      { id: "data_envio", label: "Data de Envio" },
+      { id: "data_envio", label: "Data de Envio", accessor: (i: any) => safeFormatDate(i.data_envio) },
       { id: "aliquota", label: "Alíquota (%)" },
     ]
   },
@@ -147,7 +147,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
       { id: "competencia", label: "Competência" },
       { id: "valor_total", label: "Valor Total", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor_total || 0) },
       { id: "pago", label: "Status de Pagamento", accessor: (i) => i.pago ? "Pago" : "Pendente" },
-      { id: "data_vencimento", label: "Data de Vencimento" },
+      { id: "data_vencimento", label: "Data de Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
     ]
   },
   {
@@ -157,7 +157,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     icon: <Shield size={18} />,
     color: "bg-cyan-500",
     fields: [
-      { id: "data_vencimento", label: "Vencimento" },
+      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
       { id: "observacao", label: "Observação" },
     ]
   },
@@ -169,7 +169,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     color: "bg-indigo-500",
     fields: [
       { id: "tipo_certidao", label: "Tipo de Certidão" },
-      { id: "vencimento", label: "Vencimento" },
+      { id: "vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.vencimento) },
     ]
   },
   {
@@ -181,7 +181,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     fields: [
       { id: "tipo_licenca", label: "Tipo de Licença" },
       { id: "status", label: "Situação" },
-      { id: "vencimento", label: "Vencimento" },
+      { id: "vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.vencimento) },
       { id: "numero_processo", label: "Processo" },
     ]
   },
@@ -192,7 +192,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     icon: <FileText size={18} />,
     color: "bg-orange-500",
     fields: [
-      { id: "data_vencimento", label: "Vencimento" },
+      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
       { id: "observacao", label: "Observação" },
     ]
   },
@@ -205,8 +205,8 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     fields: [
       { id: "tipo_parcelamento", label: "Tipo" },
       { id: "qtd_parcelas", label: "Parcelas" },
-      { id: "data_inicio", label: "Início" },
-      { id: "previsao_termino", label: "Término Estimado" },
+      { id: "data_inicio", label: "Início", accessor: (i: any) => safeFormatDate(i.data_inicio) },
+      { id: "previsao_termino", label: "Término Estimado", accessor: (i: any) => safeFormatDate(i.previsao_termino) },
     ]
   },
   {
@@ -245,7 +245,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     fields: [
       { id: "guia", label: "Guia" },
       { id: "competencia", label: "Competência" },
-      { id: "data_recalculo", label: "Data Recálculo" },
+      { id: "data_recalculo", label: "Data Recálculo", accessor: (i: any) => safeFormatDate(i.data_recalculo) },
       { id: "status", label: "Status" },
     ]
   },
@@ -256,7 +256,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     icon: <AlertCircle size={18} />,
     color: "bg-red-500",
     fields: [
-      { id: "data_ocorrencia", label: "Data" },
+      { id: "data_ocorrencia", label: "Data", accessor: (i: any) => safeFormatDate(i.data_ocorrencia) },
       { id: "departamento", label: "Departamento" },
       { id: "descricao", label: "Descrição" },
     ]
@@ -269,7 +269,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     color: "bg-sky-500",
     fields: [
       { id: "assunto", label: "Assunto" },
-      { id: "data", label: "Data" },
+      { id: "data", label: "Data", accessor: (i: any) => safeFormatDate(i.data) },
       { id: "horario", label: "Horário" },
       { id: "status", label: "Status" },
     ]

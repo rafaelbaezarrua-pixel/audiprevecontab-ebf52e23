@@ -359,7 +359,30 @@ const SocietarioPage: React.FC = () => {
                   onDelete={(id, nome) => setProcessoToDelete({ id, nome })}
                   activeTab={processTab[p.id] || 'timeline'}
                   onTabChange={(tab) => setProcessTab({ ...processTab, [p.id]: tab })}
-                  onUpdatePasso={(id, campo, value) => updateProcesso.mutate({ id, updates: { [campo]: value } })}
+                  onUpdatePasso={(id, campo, value) => {
+                    let acao: string | undefined = undefined;
+                    let detalhes: string | undefined = undefined;
+
+                    if (value && typeof value === 'string' && value.includes('T') && !value.includes(' ')) {
+                      // É uma data ISO marcando conclusão
+                      const stepLabel = passosConfig.find(p => p.id === campo)?.label || campo;
+                      acao = 'ETAPA_CONCLUIDA';
+                      detalhes = `Etapa "${stepLabel}" marcada como concluída.`;
+                    } else if (campo === 'dbe_deferido') {
+                      acao = value ? 'DBE_DEFERIDO' : 'DBE_INDEFERIDO';
+                    } else if (campo === 'assinatura_deferida') {
+                      acao = value ? 'ASSINATURA_DEFERIDA' : 'ASSINATURA_INDEFERIDA';
+                    } else if (campo === 'foi_deferido') {
+                      acao = value ? 'PROCESSO_DEFERIDO_JUNTA' : 'PROCESSO_INDEFERIDO_JUNTA';
+                    } else if (campo === 'em_exigencia') {
+                      acao = value ? 'PROCESSO_EM_EXIGENCIA' : 'EXIGENCIA_REMOVIDA';
+                    } else if (campo === 'exigencia_respondida') {
+                      acao = value ? 'EXIGENCIA_RESPONDIDA' : 'EXIGENCIA_REABERTA';
+                      if (value) detalhes = "A exigência da Junta Comercial foi respondida pelo usuário.";
+                    }
+
+                    updateProcesso.mutate({ id, updates: { [campo]: value }, acao, detalhes });
+                  }}
                   onUpdateDetalhePasso={(id, stepId, field, value) => {
                     const novosDetalhes = { ...p.detalhes_passos };
                     novosDetalhes[stepId] = { ...novosDetalhes[stepId], [field]: value };

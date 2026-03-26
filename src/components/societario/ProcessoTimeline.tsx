@@ -38,10 +38,14 @@ export const ProcessoTimeline = ({
           
           const isDBE = step.id === 'envio_dbe_at';
           const isSignature = step.id === 'assinatura_contrato_at';
+          const isArquivamento = step.id === 'arquivamento_junta_at';
           const hasApprovalGate = processo.tipo === 'alteracao' || processo.tipo === 'abertura' || processo.tipo === 'abertura_mei';
           
-          const isBlockedByExigencia = step.id === 'arquivamento_junta_at' && (processo.tipo === 'abertura' || processo.tipo === 'abertura_mei') && !processo.foi_deferido && !processo.exigencia_respondida;
-          const canComplete = !isDone && isPrevDone && !isBlockedByExigencia;
+          const isBlockedByExigencia = isArquivamento && hasApprovalGate && !processo.foi_deferido && !processo.exigencia_respondida;
+          const isBlockedBySignature = isSignature && hasApprovalGate && processo.assinatura_deferida !== true;
+          const isBlockedByDBE = isDBE && hasApprovalGate && processo.dbe_deferido !== true;
+
+          const canComplete = !isDone && isPrevDone && !isBlockedByExigencia && !isBlockedBySignature && !isBlockedByDBE;
 
           const detalhes: DetalhesPasso = (processo.detalhes_passos && processo.detalhes_passos[step.id]) || {};
 
@@ -102,6 +106,65 @@ export const ProcessoTimeline = ({
                         >
                           NÃO DEFERIDO
                         </button>
+                      </div>
+                    )}
+
+                    {hasApprovalGate && isSignature && !isDone && isPrevDone && (
+                      <div className="flex gap-2 p-2 bg-muted/50 rounded-lg border border-border mt-2">
+                        <button 
+                          onClick={() => onUpdatePasso(processo.id, 'assinatura_deferida', true)}
+                          className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${processo.assinatura_deferida === true ? "bg-green-500 text-white" : "bg-background text-muted-foreground"}`}
+                        >
+                          ASSINATURA DEFERIDA
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (window.confirm("A assinatura não foi aprovada? Retornar status?")) {
+                              onUpdatePasso(processo.id, 'assinatura_deferida', false);
+                            }
+                          }}
+                          className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${processo.assinatura_deferida === false ? "bg-destructive text-white" : "bg-background text-muted-foreground"}`}
+                        >
+                          NÃO DEFERIDA
+                        </button>
+                      </div>
+                    )}
+
+                    {hasApprovalGate && isArquivamento && !isDone && isPrevDone && (
+                      <div className="flex flex-col gap-2 p-2 bg-muted/50 rounded-lg border border-border mt-2">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status na Junta Comercial</p>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => {
+                              onUpdatePasso(processo.id, 'foi_deferido', true);
+                              onUpdatePasso(processo.id, 'em_exigencia', false);
+                            }}
+                            className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${processo.foi_deferido === true ? "bg-green-500 text-white" : "bg-background text-muted-foreground border border-border"}`}
+                          >
+                            DEFERIDO
+                          </button>
+                          <button 
+                            onClick={() => {
+                              onUpdatePasso(processo.id, 'em_exigencia', true);
+                              onUpdatePasso(processo.id, 'foi_deferido', false);
+                            }}
+                            className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${processo.em_exigencia === true ? "bg-yellow-500 text-white" : "bg-background text-muted-foreground border border-border"}`}
+                          >
+                            EM EXIGÊNCIA
+                          </button>
+                        </div>
+                        {processo.em_exigencia && (
+                          <div className="mt-2 pt-2 border-t border-border">
+                            <button
+                              onClick={() => {
+                                onUpdatePasso(processo.id, 'exigencia_respondida', true);
+                              }}
+                              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${processo.exigencia_respondida ? "bg-primary text-white" : "bg-background text-primary border border-primary/30"}`}
+                            >
+                              MARCAR EXIGÊNCIA COMO RESPONDIDA
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
