@@ -7,7 +7,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings, Shield, CheckCircle, Upload, Eye, Briefcase } from "lucide-react";
 import { maskCNPJ, maskCPF } from "@/lib/utils";
 
-interface Socio { id?: string; nome: string; cpf: string; administrador: boolean; }
+interface Socio { 
+  id?: string; 
+  nome: string; 
+  cpf: string; 
+  administrador: boolean; 
+  percentual_cotas?: number;
+  data_entrada?: string;
+  data_saida?: string;
+  email?: string;
+  telefone?: string;
+}
 interface LicencaRow { id?: string; tipo_licenca: string; status: string | null; vencimento: string | null; numero_processo: string | null; }
 interface Endereco { logradouro: string; numero: string; complemento?: string; bairro: string; city: string; state: string; cep: string; }
 
@@ -64,7 +74,16 @@ const SocietarioEmpresaPage: React.FC = () => {
   const [endereco, setEndereco] = useState<any>({ ...emptyEndereco });
   const [socios, setSocios] = useState<Socio[]>([]);
   const [licencas, setLicencas] = useState<LicencaRow[]>([]);
-  const [newSocio, setNewSocio] = useState<Socio>({ nome: "", cpf: "", administrador: false });
+  const [newSocio, setNewSocio] = useState<Socio>({ 
+    nome: "", 
+    cpf: "", 
+    administrador: false,
+    percentual_cotas: 0,
+    data_entrada: "",
+    data_saida: "",
+    email: "",
+    telefone: ""
+  });
 
   // New RFB fields
   const [nomeFantasia, setNomeFantasia] = useState("");
@@ -146,8 +165,8 @@ const SocietarioEmpresaPage: React.FC = () => {
         setPorteRfb(emp.porte_rfb || "");
         setDataExclusaoSimples(emp.data_exclusao_simples || "");
         setDataExclusaoSimei(emp.data_exclusao_simei || "");
-        setPossuiFuncionarios(emp.possui_funcionarios || false);
-        setSomenteProlabore(emp.somente_pro_labore || false);
+        setPossuiFuncionarios((emp as any).possui_funcionarios || false);
+        setSomenteProlabore((emp as any).somente_pro_labore || false);
       }
 
       if (isAdmin) {
@@ -157,8 +176,18 @@ const SocietarioEmpresaPage: React.FC = () => {
         setUserAcessos(acessosMap);
       }
 
-      const { data: sociosData } = await supabase.from("socios").select("*").eq("empresa_id", id);
-      setSocios((sociosData || []).map(s => ({ id: s.id, nome: s.nome, cpf: s.cpf || "", administrador: s.administrador || false })));
+      const { data: sociosData } = await supabase.from("socios").select("*").order("nome", { ascending: true }).eq("empresa_id", id);
+      setSocios((sociosData || []).map((s: any) => ({ 
+        id: s.id, 
+        nome: s.nome, 
+        cpf: s.cpf || "", 
+        administrador: s.administrador || false,
+        percentual_cotas: s.percentual_cotas || 0,
+        data_entrada: s.data_entrada || "",
+        data_saida: s.data_saida || "",
+        email: s.email || "",
+        telefone: s.telefone || ""
+      })));
 
       const { data: licData } = await supabase.from("licencas").select("*").eq("empresa_id", id);
       const existingTypes = new Set((licData || []).map(l => l.tipo_licenca));
@@ -169,6 +198,7 @@ const SocietarioEmpresaPage: React.FC = () => {
       setLicencas(allLicencas);
       setLoading(false);
     };
+
     load();
   }, [id, isNew]);
 
@@ -213,7 +243,17 @@ const SocietarioEmpresaPage: React.FC = () => {
 
       if (!isNew) await supabase.from("socios").delete().eq("empresa_id", empresaId!);
       if (socios.length > 0) {
-        const { error: socError } = await supabase.from("socios").insert(socios.map(s => ({ empresa_id: empresaId!, nome: s.nome, cpf: s.cpf || null, administrador: s.administrador })));
+        const { error: socError } = await supabase.from("socios").insert(socios.map(s => ({ 
+          empresa_id: empresaId!, 
+          nome: s.nome, 
+          cpf: s.cpf || null, 
+          administrador: s.administrador,
+          percentual_cotas: s.percentual_cotas || 0,
+          data_entrada: s.data_entrada || null,
+          data_saida: s.data_saida || null,
+          email: s.email || null,
+          telefone: s.telefone || null
+        })));
         if (socError) throw socError;
       }
 
@@ -330,7 +370,16 @@ const SocietarioEmpresaPage: React.FC = () => {
   const addSocio = () => {
     if (!newSocio.nome.trim()) { toast.error("Nome do sócio é obrigatório"); return; }
     setSocios(prev => [...prev, { ...newSocio }]);
-    setNewSocio({ nome: "", cpf: "", administrador: false });
+    setNewSocio({ 
+      nome: "", 
+      cpf: "", 
+      administrador: false,
+      percentual_cotas: 0,
+      data_entrada: "",
+      data_saida: "",
+      email: "",
+      telefone: ""
+    });
     toast.success("Sócio adicionado!");
   };
 
@@ -494,12 +543,17 @@ const SocietarioEmpresaPage: React.FC = () => {
             </div>
             <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-4">
               <p className="text-sm font-medium text-card-foreground">Adicionar Sócio</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-                <div><label className={labelCls}>Nome Completo *</label><input value={newSocio.nome} onChange={e => setNewSocio({ ...newSocio, nome: e.target.value })} className={inputCls} placeholder="Nome do sócio" /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
+                <div className="md:col-span-2"><label className={labelCls}>Nome Completo *</label><input value={newSocio.nome} onChange={e => setNewSocio({ ...newSocio, nome: e.target.value })} className={inputCls} placeholder="Nome do sócio" /></div>
                 <div><label className={labelCls}>CPF</label><input value={newSocio.cpf} onChange={e => setNewSocio({ ...newSocio, cpf: maskCPF(e.target.value) })} className={inputCls} placeholder="000.000.000-00" /></div>
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={newSocio.administrador} onChange={e => setNewSocio({ ...newSocio, administrador: e.target.checked })} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" /> Administrador</label>
-                  <button onClick={addSocio} className="flex items-center gap-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-primary-foreground" style={{ background: "var(--gradient-primary)" }}><Plus size={14} /> Adicionar</button>
+                <div><label className={labelCls}>Capital (%)</label><input type="number" step="0.01" value={newSocio.percentual_cotas} onChange={e => setNewSocio({ ...newSocio, percentual_cotas: parseFloat(e.target.value) || 0 })} className={inputCls} placeholder="0.00" /></div>
+                <div><label className={labelCls}>E-mail</label><input type="email" value={newSocio.email} onChange={e => setNewSocio({ ...newSocio, email: e.target.value })} className={inputCls} placeholder="email@exemplo.com" /></div>
+                <div><label className={labelCls}>Telefone</label><input value={newSocio.telefone} onChange={e => setNewSocio({ ...newSocio, telefone: e.target.value })} className={inputCls} placeholder="(00) 00000-0000" /></div>
+                <div><label className={labelCls}>Data Entrada</label><input type="date" value={newSocio.data_entrada} onChange={e => setNewSocio({ ...newSocio, data_entrada: e.target.value })} className={inputCls} /></div>
+                <div><label className={labelCls}>Data Saída</label><input type="date" value={newSocio.data_saida} onChange={e => setNewSocio({ ...newSocio, data_saida: e.target.value })} className={inputCls} /></div>
+                <div className="flex items-center gap-3 h-[42px] mb-1">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={newSocio.administrador} onChange={e => setNewSocio({ ...newSocio, administrador: e.target.checked })} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" /> ADM</label>
+                  <button onClick={addSocio} className="flex-1 flex items-center justify-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground min-w-[100px]" style={{ background: "var(--gradient-primary)" }}><Plus size={14} /> Add</button>
                 </div>
               </div>
             </div>
@@ -510,8 +564,17 @@ const SocietarioEmpresaPage: React.FC = () => {
                 {socios.map((socio, idx) => (
                   <div key={idx} className="flex items-center justify-between p-4 bg-card rounded-xl border border-border hover:shadow-sm transition-shadow">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${socio.administrador ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground"}`}>{socio.administrador ? <Crown size={18} /> : <Users size={18} />}</div>
-                      <div><p className="font-medium text-card-foreground">{socio.nome}</p><p className="text-xs text-muted-foreground">CPF: {socio.cpf || "—"} {socio.administrador && <span className="ml-2 badge-status badge-warning text-[10px]">Administrador</span>}</p></div>
+                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${socio.administrador ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground"}`}>{socio.administrador ? <Crown size={18} /> : <Users size={18} />}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-card-foreground truncate">{socio.nome}</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                          <p className="text-[11px] text-muted-foreground flex items-center gap-1.5"><Shield size={10} /> {socio.cpf || "CPF não inf."}</p>
+                          <p className="text-[11px] text-muted-foreground flex items-center gap-1.5"><Briefcase size={10} /> {socio.percentual_cotas || 0}% de Capital</p>
+                          {socio.data_entrada && <p className="text-[11px] text-muted-foreground flex items-center gap-1.5"><CalendarIcon size={10} /> Entrou em {formatDateBR(socio.data_entrada)}</p>}
+                          {socio.email && <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">@ {socio.email}</p>}
+                        </div>
+                        {socio.administrador && <span className="mt-2 inline-block badge-status badge-warning text-[10px]">Sócio Administrador</span>}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => toggleAdmin(idx)} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-warning" title="Alternar administrador"><Crown size={15} /></button>

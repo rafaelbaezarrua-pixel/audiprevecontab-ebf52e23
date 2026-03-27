@@ -25,6 +25,7 @@ const LicencasPage = lazy(() => import("@/pages/LicencasPage"));
 const ProcuracoesPage = lazy(() => import("@/pages/ProcuracoesPage"));
 const FiscalPage = lazy(() => import("@/pages/FiscalPage"));
 const PessoalPage = lazy(() => import("@/pages/PessoalPage"));
+const FuncionariosPage = lazy(() => import("@/pages/FuncionariosPage"));
 const VencimentosPage = lazy(() => import("@/pages/VencimentosPage"));
 const ParcelamentosPage = lazy(() => import("@/pages/ParcelamentosPage"));
 const ParcelamentoFormPage = lazy(() => import("@/pages/ParcelamentoFormPage"));
@@ -60,8 +61,18 @@ const PortalVencimentosPage = lazy(() => import("@/pages/PortalVencimentosPage")
 const PortalPerfilPage = lazy(() => import("@/pages/PortalPerfilPage"));
 const PortalProcessosPage = lazy(() => import("@/pages/PortalProcessosPage"));
 const PortalDocumentosPage = lazy(() => import("@/pages/PortalDocumentosPage"));
+const PortalHelpDeskPage = lazy(() => import("@/pages/PortalHelpDeskPage"));
+const SimuladorCalculosPage = lazy(() => import("@/pages/SimuladorCalculosPage"));
+const DocumentosPage = lazy(() => import("@/pages/DocumentosPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 // Loading Component
 const PageLoader = () => (
@@ -152,6 +163,8 @@ const App = () => (
                   <Route path="/procuracoes" element={<ProcuracoesPage />} />
                   <Route path="/fiscal" element={<FiscalPage />} />
                   <Route path="/pessoal" element={<PessoalPage />} />
+                  <Route path="/pessoal/simulador" element={<SimuladorCalculosPage />} />
+                  <Route path="/pessoal/funcionarios/:empresaId" element={<FuncionariosPage />} />
                   <Route path="/vencimentos" element={<VencimentosPage />} />
                   <Route path="/parcelamentos" element={<ParcelamentosPage />} />
                   <Route path="/parcelamentos/novo" element={<ParcelamentoFormPage />} />
@@ -173,6 +186,7 @@ const App = () => (
                   <Route path="/configuracoes" element={<AdminRoute><ConfiguracoesPage /></AdminRoute>} />
                   <Route path="/configuracoes/alertas" element={<AdminRoute><GestorAlertasPage /></AdminRoute>} />
                   <Route path="/configuracoes/auditoria" element={<AdminRoute><AuditoriaPage /></AdminRoute>} />
+                  <Route path="/documentos" element={<DocumentosPage />} />
                 </Route>
 
                 {/* Portal do Cliente Routes */}
@@ -183,6 +197,7 @@ const App = () => (
                   <Route path="/portal/vencimentos" element={<PortalVencimentosPage />} />
                   <Route path="/portal/perfil" element={<PortalPerfilPage />} />
                   <Route path="/portal/documentos" element={<PortalDocumentosPage />} />
+                  <Route path="/portal/helpdesk" element={<PortalHelpDeskPage />} />
                   <Route path="/portal/processos" element={<PortalProcessosPage />} />
                   <Route path="/portal/mensagens" element={<MessagesPage />} />
                 </Route>

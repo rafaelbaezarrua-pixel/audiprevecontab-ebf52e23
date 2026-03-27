@@ -63,10 +63,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' 
             : '/usr/bin/google-chrome')
         : await chromium.executablePath(),
-      headless: true,
+      headless: isLocal ? false : true,
     }) as any;
     
     const page: Page = await (browser as Browser).newPage();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BYPASS ANTI-BOT: Oculta o Headless Chrome para o RichFaces não travar
+    // ─────────────────────────────────────────────────────────────────────────
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36');
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false });
+      (window as any).chrome = { runtime: {} };
+    });
 
     // ─────────────────────────────────────────────────────────────────────────
     // HELPER: extrai URL do PDF a partir da URL do viewer.html
@@ -80,20 +89,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return null;
     };
 
-    // Registra framenavigated ANTES do clique (por precaução)
+    // Registra framenavigated e response ANTES do clique (por precaução)
     let framenavigatedPdfUrl: string | null = null;
+    
+    page.on('response', async (res) => {
+      try {
+        const url = res.url();
+        const contentType = res.headers()['content-type'] || '';
+        if (url.includes('faces') || url.includes('pdf')) {
+          console.log(`[NET] URL: ${url.substring(0, 100)} | Type: ${contentType}`);
+        }
+        
+        // Se a resposta for um PDF nativo ou for o gerador de relatorio assíncrono (mesmo sem .pdf)
+        if (contentType.includes('application/pdf') || (url.includes('reportasync.faces') && !url.includes('.js') && !url.includes('.css'))) {
+          // Garante que é uma URL válida
+          if (!framenavigatedPdfUrl && url.startsWith('http')) {
+            framenavigatedPdfUrl = url;
+            console.log('[INTERCEPT] ✅ URL do PDF identificada via response:', url);
+          }
+        }
+      } catch (e) { /* ignorar contexto destruído */ }
+    });
+    
     page.on('framenavigated', (frame: any) => {
       const url = frame.url();
-      if (url && url !== 'about:blank' && !url.includes('.css') && !url.includes('.js')) {
-        console.log('[FRAME] navegou:', url.substring(0, 120));
-      }
       if (url.includes('viewer.html') && url.includes('file=')) {
-        framenavigatedPdfUrl = extractPdfUrl(url);
-        if (framenavigatedPdfUrl) console.log('[FRAME] ✅ PDF URL:', framenavigatedPdfUrl);
-      }
-      if (url.includes('reportasync.faces') && url.toLowerCase().includes('.pdf')) {
-        framenavigatedPdfUrl = url;
-        console.log('[FRAME] ✅ reportasync PDF direto:', url);
+        const extracted = extractPdfUrl(url);
+        if (extracted && !framenavigatedPdfUrl) {
+          framenavigatedPdfUrl = extracted;
+          console.log('[FRAME] ✅ PDF URL extraída do viewer.html:', framenavigatedPdfUrl);
+        }
       }
     });
 
@@ -167,7 +192,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await page.waitForSelector('#mainForm\\:cnpj', { visible: true, timeout: 10000 });
     await page.type('#mainForm\\:cnpj', sanitizedCnpj);
     await page.click('#mainForm\\:btCnpj');
-    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 20000 }).catch(() => {});
+    
+    // Aguarda carregar os débitos (networkidle0 é importante para o JSF RichFaces anexar os listeners)
+    await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 20000 }).catch(() => {});
+    await new Promise(r => setTimeout(r, 1500));
 
     // ─────────────────────────────────────────────────────────────────────────
     // PASSO 3: Verificar e selecionar débitos
@@ -176,10 +204,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const hasDebits = await page.evaluate(() => document.querySelectorAll('input[id^="P"]').length > 0);
     if (!hasDebits) throw new Error('Não foram encontrados débitos em aberto para este CNPJ.');
 
+    // Clica via JS disparando evento 'change' explicitamente para engatilhar o AJAX do RichFaces
+    console.log('[3] Clicando no primeiro checkbox para habilitar botões...');
     await page.evaluate(() => {
+      const firstCheck = document.querySelector('input[id^="P"]') as HTMLInputElement;
+      if (firstCheck) {
+        
+        // Tenta usar jQuery/iCheck se estiver carregado na página (padrão Betha antigo)
+        try {
+          if (typeof (window as any).$ !== 'undefined') {
+            const $el = (window as any).$(firstCheck);
+            if ($el.parent().hasClass('icheckbox_minimal') || $el.parent().hasClass('icheckbox_flat-green')) {
+               $el.iCheck('check');
+            }
+          }
+        } catch(e) {}
+        
+        firstCheck.checked = true;
+        firstCheck.click();
+        
+        // Simula todos os eventos que o JSF costuma escutar
+        ['change', 'click', 'blur'].forEach(evName => {
+          const evt = document.createEvent("HTMLEvents");
+          evt.initEvent(evName, true, true);
+          firstCheck.dispatchEvent(evt);
+        });
+
+        // Clica na label associada (muitos frameworks baseiam-se na label)
+        const label = document.querySelector(`label[for="${firstCheck.id}"]`) as HTMLLabelElement;
+        if (label) label.click();
+      }
+      
+      // Se tiver "Marcar todas", clica nativamente na string do Betha
       const marcarTodas = Array.from(document.querySelectorAll('a')).find(a => a.textContent?.trim() === 'Marcar todas');
-      if (marcarTodas) { (marcarTodas as HTMLElement).click(); }
-      else { document.querySelectorAll<HTMLInputElement>('input[id^="P"]').forEach(c => { if (!c.checked) c.click(); }); }
+      if (marcarTodas) {
+        // Usa onclick vazio para evitar redirect falso
+        const onClickOriginal = marcarTodas.getAttribute('onclick');
+        if (onClickOriginal) (window as any).eval(onClickOriginal);
+        else (marcarTodas as HTMLElement).click();
+      }
     });
     
     // JSF faz uma chamada AJAX após marcar os checkboxes para habilitar o botão
@@ -188,7 +251,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const em1 = document.querySelector<HTMLButtonElement>('#mainForm\\:emitir');
       const em2 = document.querySelector<HTMLButtonElement>('#mainForm\\:emitirIndividual');
       return (em1 && !em1.disabled) || (em2 && !em2.disabled);
-    }, { timeout: 10000 }).catch(() => console.log('[3] Timeout aguardando habilitar o botão naturalmente...'));
+    }, { timeout: 15000 }).catch(() => console.log('[3] Timeout aguardando habilitar o botão naturalmente...'));
 
     // ─────────────────────────────────────────────────────────────────────────
     // PASSO 4: Clicar no botão de emissão
@@ -218,71 +281,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!clicked) throw new Error('Botão de emissão não encontrado.');
 
     // ─────────────────────────────────────────────────────────────────────────
-    // PASSO 5: Aguardar URL do PDF via polling intensivo do DOM
-    // Estratégia: verifica DOM a cada 300ms por até 60s
-    // O fancybox injeta o iframe dinamicamente sem gerar navegação de frame
+    // PASSO 5: Aguardar URL do PDF interagir com botão Salvar
     // ─────────────────────────────────────────────────────────────────────────
-    console.log('[5] Aguardando iframe fancybox via polling do DOM...');
+    console.log('[5] Verificando existência de modal com botão Salvar...');
     
-    const pdfUrl = await new Promise<string>(async (resolve, reject) => {
+    // Tenta clicar pró-ativamente num botão de Salvar/Download (se aparecer na interface do visualizador JSF)
+    try {
+      await page.waitForSelector(`::-p-xpath(//button[contains(text(), "Salvar") or contains(text(), "Download")] | //span[contains(text(), "Salvar")]/parent::* | //a[contains(text(), "Salvar")])`, { visible: true, timeout: 5000 })
+        .then(async (btn: any) => {
+          console.log('[5] Botão Salvar encontrado! Clicando...');
+          await btn.click();
+        })
+        .catch(() => console.log('[5] Botão Salvar não encontrado, aguardando download automático...'));
+    } catch(e) {}
+
+    console.log('[5] Aguardando interceptação da resposta PDF...');
+    const pdfUrl = await new Promise<string>((resolve, reject) => {
       const deadline = Date.now() + 60000;
       
-      // Checa se framenavigated já capturou algo
-      if (framenavigatedPdfUrl) {
-        console.log('[5] framenavigated já capturou:', framenavigatedPdfUrl);
-        return resolve(framenavigatedPdfUrl);
-      }
-
       const poll = async (): Promise<void> => {
-        if (Date.now() > deadline) {
-          // Log de diagnóstico final
-          const diagInfo = await page.evaluate(() => {
-            const iframes = Array.from(document.querySelectorAll('iframe'))
-              .map(f => ({ id: f.id, class: f.className, src: f.src.substring(0, 100) }));
-            const fancybox = document.querySelector('.fancybox-wrap, #fancybox-wrap');
-            const bodySnippet = document.body.innerText.substring(0, 200);
-            return { iframes, hasFancybox: !!fancybox, bodySnippet };
-          }).catch(() => null);
-          console.error('[5] TIMEOUT. Estado DOM:', JSON.stringify(diagInfo));
-          return reject(new Error('Timeout (60s) aguardando geração do PDF.'));
-        }
-
-        // Verifica se framenavigated capturou
         if (framenavigatedPdfUrl) {
-          console.log('[5] framenavigated capturou:', framenavigatedPdfUrl);
-          return resolve(framenavigatedPdfUrl);
+           return resolve(framenavigatedPdfUrl);
         }
-
+        
+        if (Date.now() > deadline) {
+           return reject(new Error('Timeout (60s) aguardando geração do PDF. Tente novamente mais tarde.'));
+        }
+        
+        // Verifica se o JS injetou um link para donwload (pdfViewer Betha antigo)
         try {
-          const result = await page.evaluate(() => {
-            // Procura qualquer iframe com viewer.html no src
-            const iframes = Array.from(document.querySelectorAll('iframe'));
-            for (const iframe of iframes) {
-              const src = iframe.src || iframe.getAttribute('src') || '';
-              if (src.includes('viewer.html') && src.includes('file=')) return { type: 'viewer', url: src };
-              if (src.includes('reportasync.faces') && src.toLowerCase().includes('.pdf')) return { type: 'async', url: src };
-            }
-            // Verifica também se o texto do corpo indica carregamento
-            const loadingMsg = document.querySelector('.fancybox-inner, .fancybox-wrap');
-            return { type: 'none', hasFancybox: !!loadingMsg };
+          const directLink = await page.evaluate(() => {
+            const a = document.querySelector('a[href*="reportasync.faces"]') as HTMLAnchorElement;
+            return a ? a.href : null;
           });
-
-          if (result.type === 'viewer' || result.type === 'async') {
-            let pdfUrl: string = result.url!;
-            if (result.type === 'viewer') {
-              pdfUrl = extractPdfUrl(result.url!) || result.url!;
-            }
-            console.log('[5] ✅ iframe encontrado via polling! URL:', pdfUrl);
-            return resolve(pdfUrl);
+          if (directLink) {
+             console.log('[5] Link no DOM (fallback) encontrado:', directLink);
+             return resolve(directLink);
           }
+        } catch (e) {}
 
-          if ((result as any).hasFancybox) {
-            console.log('[5] Fancybox aberto mas sem iframe src ainda...');
-          }
-        } catch (e) { /* página navegando */ }
-
-        await new Promise(r => setTimeout(r, 300));
-        return poll();
+        setTimeout(poll, 400);
       };
 
       poll();

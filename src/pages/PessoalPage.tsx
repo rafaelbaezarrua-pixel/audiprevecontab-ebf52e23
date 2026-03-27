@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle, AlertTriangle, Calendar, Users, UserPlus, Trash2, Settings } from "lucide-react";
+import { format, subDays, addDays, isBefore, parseISO } from "date-fns";
+import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { usePessoal } from "@/hooks/usePessoal";
@@ -9,6 +12,7 @@ import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const PessoalPage: React.FC = () => {
+  const navigate = useNavigate();
   const { empresas, loading } = useEmpresas("pessoal");
   const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
@@ -17,8 +21,32 @@ const PessoalPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"ativas" | "mei">("ativas");
   const [activeSubTab, setActiveSubTab] = useState<"folha" | "prolabore">("folha");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
+  const [funcionarios, setFuncionarios] = useState<Record<string, any[]>>({});
+  const [alertsSummary, setAlertsSummary] = useState({ aso: 0, ferias: 0 });
 
   const { pessoalData, loading: pessoalLoading, savePessoalRecord } = usePessoal(competencia);
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      const today = new Date();
+      const nextMonth = addDays(today, 30);
+      
+      const { data: allFuncs } = await (supabase.from("funcionarios" as any).select("*").eq("ativo", true) as any);
+      if (allFuncs) {
+        const aso = (allFuncs as any[]).filter(f => f.vencimento_aso && isBefore(parseISO(f.vencimento_aso), nextMonth)).length;
+        const ferias = (allFuncs as any[]).filter(f => f.vencimento_ferias && isBefore(parseISO(f.vencimento_ferias), nextMonth)).length;
+        setAlertsSummary({ aso, ferias });
+        
+        const map: Record<string, any[]> = {};
+        (allFuncs as any[]).forEach(f => {
+          if (!map[f.empresa_id]) map[f.empresa_id] = [];
+          map[f.empresa_id].push(f);
+        });
+        setFuncionarios(map);
+      }
+    };
+    fetchAlerts();
+  }, []);
 
   const filtered = React.useMemo(() => {
     return empresas.filter(e => {
@@ -174,6 +202,16 @@ const PessoalPage: React.FC = () => {
           <div className="px-4 flex items-center gap-2 bg-warning/5">
             <span className="text-[10px] text-warning font-bold uppercase tracking-wider">Pendentes</span>
             <span className="text-lg font-black text-warning">{filtered.length - completedCount}</span>
+          </div>
+          <div className="px-4 flex items-center gap-4 bg-destructive/5 border-l border-border/60">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-destructive font-bold uppercase tracking-wider">ASO Vencendo</span>
+              <span className="text-lg font-black text-destructive">{alertsSummary.aso}</span>
+            </div>
+            <div className="flex items-center gap-2 border-l border-destructive/10 pl-4">
+              <span className="text-[10px] text-destructive font-bold uppercase tracking-wider">Férias 30d</span>
+              <span className="text-lg font-black text-destructive">{alertsSummary.ferias}</span>
+            </div>
           </div>
         </div>
 
@@ -368,6 +406,45 @@ const PessoalPage: React.FC = () => {
                               <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} />
                             ) : <div />}
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Funcionários & Alertas */}
+                      <div>
+                        <div className="flex items-center justify-between mb-3 pt-3 border-t border-border">
+                          <h3 className="text-sm font-semibold text-card-foreground flex items-center gap-2">
+                            <Users size={16} className="text-primary" /> Funcionários & Alertas
+                          </h3>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/pessoal/funcionarios/${emp.id}`);
+                            }}
+                            className="text-[10px] font-bold uppercase tracking-widest text-primary hover:underline flex items-center gap-1"
+                          >
+                            <Settings size={12} /> Gerenciar
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          {(funcionarios[emp.id] || []).length === 0 ? (
+                            <p className="text-xs text-muted-foreground italic bg-background/50 p-2 rounded-lg border border-dashed border-border">Nenhum funcionário cadastrado com alertas ativos.</p>
+                          ) : (
+                            funcionarios[emp.id].map(func => (
+                              <div key={func.id} className="p-3 bg-background/50 rounded-lg border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-medium">{func.nome}</p>
+                                  <div className="flex flex-wrap gap-3 mt-1">
+                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${func.vencimento_aso && isBefore(parseISO(func.vencimento_aso), addDays(new Date(), 30)) ? "text-destructive" : "text-muted-foreground"}`}>
+                                      <AlertTriangle size={12} /> ASO: {func.vencimento_aso ? formatDateBR(func.vencimento_aso) : "N/D"}
+                                    </div>
+                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${func.vencimento_ferias && isBefore(parseISO(func.vencimento_ferias), addDays(new Date(), 30)) ? "text-destructive" : "text-muted-foreground"}`}>
+                                      <Calendar size={12} /> Férias: {func.vencimento_ferias ? formatDateBR(func.vencimento_ferias) : "N/D"}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
                     </>

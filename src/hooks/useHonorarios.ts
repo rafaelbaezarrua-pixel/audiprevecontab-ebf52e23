@@ -69,15 +69,17 @@ export const useHonorarios = (competencia?: string) => {
 
   const saveConfig = useMutation({
     mutationFn: async (payload: HonorarioConfig) => {
+      // Usar upsert para evitar erro 409 (conflito) caso a configuração já exista para a empresa
       const { id, ...data } = payload;
-      if (id) {
-        // Assume jsonb compatible format for outros_servicos
-        const { error } = await supabase.from("honorarios_config").update(data as any).eq("id", id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("honorarios_config").insert([data as any]);
-        if (error) throw error;
-      }
+      
+      const { error } = await supabase
+        .from("honorarios_config")
+        .upsert(payload as any, { 
+          onConflict: 'empresa_id',
+          ignoreDuplicates: false 
+        });
+        
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Configuração de honorários salva!");
@@ -97,13 +99,13 @@ export const useHonorarios = (competencia?: string) => {
           observacoes: observacoes as unknown as any
       };
       
-      if (id) {
-        const { error } = await supabase.from("honorarios_mensal").update(updateData as any).eq("id", id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("honorarios_mensal").insert([updateData as any]);
-        if (error) throw error;
-      }
+      const { error } = await supabase
+        .from("honorarios_mensal")
+        .upsert(updateData as any, {
+          onConflict: 'id', // Default to ID if present, but upsert with ID works like update
+        });
+        
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Controle mensal salvo!");
