@@ -33,8 +33,10 @@ const PortalLayout: React.FC = () => {
         { title: "Licenças", icon: ScrollText, path: "/portal/licencas" },
         { title: "Certidões", icon: FileBadge, path: "/portal/certidoes" },
         { title: "Processos", icon: Briefcase, path: "/portal/processos" },
+        { title: "Documentos", icon: FileText, path: "/portal/documentos" },
         { title: "Vencimentos", icon: CalendarClock, path: "/portal/vencimentos" },
         { title: "Mensagens", icon: MessageSquare, path: "/portal/mensagens" },
+        { title: "Help Desk", icon: MessageSquare, path: "/portal/helpdesk" },
         { title: "Meu Perfil", icon: UserCircle, path: "/portal/perfil" },
     ];
 

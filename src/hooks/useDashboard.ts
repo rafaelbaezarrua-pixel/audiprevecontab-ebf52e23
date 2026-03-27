@@ -7,19 +7,29 @@ import { ptBR } from "date-fns/locale";
 
 export const useDashboard = (userId?: string) => {
   // 1. Basic Stats
-  const { data: stats = { totalEmpresas: 0, ativas: 0, processosAtivos: 0 }, isLoading: loadingStats } = useQuery({
+  const { data: stats = { totalEmpresas: 0, ativas: 0, processosAtivos: 0, tarefasHoje: 0 }, isLoading: loadingStats } = useQuery({
     queryKey: ["dashboard_stats"],
     queryFn: async () => {
-      const [{ count: total }, { count: ativas }, { count: processos }] = await Promise.all([
+      let tarefasHojeQuery = supabase.from("tarefas" as any).select("*", { count: "exact", head: true })
+          .eq("data", format(new Date(), "yyyy-MM-dd"))
+          .neq("status", "concluido");
+      
+      if (userId) {
+          tarefasHojeQuery = tarefasHojeQuery.eq("usuario_id", userId);
+      }
+
+      const [{ count: total }, { count: ativas }, { count: processos }, { count: tarefasHoje }] = await Promise.all([
         supabase.from("empresas").select("*", { count: "exact", head: true }),
         supabase.from("empresas").select("*", { count: "exact", head: true }).eq("situacao", "ativa"),
         supabase.from("processos_societarios").select("*", { count: "exact", head: true }).neq("status", "concluido"),
+        tarefasHojeQuery
       ]);
 
       return {
         totalEmpresas: total || 0,
         ativas: ativas || 0,
         processosAtivos: processos || 0,
+        tarefasHoje: tarefasHoje || 0,
       };
     },
   });

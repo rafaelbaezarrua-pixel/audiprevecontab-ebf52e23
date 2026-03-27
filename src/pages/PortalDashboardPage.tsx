@@ -7,6 +7,18 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend,
+    ResponsiveContainer,
+    Line,
+    ComposedChart,
+} from "recharts";
 
 const PortalDashboardPage: React.FC = () => {
     const { userData } = useAuth();
@@ -39,6 +51,15 @@ const PortalDashboardPage: React.FC = () => {
         { label: "Licenças Ativas", value: counts.lics.toString(), icon: FileText, color: "text-amber-500", bg: "bg-amber-500/10" },
         { label: "Certidões Disponíveis", value: counts.certs.toString(), icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" },
         { label: "Mensagens Não Lidas", value: counts.msgs.toString(), icon: MessageSquare, color: "text-blue-500", bg: "bg-blue-500/10" },
+    ];
+
+    const chartData = [
+        { name: "Set", faturamento: 45000, impostos: 4100 },
+        { name: "Out", faturamento: 52000, impostos: 4800 },
+        { name: "Nov", faturamento: 48000, impostos: 4400 },
+        { name: "Dez", faturamento: 61000, impostos: 5600 },
+        { name: "Jan", faturamento: 55000, impostos: 5100 },
+        { name: "Fev", faturamento: 58000, impostos: 5300 },
     ];
 
     return (
@@ -77,6 +98,75 @@ const PortalDashboardPage: React.FC = () => {
                         <div className="text-4xl font-black text-card-foreground">{stat.value}</div>
                     </div>
                 ))}
+            </div>
+
+            {/* Dashboard Financeiro */}
+            <div className="card-premium animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                    <div>
+                        <h3 className="text-xl font-bold flex items-center gap-2">
+                            <Building2 className="text-primary" size={22} /> Faturamento vs Impostos
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">Histórico dos últimos 6 meses</p>
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-primary" />
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Faturamento</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-amber-500" />
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Impostos</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                            <XAxis 
+                                dataKey="name" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fontSize: 12, fontWeight: 700, fill: "hsl(var(--muted-foreground))" }} 
+                                dy={10}
+                            />
+                            <YAxis 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fontSize: 12, fontWeight: 700, fill: "hsl(var(--muted-foreground))" }}
+                                tickFormatter={(value) => `R$ ${value / 1000}k`}
+                            />
+                            <Tooltip 
+                                contentStyle={{ 
+                                    backgroundColor: "hsl(var(--card))", 
+                                    borderRadius: "16px", 
+                                    border: "1px solid hsl(var(--border))",
+                                    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                                    fontWeight: 700
+                                }}
+                                formatter={(value: number) => [
+                                    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value),
+                                    ""
+                                ]}
+                            />
+                            <Bar 
+                                dataKey="faturamento" 
+                                fill="hsl(var(--primary))" 
+                                radius={[6, 6, 0, 0]} 
+                                barSize={40}
+                            />
+                            <Line 
+                                type="monotone" 
+                                dataKey="impostos" 
+                                stroke="#f59e0b" 
+                                strokeWidth={3} 
+                                dot={{ fill: "#f59e0b", r: 4, strokeWidth: 2 }} 
+                                activeDot={{ r: 6, strokeWidth: 0 }}
+                            />
+                        </ComposedChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

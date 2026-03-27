@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Clock, User, Save, ArrowLeft, ClipboardList } from "lucide-react";
+import { Calendar, Clock, User, Save, ArrowLeft, ClipboardList, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 const TarefaFormPage: React.FC = () => {
@@ -10,22 +10,25 @@ const TarefaFormPage: React.FC = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [usuarios, setUsuarios] = useState<{ id: string; nome: string }[]>([]);
+    const [empresas, setEmpresas] = useState<{ id: string; nome_empresa: string }[]>([]);
     const [form, setForm] = useState({
         data: new Date().toISOString().split('T')[0],
         horario: "09:00",
         usuario_id: "",
+        empresa_id: "",
         assunto: "",
         informacoes_adicionais: ""
     });
 
     useEffect(() => {
-        const loadUsers = async () => {
+        const loadData = async () => {
             try {
                 const { data: profiles } = await supabase.from("profiles").select("id, full_name, nome_completo, user_id").eq("ativo", true);
+                const { data: emps } = await supabase.from("empresas").select("id, nome_empresa").order("nome_empresa");
+                setEmpresas(emps || []);
+
                 if (!profiles) return;
-
                 const userIds = profiles.filter(p => p.user_id).map(p => p.user_id);
-
                 const [{ data: roles }, { data: access }] = await Promise.all([
                     supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
                     supabase.from("empresa_acessos").select("user_id").in("user_id", userIds)
@@ -48,7 +51,7 @@ const TarefaFormPage: React.FC = () => {
                 console.error(err);
             }
         };
-        loadUsers();
+        loadData();
     }, []);
 
     const handleSave = async () => {
@@ -117,6 +120,23 @@ const TarefaFormPage: React.FC = () => {
                                 className={inputCls + " pl-11"}
                             />
                         </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label className={labelCls}>Empresa Vinculada (Opcional)</label>
+                    <div className="relative">
+                        <Building2 size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <select
+                            value={form.empresa_id}
+                            onChange={e => setForm({ ...form, empresa_id: e.target.value })}
+                            className={inputCls + " pl-11 appearance-none"}
+                        >
+                            <option value="">Selecione uma empresa se houver vínculo...</option>
+                            {empresas.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.nome_empresa}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

@@ -3,9 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, parseISO, isValid, startOfMonth, addMonths, setDate, lastDayOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 
 interface Tarefa {
@@ -20,6 +24,7 @@ interface Tarefa {
     usuario_nome?: string;
     status: "em_aberto" | "concluido" | "pendente";
     arquivado: boolean;
+    empresas?: { nome_empresa: string } | null;
 }
 
 const TarefasPage: React.FC = () => {
@@ -31,22 +36,40 @@ const TarefasPage: React.FC = () => {
     const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
     const [activeTab, setActiveTab] = useState<"geral" | "meus">("geral");
     const [activeSubTab, setActiveSubTab] = useState<"em_aberto" | "concluido" | "pendente" | "arquivados">("em_aberto");
-    const [viewMode, setViewMode] = useState<"list">("list");
+    const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
+    
+    // Batch Cloning State
+    const [isBatchOpen, setIsBatchOpen] = useState(false);
+    const [batchForm, setBatchForm] = useState({
+        assunto: "",
+        informacoes: "",
+        data: new Date().toISOString().split('T')[0],
+        horario: "09:00",
+        responsavel_id: user?.id || ""
+    });
+    const [selectedEmpresas, setSelectedEmpresas] = useState<string[]>([]);
+    const [empresas, setEmpresas] = useState<any[]>([]);
+    const [usuarios, setUsuarios] = useState<any[]>([]);
 
     const loadData = async () => {
         setLoading(true);
         try {
             // Carregar usuários para mapear nomes
-            const { data: usersData } = await (supabase.from("profiles").select("id, full_name, user_id") as any);
+            const { data: usersData } = await supabase.from("profiles").select("id, full_name, user_id").eq("ativo", true);
             const mappedUsers = (usersData || []).filter((u: any) => u.user_id).map((u: any) => ({
                 id: u.user_id,
                 nome: u.full_name || "Sem Nome"
             }));
+            setUsuarios(mappedUsers);
+
+            // Carregar empresas para o lote
+            const { data: emps } = await supabase.from("empresas").select("id, nome_empresa").order("nome_empresa");
+            setEmpresas(emps || []);
 
             // Carregar tarefas
             const { data: agendaData } = await (supabase
                 .from("tarefas" as any)
-                .select("*")
+                .select("*, empresas(nome_empresa)")
                 .eq("competencia", competencia)
                 .order("horario", { ascending: true }) as any);
 
@@ -69,7 +92,7 @@ const TarefasPage: React.FC = () => {
                     status: currentStatus,
                     arquivado: !!a.arquivado,
                     usuario_nome: mappedUsers.find(u => u.id === a.usuario_id)?.nome || "Não encontrado",
-                    _isOverdueDbUpdateNeeded: isOverdue // Flag to update DB later
+                    _isOverdueDbUpdateNeeded: isOverdue
                 };
             });
 
@@ -167,7 +190,102 @@ const TarefasPage: React.FC = () => {
             toast.error("Erro ao excluir: " + error.message);
         }
     };
+    const handleCreateBatch = async () => {
+        if (!batchForm.assunto || !batchForm.responsavel_id || selectedEmpresas.length === 0) {
+            toast.error("Preencha o assunto, responsável e selecione ao menos uma empresa.");
+            return;
+        }
 
+        try {
+            const inserts = selectedEmpresas.map(empId => ({
+                assunto: batchForm.assunto,
+                informacoes_adicionais: batchForm.informacoes,
+                data: batchForm.data,
+                horario: batchForm.horario,
+                usuario_id: batchForm.responsavel_id,
+                empresa_id: empId,
+                criado_por: user?.id,
+                competencia: batchForm.data.slice(0, 7)
+            }));
+
+            const { error } = await supabase.from("tarefas" as any).insert(inserts);
+            if (error) throw error;
+
+            toast.success(`${inserts.length} tarefas criadas com sucesso!`);
+            setIsBatchOpen(false);
+            setBatchForm({ ...batchForm, assunto: "", informacoes: "" });
+            setSelectedEmpresas([]);
+            loadData();
+        } catch (err: any) {
+            toast.error("Erro no lançamento em lote: " + err.message);
+        }
+    };
+    const handleClonePreviousMonth = async () => {
+        try {
+            const currentYear = parseInt(competencia.slice(0, 4));
+            const currentMonth = parseInt(competencia.slice(5, 7));
+            
+            let prevYear = currentYear;
+            let prevMonth = currentMonth - 1;
+            if (prevMonth === 0) {
+                prevMonth = 12;
+                prevYear -= 1;
+            }
+            const prevCompetencia = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+
+            const { data: prevTasks, error: fetchError } = await supabase
+                .from("tarefas" as any)
+                .select("*")
+                .eq("competencia", prevCompetencia);
+
+            if (fetchError) throw fetchError;
+            if (!prevTasks || prevTasks.length === 0) {
+                toast.error("Nenhuma tarefa encontrada no mês anterior.");
+                return;
+            }
+
+            if (!window.confirm(`Deseja clonar ${prevTasks.length} tarefas de ${prevCompetencia} para ${competencia}?`)) {
+                return;
+            }
+
+            const clones = prevTasks.map((t: any) => {
+                const originalDate = parseISO(t.data);
+                const day = originalDate.getDate();
+                
+                // Parse current competence (YYYY-MM)
+                const [year, month] = competencia.split('-').map(Number);
+                let targetDate = new Date(year, month - 1, day);
+                
+                // Check if the day exists in the target month (overflow check)
+                if (targetDate.getMonth() !== month - 1) {
+                    targetDate = lastDayOfMonth(new Date(year, month - 1));
+                }
+                
+                const newData = format(targetDate, "yyyy-MM-dd");
+                
+                return {
+                    assunto: t.assunto,
+                    informacoes_adicionais: t.informacoes_adicionais,
+                    data: newData,
+                    horario: t.horario,
+                    usuario_id: t.usuario_id,
+                    empresa_id: t.empresa_id,
+                    criado_por: user?.id,
+                    competencia: competencia,
+                    status: "em_aberto",
+                    arquivado: false
+                };
+            });
+
+            const { error: insertError } = await supabase.from("tarefas" as any).insert(clones);
+            if (insertError) throw insertError;
+
+            toast.success(`${clones.length} tarefas clonadas com sucesso!`);
+            loadData();
+        } catch (err: any) {
+            toast.error("Erro ao clonar tarefas: " + err.message);
+        }
+    };
     const filtered = agendamentos.filter(a => {
         const matchSearch = a.assunto.toLowerCase().includes(search.toLowerCase()) ||
             a.usuario_nome?.toLowerCase().includes(search.toLowerCase());
@@ -219,6 +337,11 @@ const TarefasPage: React.FC = () => {
                         <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
                             <User size={12} className="text-primary/70" /> Para: <span className="text-foreground font-medium">{a.usuario_nome}</span>
                         </p>
+                        {a.empresas?.nome_empresa && (
+                             <p className="text-[10px] font-black uppercase tracking-widest text-primary/70 bg-primary/5 px-2 py-0.5 rounded-md w-fit mt-1">
+                                {a.empresas.nome_empresa}
+                             </p>
+                        )}
                     </div>
                 </div>
 
@@ -291,6 +414,80 @@ const TarefasPage: React.FC = () => {
                     onChange={e => setCompetencia(e.target.value)}
                     className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold"
                 />
+                <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
+                    <DialogTrigger asChild>
+                        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/20 text-primary bg-primary/5 text-sm font-bold hover:bg-primary/10 transition-all">
+                            <ClipboardList size={18} /> Lançamento em Lote
+                        </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader><DialogTitle>Lançamento em Lote de Tarefas</DialogTitle></DialogHeader>
+                        <div className="space-y-6 py-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Assunto</Label>
+                                    <input className="w-full px-4 py-2 border rounded-lg" value={batchForm.assunto} onChange={e => setBatchForm({...batchForm, assunto: e.target.value})} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Responsável</Label>
+                                    <select className="w-full px-4 py-2 border rounded-lg" value={batchForm.responsavel_id} onChange={e => setBatchForm({...batchForm, responsavel_id: e.target.value})}>
+                                        <option value="">Selecione...</option>
+                                        {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Data</Label>
+                                    <input type="date" className="w-full px-4 py-2 border rounded-lg" value={batchForm.data} onChange={e => setBatchForm({...batchForm, data: e.target.value})} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Horário</Label>
+                                    <input type="time" className="w-full px-4 py-2 border rounded-lg" value={batchForm.horario} onChange={e => setBatchForm({...batchForm, horario: e.target.value})} />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Informações Adicionais</Label>
+                                <textarea className="w-full px-4 py-2 border rounded-lg h-20 resize-none" value={batchForm.informacoes} onChange={e => setBatchForm({...batchForm, informacoes: e.target.value})} />
+                            </div>
+                            
+                            <div className="space-y-3">
+                                <Label className="flex items-center justify-between">
+                                    Selecione as Empresas ({selectedEmpresas.length})
+                                    <button className="text-xs text-primary font-bold" onClick={() => {
+                                        if (selectedEmpresas.length === empresas.length) setSelectedEmpresas([]);
+                                        else setSelectedEmpresas(empresas.map(e => e.id));
+                                    }}>
+                                        {selectedEmpresas.length === empresas.length ? "Desmarcar Todas" : "Selecionar Todas"}
+                                    </button>
+                                </Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-xl p-4 max-h-48 overflow-y-auto bg-muted/20">
+                                    {empresas.map(emp => (
+                                        <div key={emp.id} className="flex items-center gap-3 p-2 hover:bg-card rounded-lg transition-colors cursor-pointer" onClick={() => {
+                                            if (selectedEmpresas.includes(emp.id)) setSelectedEmpresas(prev => prev.filter(id => id !== emp.id));
+                                            else setSelectedEmpresas(prev => [...prev, emp.id]);
+                                        }}>
+                                            <Checkbox checked={selectedEmpresas.includes(emp.id)} />
+                                            <span className="text-xs font-medium truncate">{emp.nome_empresa}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <Button className="w-full button-premium" onClick={handleCreateBatch}>
+                                Criar Tarefas em Lote
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                <button
+                    onClick={handleClonePreviousMonth}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/20 text-primary bg-primary/5 text-sm font-bold hover:bg-primary/10 transition-all"
+                >
+                    <RefreshCw size={18} /> Clonar Mês Anterior
+                </button>
+
                 <button
                     onClick={() => navigate("/tarefas/novo")}
                     className="button-premium shadow-md"
@@ -343,6 +540,22 @@ const TarefasPage: React.FC = () => {
                 </div>
 
 
+                <div className="flex gap-2 p-1 bg-muted/20 border border-border/50 rounded-xl shrink-0">
+                    <button 
+                        onClick={() => setViewMode("list")} 
+                        className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                        title="Lista"
+                    >
+                        <List size={18} />
+                    </button>
+                    <button 
+                        onClick={() => setViewMode("kanban")} 
+                        className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                        title="Kanban"
+                    >
+                        <LayoutDashboard size={18} />
+                    </button>
+                </div>
             </div>
 
             <div className="relative max-w-sm shrink-0">
@@ -356,15 +569,49 @@ const TarefasPage: React.FC = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
-                {filtered.length === 0 ? (
-                    <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
-                        Nenhuma tarefa encontrada para este período.
-                    </div>
-                ) : (
-                    filtered.map(a => <React.Fragment key={a.id}>{renderItemContent(a)}</React.Fragment>)
-                )}
-            </div>
+            {viewMode === "list" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
+                    {filtered.length === 0 ? (
+                        <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
+                            Nenhuma tarefa encontrada para este período.
+                        </div>
+                    ) : (
+                        filtered.map(a => <React.Fragment key={a.id}>{renderItemContent(a)}</React.Fragment>)
+                    )}
+                </div>
+            ) : (
+                <div className="flex gap-6 pb-10 overflow-x-auto no-scrollbar min-h-[500px]">
+                    {[
+                        { id: "em_aberto", label: "Em Aberto", color: "bg-primary" },
+                        { id: "pendente", label: "Pendente", color: "bg-amber-500" },
+                        { id: "concluido", label: "Concluído", color: "bg-green-500" }
+                    ].map(col => {
+                        const colTasks = filtered.filter(a => a.status === col.id);
+                        return (
+                            <div key={col.id} className="flex-1 min-w-[300px] flex flex-col gap-4">
+                                <div className="flex items-center justify-between px-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${col.color}`} />
+                                        <h3 className="font-bold text-sm tracking-tight">{col.label}</h3>
+                                        <span className="text-[10px] font-black bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{colTasks.length}</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    {colTasks.length === 0 ? (
+                                        <div className="py-8 text-center text-[10px] text-muted-foreground bg-muted/10 rounded-xl border border-dashed border-border/50">Vazio</div>
+                                    ) : (
+                                        colTasks.map(a => (
+                                            <div key={a.id} className="rounded-xl overflow-hidden shadow-sm border border-border">
+                                                {renderItemContent(a)}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 };

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Building2, Activity, DollarSign, Users } from "lucide-react";
+import { Building2, Activity, DollarSign, Users, ClipboardList } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface DashboardStatsProps {
@@ -8,6 +8,7 @@ interface DashboardStatsProps {
     totalEmpresas: number;
     ativas: number;
     processosAtivos: number;
+    tarefasHoje: number;
   };
 }
 
@@ -34,10 +35,17 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
       color: "from-purple-500/20 to-pink-500/20",
       text: "text-purple-500",
     },
+    {
+      label: "Tarefas Pendentes Hoje",
+      value: stats.tarefasHoje,
+      icon: <ClipboardList className="w-6 h-6" />,
+      color: "from-amber-500/20 to-orange-500/20",
+      text: "text-amber-500",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, idx) => (
         <div
           key={idx}
