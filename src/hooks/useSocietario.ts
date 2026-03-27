@@ -57,6 +57,30 @@ export const useSocietario = () => {
       query = query.eq("regime_tributario", regime as any);
     }
 
+    // Filter by permissions if userId is provided
+    if (userId && moduloId) {
+      const { data: acessos } = await supabase
+        .from("empresa_acessos")
+        .select("empresa_id, modulos_permitidos")
+        .eq("user_id", userId);
+
+      if (acessos && acessos.length > 0) {
+        // Companies with specific rules
+        const restrictedIds = acessos.map(a => a.empresa_id);
+        const allowedIds = acessos
+          .filter(a => a.modulos_permitidos.includes(moduloId))
+          .map(a => a.empresa_id);
+        
+        // Allowed companies = (Not Restricted) OR (Allowed in Restricted)
+        // This is complex for a single query, so we'll use a simpler 'where in' or 'not in'
+        // For now, let's at least filter the ones that are explicitly allowed if they are in the restricted list
+        const disallowedIds = restrictedIds.filter(id => !allowedIds.includes(id));
+        if (disallowedIds.length > 0) {
+          query = query.not("id", "in", `(${disallowedIds.join(',')})`);
+        }
+      }
+    }
+
     const from = page * limit;
     const to = from + limit - 1;
 
@@ -75,23 +99,6 @@ export const useSocietario = () => {
     });
 
     const enrichedData = (empresasData || []).map(e => ({ ...e, socios_count: sociosCounts[e.id] || 0 })) as Empresa[];
-
-    if (userId && moduloId) {
-      const { data: acessos } = await supabase
-        .from("empresa_acessos")
-        .select("empresa_id, modulos_permitidos")
-        .eq("user_id", userId);
-
-      if (acessos && acessos.length > 0) {
-        const acessosMap = new Map(acessos.map(a => [a.empresa_id, a.modulos_permitidos]));
-        const filtered = enrichedData.filter(emp => {
-          const modulosPermitidos = acessosMap.get(emp.id);
-          if (!modulosPermitidos) return true; // Full access if no specific rule
-          return modulosPermitidos.includes(moduloId);
-        });
-        return { data: filtered, count: count || 0 };
-      }
-    }
     
     return { data: enrichedData, count: count || 0 };
   };

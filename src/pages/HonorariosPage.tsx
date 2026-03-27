@@ -64,8 +64,9 @@ const HonorariosPage: React.FC = () => {
       );
       setPaginatedData(data);
       setTotalCount(count);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao carregar empresas paginadas:", err);
+      toast.error("Erro ao carregar lista de empresas: " + err.message);
     } finally {
       setLoadingPaginated(false);
     }
