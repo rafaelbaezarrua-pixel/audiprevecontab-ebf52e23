@@ -218,7 +218,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                $el.iCheck('check');
             }
           }
-        } catch(e) {}
+        } catch(e) { /* fallback ignorado */ }
         
         firstCheck.checked = true;
         firstCheck.click();
@@ -293,7 +293,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           await btn.click();
         })
         .catch(() => console.log('[5] Botão Salvar não encontrado, aguardando download automático...'));
-    } catch(e) {}
+    } catch(e) { /* ignore timeout error */ }
 
     console.log('[5] Aguardando interceptação da resposta PDF...');
     const pdfUrl = await new Promise<string>((resolve, reject) => {
@@ -318,7 +318,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
              console.log('[5] Link no DOM (fallback) encontrado:', directLink);
              return resolve(directLink);
           }
-        } catch (e) {}
+        } catch (e) { /* fallback DOM error ignored */ }
 
         setTimeout(poll, 400);
       };

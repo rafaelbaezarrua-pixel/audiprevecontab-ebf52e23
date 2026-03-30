@@ -4,7 +4,7 @@
  */
 
 // Declaração do global do Lacuna (carregado via script tag)
-declare var LacunaWebPKI: any;
+declare let LacunaWebPKI: any;
 
 export interface Certificate {
   id: string;
@@ -46,7 +46,7 @@ class LacunaWebPkiClient {
           
           console.log(`[Lacuna] Inicializando para ${window.location.hostname} (Licença: ${isLocal ? 'Livre/Localhost' : 'Dev-Key'})`);
           
-          // @ts-ignore
+          // @ts-expect-error - window.LacunaWebPKI comes from external script
           this.pki = new window.LacunaWebPKI(licenseToUse);
           this.pki.init({
             ready: () => {
@@ -68,7 +68,7 @@ class LacunaWebPkiClient {
         }
       };
 
-      // @ts-ignore
+      // @ts-expect-error - window.LacunaWebPKI comes from external script
       if (typeof window.LacunaWebPKI !== 'undefined') {
         onReady();
       } else {

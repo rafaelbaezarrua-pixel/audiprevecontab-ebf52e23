@@ -1,5 +1,6 @@
 import { RealtimeChannel } from "@supabase/supabase-js";
 import React, { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
   Building2, Search, Filter, ChevronDown, 
@@ -21,6 +22,7 @@ import { List } from "lucide-react";
 
 const SocietarioPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { 
     empresas, processos, isLoading, 
     deleteProcesso, updateProcesso, getPaginatedEmpresas
@@ -37,6 +39,7 @@ const SocietarioPage: React.FC = () => {
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [processTab, setProcessTab] = useState<Record<string, 'timeline' | 'historico'>>({});
   const [processoToDelete, setProcessoToDelete] = useState<{ id: string, nome: string } | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [novoProcessoData, setNovoProcessoData] = useState({ 
     tipo: 'abertura', 
@@ -107,7 +110,7 @@ const SocietarioPage: React.FC = () => {
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [pagination.pageIndex, pagination.pageSize, search, filterSituacao, filterRegime, activeTab]);
+  }, [pagination.pageIndex, pagination.pageSize, search, filterSituacao, filterRegime, activeTab, refreshTrigger]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -123,7 +126,7 @@ const SocietarioPage: React.FC = () => {
           (payload) => {
             if (isMounted) {
                // Force a refetch of the current page
-               setPagination(prev => ({ ...prev }));
+               setRefreshTrigger(prev => prev + 1);
             }
           }
         )
@@ -177,7 +180,7 @@ const SocietarioPage: React.FC = () => {
       });
       toast.success("Processo iniciado!");
       setShowNovoProcesso(false);
-      window.location.reload(); 
+      queryClient.invalidateQueries({ queryKey: ["processos_societarios"] });
     }
   };
 

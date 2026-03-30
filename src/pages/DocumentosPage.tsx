@@ -210,7 +210,8 @@ const DocumentosPage = () => {
 
           console.log('[Documentos] Enviando para backend. Tamanhos:', { pdf: pdfBase64.length, pfx: pfxBase64.length });
 
-          const res = await fetch('http://localhost:3000/api/sign-pdf', {
+          const apiUrl = import.meta.env.DEV ? 'http://localhost:3000/api/sign-pdf' : '/api/sign-pdf';
+          const res = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

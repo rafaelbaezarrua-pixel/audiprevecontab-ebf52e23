@@ -33,7 +33,7 @@ export function numeroPorExtenso(numero: number): string {
     const txtReais = parseGroup(reais);
     const txtCentavos = parseGroup(centavos);
 
-    let res = [];
+    const res = [];
     if (reais > 0) {
         if (reais >= 1000) {
             const milhares = Math.floor(reais / 1000);
