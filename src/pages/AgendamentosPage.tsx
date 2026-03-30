@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List } from "lucide-react";
+import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -209,13 +209,22 @@ const AgendamentosPage: React.FC = () => {
                         </button>
                     )}
 
-                    <button
-                        onClick={() => handleDeleteAgendamento(a.id)}
-                        className="px-3 py-1.5 rounded-md bg-destructive/10 text-destructive text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center gap-1.5"
-                        title="Excluir"
-                    >
-                        <Trash2 size={13} /> Excluir
-                    </button>
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={() => navigate(`/agendamentos/editar/${a.id}`)}
+                            className="p-1.5 rounded-md text-primary/70 hover:bg-primary/10 hover:text-primary transition-all"
+                            title="Editar"
+                        >
+                            <Pencil size={14} />
+                        </button>
+                        <button
+                            onClick={() => handleDeleteAgendamento(a.id)}
+                            className="p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all"
+                            title="Excluir"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

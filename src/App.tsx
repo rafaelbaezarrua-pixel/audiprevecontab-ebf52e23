@@ -180,8 +180,10 @@ const App = () => (
                   <Route path="/relatorios" element={<RelatorioPersonalizadoPage />} />
                   <Route path="/agendamentos" element={<AgendamentosPage />} />
                   <Route path="/agendamentos/novo" element={<AgendamentoFormPage />} />
+                  <Route path="/agendamentos/editar/:id" element={<AgendamentoFormPage />} />
                   <Route path="/tarefas" element={<TarefasPage />} />
                   <Route path="/tarefas/novo" element={<TarefaFormPage />} />
+                  <Route path="/tarefas/editar/:id" element={<TarefaFormPage />} />
                   <Route path="/ocorrencias" element={<OcorrenciasPage />} />
                   <Route path="/configuracoes/usuarios/novo" element={<AdminRoute><UsuarioFormPage /></AdminRoute>} />
                   <Route path="/perfil" element={<PerfilPage />} />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List } from "lucide-react";
+import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO, isValid, startOfMonth, addMonths, setDate, lastDayOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -326,13 +326,22 @@ const TarefasPage: React.FC = () => {
                 <div className="space-y-1 w-full">
                     <div className="flex items-start justify-between gap-2">
                         <h3 className="font-bold text-card-foreground leading-tight text-sm flex-1">{a.assunto}</h3>
-                        <button
-                            onClick={() => handleDeleteAgendamento(a.id)}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
-                            title="Excluir"
-                        >
-                            <Trash2 size={14} />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                            <button
+                                onClick={() => navigate(`/tarefas/editar/${a.id}`)}
+                                className="p-1.5 rounded-md text-primary/70 hover:bg-primary/10 hover:text-primary transition-all"
+                                title="Editar"
+                            >
+                                <Pencil size={14} />
+                            </button>
+                            <button
+                                onClick={() => handleDeleteAgendamento(a.id)}
+                                className="p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all"
+                                title="Excluir"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
                         <User size={12} className="text-primary/70" /> Para: <span className="text-foreground font-medium">{a.usuario_nome}</span>
