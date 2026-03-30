@@ -39,6 +39,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      documentos_assinaturas: {
+        Row: {
+          assinatura_pkcs7: string | null
+          certificado_info: Json | null
+          created_at: string
+          criado_por: string | null
+          data_assinatura: string | null
+          empresa_id: string | null
+          file_url: string
+          id: string
+          status: Database["public"]["Enums"]["status_assinatura"]
+          tipo_documento: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          assinatura_pkcs7?: string | null
+          certificado_info?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          data_assinatura?: string | null
+          empresa_id?: string | null
+          file_url: string
+          id?: string
+          status?: Database["public"]["Enums"]["status_assinatura"]
+          tipo_documento?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          assinatura_pkcs7?: string | null
+          certificado_info?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          data_assinatura?: string | null
+          empresa_id?: string | null
+          file_url?: string
+          id?: string
+          status?: Database["public"]["Enums"]["status_assinatura"]
+          tipo_documento?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_assinaturas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      },
       agendamentos: {
         Row: {
           arquivado: boolean | null
@@ -1436,6 +1489,7 @@ export type Database = {
         | "com_vencimento"
         | "em_processo"
       regime_tributario: "simples" | "lucro_presumido" | "lucro_real" | "mei"
+      status_assinatura: "pendente" | "assinado" | "rejeitado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1576,6 +1630,7 @@ export const Constants = {
         "em_processo",
       ],
       regime_tributario: ["simples", "lucro_presumido", "lucro_real", "mei"],
+      status_assinatura: ["pendente", "assinado", "rejeitado"],
     },
   },
 } as const

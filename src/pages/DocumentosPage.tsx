@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ClipboardList, Plus, Loader2, Eye, EyeOff } from "lucide-react";
 import { lacunaApi, Certificate } from "@/lib/lacuna";
+import PdfSignPositioner from "@/components/PdfSignPositioner";
 
 const DocumentosPage = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -36,6 +37,8 @@ const DocumentosPage = () => {
   const [pfxFile, setPfxFile] = useState<File | null>(null);
   const [pfxPassword, setPfxPassword] = useState('');
   const [showPfxPassword, setShowPfxPassword] = useState(false);
+  const [signCoords, setSignCoords] = useState<{ x: number; y: number; pageIndex: number } | null>(null);
+  const [showPositioner, setShowPositioner] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: empresas = [] } = useQuery({
@@ -116,10 +119,11 @@ const DocumentosPage = () => {
       const { data, error: dbError } = await supabase
         .from('documentos_assinaturas' as any)
         .insert({
-          empresa_id: empresaId === 'geral' ? null : empresaId,
+          empresa_id: (!empresaId || empresaId === 'geral') ? null : empresaId,
           titulo,
           file_url: publicUrl,
-          status: 'pendente'
+          status: 'pendente',
+          tipo_documento: 'Geral'
         })
         .select()
         .single();
@@ -159,7 +163,7 @@ const DocumentosPage = () => {
   };
 
   const signMutation = useMutation({
-    mutationFn: async ({ doc, certId, pfxData, pfxPass }: { doc: any, certId?: string, pfxData?: File | null, pfxPass?: string }) => {
+    mutationFn: async ({ doc, certId, pfxData, pfxPass, coords }: { doc: any, certId?: string, pfxData?: File | null, pfxPass?: string, coords?: any }) => {
       setIsSigning(doc.id);
       try {
         toast.info("Processando assinatura digital...");
@@ -218,7 +222,10 @@ const DocumentosPage = () => {
               pdfBase64,
               pfxBase64,
               passphrase: pfxPass,
-              visualText: `Assinado digitalmente por Audipreve\nData: ${new Date().toLocaleString('pt-BR')}`
+              visualText: `Assinado digitalmente por Audipreve\nData: ${new Date().toLocaleString('pt-BR')}`,
+              x: coords?.x,
+              y: coords?.y,
+              pageIndex: coords?.pageIndex
             })
           });
 
@@ -305,12 +312,19 @@ const DocumentosPage = () => {
 
   const handleFinalSign = (certId?: string) => {
     if (docToSign) {
+      if (!signCoords) {
+        setShowPositioner(true);
+        return;
+      }
+
       signMutation.mutate({ 
         doc: docToSign, 
         certId, 
         pfxData: pfxFile, 
-        pfxPass: pfxPassword 
+        pfxPass: pfxPassword,
+        coords: signCoords
       });
+      setSignCoords(null);
     }
   };
 
@@ -335,7 +349,28 @@ const DocumentosPage = () => {
                             <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
                                 <DialogHeader><DialogTitle>Assinar Documento</DialogTitle></DialogHeader>
                                 
-                                <Tabs value={signingMethod} onValueChange={(v: any) => setSigningMethod(v)} className="w-full">
+                                {showPositioner ? (
+                                    <div className="h-[600px] mt-4">
+                                        <PdfSignPositioner 
+                                            fileUrl={docToSign?.file_url} 
+                                            onCancel={() => setShowPositioner(false)}
+                                            onSelection={(coords) => {
+                                                setSignCoords(coords);
+                                                setShowPositioner(false);
+                                                // O handleFinalSign será chamado novamente pelo clique do usuário ou automático aqui
+                                                // Vamos disparar manualmente para facilitar
+                                                signMutation.mutate({ 
+                                                    doc: docToSign, 
+                                                    pfxData: pfxFile, 
+                                                    pfxPass: pfxPassword,
+                                                    coords
+                                                });
+                                                setSignCoords(null);
+                                            }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <Tabs value={signingMethod} onValueChange={(v: any) => setSigningMethod(v)} className="w-full">
                                     <TabsList className="grid w-full grid-cols-2 mb-4">
                                         <TabsTrigger value="pfx">Arquivo PFX (A1)</TabsTrigger>
                                         <TabsTrigger value="lacuna">Token / Certificado Local</TabsTrigger>
@@ -408,12 +443,13 @@ const DocumentosPage = () => {
                                                 disabled={!pfxFile || !pfxPassword || signMutation.isPending}
                                             >
                                                 {signMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileSignature className="w-4 h-4 mr-2" />}
-                                                REALIZAR ASSINATURA
+                                                ESCOLHER LOCAL E ASSINAR
                                             </Button>
                                         </div>
                                         <p className="text-[10px] text-center text-gray-400 italic">Sessão Volátil: Seu certificado não é armazenado no servidor.</p>
                                     </TabsContent>
-                                </Tabs>
+                                    </Tabs>
+                                )}
                             </DialogContent>
                         </Dialog>
 

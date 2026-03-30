@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { Calendar, Clock, User, Save, ArrowLeft, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 const AgendamentoFormPage: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { id } = useParams();
     const isEdit = !!id;
     const [loading, setLoading] = useState(false);
@@ -100,6 +102,7 @@ const AgendamentoFormPage: React.FC = () => {
             if (error) throw error;
 
             toast.success(isEdit ? "Agendamento atualizado com sucesso!" : "Agendamento criado com sucesso!");
+            queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
             navigate("/agendamentos");
         } catch (err: any) {
             toast.error("Erro ao salvar: " + err.message);

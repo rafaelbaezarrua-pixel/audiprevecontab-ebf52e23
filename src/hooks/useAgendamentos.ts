@@ -66,7 +66,7 @@ export const useAgendamentos = (competencia: string) => {
 
             return enrichedData;
         },
-        staleTime: 5 * 60 * 1000,
+        staleTime: 30 * 1000, // 30 segundos de cache (mais fresco)
     });
 
     const updateStatus = useMutation({
