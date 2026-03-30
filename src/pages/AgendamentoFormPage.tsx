@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Calendar, Clock, User, Save, ArrowLeft, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 
 const AgendamentoFormPage: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEdit = !!id;
     const [loading, setLoading] = useState(false);
     const [usuarios, setUsuarios] = useState<{ id: string; nome: string }[]>([]);
     const [form, setForm] = useState({
@@ -44,12 +46,38 @@ const AgendamentoFormPage: React.FC = () => {
                     }));
 
                 setUsuarios(mapped);
+
+                // If editing, load the appointment data
+                if (isEdit) {
+                    const { data, error } = await supabase
+                        .from("agendamentos" as any)
+                        .select("*")
+                        .eq("id", id)
+                        .single();
+                    
+                    if (error) {
+                        toast.error("Erro ao carregar agendamento: " + error.message);
+                        navigate("/agendamentos");
+                        return;
+                    }
+
+                    const agData = data as any;
+                    if (agData) {
+                        setForm({
+                            data: agData.data,
+                            horario: agData.horario.slice(0, 5),
+                            usuario_id: agData.usuario_id,
+                            assunto: agData.assunto,
+                            informacoes_adicionais: agData.informacoes_adicionais || ""
+                        });
+                    }
+                }
             } catch (err) {
                 console.error(err);
             }
         };
         loadUsers();
-    }, []);
+    }, [id, isEdit]);
 
     const handleSave = async () => {
         if (!form.data || !form.usuario_id || !form.assunto) {
@@ -65,12 +93,13 @@ const AgendamentoFormPage: React.FC = () => {
                 competencia: form.data.slice(0, 7)
             };
 
-            const { error } = await (supabase.from("agendamentos" as any).insert(payload) as any);
+            const { error } = isEdit 
+                ? await (supabase.from("agendamentos" as any).update(payload).eq("id", id) as any)
+                : await (supabase.from("agendamentos" as any).insert(payload) as any);
+
             if (error) throw error;
 
-            // Notification is handled by the DB trigger `handle_agendamento_notification`
-
-            toast.success("Agendamento criado com sucesso!");
+            toast.success(isEdit ? "Agendamento atualizado com sucesso!" : "Agendamento criado com sucesso!");
             navigate("/agendamentos");
         } catch (err: any) {
             toast.error("Erro ao salvar: " + err.message);
@@ -179,7 +208,7 @@ const AgendamentoFormPage: React.FC = () => {
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
-                            <><Save size={20} /> Salvar Agendamento</>
+                            <><Save size={20} /> {isEdit ? "Atualizar Agendamento" : "Salvar Agendamento"}</>
                         )}
                     </button>
                 </div>

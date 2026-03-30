@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Calendar, Clock, User, Save, ArrowLeft, ClipboardList, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 const TarefaFormPage: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEdit = !!id;
     const [loading, setLoading] = useState(false);
     const [usuarios, setUsuarios] = useState<{ id: string; nome: string }[]>([]);
     const [empresas, setEmpresas] = useState<{ id: string; nome_empresa: string }[]>([]);
@@ -47,12 +49,39 @@ const TarefaFormPage: React.FC = () => {
                     }));
 
                 setUsuarios(mapped);
+                
+                // If editing, load the task data
+                if (isEdit) {
+                    const { data, error } = await supabase
+                        .from("tarefas" as any)
+                        .select("*")
+                        .eq("id", id)
+                        .single();
+                    
+                    if (error) {
+                        toast.error("Erro ao carregar tarefa: " + error.message);
+                        navigate("/tarefas");
+                        return;
+                    }
+
+                    const task = data as any;
+                    if (task) {
+                        setForm({
+                            data: task.data,
+                            horario: task.horario.slice(0, 5),
+                            usuario_id: task.usuario_id,
+                            empresa_id: task.empresa_id || "",
+                            assunto: task.assunto,
+                            informacoes_adicionais: task.informacoes_adicionais || ""
+                        });
+                    }
+                }
             } catch (err) {
                 console.error(err);
             }
         };
         loadData();
-    }, []);
+    }, [id, isEdit]);
 
     const handleSave = async () => {
         if (!form.data || !form.usuario_id || !form.assunto) {
@@ -68,10 +97,13 @@ const TarefaFormPage: React.FC = () => {
                 competencia: form.data.slice(0, 7)
             };
 
-            const { error } = await (supabase.from("tarefas" as any).insert(payload) as any);
+            const { error } = isEdit 
+                ? await (supabase.from("tarefas" as any).update(payload).eq("id", id) as any)
+                : await (supabase.from("tarefas" as any).insert(payload) as any);
+            
             if (error) throw error;
 
-            toast.success("Tarefa interna criada com sucesso!");
+            toast.success(isEdit ? "Tarefa atualizada com sucesso!" : "Tarefa interna criada com sucesso!");
             navigate("/tarefas");
         } catch (err: any) {
             toast.error("Erro ao salvar: " + err.message);
@@ -197,7 +229,7 @@ const TarefaFormPage: React.FC = () => {
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
-                            <><Save size={20} /> Salvar Tarefa</>
+                            <><Save size={20} /> {isEdit ? "Atualizar Tarefa" : "Salvar Tarefa"}</>
                         )}
                     </button>
                 </div>
