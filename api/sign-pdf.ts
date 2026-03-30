@@ -4,6 +4,11 @@ import { SignPdf } from '@signpdf/signpdf';
 import { P12Signer } from '@signpdf/signer-p12';
 import { plainAddPlaceholder } from '@signpdf/placeholder-plain';
 
+const cleanBase64 = (str: string) => {
+  if (!str) return '';
+  return str.includes(',') ? str.split(',')[1] : str;
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

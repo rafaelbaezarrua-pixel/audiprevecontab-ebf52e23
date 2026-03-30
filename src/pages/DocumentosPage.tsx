@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileSignature, UploadCloud, File, CheckCircle2, Clock, XCircle, Download } from "lucide-react";
 import { toast } from "sonner";
@@ -30,6 +30,15 @@ const DocumentosPage = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [selectedCert, setSelectedCert] = useState<string>("");
   const [isCertDialogOpen, setIsCertDialogOpen] = useState(false);
+  const handleCertDialogChange = (open: boolean) => {
+    setIsCertDialogOpen(open);
+    if (!open) {
+      setPfxFile(null);
+      setPfxPassword("");
+      setSignCoords(null);
+      setShowPositioner(false);
+    }
+  };
   const [docToSign, setDocToSign] = useState<any>(null);
   
   // Novos estados para Assinatura PFX (Backend)
@@ -181,8 +190,11 @@ const DocumentosPage = () => {
   };
 
   const signMutation = useMutation({
-    mutationFn: async ({ doc, certId, pfxData, pfxPass, coords }: { doc: any, certId?: string, pfxData?: File | null, pfxPass?: string, coords?: any }) => {
+    mutationFn: async ({ doc, method, certId, pfxData, pfxPass, coords }: { doc: any, method: 'pfx' | 'lacuna', certId?: string, pfxData?: File | null, pfxPass?: string, coords?: any }) => {
       setIsSigning(doc.id);
+      const finalMethod = method || signingMethod;
+      console.log(`[Documentos] Iniciando assinatura. Método: ${finalMethod}, CertID: ${certId || 'N/A'}`);
+      
       try {
         toast.info("Processando assinatura digital...");
         
@@ -214,8 +226,8 @@ const DocumentosPage = () => {
         console.log('[Documentos] PDF carregado para assinatura. Tamanho Base64:', pdfBase64.length);
 
         let signedPdfBase64 = "";
-
-        if (signingMethod === 'pfx') {
+        
+        if (finalMethod === 'pfx') {
           // --- ASSINATURA VIA BACKEND (PFX) ---
           if (!pfxData || !pfxPass) throw new Error("Certificado PFX ou senha não fornecidos");
           
@@ -254,7 +266,10 @@ const DocumentosPage = () => {
         } else {
           // --- ASSINATURA VIA LACUNA (LOCAL) ---
           if (!certId) throw new Error("Certificado não selecionado");
-          signedPdfBase64 = await lacunaApi.signPdf(certId, pdfBase64, { visual: false });
+          signedPdfBase64 = await lacunaApi.signPdf(certId, pdfBase64, { 
+            visual: true, 
+            coords 
+          });
         }
         
         // 2. Converter resultado para Blob e upload
@@ -308,6 +323,7 @@ const DocumentosPage = () => {
     },
     onError: (error: any) => {
       toast.error("Erro na assinatura", { description: error.message });
+      setPfxPassword(""); // Limpar senha imediatamente em caso de erro
     }
   });
 
@@ -329,6 +345,8 @@ const DocumentosPage = () => {
   };
 
   const handleFinalSign = (certId?: string) => {
+    if (certId) setSelectedCert(certId);
+    
     if (docToSign) {
       if (!signCoords) {
         setShowPositioner(true);
@@ -337,12 +355,14 @@ const DocumentosPage = () => {
 
       signMutation.mutate({ 
         doc: docToSign, 
-        certId, 
+        method: signingMethod,
+        certId: certId || selectedCert, 
         pfxData: pfxFile, 
         pfxPass: pfxPassword,
-        coords: signCoords
+        coords: signCoords || (docToSign as any).tempCoords
       });
       setSignCoords(null);
+      if ((docToSign as any).tempCoords) delete (docToSign as any).tempCoords;
     }
   };
 
@@ -363,9 +383,12 @@ const DocumentosPage = () => {
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Dialog open={isCertDialogOpen} onOpenChange={setIsCertDialogOpen}>
+                        <Dialog open={isCertDialogOpen} onOpenChange={handleCertDialogChange}>
                             <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
-                                <DialogHeader><DialogTitle>Assinar Documento</DialogTitle></DialogHeader>
+                                <DialogHeader>
+                                    <DialogTitle>Assinar Documento</DialogTitle>
+                                    <DialogDescription className="text-[10px] text-muted-foreground">Escolha o método de assinatura e posicione o carimbo no PDF.</DialogDescription>
+                                </DialogHeader>
                                 
                                 {showPositioner ? (
                                     <div className="h-[600px] mt-4">
@@ -375,10 +398,11 @@ const DocumentosPage = () => {
                                             onSelection={(coords) => {
                                                 setSignCoords(coords);
                                                 setShowPositioner(false);
-                                                // O handleFinalSign será chamado novamente pelo clique do usuário ou automático aqui
-                                                // Vamos disparar manualmente para facilitar
+                                                // Chama o handleFinalSign novamente com os dados preservados
                                                 signMutation.mutate({ 
                                                     doc: docToSign, 
+                                                    method: signingMethod,
+                                                    certId: selectedCert, 
                                                     pfxData: pfxFile, 
                                                     pfxPass: pfxPassword,
                                                     coords
@@ -405,7 +429,10 @@ const DocumentosPage = () => {
                                                         key={cert.id} 
                                                         variant="outline" 
                                                         className="w-full justify-start text-left h-auto py-3 px-4 border-orange-100 hover:border-orange-500 hover:bg-orange-50"
-                                                        onClick={() => handleFinalSign(cert.id)}
+                                                        onClick={() => {
+                                                            setSelectedCert(cert.id);
+                                                            handleFinalSign(cert.id);
+                                                        }}
                                                         disabled={signMutation.isPending}
                                                     >
                                                         <div className="flex flex-col">
@@ -478,7 +505,10 @@ const DocumentosPage = () => {
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>
-                                <DialogHeader><DialogTitle>Assinar Novo Documento</DialogTitle></DialogHeader>
+                                <DialogHeader>
+                                    <DialogTitle>Assinar Novo Documento</DialogTitle>
+                                    <DialogDescription>Selecione um arquivo PDF para iniciar o processo de assinatura.</DialogDescription>
+                                </DialogHeader>
                                 <div className="space-y-4 py-4">
                                     <div className="space-y-2">
                                         <Label>Empresa / Referência (Opcional)</Label>
@@ -608,7 +638,10 @@ const DocumentosPage = () => {
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
-                            <DialogHeader><DialogTitle>Nova Solicitação</DialogTitle></DialogHeader>
+                            <DialogHeader>
+                                <DialogTitle>Nova Solicitação</DialogTitle>
+                                <DialogDescription>Crie um pedido de documento para que seu cliente possa enviá-lo.</DialogDescription>
+                            </DialogHeader>
                             <div className="space-y-4 py-4">
                                 <div className="space-y-2">
                                     <Label>Empresa / Cliente</Label>

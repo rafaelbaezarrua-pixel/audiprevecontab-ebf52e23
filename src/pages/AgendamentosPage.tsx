@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil } from "lucide-react";
+import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, isAfter, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { useAgendamentos, Agendamento } from "@/hooks/useAgendamentos";
@@ -17,6 +17,14 @@ const AgendamentosPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<"geral" | "meus">("geral");
     const [activeSubTab, setActiveSubTab] = useState<"em_aberto" | "concluido" | "pendente" | "arquivados">("em_aberto");
     const [viewMode, setViewMode] = useState<"list">("list");
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000); // Atualiza a cada minuto para mover itens de Próximos para Atrasados
+        return () => clearInterval(timer);
+    }, []);
 
     const { agendamentos, isLoading, isFetching, updateStatus, updateArquivado, deleteAgendamento } = useAgendamentos(competencia);
 
@@ -48,30 +56,52 @@ const AgendamentosPage: React.FC = () => {
         }
     };
 
-    const filtered = agendamentos.filter(a => {
+    // Lista base de agendamentos não arquivados
+    const baseList = agendamentos.filter(a => {
         const matchSearch = a.assunto.toLowerCase().includes(search.toLowerCase()) ||
             a.usuario_nome?.toLowerCase().includes(search.toLowerCase());
-
         const isMine = a.usuario_id === user?.id;
-        const baseFilter = activeTab === "geral" ? true : isMine;
-
-        if (!matchSearch || !baseFilter) return false;
-
-        if (activeSubTab === "arquivados") {
-            return a.arquivado;
-        } else {
-            if (a.arquivado) return false;
-            if (activeSubTab === "em_aberto") return a.status === "em_aberto";
-            return a.status === activeSubTab;
-        }
+        const matchTab = activeTab === "geral" ? true : isMine;
+        return matchSearch && matchTab;
     });
 
-    const counts = {
-        em_aberto: agendamentos.filter(a => !a.arquivado && a.status === "em_aberto" && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length,
-        concluido: agendamentos.filter(a => !a.arquivado && a.status === "concluido" && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length,
-        pendente: agendamentos.filter(a => !a.arquivado && a.status === "pendente" && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length,
-        arquivados: agendamentos.filter(a => a.arquivado && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length
+    // Função para determinar o status temporal
+    const getTemporalStatus = (a: any) => {
+        if (a.arquivado) return "arquivados";
+        if (a.status === "concluido") return "concluido";
+        
+        try {
+            const agDate = parseISO(`${a.data}T${a.horario}`);
+            return isAfter(currentTime, agDate) ? "atrasados" : "proximos";
+        } catch (e) {
+            return "proximos";
+        }
     };
+
+    const filtered = baseList.filter(a => {
+        const tStatus = getTemporalStatus(a);
+        if (activeSubTab === "em_aberto") return tStatus === "proximos";
+        if (activeSubTab === "pendente") return tStatus === "atrasados";
+        return tStatus === activeSubTab;
+    });
+
+    const getCounts = () => {
+        const c = { pro: 0, con: 0, atr: 0, arq: 0 };
+        agendamentos.forEach(a => {
+            const isMine = a.usuario_id === user?.id;
+            const matchTab = activeTab === "geral" ? true : isMine;
+            if (!matchTab) return;
+
+            const tStatus = getTemporalStatus(a);
+            if (tStatus === "proximos") c.pro++;
+            else if (tStatus === "concluido") c.con++;
+            else if (tStatus === "atrasados") c.atr++;
+            else if (tStatus === "arquivados") c.arq++;
+        });
+        return c;
+    };
+
+    const tabCounts = getCounts();
 
     const renderItemContent = (a: Agendamento) => (
         <div className={`p-4 rounded-xl border border-border bg-card group relative transition-all hover:shadow-md ${a.status === 'concluido' ? 'opacity-90' : ''}`}>
@@ -97,11 +127,11 @@ const AgendamentosPage: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full text-center ${
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full text-center flex items-center gap-1 ${
                         a.status === 'concluido' ? 'bg-green-500/10 text-green-500' : 
-                        a.status === 'pendente' ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'
+                        getTemporalStatus(a) === 'atrasados' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'
                     }`}>
-                        {a.status.replace('_', ' ')}
+                        {a.status === 'concluido' ? 'Concluído' : getTemporalStatus(a) === 'atrasados' ? <><AlertCircle size={10} /> Atrasado</> : 'Próximo'}
                     </span>
                 </div>
             </div>
@@ -114,7 +144,7 @@ const AgendamentosPage: React.FC = () => {
                                 <CheckCircle size={14} /> Concluir
                             </button>
                         ) : (
-                            <button onClick={() => handleUpdateStatus(a.id, 'em_aberto')} className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted-foreground hover:text-white transition-all">
+                            <button onClick={() => handleUpdateStatus(a.id, 'pendente')} className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted-foreground hover:text-white transition-all">
                                 <Circle size={14} /> Reabrir
                             </button>
                         )
@@ -174,10 +204,10 @@ const AgendamentosPage: React.FC = () => {
             <div className="flex flex-col gap-4 bg-card/30 p-2 rounded-2xl border border-border/50">
                 <div className="flex flex-wrap gap-2">
                     {[
-                        { id: "em_aberto", label: "Próximos", color: "text-primary", count: counts.em_aberto },
-                        { id: "concluido", label: "Concluídos", color: "text-green-500", count: counts.concluido },
-                        { id: "pendente", label: "Atrasados", color: "text-amber-500", count: counts.pendente },
-                        { id: "arquivados", label: "Arquivados", color: "text-muted-foreground", count: counts.arquivados }
+                        { id: "em_aberto", label: "Próximos", color: "text-primary", count: tabCounts.pro },
+                        { id: "concluido", label: "Concluídos", color: "text-green-500", count: tabCounts.con },
+                        { id: "pendente", label: "Atrasados", color: "text-destructive", count: tabCounts.atr },
+                        { id: "arquivados", label: "Arquivados", color: "text-muted-foreground", count: tabCounts.arq }
                     ].map(tab => (
                         <button 
                             key={tab.id} 

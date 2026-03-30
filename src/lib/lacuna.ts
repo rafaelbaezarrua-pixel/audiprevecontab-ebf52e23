@@ -106,55 +106,51 @@ class LacunaWebPkiClient {
     });
   }
 
-  async signPdf(certificateId: string, pdfBase64: string, options: { visual?: boolean, text?: string } = {}): Promise<string> {
+  async signPdf(certificateId: string, pdfBase64: string, options: { visual?: boolean, text?: string, coords?: any } = {}): Promise<string> {
     await this.init();
     return new Promise((resolve, reject) => {
-      // 1. Logs de diagnóstico para garantir que o Base64 é válido
-      const base64Prefix = pdfBase64?.substring(0, 50);
       const outputMode = this.pki.outputModes?.returnContent || 'returnContent';
       
-      console.log('[Lacuna] Diagnóstico Assinatura:', { 
-        length: pdfBase64?.length,
-        versionJS: this.pki.version,
-        prefix: base64Prefix,
-        outputMode
-      });
+      console.log('[Lacuna] Iniciando assinatura PAdES...', { length: pdfBase64?.length, certId: certificateId.substring(0, 8) });
 
-      if (!pdfBase64 || pdfBase64.length < 50) {
-        return reject(new Error("Erro: O PDF está vazio ou corrompido antes de enviar para a Lacuna."));
+      if (!pdfBase64 || pdfBase64.length < 100) {
+        return reject(new Error("O PDF está vazio ou corrompido."));
       }
 
-      // 2. Parâmetros em formato simplificado (SHOTGUN APPROACH)
-      // Tentamos enviar de várias formas para cobrir diferentes versões do componente local
+      // Parâmetros base conforme documentação oficial
       const padesParams: any = {
         certificateThumbprint: certificateId,
         content: pdfBase64,
-        pdf: pdfBase64,      // Redundância para versões antigas
-        policy: this.pki.padesPolicies?.basic || 'basic', // Forçar política básica para evitar "policy 0"
         output: {
           mode: outputMode
         }
       };
 
-      // Se options.visual for explicitamente falso ou não estiver presente, 
-      // NÃO enviamos para evitar o erro de "source null" no componente local
-      if (options.visual) {
+      // Se houver coordenadas de posicionamento, traduzimos para o formato Lacuna (centímetros)
+      if (options.coords) {
+        // PDF A4 tem ~21cm x 29.7cm. Traduzimos % para cm aproximadamente.
+        // Lacuna: 0,0 é o canto INFERIOR ESQUERDO.
+        const leftCm = (options.coords.x / 100) * 21;
+        const bottomCm = (1 - (options.coords.y / 100)) * 29.7;
+        
         padesParams.visualRepresentation = {
           text: {
-            text: options.text || 'Assinado digitalmente',
-            includeSigningTime: true
+            text: options.text || `Assinado digitalmente por Audipreve\nData: ${new Date().toLocaleString('pt-BR')}`,
+            includeSigningTime: true,
+            horizontalAlign: 'left'
           },
           position: {
-            pageNumber: -1,
+            pageNumber: (options.coords.pageIndex || 0) + 1, // Página base 1 na Lacuna
             manual: {
-              left: 1.5,
-              bottom: 1.5,
-              width: 7,
-              height: 3
+              left: Math.max(1, leftCm),
+              bottom: Math.max(1, bottomCm - 2), // Ajuste para o texto caber
+              width: 6,
+              height: 2
             },
             measurementUnits: 'centimeters'
           }
         };
+        console.log('[Lacuna] Aplicando posicionamento visual em CM:', padesParams.visualRepresentation.position.manual);
       }
 
       this.pki.signPdf({
