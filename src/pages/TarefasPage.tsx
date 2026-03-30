@@ -37,7 +37,7 @@ const TarefasPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<"geral" | "meus">("geral");
     const [activeSubTab, setActiveSubTab] = useState<"em_aberto" | "concluido" | "pendente" | "arquivados">("em_aberto");
     const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
-    
+
     // Batch Cloning State
     const [isBatchOpen, setIsBatchOpen] = useState(false);
     const [batchForm, setBatchForm] = useState({
@@ -217,14 +217,14 @@ const TarefasPage: React.FC = () => {
             setSelectedEmpresas([]);
             loadData();
         } catch (err: any) {
-            toast.error("Erro no lançamento em lote: " + err.message);
+            toast.error("Erro nos lançamentos: " + err.message);
         }
     };
     const handleClonePreviousMonth = async () => {
         try {
             const currentYear = parseInt(competencia.slice(0, 4));
             const currentMonth = parseInt(competencia.slice(5, 7));
-            
+
             let prevYear = currentYear;
             let prevMonth = currentMonth - 1;
             if (prevMonth === 0) {
@@ -251,18 +251,18 @@ const TarefasPage: React.FC = () => {
             const clones = prevTasks.map((t: any) => {
                 const originalDate = parseISO(t.data);
                 const day = originalDate.getDate();
-                
+
                 // Parse current competence (YYYY-MM)
                 const [year, month] = competencia.split('-').map(Number);
                 let targetDate = new Date(year, month - 1, day);
-                
+
                 // Check if the day exists in the target month (overflow check)
                 if (targetDate.getMonth() !== month - 1) {
                     targetDate = lastDayOfMonth(new Date(year, month - 1));
                 }
-                
+
                 const newData = format(targetDate, "yyyy-MM-dd");
-                
+
                 return {
                     assunto: t.assunto,
                     informacoes_adicionais: t.informacoes_adicionais,
@@ -318,91 +318,91 @@ const TarefasPage: React.FC = () => {
 
 
     const renderItemContent = (a: Tarefa) => (
-            <div className={`
+        <div className={`
                 p-4 space-y-3 h-full bg-card group relative
                 border-l-4 ${a.status === 'concluido' ? 'border-l-green-500 opacity-90' : a.status === 'pendente' ? 'border-l-amber-500' : 'border-l-primary'}
             `}>
-                <div className="flex items-start justify-between">
-                    <div className="space-y-1 w-full">
-                        <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-bold text-card-foreground leading-tight text-sm flex-1">{a.assunto}</h3>
-                            <button
-                                onClick={() => handleDeleteAgendamento(a.id)}
-                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
-                                title="Excluir"
-                            >
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
-                            <User size={12} className="text-primary/70" /> Para: <span className="text-foreground font-medium">{a.usuario_nome}</span>
+            <div className="flex items-start justify-between">
+                <div className="space-y-1 w-full">
+                    <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-bold text-card-foreground leading-tight text-sm flex-1">{a.assunto}</h3>
+                        <button
+                            onClick={() => handleDeleteAgendamento(a.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                            title="Excluir"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
+                        <User size={12} className="text-primary/70" /> Para: <span className="text-foreground font-medium">{a.usuario_nome}</span>
+                    </p>
+                    {a.empresas?.nome_empresa && (
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary/70 bg-primary/5 px-2 py-0.5 rounded-md w-fit mt-1">
+                            {a.empresas.nome_empresa}
                         </p>
-                        {a.empresas?.nome_empresa && (
-                             <p className="text-[10px] font-black uppercase tracking-widest text-primary/70 bg-primary/5 px-2 py-0.5 rounded-md w-fit mt-1">
-                                {a.empresas.nome_empresa}
-                             </p>
-                        )}
-                    </div>
+                    )}
                 </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar size={14} className="text-primary" />
-                        {format(new Date(a.data + 'T00:00:00'), "dd 'de' MMM", { locale: ptBR })}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock size={14} className="text-primary" />
-                        {a.horario.slice(0, 5)}
-                    </div>
-                </div>
-
-                {a.informacoes_adicionais && (
-                    <div className="bg-muted/40 p-2.5 rounded-lg text-xs tracking-tight text-foreground/80 border border-border italic line-clamp-3">
-                        {a.informacoes_adicionais}
-                    </div>
-                )}
-
-                {(a.usuario_id === user?.id || userData?.isAdmin) && (
-                    <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border mt-auto">
-                        {!a.arquivado && (
-                            <>
-                                {a.status !== 'concluido' ? (
-                                    <button
-                                        onClick={() => handleUpdateStatus(a.id, 'concluido')}
-                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-green-500/10 text-green-500 text-xs font-bold hover:bg-green-500 hover:text-white transition-all"
-                                    >
-                                        <CheckCircle size={14} /> Concluir
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => handleUpdateStatus(a.id, 'em_aberto')}
-                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-muted-foreground text-xs font-bold hover:bg-muted-foreground hover:text-white transition-all"
-                                    >
-                                        <Circle size={14} /> Reabrir
-                                    </button>
-                                )}
-                            </>
-                        )}
-
-                        {!a.arquivado ? (
-                            <button
-                                onClick={() => handleUpdateArquivado(a.id, true)}
-                                className="flex-1 px-3 py-1.5 rounded-md bg-muted/50 text-muted-foreground text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center justify-center gap-1.5"
-                                title="Arquivar"
-                            >
-                                <X size={13} /> Arquivar
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => handleUpdateArquivado(a.id, false)}
-                                className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary hover:text-white transition-all"
-                            >
-                                <RefreshCw size={13} /> Desarquivar
-                            </button>
-                        )}
-                    </div>
-                )}
             </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar size={14} className="text-primary" />
+                    {format(new Date(a.data + 'T00:00:00'), "dd 'de' MMM", { locale: ptBR })}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock size={14} className="text-primary" />
+                    {a.horario.slice(0, 5)}
+                </div>
+            </div>
+
+            {a.informacoes_adicionais && (
+                <div className="bg-muted/40 p-2.5 rounded-lg text-xs tracking-tight text-foreground/80 border border-border italic line-clamp-3">
+                    {a.informacoes_adicionais}
+                </div>
+            )}
+
+            {(a.usuario_id === user?.id || userData?.isAdmin) && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border mt-auto">
+                    {!a.arquivado && (
+                        <>
+                            {a.status !== 'concluido' ? (
+                                <button
+                                    onClick={() => handleUpdateStatus(a.id, 'concluido')}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-green-500/10 text-green-500 text-xs font-bold hover:bg-green-500 hover:text-white transition-all"
+                                >
+                                    <CheckCircle size={14} /> Concluir
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => handleUpdateStatus(a.id, 'em_aberto')}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-muted-foreground text-xs font-bold hover:bg-muted-foreground hover:text-white transition-all"
+                                >
+                                    <Circle size={14} /> Reabrir
+                                </button>
+                            )}
+                        </>
+                    )}
+
+                    {!a.arquivado ? (
+                        <button
+                            onClick={() => handleUpdateArquivado(a.id, true)}
+                            className="flex-1 px-3 py-1.5 rounded-md bg-muted/50 text-muted-foreground text-[11px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center justify-center gap-1.5"
+                            title="Arquivar"
+                        >
+                            <X size={13} /> Arquivar
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => handleUpdateArquivado(a.id, false)}
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary hover:text-white transition-all"
+                        >
+                            <RefreshCw size={13} /> Desarquivar
+                        </button>
+                    )}
+                </div>
+            )}
+        </div>
     );
 
     return (
@@ -417,20 +417,20 @@ const TarefasPage: React.FC = () => {
                 <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
                     <DialogTrigger asChild>
                         <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/20 text-primary bg-primary/5 text-sm font-bold hover:bg-primary/10 transition-all">
-                            <ClipboardList size={18} /> Lançamento em Lote
+                            <ClipboardList size={18} /> Lançamentos
                         </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader><DialogTitle>Lançamento em Lote de Tarefas</DialogTitle></DialogHeader>
+                        <DialogHeader><DialogTitle>Lançamentos de Tarefas</DialogTitle></DialogHeader>
                         <div className="space-y-6 py-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Assunto</Label>
-                                    <input className="w-full px-4 py-2 border rounded-lg" value={batchForm.assunto} onChange={e => setBatchForm({...batchForm, assunto: e.target.value})} />
+                                    <input className="w-full px-4 py-2 border rounded-lg" value={batchForm.assunto} onChange={e => setBatchForm({ ...batchForm, assunto: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Responsável</Label>
-                                    <select className="w-full px-4 py-2 border rounded-lg" value={batchForm.responsavel_id} onChange={e => setBatchForm({...batchForm, responsavel_id: e.target.value})}>
+                                    <select className="w-full px-4 py-2 border rounded-lg" value={batchForm.responsavel_id} onChange={e => setBatchForm({ ...batchForm, responsavel_id: e.target.value })}>
                                         <option value="">Selecione...</option>
                                         {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
                                     </select>
@@ -439,18 +439,18 @@ const TarefasPage: React.FC = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Data</Label>
-                                    <input type="date" className="w-full px-4 py-2 border rounded-lg" value={batchForm.data} onChange={e => setBatchForm({...batchForm, data: e.target.value})} />
+                                    <input type="date" className="w-full px-4 py-2 border rounded-lg" value={batchForm.data} onChange={e => setBatchForm({ ...batchForm, data: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Horário</Label>
-                                    <input type="time" className="w-full px-4 py-2 border rounded-lg" value={batchForm.horario} onChange={e => setBatchForm({...batchForm, horario: e.target.value})} />
+                                    <input type="time" className="w-full px-4 py-2 border rounded-lg" value={batchForm.horario} onChange={e => setBatchForm({ ...batchForm, horario: e.target.value })} />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label>Informações Adicionais</Label>
-                                <textarea className="w-full px-4 py-2 border rounded-lg h-20 resize-none" value={batchForm.informacoes} onChange={e => setBatchForm({...batchForm, informacoes: e.target.value})} />
+                                <textarea className="w-full px-4 py-2 border rounded-lg h-20 resize-none" value={batchForm.informacoes} onChange={e => setBatchForm({ ...batchForm, informacoes: e.target.value })} />
                             </div>
-                            
+
                             <div className="space-y-3">
                                 <Label className="flex items-center justify-between">
                                     Selecione as Empresas ({selectedEmpresas.length})
@@ -541,15 +541,15 @@ const TarefasPage: React.FC = () => {
 
 
                 <div className="flex gap-2 p-1 bg-muted/20 border border-border/50 rounded-xl shrink-0">
-                    <button 
-                        onClick={() => setViewMode("list")} 
+                    <button
+                        onClick={() => setViewMode("list")}
                         className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                         title="Lista"
                     >
                         <List size={18} />
                     </button>
-                    <button 
-                        onClick={() => setViewMode("kanban")} 
+                    <button
+                        onClick={() => setViewMode("kanban")}
                         className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                         title="Kanban"
                     >
