@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ const HonorariosPage: React.FC = () => {
   const { user } = useAuth();
   const { getPaginatedEmpresas } = useSocietario();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [mainTab, setMainTab] = useState<"empresas" | "geral">("empresas");
   const [globalCompetencia, setGlobalCompetencia] = useState(new Date().toISOString().slice(0, 7));
 
@@ -29,16 +31,19 @@ const HonorariosPage: React.FC = () => {
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
 
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 12 });
-  const [paginatedData, setPaginatedData] = useState<Empresa[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loadingPaginated, setLoadingPaginated] = useState(false);
-
   const [configs, setConfigs] = useState<Record<string, Partial<HonorarioConfig>>>({});
   const [mensalData, setMensalData] = useState<Record<string, HonorarioMensal[]>>({});
   const [configForms, setConfigForms] = useState<Record<string, Partial<HonorarioConfig>>>({});
   const [mensalForms, setMensalForms] = useState<Record<string, Partial<HonorarioMensal>>>({});
   const [competenciaSelecionada, setCompetenciaSelecionada] = useState<Record<string, string>>({});
   const [todasEmpresas, setTodasEmpresas] = useState<Empresa[]>([]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     if (mainTab === 'geral' && todasEmpresas.length === 0) {
@@ -50,35 +55,27 @@ const HonorariosPage: React.FC = () => {
     }
   }, [mainTab, todasEmpresas.length]);
 
-  const loadPaginatedData = useCallback(async () => {
-    setLoadingPaginated(true);
-    try {
-      const { data, count } = await getPaginatedEmpresas(
-        pagination.pageIndex,
-        pagination.pageSize,
-        search,
-        activeStatusTab,
-        "todos",
-        "honorarios",
-        user?.id
-      );
-      setPaginatedData(data);
-      setTotalCount(count);
-    } catch (err: any) {
-      console.error("Erro ao carregar empresas paginadas:", err);
-      toast.error("Erro ao carregar lista de empresas: " + err.message);
-    } finally {
-      setLoadingPaginated(false);
-    }
-  }, [pagination.pageIndex, pagination.pageSize, search, activeStatusTab, user?.id, getPaginatedEmpresas]);
+  const { data: paginatedResult, isLoading: loadingPaginated } = useQuery({
+    queryKey: ["honorarios_empresas_paginated", pagination.pageIndex, pagination.pageSize, debouncedSearch, activeStatusTab, user?.id],
+    queryFn: () => getPaginatedEmpresas(
+      pagination.pageIndex,
+      pagination.pageSize,
+      debouncedSearch,
+      activeStatusTab,
+      "todos",
+      "honorarios",
+      user?.id
+    ),
+    placeholderData: (prev) => prev,
+    staleTime: 30000,
+  });
 
-  useEffect(() => {
-    loadPaginatedData();
-  }, [loadPaginatedData]);
+  const paginatedData = paginatedResult?.data || [];
+  const totalCount = paginatedResult?.count || 0;
 
   useEffect(() => {
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
-  }, [search, activeStatusTab]);
+  }, [debouncedSearch, activeStatusTab]);
 
   const toggleExpand = async (empresaId: string) => {
     if (expanded === empresaId) {
