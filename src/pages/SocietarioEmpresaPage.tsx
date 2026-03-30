@@ -39,8 +39,13 @@ const estados = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT
 const AVAILABLE_MODULES = [
   { id: 'societario', label: 'Societário' },
   { id: 'agendamentos', label: 'Agendamentos' },
+  { id: 'tarefas', label: 'Tarefas' },
+  { id: 'ocorrencias', label: 'Ocorrências' },
+  { id: 'documentos', label: 'Assinaturas' },
+  { id: 'recibos', label: 'Recibos' },
   { id: 'fiscal', label: 'Fiscal' },
   { id: 'pessoal', label: 'Pessoal' },
+  { id: 'simulador', label: 'Simulador' },
   { id: 'licencas', label: 'Licenças' },
   { id: 'certificados', label: 'Certificados Digitais' },
   { id: 'certidoes', label: 'Certidões Negativas' },
@@ -49,8 +54,10 @@ const AVAILABLE_MODULES = [
   { id: 'parcelamentos', label: 'Parcelamentos' },
   { id: 'recalculos', label: 'Recálculos' },
   { id: 'honorarios', label: 'Honorários' },
+  { id: 'irpf', label: 'IRPF' },
   { id: 'declaracoes_anuais', label: 'Declarações Anuais' },
   { id: 'declaracoes_mensais', label: 'Declarações Mensais' },
+  { id: 'relatorios', label: 'Relatórios' },
 ];
 
 const SocietarioEmpresaPage: React.FC = () => {

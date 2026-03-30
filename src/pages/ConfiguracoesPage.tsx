@@ -30,8 +30,15 @@ const moduleLabels: Record<string, string> = {
   recalculos: "Recálculos",
   honorarios: "Honorários",
   agendamentos: "Agendamentos",
+  tarefas: "Tarefas",
+  ocorrencias: "Ocorrências",
+  documentos: "Assinaturas",
+  recibos: "Recibos",
+  simulador: "Simulador",
+  irpf: "IRPF",
   declaracoes_anuais: "Declarações Anuais",
   declaracoes_mensais: "Declarações Mensais",
+  relatorios: "Relatórios",
 };
 
 const ConfiguracoesPage: React.FC = () => {
