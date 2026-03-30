@@ -1180,29 +1180,94 @@ export type Database = {
           administrador: boolean | null
           cpf: string | null
           created_at: string | null
+          data_entrada: string | null
+          data_saida: string | null
+          email: string | null
           empresa_id: string
           id: string
           nome: string
+          percentual_cotas: number | null
+          telefone: string | null
         }
         Insert: {
           administrador?: boolean | null
           cpf?: string | null
           created_at?: string | null
+          data_entrada?: string | null
+          data_saida?: string | null
+          email?: string | null
           empresa_id: string
           id?: string
           nome: string
+          percentual_cotas?: number | null
+          telefone?: string | null
         }
         Update: {
           administrador?: boolean | null
           cpf?: string | null
           created_at?: string | null
+          data_entrada?: string | null
+          data_saida?: string | null
+          email?: string | null
           empresa_id?: string
           id?: string
           nome?: string
+          percentual_cotas?: number | null
+          telefone?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "socios_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionarios: {
+        Row: {
+          ativo: boolean | null
+          cargo: string | null
+          cpf: string | null
+          created_at: string | null
+          data_admissao: string | null
+          data_ultimo_aso: string | null
+          empresa_id: string | null
+          id: string
+          nome: string
+          vencimento_aso: string | null
+          vencimento_ferias: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cargo?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_admissao?: string | null
+          data_ultimo_aso?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome: string
+          vencimento_aso?: string | null
+          vencimento_ferias?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cargo?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_admissao?: string | null
+          data_ultimo_aso?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome?: string
+          vencimento_aso?: string | null
+          vencimento_ferias?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"

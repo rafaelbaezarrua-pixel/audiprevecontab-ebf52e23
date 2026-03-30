@@ -244,9 +244,16 @@ const TarefasPage: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
-                        <User size={12} className="text-primary/70" /> Para: <span className="text-foreground font-medium">{a.usuario_nome}</span>
-                    </p>
+                    <div className="flex flex-col gap-1 pt-1">
+                        <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium">
+                            <User size={12} className="text-primary/70" /> Para: <span className="text-foreground">{a.usuario_nome}</span>
+                        </p>
+                        {a.criado_por_nome && a.criado_por_nome !== a.usuario_nome && (
+                            <p className="text-[10px] text-muted-foreground/80 flex items-center gap-1.5 italic pl-1">
+                                Atribuído por: {a.criado_por_nome}
+                            </p>
+                        )}
+                    </div>
                     {a.empresas?.nome_empresa && (
                         <p className="text-[10px] font-black uppercase tracking-widest text-primary/70 bg-primary/5 px-2 py-0.5 rounded-md w-fit mt-1">
                             {a.empresas.nome_empresa}

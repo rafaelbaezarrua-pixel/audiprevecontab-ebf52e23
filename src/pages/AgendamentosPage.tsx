@@ -52,20 +52,21 @@ const AgendamentosPage: React.FC = () => {
         const matchSearch = a.assunto.toLowerCase().includes(search.toLowerCase()) ||
             a.usuario_nome?.toLowerCase().includes(search.toLowerCase());
 
+        const isMine = a.usuario_id === user?.id;
+        const baseFilter = activeTab === "geral" ? true : isMine;
+
+        if (!matchSearch || !baseFilter) return false;
+
         if (activeSubTab === "arquivados") {
-            if (!a.arquivado) return false;
+            return a.arquivado;
         } else {
             if (a.arquivado) return false;
-        }
-
-        const isMine = a.usuario_id === user?.id;
-
-        if (activeTab === "geral") {
-            return matchSearch && (activeSubTab === "arquivados" ? true : (activeSubTab === "em_aberto" ? true : a.status === activeSubTab));
-        } else {
-            return matchSearch && isMine && (activeSubTab === "arquivados" ? true : (activeSubTab === "em_aberto" ? a.status === "em_aberto" : a.status === activeSubTab));
+            if (activeSubTab === "em_aberto") return a.status === "em_aberto";
+            return a.status === activeSubTab;
         }
     });
+
+    const overdueCount = agendamentos.filter(a => !a.arquivado && a.status === "pendente" && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length;
 
     const renderItemContent = (a: Agendamento) => (
         <div className={`p-4 rounded-xl border border-border bg-card group relative transition-all hover:shadow-md ${a.status === 'concluido' ? 'opacity-90' : ''}`}>
@@ -139,51 +140,93 @@ const AgendamentosPage: React.FC = () => {
 
     return (
         <div className="space-y-6 flex flex-col min-h-[calc(100vh-100px)] animate-fade-in">
-            <div className="flex items-center gap-3 justify-end shrink-0">
-                {isFetching && !isLoading && (
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                        <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
-                    </div>
-                )}
-                <input
-                    type="month"
-                    value={competencia}
-                    onChange={e => setCompetencia(e.target.value)}
-                    className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold"
-                />
-                <button onClick={() => navigate("/agendamentos/novo")} className="button-premium shadow-md">
-                    <Plus size={18} /> Novo Agendamento
-                </button>
+            {/* Header com Ações */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold tracking-tight">Agendamentos</h1>
+                    {isFetching && !isLoading && (
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                            <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
+                        </div>
+                    )}
+                </div>
+                
+                <div className="flex items-center gap-3">
+                    <input
+                        type="month"
+                        value={competencia}
+                        onChange={e => setCompetencia(e.target.value)}
+                        className="px-4 py-2 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold"
+                    />
+                    <button onClick={() => navigate("/agendamentos/novo")} className="button-premium shadow-md py-2 px-4 whitespace-nowrap">
+                        <Plus size={18} /> Novo Agendamento
+                    </button>
+                </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-                <div className="flex border-b border-border w-full sm:w-auto">
-                    <button className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === "geral" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`} onClick={() => setActiveTab("geral")}>Geral</button>
-                    <button className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === "meus" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`} onClick={() => setActiveTab("meus")}>Meus Agendamentos</button>
-                </div>
-
-                <div className="flex gap-1.5 p-1 bg-muted/30 rounded-lg">
+            {/* Navegação Principal por Status */}
+            <div className="flex flex-col gap-4 bg-card/30 p-2 rounded-2xl border border-border/50">
+                <div className="flex flex-wrap gap-2">
                     {[
-                        { id: "em_aberto", label: "Próximos", hideOnGeral: true },
-                        { id: "concluido", label: "Concluídos", hideOnGeral: true },
-                        { id: "pendente", label: "Atrasados", hideOnGeral: true },
-                        { id: "arquivados", label: "Arquivados", hideOnGeral: false }
-                    ].map(sub => {
-                        if (activeTab === "geral" && sub.hideOnGeral && sub.id !== "em_aberto") return null;
-                        const label = activeTab === "geral" && sub.id === "em_aberto" ? "Todos Ativos" : sub.label;
-                        return (
-                            <button key={sub.id} onClick={() => setActiveSubTab(sub.id as any)} className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${activeSubTab === sub.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                                {label}
-                            </button>
-                        );
-                    })}
+                        { id: "em_aberto", label: "Próximos", color: "text-primary" },
+                        { id: "concluido", label: "Concluídos", color: "text-green-500" },
+                        { id: "pendente", label: "Atrasados", color: "text-amber-500" },
+                        { id: "arquivados", label: "Arquivados", color: "text-muted-foreground" }
+                    ].map(tab => (
+                        <button 
+                            key={tab.id} 
+                            onClick={() => setActiveSubTab(tab.id as any)} 
+                            className={`flex-1 min-w-[120px] relative flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-xl transition-all duration-300 ${
+                                activeSubTab === tab.id 
+                                ? "bg-background shadow-md border-b-2 border-primary" 
+                                : "hover:bg-background/50 text-muted-foreground"
+                            }`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className={`text-xs font-black uppercase tracking-widest ${activeSubTab === tab.id ? tab.color : "text-muted-foreground"}`}>
+                                    {tab.label}
+                                </span>
+                                {tab.id === "pendente" && overdueCount > 0 && (
+                                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-destructive text-white text-[10px] font-bold animate-bounce md:animate-pulse">
+                                        {overdueCount}
+                                    </div>
+                                )}
+                            </div>
+                        </button>
+                    ))}
                 </div>
-            </div>
 
-            <div className="relative max-w-sm shrink-0">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="text" placeholder="Buscar agendamento..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
+                {/* Filtros Secundários */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-1 border-t border-border/50 pt-3 mt-1">
+                    <div className="flex items-center gap-4">
+                        <div className="relative w-full max-w-sm">
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                            <input 
+                                type="text" 
+                                placeholder="Buscar nos agendamentos..." 
+                                value={search} 
+                                onChange={e => setSearch(e.target.value)} 
+                                className="w-[200px] sm:w-[300px] pl-9 pr-4 py-2 border border-border/50 rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none transition-all" 
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-muted/20 p-1 rounded-lg border border-border/50">
+                        <button 
+                            onClick={() => setActiveTab("geral")} 
+                            className={`px-4 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === "geral" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                        >
+                            <div className="flex items-center gap-2"><LayoutDashboard size={14} /> Todos</div>
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab("meus")} 
+                            className={`px-4 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === "meus" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                        >
+                            <div className="flex items-center gap-2"><User size={14} /> Meus</div>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">

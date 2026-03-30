@@ -248,8 +248,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    if (data.user) {
+      const { logAction } = await import("@/lib/audit");
+      logAction(data.user.id, 'LOGIN', 'auth', data.user.id);
+    }
   };
 
   const logout = async () => {
@@ -264,19 +268,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const cleanPassword = password.replace(/\D/g, "");
 
-    // Tenta primeiro com a senha como digitada
-    let { error } = await supabase.auth.signInWithPassword({ email, password });
+    // Capture user/session on success
+    const result = await (async () => {
+      const res = await supabase.auth.signInWithPassword({ email, password });
+      if (res.error && cleanPassword.length === 14 && password !== cleanPassword) {
+        const res2 = await supabase.auth.signInWithPassword({ email, password: cleanPassword });
+        if (!res2.error) return res2;
+      }
+      return res;
+    })();
 
-    // Se falhar e a senha parecer um CNPJ com máscara, tenta com a senha limpa
-    if (error && cleanPassword.length === 14 && password !== cleanPassword) {
-      const { error: error2 } = await supabase.auth.signInWithPassword({
-        email,
-        password: cleanPassword
-      });
-      if (!error2) error = null;
-    }
-
-    if (error) {
+    if (result.error) {
+      const { error } = result;
       console.error("Login Error:", error);
       if (error.message === "Invalid login credentials" || error.message === "Invalid credentials") {
         throw new Error("E-mail ou senha inválidos. Utilize o E-mail RFB da empresa e o CNPJ (apenas números) como senha inicial.");
@@ -285,6 +288,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("O e-mail deste acesso ainda não foi confirmado. Por favor, solicite ao administrador para sincronizar os acessos.");
       }
       throw error;
+    }
+
+    if (result.data.user) {
+      const { logAction } = await import("@/lib/audit");
+      logAction(result.data.user.id, 'LOGIN', 'auth', result.data.user.id);
     }
   };
 

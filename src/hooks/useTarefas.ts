@@ -11,6 +11,7 @@ export interface Tarefa {
     informacoes_adicionais: string;
     competencia: string;
     usuario_nome?: string;
+    criado_por_nome?: string;
     status: "em_aberto" | "concluido" | "pendente";
     arquivado: boolean;
     empresas?: { nome_empresa: string } | null;
@@ -57,6 +58,7 @@ export const useTarefas = (competencia: string) => {
                     status: currentStatus,
                     arquivado: !!a.arquivado,
                     usuario_nome: mappedUsers.find(u => u.id === a.usuario_id)?.nome || "Não encontrado",
+                    criado_por_nome: mappedUsers.find(u => u.id === a.criado_por)?.nome || "Sistema",
                 };
             }) as Tarefa[];
 
