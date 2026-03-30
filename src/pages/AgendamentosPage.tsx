@@ -66,7 +66,12 @@ const AgendamentosPage: React.FC = () => {
         }
     });
 
-    const overdueCount = agendamentos.filter(a => !a.arquivado && a.status === "pendente" && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length;
+    const counts = {
+        em_aberto: agendamentos.filter(a => !a.arquivado && a.status === "em_aberto" && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length,
+        concluido: agendamentos.filter(a => !a.arquivado && a.status === "concluido" && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length,
+        pendente: agendamentos.filter(a => !a.arquivado && a.status === "pendente" && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length,
+        arquivados: agendamentos.filter(a => a.arquivado && (activeTab === "geral" ? true : a.usuario_id === user?.id)).length
+    };
 
     const renderItemContent = (a: Agendamento) => (
         <div className={`p-4 rounded-xl border border-border bg-card group relative transition-all hover:shadow-md ${a.status === 'concluido' ? 'opacity-90' : ''}`}>
@@ -169,10 +174,10 @@ const AgendamentosPage: React.FC = () => {
             <div className="flex flex-col gap-4 bg-card/30 p-2 rounded-2xl border border-border/50">
                 <div className="flex flex-wrap gap-2">
                     {[
-                        { id: "em_aberto", label: "Próximos", color: "text-primary" },
-                        { id: "concluido", label: "Concluídos", color: "text-green-500" },
-                        { id: "pendente", label: "Atrasados", color: "text-amber-500" },
-                        { id: "arquivados", label: "Arquivados", color: "text-muted-foreground" }
+                        { id: "em_aberto", label: "Próximos", color: "text-primary", count: counts.em_aberto },
+                        { id: "concluido", label: "Concluídos", color: "text-green-500", count: counts.concluido },
+                        { id: "pendente", label: "Atrasados", color: "text-amber-500", count: counts.pendente },
+                        { id: "arquivados", label: "Arquivados", color: "text-muted-foreground", count: counts.arquivados }
                     ].map(tab => (
                         <button 
                             key={tab.id} 
@@ -187,11 +192,15 @@ const AgendamentosPage: React.FC = () => {
                                 <span className={`text-xs font-black uppercase tracking-widest ${activeSubTab === tab.id ? tab.color : "text-muted-foreground"}`}>
                                     {tab.label}
                                 </span>
-                                {tab.id === "pendente" && overdueCount > 0 && (
-                                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-destructive text-white text-[10px] font-bold animate-bounce md:animate-pulse">
-                                        {overdueCount}
-                                    </div>
-                                )}
+                                <span className={`flex items-center justify-center min-w-[22px] h-5 px-1.5 text-[10px] font-black rounded-full transition-all duration-300 ${
+                                    tab.id === 'em_aberto' ? "bg-primary/10 text-primary border border-primary/20" :
+                                    tab.id === 'concluido' ? "bg-green-500/10 text-green-500 border border-green-500/20" :
+                                    tab.id === 'pendente' && tab.count > 0 ? "bg-destructive text-white border border-destructive/30 animate-pulse shadow-sm shadow-destructive/20" :
+                                    tab.id === 'pendente' ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
+                                    "bg-muted/50 text-muted-foreground border border-border"
+                                }`}>
+                                    {tab.count}
+                                </span>
                             </div>
                         </button>
                     ))}

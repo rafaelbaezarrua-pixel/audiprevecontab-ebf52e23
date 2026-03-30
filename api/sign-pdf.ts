@@ -10,41 +10,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { pdfBase64, pfxBase64, passphrase, visualText } = req.body;
+    const { pdfBase64, pfxBase64, passphrase, visualText, x, y, pageIndex } = req.body;
 
     if (!pdfBase64 || !pfxBase64 || !passphrase) {
       return res.status(400).json({ error: 'Parâmetros ausentes (pdfBase64, pfxBase64, passphrase)' });
     }
 
-    // Remover possíveis prefixos "data:application/pdf;base64," ou "data:application/x-pkcs12;base64,"
-    const cleanBase64 = (str: string) => {
-      if (str.includes(',')) return str.split(',')[1];
-      return str.trim();
-    };
-
-    // 1. Carregar o PDF e Normalizar (Reconstruir Tabela XREF)
+    // 1. Carregar o PDF e Normalizar
     const pdfBuffer = Buffer.from(cleanBase64(pdfBase64), 'base64');
-    
-    // Log do final do arquivo para depuração
-    const tail = pdfBuffer.slice(-60).toString();
-    console.log('[API Sign] PDF Tail:', tail.replace(/\n/g, '\\n').replace(/\r/g, '\\r'));
-
-    // Reconstruir o PDF com pdf-lib para garantir compatibilidade do XREF
-    // 'useObjectStreams: false' garante um formato mais básico que o plainAddPlaceholder entende melhor
     const pdfDoc = await PDFDocument.load(pdfBuffer);
     
-    // Adicionar texto visual no rodapé (Opcional, mas vamos manter agora que o PDF será reconstruído)
+    // Configurar Fonte
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const text = visualText || `Assinado digitalmente por Audipreve\nData: ${new Date().toLocaleString('pt-BR')}`;
-    const pages = pdfDoc.getPages();
-    const lastPage = pages[pages.length - 1];
     
+    // 2. Aplicar Assinatura Visual (Se fornecido)
+    const pages = pdfDoc.getPages();
+    const targetPageIndex = (pageIndex !== undefined && pageIndex < pages.length) ? pageIndex : pages.length - 1;
+    const lastPage = pages[targetPageIndex];
+    const { width, height } = lastPage.getSize();
+
+    // Converter percentual para pontos (PDF usa pontos, onde 1pt = 1/72 pol)
+    // No PDF, (0,0) é canto inferior esquerdo. No navegador/viewport, (0,0) é superior esquerdo.
+    const finalX = x !== undefined ? (x / 100) * width : 30;
+    const finalY = y !== undefined ? height - ((y / 100) * height) : 30;
+
     lastPage.drawText(text, {
-      x: 30,
-      y: 30,
-      size: 9,
+      x: finalX,
+      y: Math.max(10, finalY - 20), // Ajuste para não sair da borda inferior
+      size: 8,
       font: font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: rgb(0.1, 0.1, 0.1),
     });
 
     const pdfBufferNormalized = Buffer.from(await pdfDoc.save({ useObjectStreams: false }));
