@@ -115,7 +115,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading, userData } = useAuth();
   if (loading) return null;
-  if (!user || !userData?.isAdmin) return <Navigate to="/dashboard" replace />;
+  if (!user || !userData?.isAdmin) {
+    if (user) {
+      import("@/lib/audit").then(({ logAction }) => {
+        logAction(user.id, 'ACCESS_DENIED', 'routes', window.location.pathname);
+      });
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return <>{children}</>;
 };
@@ -123,7 +130,14 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const ClientRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading, userData } = useAuth();
   if (loading) return null;
-  if (!user || (!userData?.isClient && !userData?.isAdmin)) return <Navigate to="/login" replace />;
+  if (!user || (!userData?.isClient && !userData?.isAdmin)) {
+    if (user) {
+      import("@/lib/audit").then(({ logAction }) => {
+        logAction(user.id, 'ACCESS_DENIED', 'routes', window.location.pathname);
+      });
+    }
+    return <Navigate to="/login" replace />;
+  }
 
   return <>{children}</>;
 };

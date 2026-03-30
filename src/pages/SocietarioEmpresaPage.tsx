@@ -296,12 +296,65 @@ const SocietarioEmpresaPage: React.FC = () => {
     setConsultingRFB(true);
     const tid = toast.loading("Consultando RFB via BrazilAPI...");
     try {
-      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCNPJ}`);
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Erro na consulta");
+      let data = null;
+      let error = null;
+
+      // Try BrazilAPI first
+      try {
+        const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCNPJ}`);
+        if (response.ok) {
+          data = await response.json();
+        } else {
+          const errData = await response.json();
+          error = errData.message || "Erro na BrazilAPI";
+        }
+      } catch (e) {
+        console.warn("BrazilAPI failed (possibly CORS):", e);
       }
-      const data = await response.json();
+
+      // If BrazilAPI failed, try CNPJ.ws (Publica) as primary
+      if (!data) {
+        try {
+          const wsResponse = await fetch(`https://publica.cnpj.ws/cnpj/${cleanCNPJ}`);
+          if (wsResponse.ok) {
+            const wsData = await wsResponse.json();
+            // Map CNPJ.ws data to BrazilAPI format for compatibility
+            data = {
+              razao_social: wsData.raza_social,
+              nome_fantasia: wsData.estabelecimento.nome_fantasia,
+              data_inicio_atividade: wsData.estabelecimento.data_inicio_atividade,
+              capital_social: parseFloat(wsData.capital_social),
+              opcao_pelo_simples: wsData.simples?.optante === "Sim",
+              data_opcao_pelo_simples: wsData.simples?.data_opcao_simples,
+              opcao_pelo_simei: wsData.simples?.mei === "Sim",
+              data_opcao_pelo_simei: wsData.simples?.data_opcao_mei,
+              cnae_fiscal: wsData.estabelecimento.cnae_fiscal_principal.codigo,
+              cnae_fiscal_descricao: wsData.estabelecimento.cnae_fiscal_principal.descricao,
+              email: wsData.estabelecimento.email,
+              ddd_telefone_1: wsData.estabelecimento.ddd1 + wsData.estabelecimento.telefone1,
+              logradouro: wsData.estabelecimento.logradouro,
+              numero: wsData.estabelecimento.numero,
+              complemento: wsData.estabelecimento.complemento,
+              bairro: wsData.estabelecimento.bairro,
+              municipio: wsData.estabelecimento.cidade.nome,
+              uf: wsData.estabelecimento.estado.sigla,
+              cep: wsData.estabelecimento.cep,
+              qsa: wsData.socios?.map((s: any) => ({
+                nome_socio: s.nome,
+                cnpj_cpf_do_socio: s.cpf_cnpj,
+                qualificacao_socio: s.qualificacao_socio.descricao
+              })),
+              porte: wsData.porte.descricao,
+              natureza_juridica: wsData.natureza_juridica.descricao
+            };
+          }
+        } catch (e) {
+          console.error("CNPJ.ws failed as fallback:", e);
+        }
+      }
+
+      if (!data) throw new Error(error || "Não foi possível consultar os dados do CNPJ. Verifique sua conexão ou tente novamente mais tarde.");
+      
       if (data.razao_social) setNomeEmpresa(data.razao_social);
       if (data.nome_fantasia) setNomeFantasia(data.nome_fantasia);
       if (data.data_inicio_atividade) setDataAbertura(data.data_inicio_atividade);
@@ -314,23 +367,19 @@ const SocietarioEmpresaPage: React.FC = () => {
       setDataExclusaoSimei(data.data_exclusao_do_simei || "");
       if (data.cnae_fiscal) setCnaeFiscal(data.cnae_fiscal);
       if (data.cnae_fiscal_descricao) setCnaeFiscalDescricao(data.cnae_fiscal_descricao);
-      let finalEmail = data.email || "";
-      if (!finalEmail) {
-        try {
-          const wsResponse = await fetch(`https://publica.cnpj.ws/cnpj/${cleanCNPJ}`);
-          if (wsResponse.ok) {
-            const wsData = await wsResponse.json();
-            if (wsData?.estabelecimento?.email) finalEmail = wsData.estabelecimento.email;
-          }
-        } catch (e) { /* ignore cnpj.ws error */ }
-      }
-      setEmailRfb(finalEmail);
+      
+      setEmailRfb(data.email || "");
+      
       let fullTelefone = "";
-      if (data.ddd_telefone_1) fullTelefone = `(${data.ddd_telefone_1.substring(0, 2)}) ${data.ddd_telefone_1.substring(2)}`;
-      else if (data.telefone) fullTelefone = data.telefone;
+      if (data.ddd_telefone_1) {
+        const tel = String(data.ddd_telefone_1).replace(/\D/g, "");
+        if (tel.length >= 10) fullTelefone = `(${tel.substring(0, 2)}) ${tel.substring(2)}`;
+        else fullTelefone = data.ddd_telefone_1;
+      }
       setTelefoneRfb(fullTelefone);
+
       setEndereco({
-        logradouro: `${data.descricao_tipo_de_logradouro || ""} ${data.logradouro || ""}`.trim(),
+        logradouro: data.logradouro || "",
         numero: data.numero || "",
         complemento: data.complemento || "",
         bairro: data.bairro || "",
@@ -338,35 +387,39 @@ const SocietarioEmpresaPage: React.FC = () => {
         estado: data.uf || "",
         cep: data.cep || ""
       });
+
       if (data.qsa && Array.isArray(data.qsa)) {
         setQsa(data.qsa);
         const autoSocios: Socio[] = data.qsa.map((s: any) => ({
-          nome: s.nome_socio || s.nome_fantasia || s.nome_completo || "",
+          nome: s.nome_socio || s.nome_fantasia || s.nome_completo || s.nome || "",
           cpf: s.cnpj_cpf_do_socio || s.cpf_cnpj || "",
           administrador: s.qualificacao_socio?.toLowerCase().includes("administrador") || [10, 16, 5, 49].includes(s.codigo_qualificacao_socio)
         }));
         if (autoSocios.length > 0) setSocios(autoSocios);
       }
+      
       if (data.porte) setPorteRfb(data.porte);
+      
+      // Heuristics for types
       const isMEIByOption = data.opcao_pelo_simei === true;
-      const isMEIByNature = data.codigo_natureza_juridica === 2135;
-      if (isMEIByOption || (isMEIByNature && data.porte?.toLowerCase().includes("mei"))) {
+      const porteLabel = data.porte?.toLowerCase() || "";
+      
+      if (isMEIByOption || porteLabel.includes("mei")) {
         setPorteEmpresa("mei"); setRegimeTributario("mei"); setNaturezaJuridica("mei"); setSituacao("mei");
       } else {
-         const porteLabel = data.porte?.toLowerCase() || "";
          if (porteLabel.includes("me") || data.codigo_porte === 1) setPorteEmpresa("me");
          else if (porteLabel.includes("epp") || data.codigo_porte === 3) setPorteEmpresa("epp");
          else if (data.codigo_porte === 5) setPorteEmpresa("grande");
+         
          const natureLabel = data.natureza_juridica?.toLowerCase() || "";
          if (natureLabel.includes("unipessoal")) setNaturezaJuridica("slu");
          else if (natureLabel.includes("limitada")) setNaturezaJuridica("ltda");
          else if (natureLabel.includes("individual")) setNaturezaJuridica("ei");
-         if (data.opcao_pelo_simples) {
-           setRegimeTributario("simples");
-         } else {
-           setRegimeTributario("lucro_presumido");
-         }
+         
+         if (data.opcao_pelo_simples) setRegimeTributario("simples");
+         else setRegimeTributario("lucro_presumido");
       }
+      
       setInfoRfbCompleta(data);
       toast.success("Dados preenchidos com sucesso!", { id: tid });
     } catch (err: any) {

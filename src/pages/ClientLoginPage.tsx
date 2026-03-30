@@ -73,6 +73,7 @@ const ClientLoginPage: React.FC = () => {
                             <Input
                                 type="password"
                                 placeholder="••••••••"
+                                autoComplete="current-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="h-12 bg-background/50 border-border/50 focus:border-primary transition-all"
