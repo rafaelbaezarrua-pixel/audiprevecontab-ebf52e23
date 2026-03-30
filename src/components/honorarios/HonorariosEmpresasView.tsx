@@ -236,15 +236,25 @@ export const HonorariosEmpresasView = ({
               Anterior
             </button>
             <div className="flex items-center gap-1">
-               {Array.from({ length: Math.min(5, Math.ceil(totalCount / pagination.pageSize)) }).map((_, i) => (
-                 <button
-                   key={i}
-                   onClick={() => onPageChange(i)}
-                   className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${pagination.pageIndex === i ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
-                 >
-                   {i + 1}
-                 </button>
-               ))}
+               {(() => {
+                 const totalPages = Math.ceil(totalCount / pagination.pageSize);
+                 const current = pagination.pageIndex;
+                 const start = Math.max(0, Math.min(current - 2, totalPages - 5));
+                 const end = Math.min(totalPages, start + 5);
+                 
+                 return Array.from({ length: end - start }).map((_, i) => {
+                   const pageIdx = start + i;
+                   return (
+                    <button
+                      key={pageIdx}
+                      onClick={() => onPageChange(pageIdx)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${pagination.pageIndex === pageIdx ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                    >
+                      {pageIdx + 1}
+                    </button>
+                   );
+                 });
+               })()}
             </div>
             <button
               onClick={() => onPageChange(pagination.pageIndex + 1)}

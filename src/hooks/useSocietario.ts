@@ -92,9 +92,15 @@ export const useSocietario = () => {
 
     // Get socio count map for these specific companies
     const empIds = (empresasData || []).map(e => e.id);
-    const { data: sociosData } = await supabase.from("socios").select("empresa_id").in("empresa_id", empIds);
+    let sociosData: any[] = [];
+    
+    if (empIds.length > 0) {
+      const { data } = await supabase.from("socios").select("empresa_id").in("empresa_id", empIds);
+      if (data) sociosData = data;
+    }
+
     const sociosCounts: Record<string, number> = {};
-    sociosData?.forEach(s => {
+    sociosData.forEach(s => {
       sociosCounts[s.empresa_id] = (sociosCounts[s.empresa_id] || 0) + 1;
     });
 

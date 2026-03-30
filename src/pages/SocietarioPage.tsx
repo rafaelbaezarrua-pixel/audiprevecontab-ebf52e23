@@ -1,6 +1,6 @@
 import { RealtimeChannel } from "@supabase/supabase-js";
 import React, { useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
   Building2, Search, Filter, ChevronDown, 
@@ -32,6 +32,7 @@ const SocietarioPage: React.FC = () => {
   const [activeMainTab, setActiveMainTab] = useState<"empresas" | "processos">((searchParams.get("view") as any) || "empresas");
   const [activeTab, setActiveTab] = useState<"ativas" | "paralisadas" | "baixadas" | "mei" | "entregue">((searchParams.get("aba") as any) || "ativas");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterSituacao, setFilterSituacao] = useState(searchParams.get("situacao") || "todas");
   const [filterRegime, setFilterRegime] = useState(searchParams.get("regime") || "todos");
   const [showFilters, setShowFilters] = useState(!!searchParams.get("regime") || !!searchParams.get("situacao"));
@@ -55,8 +56,6 @@ const SocietarioPage: React.FC = () => {
     pageSize: 10,
   });
 
-  const [paginatedData, setPaginatedData] = useState<{ data: Empresa[]; count: number }>({ data: [], count: 0 });
-  const [isFetchingPage, setIsFetchingPage] = useState(false);
 
   useEffect(() => {
     // Sync URL params to state if they change externally (e.g. clicking dashboard chart)
@@ -79,38 +78,32 @@ const SocietarioPage: React.FC = () => {
     if (aba) setActiveTab(aba as any);
   }, [searchParams]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
     // Reset to page 0 if filters change
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
-  }, [search, filterSituacao, filterRegime, activeTab]);
+  }, [debouncedSearch, filterSituacao, filterRegime, activeTab]);
 
-  React.useEffect(() => {
-    const fetchPage = async () => {
-      setIsFetchingPage(true);
-      try {
-        const result = await getPaginatedEmpresas(
-           pagination.pageIndex, 
-           pagination.pageSize, 
-           search, 
-           // activeTab acts as situacao filter if nothing else is selected in the regular filter dropdown
-           filterSituacao !== 'todas' ? filterSituacao : activeTab, 
-           filterRegime
-        );
-        setPaginatedData(result);
-      } catch (err) {
-        toast.error("Erro ao carregar empresas");
-      } finally {
-        setIsFetchingPage(false);
-      }
-    };
-    
-    // Debounce search
-    const timeout = setTimeout(() => {
-        fetchPage();
-    }, 300);
+  const { data: paginatedResult, isLoading: loadingPaginated, isFetching: isFetchingPage } = useQuery({
+    queryKey: ["societario_empresas_paginated", pagination.pageIndex, pagination.pageSize, debouncedSearch, activeTab, filterSituacao, filterRegime, refreshTrigger],
+    queryFn: () => getPaginatedEmpresas(
+      pagination.pageIndex, 
+      pagination.pageSize, 
+      debouncedSearch, 
+      filterSituacao !== 'todas' ? filterSituacao : activeTab, 
+      filterRegime
+    ),
+    placeholderData: (prev) => prev,
+    staleTime: 30000,
+  });
 
-    return () => clearTimeout(timeout);
-  }, [pagination.pageIndex, pagination.pageSize, search, filterSituacao, filterRegime, activeTab, refreshTrigger]);
+  const paginatedData = paginatedResult || { data: [], count: 0 };
 
   React.useEffect(() => {
     let isMounted = true;
