@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Empresa, Processo } from "@/types/societario";
@@ -7,10 +6,9 @@ import { toast } from "sonner";
 export const useSocietario = () => {
   const queryClient = useQueryClient();
 
-  const { data: listEmpresas = [], isLoading: loadingEmpresas } = useQuery({
+  const { data: listEmpresas = [], isLoading: loadingEmpresas, isFetching: fetchingEmpresas } = useQuery({
     queryKey: ["empresas"],
     queryFn: async () => {
-      // Keeping original listEmpresas for backward compatibility in forms/dropdowns
       const { data } = await supabase.from("empresas").select("*").order("nome_empresa");
       const { data: sociosData } = await supabase.from("socios").select("empresa_id");
       const sociosCounts: Record<string, number> = {};
@@ -18,7 +16,8 @@ export const useSocietario = () => {
         sociosCounts[s.empresa_id] = (sociosCounts[s.empresa_id] || 0) + 1;
       });
       return (data || []).map(e => ({ ...e, socios_count: sociosCounts[e.id] || 0 })) as Empresa[];
-    }
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   const getPaginatedEmpresas = async (page: number, limit: number, search: string, situacao: string, regime: string, moduloId?: string, userId?: string) => {
@@ -44,7 +43,6 @@ export const useSocietario = () => {
       const mappedSituacao = situacaoMap[situacao] || situacao;
 
       if (situacao === 'mei') {
-         // Filter by regime MEI OR situation MEI
          query = query.or(`regime_tributario.eq.mei,situacao.eq.mei`);
       } else if (mappedSituacao === 'ativa') {
          query = query.eq("situacao", "ativa");
@@ -57,7 +55,6 @@ export const useSocietario = () => {
       query = query.eq("regime_tributario", regime as any);
     }
 
-    // Filter by permissions if userId is provided
     if (userId && moduloId) {
       const { data: acessos } = await supabase
         .from("empresa_acessos")
@@ -65,15 +62,11 @@ export const useSocietario = () => {
         .eq("user_id", userId);
 
       if (acessos && acessos.length > 0) {
-        // Companies with specific rules
         const restrictedIds = acessos.map(a => a.empresa_id);
         const allowedIds = acessos
           .filter(a => a.modulos_permitidos.includes(moduloId))
           .map(a => a.empresa_id);
         
-        // Allowed companies = (Not Restricted) OR (Allowed in Restricted)
-        // This is complex for a single query, so we'll use a simpler 'where in' or 'not in'
-        // For now, let's at least filter the ones that are explicitly allowed if they are in the restricted list
         const disallowedIds = restrictedIds.filter(id => !allowedIds.includes(id));
         if (disallowedIds.length > 0) {
           query = query.not("id", "in", `(${disallowedIds.join(',')})`);
@@ -90,7 +83,6 @@ export const useSocietario = () => {
 
     if (error) throw error;
 
-    // Get socio count map for these specific companies
     const empIds = (empresasData || []).map(e => e.id);
     let sociosData: any[] = [];
     
@@ -109,7 +101,7 @@ export const useSocietario = () => {
     return { data: enrichedData, count: count || 0 };
   };
 
-  const { data: listProcessos = [], isLoading: loadingProcessos } = useQuery({
+  const { data: listProcessos = [], isLoading: loadingProcessos, isFetching: fetchingProcessos } = useQuery({
     queryKey: ["processos_societarios"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -122,7 +114,8 @@ export const useSocietario = () => {
 
       if (error) throw error;
       return (data as unknown as Processo[]) || [];
-    }
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   const addHistorico = async (processoId: string, acao: string, detalhes?: string) => {
@@ -171,6 +164,7 @@ export const useSocietario = () => {
     empresas: listEmpresas,
     processos: listProcessos,
     isLoading: loadingEmpresas || loadingProcessos,
+    isFetching: fetchingEmpresas || fetchingProcessos,
     addHistorico,
     deleteProcesso,
     updateProcesso,

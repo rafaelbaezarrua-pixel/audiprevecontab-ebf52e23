@@ -13,9 +13,11 @@ import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const PessoalPage: React.FC = () => {
   const navigate = useNavigate();
-  const { empresas, loading } = useEmpresas("pessoal");
-  const [search, setSearch] = useState("");
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
+  const { empresas, loading: empresasLoading, isFetching: empresasFetching } = useEmpresas("pessoal");
+  const { pessoalData, loading: pessoalLoading, isFetching: pessoalFetching, savePessoalRecord } = usePessoal(competencia);
+
+  const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei">("ativas");
@@ -24,19 +26,15 @@ const PessoalPage: React.FC = () => {
   const [funcionarios, setFuncionarios] = useState<Record<string, any[]>>({});
   const [alertsSummary, setAlertsSummary] = useState({ aso: 0, ferias: 0 });
 
-  const { pessoalData, loading: pessoalLoading, savePessoalRecord } = usePessoal(competencia);
-
   useEffect(() => {
     const fetchAlerts = async () => {
       const today = new Date();
       const nextMonth = addDays(today, 30);
-      
       const { data: allFuncs } = await (supabase.from("funcionarios" as any).select("*").eq("ativo", true) as any);
       if (allFuncs) {
         const aso = (allFuncs as any[]).filter(f => f.vencimento_aso && isBefore(parseISO(f.vencimento_aso), nextMonth)).length;
         const ferias = (allFuncs as any[]).filter(f => f.vencimento_ferias && isBefore(parseISO(f.vencimento_ferias), nextMonth)).length;
         setAlertsSummary({ aso, ferias });
-        
         const map: Record<string, any[]> = {};
         (allFuncs as any[]).forEach(f => {
           if (!map[f.empresa_id]) map[f.empresa_id] = [];
@@ -51,27 +49,19 @@ const PessoalPage: React.FC = () => {
   const filtered = React.useMemo(() => {
     return empresas.filter(e => {
       const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
-
       let matchTab = false;
-      if (activeTab === "ativas") {
-        matchTab = (e.situacao === "ativa" || !e.situacao) && e.porte_empresa !== "mei";
-      } else if (activeTab === "mei") {
-        matchTab = e.situacao === "mei" || ((e.situacao === "ativa" || !e.situacao) && e.porte_empresa === "mei");
-      }
-
+      if (activeTab === "ativas") matchTab = (e.situacao === "ativa" || !e.situacao) && e.porte_empresa !== "mei";
+      else if (activeTab === "mei") matchTab = e.situacao === "mei" || ((e.situacao === "ativa" || !e.situacao) && e.porte_empresa === "mei");
+      
       let matchSubTab = false;
-      if (activeSubTab === "folha") {
-        matchSubTab = !!e.possui_funcionarios;
-      } else if (activeSubTab === "prolabore") {
-        matchSubTab = !!e.somente_pro_labore && !e.possui_funcionarios;
-      }
+      if (activeSubTab === "folha") matchSubTab = !!(e as any).possui_funcionarios;
+      else if (activeSubTab === "prolabore") matchSubTab = !!(e as any).somente_pro_labore && !(e as any).possui_funcionarios;
 
       let matchStatus = true;
       if (filterStatus !== "todos") {
         const record = pessoalData[e.id];
-        if (!record) {
-          matchStatus = filterStatus === 'pendente';
-        } else {
+        if (!record) matchStatus = filterStatus === 'pendente';
+        else {
           if (activeSubTab === "prolabore") {
             const isAllConcluido = !!record.dctf_web_gerada;
             matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
@@ -82,13 +72,11 @@ const PessoalPage: React.FC = () => {
             if (record.possui_vc) checks.push(record.vc_status);
             checks.push(record.inss_status);
             checks.push(record.fgts_status);
-            
             const isAllConcluido = checks.every(s => s === 'enviada' || s === 'gerada' || s === 'isento') && record.dctf_web_gerada;
             matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
           }
         }
       }
-
       return matchSearch && matchTab && matchSubTab && matchStatus;
     });
   }, [empresas, pessoalData, search, activeTab, activeSubTab, filterStatus]);
@@ -97,38 +85,15 @@ const PessoalPage: React.FC = () => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
     const existing = (pessoalData[id] || {}) as Partial<PessoalRecord> & Record<string, any>;
-    
-    let infoGerais = {
-      forma_envio: "", qtd_funcionarios: 0, qtd_pro_labore: 0,
-      possui_vt: false, possui_va: false, possui_vc: false,
-      possui_recibos: false, qtd_recibos: 0
-    };
+    let infoGerais = { forma_envio: "", qtd_funcionarios: 0, qtd_pro_labore: 0, possui_vt: false, possui_va: false, possui_vc: false, possui_recibos: false, qtd_recibos: 0 };
 
     if (!existing.id) {
       const { data: prev } = await supabase.from("pessoal").select("*").eq("empresa_id", id).order("competencia", { ascending: false }).limit(1);
       if (prev?.[0]) {
-        infoGerais = {
-          forma_envio: prev[0].forma_envio || "",
-          qtd_funcionarios: prev[0].qtd_funcionarios || 0,
-          qtd_pro_labore: prev[0].qtd_pro_labore || 0,
-          possui_vt: prev[0].possui_vt || false,
-          possui_va: prev[0].possui_va || false,
-          possui_vc: prev[0].possui_vc || false,
-          possui_recibos: prev[0].possui_recibos || false,
-          qtd_recibos: prev[0].qtd_recibos || 0
-        };
+        infoGerais = { forma_envio: prev[0].forma_envio || "", qtd_funcionarios: prev[0].qtd_funcionarios || 0, qtd_pro_labore: prev[0].qtd_pro_labore || 0, possui_vt: prev[0].possui_vt || false, possui_va: prev[0].possui_va || false, possui_vc: prev[0].possui_vc || false, possui_recibos: prev[0].possui_recibos || false, qtd_recibos: prev[0].qtd_recibos || 0 };
       }
     } else {
-      infoGerais = {
-        forma_envio: existing.forma_envio || "",
-        qtd_funcionarios: existing.qtd_funcionarios || 0,
-        qtd_pro_labore: existing.qtd_pro_labore || 0,
-        possui_vt: existing.possui_vt || false,
-        possui_va: existing.possui_va || false,
-        possui_vc: existing.possui_vc || false,
-        possui_recibos: existing.possui_recibos || false,
-        qtd_recibos: existing.qtd_recibos || 0
-      };
+      infoGerais = { forma_envio: existing.forma_envio || "", qtd_funcionarios: existing.qtd_funcionarios || 0, qtd_pro_labore: existing.qtd_pro_labore || 0, possui_vt: existing.possui_vt || false, possui_va: existing.possui_va || false, possui_vc: existing.possui_vc || false, possui_recibos: existing.possui_recibos || false, qtd_recibos: existing.qtd_recibos || 0 };
     }
 
     setEditForm(prev => ({
@@ -144,9 +109,8 @@ const PessoalPage: React.FC = () => {
     }));
   };
 
-  const handleSave = async (empresaId: string) => {
+  const handleSaveAction = async (empresaId: string) => {
     const form = editForm[empresaId];
-    const existing = pessoalData[empresaId];
     try {
       const payload = {
         empresa_id: empresaId, competencia, forma_envio: form.forma_envio || null,
@@ -162,15 +126,13 @@ const PessoalPage: React.FC = () => {
         fgts_status: form.fgts_status as GuiaStatus, fgts_data_envio: form.fgts_data_envio || null,
         dctf_web_gerada: !!form.dctf_web_gerada, dctf_web_data_envio: form.dctf_web_data_envio || null,
       };
-      const success = await savePessoalRecord(payload);
-      if (success) {
-        toast.success("Dados salvos com sucesso!");
-        setExpanded(null);
-      }
+      await savePessoalRecord(payload);
+      toast.success("Dados salvos com sucesso!");
+      setExpanded(null);
     } catch (err: any) { toast.error(err.message); }
   };
 
-  const updateForm = (empresaId: string, field: string, value: string | number | boolean | null) => {
+  const updateForm = (empresaId: string, field: string, value: any) => {
     setEditForm(prev => ({ ...prev, [empresaId]: { ...prev[empresaId], [field]: value } }));
   };
 
@@ -178,7 +140,7 @@ const PessoalPage: React.FC = () => {
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
   const completedCount = filtered.filter(e => pessoalData[e.id]?.dctf_web_gerada).length;
 
-  if (loading || pessoalLoading) {
+  if (empresasLoading || (pessoalLoading && Object.keys(pessoalData).length === 0)) {
     return (
       <div className="space-y-6 animate-fade-in">
         <PageHeaderSkeleton />
@@ -189,6 +151,12 @@ const PessoalPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {(empresasFetching || pessoalFetching) && (
+        <div className="fixed top-20 right-8 z-50 flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 shadow-sm animate-pulse">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+            <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex bg-card border border-border/60 rounded-xl shadow-sm overflow-hidden h-12">
           <div className="px-4 flex items-center gap-2 border-r border-border/60">
@@ -236,69 +204,18 @@ const PessoalPage: React.FC = () => {
         </div>
 
         <div className="flex bg-muted/50 p-1 rounded-lg self-end">
-          <button 
-            onClick={() => setFilterStatus("todos")}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "todos" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Todos
-          </button>
-          <button 
-            onClick={() => setFilterStatus("pendente")}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "pendente" ? "bg-card text-orange-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Pendentes
-          </button>
-          <button 
-            onClick={() => setFilterStatus("concluido")}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "concluido" ? "bg-card text-green-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Concluídos
-          </button>
+          <button onClick={() => setFilterStatus("todos")} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "todos" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Todos</button>
+          <button onClick={() => setFilterStatus("pendente")} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "pendente" ? "bg-card text-orange-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Pendentes</button>
+          <button onClick={() => setFilterStatus("concluido")} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "concluido" ? "bg-card text-green-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Concluídos</button>
         </div>
       </div>
 
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "ativas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("ativas")}
-        >
-          Empresas Ativas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "mei"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("mei")}
-        >
-          Empresas MEI
-        </button>
+        {["ativas", "mei"].map(t => <button key={t} className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`} onClick={() => setActiveTab(t as any)}>Empresas {t === "ativas" ? "Ativas" : "MEI"}</button>)}
       </div>
 
       <div className="flex gap-2 mb-2">
-        <button
-          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${
-            activeSubTab === "folha"
-              ? "bg-primary/10 text-primary"
-              : "bg-muted/50 text-muted-foreground hover:bg-muted"
-          }`}
-          onClick={() => setActiveSubTab("folha")}
-        >
-          Folha de Pagamento
-        </button>
-        <button
-          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${
-            activeSubTab === "prolabore"
-              ? "bg-primary/10 text-primary"
-              : "bg-muted/50 text-muted-foreground hover:bg-muted"
-          }`}
-          onClick={() => setActiveSubTab("prolabore")}
-        >
-          Pró-labore
-        </button>
+        {["folha", "prolabore"].map(s => <button key={s} className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${activeSubTab === s ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`} onClick={() => setActiveSubTab(s as any)}>{s === "folha" ? "Folha de Pagamento" : "Pró-labore"}</button>)}
       </div>
 
       <div className="space-y-3">
@@ -316,141 +233,40 @@ const PessoalPage: React.FC = () => {
                 <div className="border-t border-border p-5 space-y-5 bg-muted/10">
                   {activeSubTab === "prolabore" && (
                     <>
-                      {/* Informações Simplificadas para Pró-labore */}
-                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3>
-                        <div className="grid grid-cols-1 gap-4">
-                          <div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div>
-                        </div>
-                      </div>
-
-                      {/* Apenas DCTF Web para Pró-labore */}
-                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Obrigações - {competencia}</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-                          <span className="text-sm font-medium text-card-foreground">DCTF Web (Pró-labore)</span>
-                          <select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}>
-                            <option value="nao">Não Gerada</option><option value="sim">Gerada</option>
-                          </select>
-                          {form.dctf_web_gerada ? (
-                            <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} />
-                          ) : <div />}
-                        </div>
-                      </div>
+                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3><div className="grid grid-cols-1 gap-4"><div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div></div></div>
+                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Obrigações - {competencia}</h3><div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">DCTF Web (Pró-labore)</span><select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}><option value="nao">Não Gerada</option><option value="sim">Gerada</option></select>{form.dctf_web_gerada ? <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} /> : <div />}</div></div>
                     </>
                   )}
-
                   {activeSubTab === "folha" && (
                     <>
-                      {/* Informações */}
-                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} /></div>
-                          <div><label className={labelCls}>Qtd Funcionários</label><input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className={inputCls} /></div>
-                          <div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div>
-                        </div>
-                      </div>
-
-                      {/* Trabalhistas */}
+                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} /></div><div><label className={labelCls}>Qtd Funcionários</label><input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className={inputCls} /></div><div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div></div></div>
                       <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Trabalhistas - {competencia}</h3>
                         <div className="space-y-3">
-                          {/* Recibos - campo de quantidade */}
-                          <div className="grid grid-cols-3 gap-3 items-center">
-                            <label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer">
-                              <input type="checkbox" checked={form.possui_recibos || false} onChange={e => updateForm(emp.id, "possui_recibos", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> Recibos
-                            </label>
-                            {form.possui_recibos ? (
-                              <div><label className={labelCls}>Qtd Recibos</label><input type="number" value={form.qtd_recibos || 0} onChange={e => updateForm(emp.id, "qtd_recibos", e.target.value)} className={inputCls} /></div>
-                            ) : <div />}
-                            <div />
-                          </div>
-                          {/* VT, VA, VC - checkbox + status + data */}
-                          {[
-                            { label: "VT", checkKey: "possui_vt", statusKey: "vt_status", dateKey: "vt_data_envio" },
-                            { label: "VA", checkKey: "possui_va", statusKey: "va_status", dateKey: "va_data_envio" },
-                            { label: "VC", checkKey: "possui_vc", statusKey: "vc_status", dateKey: "vc_data_envio" },
-                          ].map((item: { label: string; checkKey: keyof PessoalRecord; statusKey: keyof PessoalRecord; dateKey: keyof PessoalRecord }) => (
-                            <div key={item.label} className="grid grid-cols-3 gap-3 items-center">
-                              <label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer">
-                                <input type="checkbox" checked={form[item.checkKey] || false} onChange={e => updateForm(emp.id, item.checkKey, e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> {item.label}
-                              </label>
-                              {form[item.checkKey] ? (
-                                <>
-                                  <select value={form[item.statusKey] || "pendente"} onChange={e => updateForm(emp.id, item.statusKey, e.target.value)} className={inputCls}>
-                                    <option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option>
-                                  </select>
-                                  <input type="date" value={form[item.dateKey] || ""} onChange={e => updateForm(emp.id, item.dateKey, e.target.value)} className={inputCls} />
-                                </>
-                              ) : (<><div /><div /></>)}
-                            </div>
+                          <div className="grid grid-cols-3 gap-3 items-center"><label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer"><input type="checkbox" checked={form.possui_recibos || false} onChange={e => updateForm(emp.id, "possui_recibos", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> Recibos </label>{form.possui_recibos ? <div><label className={labelCls}>Qtd Recibos</label><input type="number" value={form.qtd_recibos || 0} onChange={e => updateForm(emp.id, "qtd_recibos", e.target.value)} className={inputCls} /></div> : <div />}<div /></div>
+                          {[{ label: "VT", k: "vt" }, { label: "VA", k: "va" }, { label: "VC", k: "vc" }].map(x => (
+                            <div key={x.k} className="grid grid-cols-3 gap-3 items-center"><label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer"><input type="checkbox" checked={form[`possui_${x.k}`] || false} onChange={e => updateForm(emp.id, `possui_${x.k}`, e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> {x.label} </label>{form[`possui_${x.k}`] ? <><select value={form[`${x.k}_status`] || "pendente"} onChange={e => updateForm(emp.id, `${x.k}_status`, e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select><input type="date" value={form[`${x.k}_data_envio`] || ""} onChange={e => updateForm(emp.id, `${x.k}_data_envio`, e.target.value)} className={inputCls} /></> : <><div /><div /></>}</div>
                           ))}
                         </div>
                       </div>
-
-                      {/* Encargos */}
                       <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Encargos - {competencia}</h3>
                         <div className="space-y-3">
-                          {([{ label: "INSS", statusKey: "inss_status", dateKey: "inss_data_envio" }, { label: "FGTS", statusKey: "fgts_status", dateKey: "fgts_data_envio" }] as const).map((enc) => (
-                            <div key={enc.label} className="grid grid-cols-3 gap-3 items-center">
-                              <span className="text-sm font-medium text-card-foreground">{enc.label}</span>
-                              <select value={form[enc.statusKey] || "pendente"} onChange={e => updateForm(emp.id, enc.statusKey, e.target.value)} className={inputCls}>
-                                <option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option>
-                              </select>
-                              <input type="date" value={form[enc.dateKey] || ""} onChange={e => updateForm(emp.id, enc.dateKey, e.target.value)} className={inputCls} />
-                            </div>
+                          {[{ l: "INSS", s: "inss_status", d: "inss_data_envio" }, { l: "FGTS", s: "fgts_status", d: "fgts_data_envio" }].map(enc => (
+                             <div key={enc.l} className="grid grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">{enc.l}</span><select value={form[enc.s] || "pendente"} onChange={e => updateForm(emp.id, enc.s, e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select><input type="date" value={form[enc.d] || ""} onChange={e => updateForm(emp.id, enc.d, e.target.value)} className={inputCls} /></div>
                           ))}
-                          <div className="grid grid-cols-3 gap-3 items-center">
-                            <span className="text-sm font-medium text-card-foreground">DCTF Web</span>
-                            <select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}>
-                              <option value="nao">Não Gerada</option><option value="sim">Gerada</option>
-                            </select>
-                            {form.dctf_web_gerada ? (
-                              <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} />
-                            ) : <div />}
-                          </div>
+                          <div className="grid grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">DCTF Web</span><select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}><option value="nao">Não Gerada</option><option value="sim">Gerada</option></select>{form.dctf_web_gerada ? <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} /> : <div />}</div>
                         </div>
                       </div>
-
-                      {/* Funcionários & Alertas */}
                       <div>
-                        <div className="flex items-center justify-between mb-3 pt-3 border-t border-border">
-                          <h3 className="text-sm font-semibold text-card-foreground flex items-center gap-2">
-                            <Users size={16} className="text-primary" /> Funcionários & Alertas
-                          </h3>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/pessoal/funcionarios/${emp.id}`);
-                            }}
-                            className="text-[10px] font-bold uppercase tracking-widest text-primary hover:underline flex items-center gap-1"
-                          >
-                            <Settings size={12} /> Gerenciar
-                          </button>
-                        </div>
+                        <div className="flex items-center justify-between mb-3 pt-3 border-t border-border"><h3 className="text-sm font-semibold text-card-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Funcionários & Alertas</h3><button onClick={(e) => { e.stopPropagation(); navigate(`/pessoal/funcionarios/${emp.id}`); }} className="text-[10px] font-bold uppercase tracking-widest text-primary hover:underline flex items-center gap-1"><Settings size={12} /> Gerenciar</button></div>
                         <div className="space-y-2">
-                          {(funcionarios[emp.id] || []).length === 0 ? (
-                            <p className="text-xs text-muted-foreground italic bg-background/50 p-2 rounded-lg border border-dashed border-border">Nenhum funcionário cadastrado com alertas ativos.</p>
-                          ) : (
-                            funcionarios[emp.id].map(func => (
-                              <div key={func.id} className="p-3 bg-background/50 rounded-lg border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div>
-                                  <p className="text-sm font-medium">{func.nome}</p>
-                                  <div className="flex flex-wrap gap-3 mt-1">
-                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${func.vencimento_aso && isBefore(parseISO(func.vencimento_aso), addDays(new Date(), 30)) ? "text-destructive" : "text-muted-foreground"}`}>
-                                      <AlertTriangle size={12} /> ASO: {func.vencimento_aso ? formatDateBR(func.vencimento_aso) : "N/D"}
-                                    </div>
-                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${func.vencimento_ferias && isBefore(parseISO(func.vencimento_ferias), addDays(new Date(), 30)) ? "text-destructive" : "text-muted-foreground"}`}>
-                                      <Calendar size={12} /> Férias: {func.vencimento_ferias ? formatDateBR(func.vencimento_ferias) : "N/D"}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))
+                          {(funcionarios[emp.id] || []).length === 0 ? <p className="text-xs text-muted-foreground italic bg-background/50 p-2 rounded-lg border border-dashed border-border">Nenhum funcionário cadastrado.</p> : (
+                            funcionarios[emp.id].map(func => (<div key={func.id} className="p-3 bg-background/50 rounded-lg border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><p className="text-sm font-medium">{func.nome}</p><div className="flex flex-wrap gap-3 mt-1"><div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${func.vencimento_aso && isBefore(parseISO(func.vencimento_aso), addDays(new Date(), 30)) ? "text-destructive" : "text-muted-foreground"}`}><AlertTriangle size={12} /> ASO: {func.vencimento_aso ? formatDateBR(func.vencimento_aso) : "N/D"}</div><div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${func.vencimento_ferias && isBefore(parseISO(func.vencimento_ferias), addDays(new Date(), 30)) ? "text-destructive" : "text-muted-foreground"}`}><Calendar size={12} /> Férias: {func.vencimento_ferias ? formatDateBR(func.vencimento_ferias) : "N/D"}</div></div></div></div>))
                           )}
                         </div>
                       </div>
                     </>
                   )}
-
-                  <div className="flex justify-end"><button onClick={() => handleSave(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Save size={14} /> Salvar</button></div>
+                  <div className="flex justify-end"><button onClick={() => handleSaveAction(emp.id)} className="button-premium shadow-md"><Save size={14} /> Salvar</button></div>
                 </div>
               )}
             </div>

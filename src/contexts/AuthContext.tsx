@@ -219,9 +219,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
-      setSession(newSession);
+      
       const newUser = newSession?.user ?? null;
-      setUser(newUser);
+      
+      // Only update if session token or user ID actually changed to prevent focus-refetch re-renders
+      setSession(prev => (prev?.access_token === newSession?.access_token ? prev : newSession));
+      setUser(prev => (prev?.id === newUser?.id ? prev : newUser));
 
       // Trava de segurança para links de recuperação de senha enviados por e-mail
       if (event === "PASSWORD_RECOVERY" && window.location.pathname !== "/reset-password") {
@@ -231,8 +234,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     supabase.auth.getSession().then(({ data: { session: existing } }) => {
       if (!mounted) return;
-      setSession(existing);
-      setUser(existing?.user ?? null);
+      setSession(prev => (prev?.access_token === existing?.access_token ? prev : existing));
+      setUser(prev => (prev?.id === existing?.user?.id ? prev : (existing?.user ?? null)));
       if (!existing?.user) {
         setLoading(false);
       }
@@ -285,8 +288,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const contextValue = React.useMemo(() => ({
+    user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito
+  }), [user, session, userData, loading]);
+
   return (
-    <AuthContext.Provider value={{ user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

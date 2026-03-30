@@ -22,7 +22,7 @@ const HonorariosPage: React.FC = () => {
   const [globalCompetencia, setGlobalCompetencia] = useState(new Date().toISOString().slice(0, 7));
 
   const {
-    listGeral, listEsporadicos, revenueTrend, loading: loadingHonorarios,
+    listGeral, listEsporadicos, revenueTrend, loading: loadingHonorarios, isFetching: isFetchingHonorarios,
     saveConfig, saveMensal, saveEsporadico, deleteEsporadico
   } = useHonorarios(globalCompetencia);
 
@@ -160,7 +160,13 @@ const HonorariosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in relative">
+      {isFetchingHonorarios && (
+        <div className="fixed top-20 right-8 z-50 flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 shadow-sm animate-pulse">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+            <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full sm:w-auto">
           <FavoriteToggleButton moduleId="honorarios" />

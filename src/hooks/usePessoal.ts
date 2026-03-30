@@ -1,59 +1,50 @@
-import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PessoalRecord } from "@/types/pessoal";
 import { toast } from "sonner";
 
 export function usePessoal(competencia: string) {
-  const [pessoalData, setPessoalData] = useState<Record<string, PessoalRecord>>({});
-  const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
 
-  const loadPessoalData = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.from("pessoal").select("*").eq("competencia", competencia);
-      if (error) throw error;
-      const map: Record<string, PessoalRecord> = {};
-      data?.forEach(p => { map[p.empresa_id] = p as unknown as PessoalRecord; });
-      setPessoalData(map);
-    } catch (e) {
-      console.error(e);
-      toast.error("Erro ao carregar dados do pessoal");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const { data: pessoalData = {}, isLoading, isFetching } = useQuery({
+        queryKey: ["pessoal", competencia],
+        queryFn: async () => {
+            const { data, error } = await supabase.from("pessoal").select("*").eq("competencia", competencia);
+            if (error) throw error;
+            const map: Record<string, PessoalRecord> = {};
+            data?.forEach(p => { map[p.empresa_id] = p as unknown as PessoalRecord; });
+            return map;
+        },
+        staleTime: 5 * 60 * 1000,
+    });
 
-  useEffect(() => {
-    loadPessoalData();
-  }, [competencia]);
+    const savePessoalRecordMutation = useMutation({
+        mutationFn: async (record: Partial<PessoalRecord> & { empresa_id: string, competencia: string }) => {
+            const { data: existing } = await supabase
+                .from("pessoal")
+                .select("id")
+                .eq("empresa_id", record.empresa_id)
+                .eq("competencia", record.competencia)
+                .maybeSingle();
 
-  const savePessoalRecord = async (record: Partial<PessoalRecord> & { empresa_id: string, competencia: string }) => {
-    try {
-      const { data: existing } = await supabase
-        .from("pessoal")
-        .select("id")
-        .eq("empresa_id", record.empresa_id)
-        .eq("competencia", record.competencia)
-        .maybeSingle();
+            if (existing) {
+                const { error } = await supabase.from("pessoal").update(record).eq("id", existing.id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase.from("pessoal").insert([record]);
+                if (error) throw error;
+            }
+            return true;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["pessoal", competencia] });
+        }
+    });
 
-      let error;
-      if (existing) {
-        const { error: err } = await supabase.from("pessoal").update(record).eq("id", existing.id);
-        error = err;
-      } else {
-        const { error: err } = await supabase.from("pessoal").insert([record]);
-        error = err;
-      }
-
-      if (error) throw error;
-      loadPessoalData();
-      return true;
-    } catch (e) {
-      console.error(e);
-      toast.error("Erro ao salvar dados do pessoal");
-      return false;
-    }
-  };
-
-  return { pessoalData, loading, loadPessoalData, savePessoalRecord };
+    return { 
+        pessoalData, 
+        loading: isLoading, 
+        isFetching,
+        savePessoalRecord: savePessoalRecordMutation.mutateAsync 
+    };
 }

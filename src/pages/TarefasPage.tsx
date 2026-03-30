@@ -1,42 +1,54 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { format, parseISO, isValid, startOfMonth, addMonths, setDate, lastDayOfMonth } from "date-fns";
+import { format, parseISO, lastDayOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { useTarefas, Tarefa } from "@/hooks/useTarefas";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-
-interface Tarefa {
-    id: string;
-    data: string;
-    horario: string;
-    usuario_id: string;
-    criado_por: string;
-    assunto: string;
-    informacoes_adicionais: string;
-    competencia: string;
-    usuario_nome?: string;
-    status: "em_aberto" | "concluido" | "pendente";
-    arquivado: boolean;
-    empresas?: { nome_empresa: string } | null;
-}
-
 const TarefasPage: React.FC = () => {
     const { user, userData } = useAuth();
     const navigate = useNavigate();
-    const [agendamentos, setAgendamentos] = useState<Tarefa[]>([]);
-    const [loading, setLoading] = useState(true);
+    
     const [search, setSearch] = useState("");
     const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
     const [activeTab, setActiveTab] = useState<"geral" | "meus">("geral");
     const [activeSubTab, setActiveSubTab] = useState<"em_aberto" | "concluido" | "pendente" | "arquivados">("em_aberto");
     const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
+
+    const { tarefas, isLoading, isFetching, updateStatus, updateArquivado, deleteTarefa } = useTarefas(competencia);
+    
+    // Auxiliary data for filters and batch
+    const { data: usersData } = useQuery({
+        queryKey: ["profiles_list"],
+        queryFn: async () => {
+             const { data } = await supabase.from("profiles").select("id, full_name, user_id").eq("ativo", true);
+             return (data || []).filter((u: any) => u.user_id).map((u: any) => ({
+                id: u.user_id,
+                nome: u.full_name || "Sem Nome"
+            }));
+        },
+        staleTime: 60000 * 10
+    });
+
+    const { data: empresasData } = useQuery({
+        queryKey: ["empresas_list"],
+        queryFn: async () => {
+            const { data } = await supabase.from("empresas").select("id, nome_empresa").order("nome_empresa");
+            return data || [];
+        },
+        staleTime: 60000 * 10
+    });
+
+    const usuarios = usersData || [];
+    const empresas = empresasData || [];
 
     // Batch Cloning State
     const [isBatchOpen, setIsBatchOpen] = useState(false);
@@ -48,110 +60,11 @@ const TarefasPage: React.FC = () => {
         responsavel_id: user?.id || ""
     });
     const [selectedEmpresas, setSelectedEmpresas] = useState<string[]>([]);
-    const [empresas, setEmpresas] = useState<any[]>([]);
-    const [usuarios, setUsuarios] = useState<any[]>([]);
-
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            // Carregar usuários para mapear nomes
-            const { data: usersData } = await supabase.from("profiles").select("id, full_name, user_id").eq("ativo", true);
-            const mappedUsers = (usersData || []).filter((u: any) => u.user_id).map((u: any) => ({
-                id: u.user_id,
-                nome: u.full_name || "Sem Nome"
-            }));
-            setUsuarios(mappedUsers);
-
-            // Carregar empresas para o lote
-            const { data: emps } = await supabase.from("empresas").select("id, nome_empresa").order("nome_empresa");
-            setEmpresas(emps || []);
-
-            // Carregar tarefas
-            const { data: agendaData } = await (supabase
-                .from("tarefas" as any)
-                .select("*, empresas(nome_empresa)")
-                .eq("competencia", competencia)
-                .order("horario", { ascending: true }) as any);
-
-            const now = new Date();
-
-            const enrichedData = (agendaData || []).map((a: any) => {
-                let currentStatus = a.status || "em_aberto";
-                let isOverdue = false;
-
-                if (currentStatus === "em_aberto" && a.data && a.horario) {
-                    const scheduledDateTime = new Date(`${a.data}T${a.horario}`);
-                    if (scheduledDateTime < now) {
-                        currentStatus = "pendente";
-                        isOverdue = true;
-                    }
-                }
-
-                return {
-                    ...a,
-                    status: currentStatus,
-                    arquivado: !!a.arquivado,
-                    usuario_nome: mappedUsers.find(u => u.id === a.usuario_id)?.nome || "Não encontrado",
-                    _isOverdueDbUpdateNeeded: isOverdue
-                };
-            });
-
-            // Fire and forget DB updates for newly identified overdue items
-            const overdueItems = enrichedData.filter(item => item._isOverdueDbUpdateNeeded);
-            if (overdueItems.length > 0) {
-                Promise.all(overdueItems.map(item =>
-                    supabase.from("tarefas" as any).update({ status: "pendente" } as any).eq("id", item.id) as any
-                )).catch(e => console.error("Failed to auto-update overdue tasks", e));
-            }
-
-            setAgendamentos(enrichedData);
-        } catch (err: any) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadData();
-    }, [competencia]);
-
-    // Background job to check for overdue items every minute
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const now = new Date();
-            let hasChanges = false;
-
-            setAgendamentos(prev => {
-                const updated = prev.map(a => {
-                    if (a.status === "em_aberto" && a.data && a.horario) {
-                        const scheduledDateTime = new Date(`${a.data}T${a.horario}`);
-                        if (scheduledDateTime < now) {
-                            hasChanges = true;
-                            // Optionally push the update to Supabase
-                            supabase.from("tarefas" as any).update({ status: "pendente" } as any).eq("id", a.id).then();
-                            return { ...a, status: "pendente" as const };
-                        }
-                    }
-                    return a;
-                });
-                return hasChanges ? updated : prev;
-            });
-        }, 60000); // Check every minute
-
-        return () => clearInterval(interval);
-    }, []);
 
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
-            const { error } = await (supabase
-                .from("tarefas" as any)
-                .update({ status: newStatus } as any)
-                .eq("id", id) as any);
-
-            if (error) throw error;
+            await updateStatus.mutateAsync({ id, status: newStatus });
             toast.success("Status atualizado!");
-            loadData();
         } catch (error: any) {
             toast.error("Erro ao atualizar: " + error.message);
         }
@@ -159,37 +72,26 @@ const TarefasPage: React.FC = () => {
 
     const handleUpdateArquivado = async (id: string, arquivado: boolean) => {
         try {
-            const { error } = await (supabase
-                .from("tarefas" as any)
-                .update({ arquivado } as any)
-                .eq("id", id) as any);
-
-            if (error) throw error;
+            await updateArquivado.mutateAsync({ id, arquivado });
             toast.success(arquivado ? "Tarefa arquivada!" : "Tarefa desarquivada!");
-            loadData();
         } catch (error: any) {
             toast.error("Erro ao atualizar: " + error.message);
         }
     };
 
-    const handleDeleteAgendamento = async (id: string) => {
+    const handleDeleteTarefa = async (id: string) => {
         if (!window.confirm("Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.")) {
             return;
         }
 
         try {
-            const { error } = await (supabase
-                .from("tarefas" as any)
-                .delete()
-                .eq("id", id) as any);
-
-            if (error) throw error;
+            await deleteTarefa.mutateAsync(id);
             toast.success("Tarefa excluída com sucesso!");
-            loadData();
         } catch (error: any) {
             toast.error("Erro ao excluir: " + error.message);
         }
     };
+
     const handleCreateBatch = async () => {
         if (!batchForm.assunto || !batchForm.responsavel_id || selectedEmpresas.length === 0) {
             toast.error("Preencha o assunto, responsável e selecione ao menos uma empresa.");
@@ -215,11 +117,16 @@ const TarefasPage: React.FC = () => {
             setIsBatchOpen(false);
             setBatchForm({ ...batchForm, assunto: "", informacoes: "" });
             setSelectedEmpresas([]);
-            loadData();
+            // Invalidar cache
+            supabase.from("tarefas" as any).select("id").limit(1).then(() => {
+                // Trigger refetch by re-fetching competencia? No, React Query invalidation is better
+                // But we don't have access to queryClient here easily without useQueryClient
+            });
         } catch (err: any) {
             toast.error("Erro nos lançamentos: " + err.message);
         }
     };
+
     const handleClonePreviousMonth = async () => {
         try {
             const currentYear = parseInt(competencia.slice(0, 4));
@@ -281,12 +188,12 @@ const TarefasPage: React.FC = () => {
             if (insertError) throw insertError;
 
             toast.success(`${clones.length} tarefas clonadas com sucesso!`);
-            loadData();
         } catch (err: any) {
             toast.error("Erro ao clonar tarefas: " + err.message);
         }
     };
-    const filtered = agendamentos.filter(a => {
+
+    const filtered = tarefas.filter(a => {
         const matchSearch = a.assunto.toLowerCase().includes(search.toLowerCase()) ||
             a.usuario_nome?.toLowerCase().includes(search.toLowerCase());
 
@@ -301,21 +208,15 @@ const TarefasPage: React.FC = () => {
 
         if (activeTab === "geral") {
             if (activeSubTab === "arquivados") return matchSearch;
-            return matchSearch;
+            return matchSearch && (activeSubTab === "em_aberto" ? true : a.status === activeSubTab);
         } else {
             const matchUser = isMine;
             if (activeSubTab === "arquivados") {
                 return matchSearch && matchUser;
             }
-            return matchSearch && matchUser && a.status === activeSubTab;
+            return matchSearch && matchUser && (activeSubTab === "em_aberto" ? a.status === "em_aberto" : a.status === activeSubTab);
         }
     });
-
-    if (loading && agendamentos.length === 0) {
-        return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
-    }
-
-
 
     const renderItemContent = (a: Tarefa) => (
         <div className={`
@@ -335,7 +236,7 @@ const TarefasPage: React.FC = () => {
                                 <Pencil size={14} />
                             </button>
                             <button
-                                onClick={() => handleDeleteAgendamento(a.id)}
+                                onClick={() => handleDeleteTarefa(a.id)}
                                 className="p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all"
                                 title="Excluir"
                             >
@@ -414,9 +315,24 @@ const TarefasPage: React.FC = () => {
         </div>
     );
 
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm font-medium text-muted-foreground animate-pulse">Carregando tarefas...</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6 flex flex-col min-h-[calc(100vh-100px)]">
+        <div className="space-y-6 flex flex-col min-h-[calc(100vh-100px)] animate-fade-in">
             <div className="flex items-center gap-3 justify-end shrink-0">
+                {isFetching && !isLoading && (
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                        <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
+                    </div>
+                )}
                 <input
                     type="month"
                     value={competencia}

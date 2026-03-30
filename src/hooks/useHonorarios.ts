@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HonorarioConfig, HonorarioMensal, ServicoEsporadico } from "@/types/honorarios";
@@ -10,7 +9,7 @@ export const useHonorarios = (competencia?: string) => {
   const queryClient = useQueryClient();
 
   // Monthly Fees (General View)
-  const { data: listGeral = [], isLoading: loadingGeral } = useQuery({
+  const { data: listGeral = [], isLoading: loadingGeral, isFetching: fetchingGeral } = useQuery({
     queryKey: ["honorarios_mensal_geral", competencia],
     queryFn: async () => {
       if (!competencia) return [];
@@ -27,11 +26,12 @@ export const useHonorarios = (competencia?: string) => {
         observacoes: item.observacoes || { texto: "" }
       })) as HonorarioMensal[];
     },
-    enabled: !!competencia
+    enabled: !!competencia,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Sporadic Services
-  const { data: listEsporadicos = [], isLoading: loadingEsporadicos } = useQuery({
+  const { data: listEsporadicos = [], isLoading: loadingEsporadicos, isFetching: fetchingEsporadicos } = useQuery({
     queryKey: ["servicos_esporadicos", competencia],
     queryFn: async () => {
       if (!competencia) return [];
@@ -42,11 +42,12 @@ export const useHonorarios = (competencia?: string) => {
       if (error) throw error;
       return data as ServicoEsporadico[];
     },
-    enabled: !!competencia
+    enabled: !!competencia,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Historical Revenue Trend (last 6 months)
-  const { data: revenueTrend = [], isLoading: loadingTrend } = useQuery({
+  const { data: revenueTrend = [], isLoading: loadingTrend, isFetching: fetchingTrend } = useQuery({
     queryKey: ["honorarios_revenue_trend"],
     queryFn: async () => {
       const months = Array.from({ length: 6 }).map((_, i) => format(subMonths(new Date(), 5 - i), "yyyy-MM"));
@@ -64,7 +65,8 @@ export const useHonorarios = (competencia?: string) => {
           pago: monthData.filter(d => d.pago).reduce((acc, curr) => acc + (curr.valor_total || 0), 0)
         };
       });
-    }
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   const saveConfig = useMutation({
@@ -150,6 +152,7 @@ export const useHonorarios = (competencia?: string) => {
     listEsporadicos,
     revenueTrend,
     loading: loadingGeral || loadingEsporadicos || loadingTrend,
+    isFetching: fetchingGeral || fetchingEsporadicos || fetchingTrend,
     saveConfig,
     saveMensal,
     saveEsporadico,

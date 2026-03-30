@@ -32,6 +32,7 @@ export const useDashboard = (userId?: string) => {
         tarefasHoje: tarefasHoje || 0,
       };
     },
+    staleTime: 5 * 60 * 1000,
   });
 
   // 1.5. Analytics Data (Charts)
@@ -89,7 +90,8 @@ export const useDashboard = (userId?: string) => {
         regimes: regimesData,
         processos: processosData
       };
-    }
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   // 2. Revenue Trend (last 6 months)
@@ -111,7 +113,8 @@ export const useDashboard = (userId?: string) => {
           pago: monthData.filter(d => d.pago).reduce((acc, curr) => acc + (curr.valor_total || 0), 0)
         };
       });
-    }
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
 
@@ -174,7 +177,8 @@ export const useDashboard = (userId?: string) => {
 
       return combined.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     },
-    enabled: !!userId || true // Enable even if no userId (it will just not filter if not passed, but we pass it)
+    enabled: !!userId,
+    staleTime: 1 * 60 * 1000, // Alerts refetch more often (1 min)
   });
 
   return {
