@@ -195,7 +195,7 @@ const AgendamentosPage: React.FC = () => {
                                 <span className={`flex items-center justify-center min-w-[22px] h-5 px-1.5 text-[10px] font-black rounded-full transition-all duration-300 ${
                                     tab.id === 'em_aberto' ? "bg-primary/10 text-primary border border-primary/20" :
                                     tab.id === 'concluido' ? "bg-green-500/10 text-green-500 border border-green-500/20" :
-                                    tab.id === 'pendente' && tab.count > 0 ? "bg-destructive text-white border border-destructive/30 animate-pulse shadow-sm shadow-destructive/20" :
+                                    tab.id === 'pendente' && tab.count > 0 ? "bg-destructive text-white border border-destructive/30" :
                                     tab.id === 'pendente' ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
                                     "bg-muted/50 text-muted-foreground border border-border"
                                 }`}>
