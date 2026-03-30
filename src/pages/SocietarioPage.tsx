@@ -24,7 +24,7 @@ const SocietarioPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { 
-    empresas, processos, isLoading, 
+    empresas, processos, isLoading, isFetching,
     deleteProcesso, updateProcesso, getPaginatedEmpresas
   } = useSocietario();
 
@@ -216,7 +216,15 @@ const SocietarioPage: React.FC = () => {
         <div className="space-y-6 animate-in slide-in-from-left-2 duration-500">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="header-title">Societário</h1>
+              <h1 className="header-title flex items-center gap-3">
+                Societário
+                {isFetchingPage && !loadingPaginated && (
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                    <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
+                  </div>
+                )}
+              </h1>
               <p className="text-muted-foreground mt-1">Gestão de empresas e processos de constituição/alteração.</p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -302,7 +310,7 @@ const SocietarioPage: React.FC = () => {
             totalCount={paginatedData.count} 
             pagination={pagination} 
             setPagination={setPagination}
-            isLoading={isFetchingPage}
+            isLoading={loadingPaginated}
             onInlineEdit={async (id, field, value) => {
               try {
                 const { error } = await (await import("@/integrations/supabase/client")).supabase.from("empresas").update({ [field]: value }).eq("id", id);
