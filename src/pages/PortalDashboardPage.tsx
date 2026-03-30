@@ -24,6 +24,8 @@ const PortalDashboardPage: React.FC = () => {
     const { userData } = useAuth();
     const [empresa, setEmpresa] = React.useState<any>(null);
     const [counts, setCounts] = React.useState({ lics: 0, certs: 0, msgs: 0 });
+    const [recentDocs, setRecentDocs] = React.useState<any[]>([]);
+    const [activeProcs, setActiveProcs] = React.useState<any[]>([]);
 
     React.useEffect(() => {
         const load = async () => {
@@ -43,6 +45,19 @@ const PortalDashboardPage: React.FC = () => {
                 certs: certCount || 0,
                 msgs: msgCount || 0
             });
+
+            // Get recent docs
+            const { data: docs } = await supabase.from("documentos")
+               .select("*").eq("empresa_id", userData.empresaId)
+               .order("created_at", { ascending: false }).limit(3);
+            if (docs) setRecentDocs(docs);
+
+            // Get active processes
+            const { data: procs } = await supabase.from("processos_societarios")
+               .select("*").eq("empresa_id", userData.empresaId)
+               .neq("status", "concluido")
+               .order("created_at", { ascending: false }).limit(2);
+            if (procs) setActiveProcs(procs);
         };
         load();
     }, [userData]);
@@ -179,18 +194,19 @@ const PortalDashboardPage: React.FC = () => {
                         <Button variant="ghost" size="sm" className="text-primary font-bold">Ver Todos</Button>
                     </div>
                     <div className="card-premium !p-0 overflow-hidden">
-                        {[1, 2, 3].map((_, i) => (
-                            <div key={i} className="flex items-center justify-between p-5 border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors group">
+                        {recentDocs.length === 0 && <div className="p-8 text-center text-muted-foreground">Nenhum documento recente</div>}
+                        {recentDocs.map((doc, i) => (
+                            <div key={doc.id} className="flex items-center justify-between p-5 border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors group">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
                                         <FileText size={20} />
                                     </div>
                                     <div>
-                                        <p className="font-bold text-base text-card-foreground">Folha de Pagamento - 02/2026</p>
-                                        <p className="text-sm text-muted-foreground">Disponibilizado em 05/03/2026</p>
+                                        <p className="font-bold text-base text-card-foreground max-w-[200px] truncate">{doc.titulo || doc.nome_arquivo}</p>
+                                        <p className="text-sm text-muted-foreground">{doc.categoria}</p>
                                     </div>
                                 </div>
-                                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all">
+                                <Button onClick={() => window.open(doc.arquivo_url || doc.url, '_blank')} variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-xl hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all">
                                     <Download size={16} />
                                 </Button>
                             </div>
@@ -207,31 +223,25 @@ const PortalDashboardPage: React.FC = () => {
                         <Button variant="ghost" size="sm" className="text-primary font-bold">Ver Todos</Button>
                     </div>
                     <div className="card-premium">
+                        {activeProcs.length === 0 ? (
+                           <div className="p-4 text-center text-muted-foreground">Nenhum processo ativo no momento.</div>
+                        ) : (
                         <div className="relative pl-10 space-y-10">
                             <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-muted/50" />
-                            
-                            <div className="relative group">
-                                <div className="absolute -left-[29px] top-0 w-5 h-5 rounded-full bg-success ring-4 ring-background z-10 shadow-sm" />
-                                <div className="bg-muted/20 p-4 rounded-2xl border border-transparent group-hover:border-success/20 transition-all">
-                                    <p className="font-bold text-base text-card-foreground">Abertura de Empresa</p>
-                                    <p className="text-sm text-muted-foreground mt-1">Etapa: Arquivamento na Junta</p>
-                                    <div className="mt-3 text-[10px] font-black px-3 py-1 bg-success/10 text-success rounded-full inline-block uppercase tracking-wider">
-                                        Concluído
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="relative group">
+                            {activeProcs.map(proc => (
+                            <div key={proc.id} className="relative group">
                                 <div className="absolute -left-[29px] top-0 w-5 h-5 rounded-full bg-primary ring-4 ring-background animate-pulse z-10 shadow-sm shadow-primary/30" />
                                 <div className="bg-muted/20 p-4 rounded-2xl border border-transparent group-hover:border-primary/20 transition-all">
-                                    <p className="font-bold text-base text-card-foreground">Alteração Contratual</p>
-                                    <p className="text-sm text-muted-foreground mt-1">Etapa: Coleta de Assinaturas</p>
+                                    <p className="font-bold text-base text-card-foreground capitalize">{proc.tipo?.replace(/_/g, ' ')}</p>
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">Status: {proc.status?.replace(/_/g, ' ')}</p>
                                     <div className="mt-3 text-[10px] font-black px-3 py-1 bg-primary/10 text-primary rounded-full inline-block uppercase tracking-wider animate-pulse">
                                         Em Andamento
                                     </div>
                                 </div>
                             </div>
+                            ))}
                         </div>
+                        )}
                     </div>
                 </section>
             </div>

@@ -81,7 +81,7 @@ export const generateIRPFReceipt = async (record: IRPFRecord) => {
         doc.setFont("Ubuntu", "bold");
         doc.text(`${amountFormatted} (${amountExtenso}). OOOOOOOOO`, MARGIN + 40, boxY + 22);
         doc.setDrawColor(200, 0, 0); // Red line for the Xs representation
-        let xLen = doc.getTextWidth(`${amountFormatted} (${amountExtenso}). OOOOOOOOO`) + MARGIN + 40 - 25;
+        const xLen = doc.getTextWidth(`${amountFormatted} (${amountExtenso}). OOOOOOOOO`) + MARGIN + 40 - 25;
         // doc.line(MARGIN + 40 + doc.getTextWidth(`${amountFormatted} (${amountExtenso}).`), boxY + 22.5, xLen, boxY + 22.5); // Removed red underline
 
         doc.setFont("Ubuntu", "normal");

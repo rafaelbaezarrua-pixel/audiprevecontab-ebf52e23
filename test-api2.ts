@@ -19,7 +19,7 @@ import puppeteer from 'puppeteer-core';
             interceptedPdfUrl = url;
             console.log('[INTERCEPT] ✅ URL do PDF identificada via response:', url);
           }
-        } catch (e) {}
+        } catch (e) { /* ignore */ }
     });
 
     console.log('[1] Acessando portal...');
@@ -75,7 +75,7 @@ import puppeteer from 'puppeteer-core';
               console.log('[5] Botão Salvar (WebView) encontrado! Clicando...');
               await (btn as any).click();
             }).catch(() => {});
-        } catch(e) {}
+        } catch(e) { /* ignore */ }
         
         setTimeout(poll, 400);
       };

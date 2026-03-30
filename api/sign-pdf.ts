@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    let { pdfBase64, pfxBase64, passphrase, visualText } = req.body;
+    const { pdfBase64, pfxBase64, passphrase, visualText } = req.body;
 
     if (!pdfBase64 || !pfxBase64 || !passphrase) {
       return res.status(400).json({ error: 'Parâmetros ausentes (pdfBase64, pfxBase64, passphrase)' });
@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     // 1. Carregar o PDF e Normalizar (Reconstruir Tabela XREF)
-    const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+    const pdfBuffer = Buffer.from(cleanBase64(pdfBase64), 'base64');
     
     // Log do final do arquivo para depuração
     const tail = pdfBuffer.slice(-60).toString();
@@ -59,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     // 3. Realizar a Assinatura Real
-    const pfxBuffer = Buffer.from(pfxBase64, 'base64');
+    const pfxBuffer = Buffer.from(cleanBase64(pfxBase64), 'base64');
     const signer = new P12Signer(pfxBuffer, { passphrase });
 
     console.log('[API Sign] Chamando signpdf...');
