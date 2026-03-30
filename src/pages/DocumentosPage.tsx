@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, ClipboardList, Plus, Loader2, Eye, EyeOff } from "lucide-react";
+import { Calendar as CalendarIcon, ClipboardList, Plus, Loader2, Eye, EyeOff, Trash2 } from "lucide-react";
 import { lacunaApi, Certificate } from "@/lib/lacuna";
 import PdfSignPositioner from "@/components/PdfSignPositioner";
 
@@ -147,6 +147,24 @@ const DocumentosPage = () => {
       toast.error(error.message || "Erro ao fazer upload");
     }
   });
+
+  const deleteDocMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('documentos_assinaturas' as any).delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documentos_assinaturas'] });
+      toast.success("Documento excluído com sucesso!");
+    },
+    onError: (error: any) => toast.error("Erro ao excluir: " + error.message)
+  });
+
+  const handleDeleteDoc = (id: string) => {
+    if (window.confirm("Tem certeza que deseja excluir este documento?")) {
+      deleteDocMutation.mutate(id);
+    }
+  };
 
   const startSigning = async (doc: any) => {
     setDocToSign(doc);
@@ -555,6 +573,15 @@ const DocumentosPage = () => {
                                                             Assinar
                                                         </Button>
                                                     )}
+
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                        onClick={() => handleDeleteDoc(doc.id)}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
