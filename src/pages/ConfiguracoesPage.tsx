@@ -53,9 +53,9 @@ const ConfiguracoesPage: React.FC = () => {
   const loadUsers = async () => {
     try {
       setLoadingUsers(true);
-      console.log("[ConfiguracoesPage] Iniciando carregamento de usuários...");
+
       const { data: profiles, error: profilesError } = await supabase.from("profiles").select("*");
-      console.log("[ConfiguracoesPage] Profiles retornados:", profiles?.length, "Erro:", profilesError);
+
       if (profilesError) {
         console.error("Erro ao carregar perfis:", profilesError);
         return;
@@ -112,7 +112,7 @@ const ConfiguracoesPage: React.FC = () => {
           modules,
         });
       }
-      console.log("[ConfiguracoesPage] Usuários carregados:", users.length, users.map(u => u.nome));
+
       setUsuarios(users);
     } catch (err) {
       console.error("Erro ao carregar usuários:", err);

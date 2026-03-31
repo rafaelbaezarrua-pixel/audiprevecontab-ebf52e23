@@ -44,7 +44,7 @@ class LacunaWebPkiClient {
           const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
           const licenseToUse = isLocal ? null : this.devLicense;
           
-          console.log(`[Lacuna] Inicializando para ${window.location.hostname} (Licença: ${isLocal ? 'Livre/Localhost' : 'Dev-Key'})`);
+
           
           // @ts-expect-error - window.LacunaWebPKI comes from external script
           this.pki = new window.LacunaWebPKI(licenseToUse);
@@ -52,7 +52,7 @@ class LacunaWebPkiClient {
             ready: () => {
               clearTimeout(timeout);
               this.isInitialized = true;
-              console.log('[Lacuna] Inicializado com sucesso.');
+
               resolve();
             },
             defaultError: (message: string) => {
@@ -75,7 +75,7 @@ class LacunaWebPkiClient {
         const script = document.createElement('script');
         script.src = "/lacuna-web-pki.js";
         script.onload = () => {
-          console.log('[Lacuna] Script carregado localmente.');
+
           onReady();
         };
         script.onerror = () => {
@@ -111,7 +111,7 @@ class LacunaWebPkiClient {
     return new Promise((resolve, reject) => {
       const outputMode = this.pki.outputModes?.returnContent || 'returnContent';
       
-      console.log('[Lacuna] Iniciando assinatura PAdES...', { length: pdfBase64?.length, certId: certificateId.substring(0, 8) });
+
 
       if (!pdfBase64 || pdfBase64.length < 100) {
         return reject(new Error("O PDF está vazio ou corrompido."));
@@ -162,13 +162,13 @@ class LacunaWebPkiClient {
             measurementUnits: 'centimeters'
           }
         };
-        console.log('[Lacuna] Aplicando posicionamento visual em CM:', padesParams.visualRepresentation.position.manual);
+
       }
 
       this.pki.signPdf({
         ...padesParams,
         success: (signedPdf: string) => {
-          console.log('[Lacuna] Sucesso!');
+
           resolve(signedPdf);
         },
         error: (err: any) => {

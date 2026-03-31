@@ -22,7 +22,7 @@ export class SerproClient {
    */
   async connect(): Promise<boolean> {
     const triggerApp = () => {
-      console.log('[Serpro] Tentando abrir o Assinador via protocolo...');
+
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       iframe.src = 'serpro-assinador-crypto://';
@@ -35,7 +35,7 @@ export class SerproClient {
         this.ws = new WebSocket(this.wsUrl);
         
         this.ws.onopen = () => {
-          console.log('[Serpro] Conectado ao Assinador Serpro local.');
+
           resolve(true);
         };
 

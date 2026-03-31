@@ -128,7 +128,7 @@ const GestorAlertasPage: React.FC = () => {
 
       if (error) throw error;
 
-      console.log('Edge Function Response:', data);
+
 
       let debugInfo = data.debug
         ? `\n(Docs: ${data.debug.expirationsFound}, Acessos: ${data.debug.accessRowsFound})`

@@ -57,7 +57,7 @@ const AuditoriaPage: React.FC = () => {
                     table: 'audit_logs'
                 },
                 (payload) => {
-                    console.log('New audit log received:', payload);
+
                     const newLog = payload.new as unknown as AuditLog;
                     
                     // Fetch profile for the new log to show name
