@@ -327,35 +327,39 @@ const RecibosPage: React.FC = () => {
                 </div>
 
                 {/* HISTÓRICO */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/30 p-4 rounded-2xl border border-border">
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <History size={20} className="text-primary shrink-0" />
-                            <h2 className="text-lg font-bold">Histórico</h2>
-                            {loadingRecibos && <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />}
-                        </div>
-                        
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <div className="relative flex-1 sm:w-48">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <div className="lg:col-span-2 flex flex-col h-full max-h-[calc(100vh-220px)]">
+                    {/* Cabeçalho do Histórico - Fixo no topo do container */}
+                    <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-4">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/30 p-4 rounded-2xl border border-border">
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <History size={20} className="text-primary shrink-0" />
+                                <h2 className="text-lg font-bold">Histórico</h2>
+                                {loadingRecibos && <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />}
+                            </div>
+                            
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <div className="relative flex-1 sm:w-48">
+                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Buscar..."
+                                        value={search}
+                                        onChange={e => setSearch(e.target.value)}
+                                        className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-xs focus:ring-1 focus:ring-primary outline-none"
+                                    />
+                                </div>
                                 <input 
-                                    type="text" 
-                                    placeholder="Buscar..."
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-xs focus:ring-1 focus:ring-primary outline-none"
+                                    type="month" 
+                                    value={competenciaFiltro}
+                                    onChange={e => setCompetenciaFiltro(e.target.value)}
+                                    className="px-3 py-2 border border-border rounded-lg bg-background text-xs font-bold focus:ring-1 focus:ring-primary outline-none"
                                 />
                             </div>
-                            <input 
-                                type="month" 
-                                value={competenciaFiltro}
-                                onChange={e => setCompetenciaFiltro(e.target.value)}
-                                className="px-3 py-2 border border-border rounded-lg bg-background text-xs font-bold focus:ring-1 focus:ring-primary outline-none"
-                            />
                         </div>
                     </div>
 
-                    <div className="space-y-3">
+                    {/* Lista de Recibos - Scrollable */}
+                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-4">
                         {loadingRecibos ? (
                             <div className="py-20 text-center space-y-3">
                                 <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
