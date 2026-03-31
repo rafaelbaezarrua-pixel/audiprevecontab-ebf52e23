@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { Calendar, Clock, User, Save, ArrowLeft, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
+import { useAgendamentos } from "@/hooks/useAgendamentos";
 
 const AgendamentoFormPage: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
     const { id } = useParams();
     const isEdit = !!id;
     const [loading, setLoading] = useState(false);
@@ -21,6 +20,9 @@ const AgendamentoFormPage: React.FC = () => {
         assunto: "",
         informacoes_adicionais: ""
     });
+
+    // We use the hook mainly for the mutations
+    const { createAgendamento, updateAgendamento } = useAgendamentos(form.data.slice(0, 7));
 
     useEffect(() => {
         const loadUsers = async () => {
@@ -79,7 +81,7 @@ const AgendamentoFormPage: React.FC = () => {
             }
         };
         loadUsers();
-    }, [id, isEdit]);
+    }, [id, isEdit, navigate]);
 
     const handleSave = async () => {
         if (!form.data || !form.usuario_id || !form.assunto) {
@@ -95,14 +97,14 @@ const AgendamentoFormPage: React.FC = () => {
                 competencia: form.data.slice(0, 7)
             };
 
-            const { error } = isEdit 
-                ? await (supabase.from("agendamentos" as any).update(payload).eq("id", id) as any)
-                : await (supabase.from("agendamentos" as any).insert(payload) as any);
+            if (isEdit) {
+                await updateAgendamento.mutateAsync({ id: id as string, payload });
+                toast.success("Agendamento atualizado com sucesso!");
+            } else {
+                await createAgendamento.mutateAsync(payload);
+                toast.success("Agendamento criado com sucesso!");
+            }
 
-            if (error) throw error;
-
-            toast.success(isEdit ? "Agendamento atualizado com sucesso!" : "Agendamento criado com sucesso!");
-            queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
             navigate("/agendamentos");
         } catch (err: any) {
             toast.error("Erro ao salvar: " + err.message);
@@ -110,6 +112,7 @@ const AgendamentoFormPage: React.FC = () => {
             setLoading(false);
         }
     };
+
 
     const inputCls = "w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary outline-none transition-all";
     const labelCls = "block text-sm font-semibold text-muted-foreground mb-1.5 ml-1";

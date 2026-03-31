@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 export interface Agendamento {
     id: string;
@@ -17,6 +18,28 @@ export interface Agendamento {
 
 export const useAgendamentos = (competencia: string) => {
     const queryClient = useQueryClient();
+
+    useEffect(() => {
+        const channel = supabase
+            .channel('agendamentos_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'agendamentos'
+                },
+                () => {
+                    // Invalida as queries de agendamentos para refletir mudanças imediatamente
+                    queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [queryClient]);
 
     const { data: agendamentosData, isLoading, isFetching } = useQuery({
         queryKey: ["agendamentos", competencia],
@@ -69,6 +92,26 @@ export const useAgendamentos = (competencia: string) => {
         staleTime: 30 * 1000, // 30 segundos de cache (mais fresco)
     });
 
+    const createAgendamento = useMutation({
+        mutationFn: async (payload: any) => {
+            const { error } = await (supabase.from("agendamentos" as any).insert(payload) as any);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
+        }
+    });
+
+    const updateAgendamento = useMutation({
+        mutationFn: async ({ id, payload }: { id: string, payload: any }) => {
+            const { error } = await (supabase.from("agendamentos" as any).update(payload).eq("id", id) as any);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
+        }
+    });
+
     const updateStatus = useMutation({
         mutationFn: async ({ id, status }: { id: string, status: string }) => {
             const { error } = await (supabase.from("agendamentos" as any).update({ status } as any).eq("id", id) as any);
@@ -103,8 +146,11 @@ export const useAgendamentos = (competencia: string) => {
         agendamentos: agendamentosData || [],
         isLoading,
         isFetching,
+        createAgendamento,
+        updateAgendamento,
         updateStatus,
         updateArquivado,
         deleteAgendamento
     };
 };
+
