@@ -28,7 +28,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
         if (!user || hasCheckedThisSession.current) return;
         if (isCheckingRef.current) return;
 
-        console.log("Sistema de Alertas: Iniciando verificação geral...");
+
         isCheckingRef.current = true;
 
         try {

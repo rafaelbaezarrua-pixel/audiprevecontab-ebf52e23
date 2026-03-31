@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle, AlertTriangle, Calendar, Users, UserPlus, Trash2, Settings } from "lucide-react";
@@ -10,9 +11,11 @@ import { usePessoal } from "@/hooks/usePessoal";
 import { PessoalRecord, GuiaStatus } from "@/types/pessoal";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
+import { PontoCalculoForm } from "@/components/pessoal/PontoCalculoForm";
 
 const PessoalPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const { empresas, loading: empresasLoading, isFetching: empresasFetching } = useEmpresas("pessoal");
   const { pessoalData, loading: pessoalLoading, isFetching: pessoalFetching, savePessoalRecord } = usePessoal(competencia);
@@ -21,7 +24,7 @@ const PessoalPage: React.FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei">("ativas");
-  const [activeSubTab, setActiveSubTab] = useState<"folha" | "prolabore">("folha");
+  const [activeSubTab, setActiveSubTab] = useState<"folha" | "prolabore" | "ponto">("folha");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
   const [funcionarios, setFuncionarios] = useState<Record<string, any[]>>({});
   const [alertsSummary, setAlertsSummary] = useState({ aso: 0, ferias: 0 });
@@ -56,6 +59,7 @@ const PessoalPage: React.FC = () => {
       let matchSubTab = false;
       if (activeSubTab === "folha") matchSubTab = !!(e as any).possui_funcionarios;
       else if (activeSubTab === "prolabore") matchSubTab = !!(e as any).somente_pro_labore && !(e as any).possui_funcionarios;
+      else if (activeSubTab === "ponto") matchSubTab = !!(e as any).possui_cartao_ponto;
 
       let matchStatus = true;
       if (filterStatus !== "todos") {
@@ -96,9 +100,13 @@ const PessoalPage: React.FC = () => {
       infoGerais = { forma_envio: existing.forma_envio || "", qtd_funcionarios: existing.qtd_funcionarios || 0, qtd_pro_labore: existing.qtd_pro_labore || 0, possui_vt: existing.possui_vt || false, possui_va: existing.possui_va || false, possui_vc: existing.possui_vc || false, possui_recibos: existing.possui_recibos || false, qtd_recibos: existing.qtd_recibos || 0 };
     }
 
+    const empresa = filtered.find(e => e.id === id);
+    const possuiPontoManual = (empresa as any)?.possui_cartao_ponto || false;
+
     setEditForm(prev => ({
       ...prev, [id]: {
         ...infoGerais,
+        possui_ponto_manual: possuiPontoManual,
         vt_status: existing.vt_status || "pendente", vt_data_envio: existing.vt_data_envio || "",
         va_status: existing.va_status || "pendente", va_data_envio: existing.va_data_envio || "",
         vc_status: existing.vc_status || "pendente", vc_data_envio: existing.vc_data_envio || "",
@@ -127,6 +135,14 @@ const PessoalPage: React.FC = () => {
         dctf_web_gerada: !!form.dctf_web_gerada, dctf_web_data_envio: form.dctf_web_data_envio || null,
       };
       await savePessoalRecord(payload);
+
+      // Update fixed setting in empresas table
+      if (form.possui_ponto_manual !== undefined) {
+        await (supabase.from("empresas") as any).update({ possui_cartao_ponto: !!form.possui_ponto_manual }).eq("id", empresaId);
+        // Refresh companies list to reflect the point setting change immediately
+        queryClient.invalidateQueries({ queryKey: ["empresas_modulo"] });
+      }
+
       toast.success("Dados salvos com sucesso!");
       setExpanded(null);
     } catch (err: any) { toast.error(err.message); }
@@ -215,7 +231,19 @@ const PessoalPage: React.FC = () => {
       </div>
 
       <div className="flex gap-2 mb-2">
-        {["folha", "prolabore"].map(s => <button key={s} className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${activeSubTab === s ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`} onClick={() => setActiveSubTab(s as any)}>{s === "folha" ? "Folha de Pagamento" : "Pró-labore"}</button>)}
+        {[
+          { id: "folha", label: "Folha de Pagamento" },
+          { id: "prolabore", label: "Pró-labore" },
+          { id: "ponto", label: "Ponto e Recibos" }
+        ].map(s => (
+          <button 
+            key={s.id} 
+            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${activeSubTab === s.id ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`} 
+            onClick={() => setActiveSubTab(s.id as any)}
+          >
+            {s.label}
+          </button>
+        ))}
       </div>
 
       <div className="space-y-3">
@@ -239,7 +267,26 @@ const PessoalPage: React.FC = () => {
                   )}
                   {activeSubTab === "folha" && (
                     <>
-                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} /></div><div><label className={labelCls}>Qtd Funcionários</label><input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className={inputCls} /></div><div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div></div></div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} /></div>
+                          <div><label className={labelCls}>Qtd Funcionários</label><input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className={inputCls} /></div>
+                          <div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div>
+                          <div>
+                            <label className={labelCls}>Módulo Ponto?</label>
+                            <label className="flex items-center gap-2 cursor-pointer p-2 rounded border border-border bg-background hover:bg-muted/30 h-[38px] transition-colors">
+                              <input 
+                                type="checkbox" 
+                                checked={!!form.possui_ponto_manual} 
+                                onChange={e => updateForm(emp.id, "possui_ponto_manual", e.target.checked)} 
+                                className="w-4 h-4 rounded border-border text-primary" 
+                              />
+                              <span className="text-xs font-bold text-primary whitespace-nowrap">Ponto Manual</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
                       <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Trabalhistas - {competencia}</h3>
                         <div className="space-y-3">
                           <div className="grid grid-cols-3 gap-3 items-center"><label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer"><input type="checkbox" checked={form.possui_recibos || false} onChange={e => updateForm(emp.id, "possui_recibos", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> Recibos </label>{form.possui_recibos ? <div><label className={labelCls}>Qtd Recibos</label><input type="number" value={form.qtd_recibos || 0} onChange={e => updateForm(emp.id, "qtd_recibos", e.target.value)} className={inputCls} /></div> : <div />}<div /></div>
@@ -266,7 +313,19 @@ const PessoalPage: React.FC = () => {
                       </div>
                     </>
                   )}
-                  <div className="flex justify-end"><button onClick={() => handleSaveAction(emp.id)} className="button-premium shadow-md"><Save size={14} /> Salvar</button></div>
+                  {activeSubTab === "ponto" && (
+                    <PontoCalculoForm 
+                      empresa={emp as any} 
+                      funcionarios={funcionarios[emp.id] || []} 
+                    />
+                  )}
+                  {activeSubTab !== "ponto" && (
+                    <div className="flex justify-end pt-2">
+                      <button onClick={() => handleSaveAction(emp.id)} className="button-premium shadow-md">
+                        <Save size={14} /> Salvar
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

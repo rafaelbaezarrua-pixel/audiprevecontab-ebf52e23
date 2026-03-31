@@ -113,6 +113,7 @@ const SocietarioEmpresaPage: React.FC = () => {
   // Pessoal config
   const [possuiFuncionarios, setPossuiFuncionarios] = useState(false);
   const [somenteProlabore, setSomenteProlabore] = useState(false);
+  const [possuiCartaoPonto, setPossuiCartaoPonto] = useState(false);
 
   // Config params
   const { userData } = useAuth();
@@ -174,6 +175,7 @@ const SocietarioEmpresaPage: React.FC = () => {
         setDataExclusaoSimei(emp.data_exclusao_simei || "");
         setPossuiFuncionarios((emp as any).possui_funcionarios || false);
         setSomenteProlabore((emp as any).somente_pro_labore || false);
+        setPossuiCartaoPonto((emp as any).possui_cartao_ponto || false);
       }
 
       if (isAdmin) {
@@ -235,7 +237,8 @@ const SocietarioEmpresaPage: React.FC = () => {
         data_exclusao_simples: dataExclusaoSimples || null,
         data_exclusao_simei: dataExclusaoSimei || null,
         possui_funcionarios: possuiFuncionarios,
-        somente_pro_labore: somenteProlabore
+        somente_pro_labore: somenteProlabore,
+        possui_cartao_ponto: possuiCartaoPonto
       };
 
       let empresaId = id;
@@ -708,6 +711,21 @@ const SocietarioEmpresaPage: React.FC = () => {
                   <div>
                     <span className="block font-medium text-card-foreground">Somente Pró-labore</span>
                     <span className="text-sm text-muted-foreground">A empresa só tem retirada de sócios (sem folha CLT). Ela aparecerá numa aba simplificada onde basta marcar se foi gerada ou não.</span>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl border border-border/50 bg-indigo-500/5 hover:bg-indigo-500/10 transition-colors border-indigo-500/20">
+                  <div className="mt-0.5">
+                    <input 
+                      type="checkbox" 
+                      checked={possuiCartaoPonto} 
+                      onChange={e => setPossuiCartaoPonto(e.target.checked)} 
+                      className="w-5 h-5 rounded border-indigo-500 text-indigo-600 focus:ring-indigo-500" 
+                    />
+                  </div>
+                  <div>
+                    <span className="block font-medium text-indigo-900 dark:text-indigo-100">Ponto Manual</span>
+                    <span className="text-sm text-indigo-700/70 dark:text-indigo-300/70">Habilita a sub-aba de cálculo de ponto e recibos no módulo Pessoal. Opção fixa para controle de jornada.</span>
                   </div>
                 </label>
               </div>

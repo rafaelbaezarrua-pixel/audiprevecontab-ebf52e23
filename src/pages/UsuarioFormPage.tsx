@@ -51,7 +51,7 @@ const UsuarioFormPage: React.FC = () => {
 
         setLoading(true);
         try {
-            console.log("Chamando Edge Function create-user...");
+
 
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
