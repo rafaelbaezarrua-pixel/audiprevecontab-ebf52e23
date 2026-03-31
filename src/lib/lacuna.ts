@@ -106,7 +106,7 @@ class LacunaWebPkiClient {
     });
   }
 
-  async signPdf(certificateId: string, pdfBase64: string, options: { visual?: boolean, text?: string, coords?: any } = {}): Promise<string> {
+  async signPdf(certificateId: string, pdfBase64: string, options: { visual?: boolean, text?: string, coords?: any, location?: string } = {}): Promise<string> {
     await this.init();
     return new Promise((resolve, reject) => {
       const outputMode = this.pki.outputModes?.returnContent || 'returnContent';
@@ -117,10 +117,14 @@ class LacunaWebPkiClient {
         return reject(new Error("O PDF está vazio ou corrompido."));
       }
 
-      // Parâmetros base conforme documentação oficial
+      // Parâmetros base - Restaurando campos de compatibilidade
       const padesParams: any = {
         certificateThumbprint: certificateId,
         content: pdfBase64,
+        pdf: pdfBase64,        // Redundância para versões antigas
+        source: pdfBase64,     // Redundância para versões específicas
+        file: pdfBase64,       // Redundância 3
+        policy: this.pki.padesPolicies?.basic || 'basic', // Essencial para evitar o erro "Unknown policy 0"
         output: {
           mode: outputMode
         }
@@ -133,19 +137,27 @@ class LacunaWebPkiClient {
         const leftCm = (options.coords.x / 100) * 21;
         const bottomCm = (1 - (options.coords.y / 100)) * 29.7;
         
+        const now = new Date();
+        const sealText = `ASSINADO DIGITALMENTE\n` +
+                         `AUDIPREVE CONTABILIDADE LTDA\n` +
+                         `CNPJ 09.242.904/0001-06\n` +
+                         `Data: ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}\n` +
+                         `Local: ${options.location || 'Fazenda Rio Grande - PR'}`;
+
         padesParams.visualRepresentation = {
           text: {
-            text: options.text || `Assinado digitalmente por Audipreve\nData: ${new Date().toLocaleString('pt-BR')}`,
-            includeSigningTime: true,
-            horizontalAlign: 'left'
+            text: sealText,
+            includeSigningTime: false, // Já incluído manualmente no texto acima
+            horizontalAlign: 'left',
+            fontSize: 7
           },
           position: {
-            pageNumber: (options.coords.pageIndex || 0) + 1, // Página base 1 na Lacuna
+            pageNumber: (options.coords.pageIndex || 0) + 1,
             manual: {
               left: Math.max(1, leftCm),
-              bottom: Math.max(1, bottomCm - 2), // Ajuste para o texto caber
-              width: 6,
-              height: 2
+              bottom: Math.max(1, bottomCm - 2.5),
+              width: 7, 
+              height: 2.5
             },
             measurementUnits: 'centimeters'
           }

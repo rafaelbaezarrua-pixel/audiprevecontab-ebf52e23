@@ -64,7 +64,7 @@ const DocumentosPage = () => {
     queryFn: async () => {
       const { data, error } = await (supabase
         .from('documentos_assinaturas' as any)
-        .select(`*, empresas (nome_empresa)`)
+        .select(`*, empresas (nome_empresa, endereco)`)
         .order('created_at', { ascending: false }) as any);
       if (error && error.code !== '42P01') throw error;
       return data || [];
@@ -245,6 +245,10 @@ const DocumentosPage = () => {
           console.log('[Documentos] Enviando para backend. Tamanhos:', { pdf: pdfBase64.length, pfx: pfxBase64.length });
 
           const apiUrl = import.meta.env.DEV ? 'http://localhost:3000/api/sign-pdf' : '/api/sign-pdf';
+          const locationString = doc.empresas?.endereco?.cidade 
+            ? `${doc.empresas.endereco.cidade} - ${doc.empresas.endereco.estado || doc.empresas.endereco.state}`
+            : (doc.empresas?.endereco?.city ? `${doc.empresas.endereco.city} - ${doc.empresas.endereco.state}` : 'Fazenda Rio Grande - PR');
+
           const res = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -252,7 +256,9 @@ const DocumentosPage = () => {
               pdfBase64,
               pfxBase64,
               passphrase: pfxPass,
-              visualText: `Assinado digitalmente por Audipreve\nData: ${new Date().toLocaleString('pt-BR')}`,
+              // O backend agora gera o texto completo internamente para manter o padrão premium
+              visualText: "Assinatura Digital Audipreve", 
+              location: locationString,
               x: coords?.x,
               y: coords?.y,
               pageIndex: coords?.pageIndex
@@ -266,9 +272,14 @@ const DocumentosPage = () => {
         } else {
           // --- ASSINATURA VIA LACUNA (LOCAL) ---
           if (!certId) throw new Error("Certificado não selecionado");
+          const locationString = doc.empresas?.endereco?.cidade 
+            ? `${doc.empresas.endereco.cidade} - ${doc.empresas.endereco.estado || doc.empresas.endereco.state}`
+            : (doc.empresas?.endereco?.city ? `${doc.empresas.endereco.city} - ${doc.empresas.endereco.state}` : 'Fazenda Rio Grande - PR');
+          
           signedPdfBase64 = await lacunaApi.signPdf(certId, pdfBase64, { 
             visual: true, 
-            coords 
+            coords,
+            location: locationString
           });
         }
         
@@ -314,7 +325,13 @@ const DocumentosPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentos_assinaturas'] });
-      toast.success("Documento assinado com sucesso!");
+      toast.success("Documento assinado com sucesso!", {
+        description: "Dica: Para validar a assinatura no Adobe, instale as raízes da ICP-Brasil.",
+        action: {
+          label: "Saiba Mais",
+          onClick: () => window.open('https://www.iti.gov.br/repositorio/repositorio-da-icp-brasil', '_blank')
+        }
+      });
       setIsCertDialogOpen(false);
       setSelectedCert("");
       setDocToSign(null);
