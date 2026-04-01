@@ -173,41 +173,8 @@ const AppLayout: React.FC = () => {
               </React.Fragment>
             );
           })}
-
-          {userData?.isAdmin && (
-            <>
-              {!collapsed && <div className="menu-header">Contabilidade</div>}
-              <button
-                onClick={() => handleNav("/configuracoes")}
-                className={`nav-item w-full ${location.pathname === "/configuracoes" ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
-                title={collapsed ? "Configurações" : undefined}
-                aria-label="Configurações"
-              >
-                <Settings size={18} />
-                {!collapsed && <span className="whitespace-nowrap truncate">Configurações</span>}
-              </button>
-              <button
-                onClick={() => handleNav("/configuracoes/alertas")}
-                className={`nav-item w-full ${location.pathname === "/configuracoes/alertas" ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
-                title={collapsed ? "Gestor de Alertas" : undefined}
-                aria-label="Gestor de Alertas"
-              >
-                <Bell size={18} />
-                {!collapsed && <span className="whitespace-nowrap truncate">Gestor de Alertas</span>}
-              </button>
-              <button
-                onClick={() => handleNav("/configuracoes/auditoria")}
-                className={`nav-item w-full ${location.pathname === "/configuracoes/auditoria" ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
-                title={collapsed ? "Auditoria do Sistema" : undefined}
-                aria-label="Auditoria do Sistema"
-              >
-                <Database size={18} />
-                {!collapsed && <span className="whitespace-nowrap truncate">Auditoria</span>}
-              </button>
-            </>
-          )}
-
         </nav>
+
 
         {/* User footer */}
         <div className="p-3 border-t border-sidebar-border space-y-1">
