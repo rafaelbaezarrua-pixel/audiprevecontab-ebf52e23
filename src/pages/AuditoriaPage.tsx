@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Search, Filter, Eye, Database, List as ListIcon, X } from "lucide-react";
+import { Search, Filter, Eye, Database, List as ListIcon, X, ArrowRight, Plus, Trash2, Pencil } from "lucide-react";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 
 interface AuditLog {
@@ -17,6 +17,166 @@ interface AuditLog {
     profile?: { nome_completo: string | null; email: string | null };
 }
 
+// Tradução de nomes de campos técnicos para labels amigáveis
+const fieldLabels: Record<string, string> = {
+    id: "ID",
+    created_at: "Data de Criação",
+    updated_at: "Última Atualização",
+    nome_empresa: "Nome da Empresa",
+    nome_fantasia: "Nome Fantasia",
+    cnpj: "CNPJ",
+    data_abertura: "Data de Abertura",
+    porte_empresa: "Porte",
+    regime_tributario: "Regime Tributário",
+    natureza_juridica: "Natureza Jurídica",
+    situacao: "Situação",
+    endereco: "Endereço",
+    email_rfb: "E-mail RFB",
+    telefone_rfb: "Telefone RFB",
+    capital_social: "Capital Social",
+    cnae_fiscal: "CNAE",
+    cnae_fiscal_descricao: "Descrição CNAE",
+    modulos_ativos: "Módulos Ativos",
+    nome: "Nome",
+    nome_completo: "Nome Completo",
+    cpf: "CPF",
+    email: "E-mail",
+    administrador: "Administrador",
+    percentual_cotas: "% de Cotas",
+    data_entrada: "Data de Entrada",
+    data_saida: "Data de Saída",
+    status: "Status",
+    vencimento: "Vencimento",
+    tipo_licenca: "Tipo de Licença",
+    numero_processo: "Nº do Processo",
+    empresa_id: "Empresa (ID)",
+    user_id: "Usuário (ID)",
+    role: "Perfil",
+    module_name: "Módulo",
+    action_type: "Tipo de Ação",
+    table_name: "Tabela",
+    record_id: "ID do Registro",
+    old_data: "Dados Anteriores",
+    new_data: "Dados Novos",
+    valor: "Valor",
+    competencia: "Competência",
+    data_emissao: "Data de Emissão",
+    data_vencimento: "Data de Vencimento",
+    nome_cliente: "Nome do Cliente",
+    criado_por: "Criado Por",
+    descricao: "Descrição",
+    observacoes: "Observações",
+    titulo: "Título",
+    prioridade: "Prioridade",
+    atribuido_para: "Atribuído Para",
+    concluido: "Concluído",
+    data_conclusao: "Data de Conclusão",
+    tipo: "Tipo",
+    departamento: "Departamento",
+    foto_url: "Foto de Perfil",
+    favoritos: "Favoritos",
+    ativo: "Ativo",
+    profile_completed: "Perfil Completo",
+    terms_accepted_at: "Termos Aceitos em",
+    first_access_done: "Primeiro Acesso Feito",
+    email_alertas: "E-mail para Alertas",
+    opcao_pelo_simples: "Opção Simples Nacional",
+    opcao_pelo_mei: "Opção MEI",
+    possui_funcionarios: "Possui Funcionários",
+    somente_pro_labore: "Somente Pró-labore",
+    possui_cartao_ponto: "Possui Cartão Ponto",
+};
+
+const tableLabels: Record<string, string> = {
+    empresas: "Empresas",
+    socios: "Sócios",
+    licencas: "Licenças",
+    certidoes: "Certidões",
+    procuracoes: "Procurações",
+    certificados_digitais: "Certificados Digitais",
+    fiscal: "Fiscal",
+    pessoal: "Pessoal",
+    parcelamentos: "Parcelamentos",
+    honorarios_config: "Config. Honorários",
+    honorarios_mensal: "Honorários Mensal",
+    ocorrencias: "Ocorrências",
+    processos_societarios: "Processos Societários",
+    faturamentos: "Faturamentos",
+    profiles: "Perfis de Usuário",
+    tarefas: "Tarefas",
+    agendamentos: "Agendamentos",
+    notifications: "Notificações",
+    user_roles: "Papéis de Usuário",
+    user_module_permissions: "Permissões de Módulo",
+    empresa_acessos: "Acessos de Empresa",
+    audit_logs: "Logs de Auditoria",
+    recalculos: "Recálculos",
+    documentos_assinaturas: "Assinaturas Digitais",
+    funcionarios: "Funcionários",
+    controle_irpf: "Controle IRPF",
+    servicos_esporadicos: "Serviços Esporádicos",
+    declaracoes_anuais: "Declarações Anuais",
+    tickets: "Tickets",
+    internal_messages: "Mensagens Internas",
+};
+
+const actionLabels: Record<string, { label: string; icon: React.ReactNode }> = {
+    INSERT: { label: "Criação", icon: <Plus size={14} /> },
+    UPDATE: { label: "Edição", icon: <Pencil size={14} /> },
+    DELETE: { label: "Exclusão", icon: <Trash2 size={14} /> },
+};
+
+// Campos que devem ser ignorados na visualização (ruído técnico)
+const HIDDEN_FIELDS = new Set(["id", "created_at", "updated_at", "empresa_id", "user_id", "criado_por"]);
+
+function getFieldLabel(key: string): string {
+    return fieldLabels[key] || key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function formatValue(value: any): string {
+    if (value === null || value === undefined) return "—";
+    if (typeof value === "boolean") return value ? "Sim" : "Não";
+    if (typeof value === "object") {
+        if (Array.isArray(value)) return value.length === 0 ? "Nenhum" : value.join(", ");
+        // For objects like endereco, show a summary
+        const entries = Object.entries(value).filter(([, v]) => v);
+        if (entries.length === 0) return "—";
+        return entries.map(([k, v]) => `${getFieldLabel(k)}: ${v}`).join(" • ");
+    }
+    if (typeof value === "number") {
+        // Format currency-like numbers
+        if (value >= 100 && Number.isFinite(value)) {
+            return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        return String(value);
+    }
+    return String(value);
+}
+
+function getChangedFields(oldData: any, newData: any): { key: string; oldVal: any; newVal: any }[] {
+    if (!oldData || !newData) return [];
+    const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
+    const changes: { key: string; oldVal: any; newVal: any }[] = [];
+
+    for (const key of allKeys) {
+        if (HIDDEN_FIELDS.has(key)) continue;
+        const oldVal = oldData[key];
+        const newVal = newData[key];
+        // Deep comparison for objects
+        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+            changes.push({ key, oldVal, newVal });
+        }
+    }
+    return changes;
+}
+
+function getVisibleFields(data: any): { key: string; value: any }[] {
+    if (!data) return [];
+    return Object.entries(data)
+        .filter(([key]) => !HIDDEN_FIELDS.has(key))
+        .map(([key, value]) => ({ key, value }));
+}
+
 const AuditoriaPage: React.FC = () => {
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +187,6 @@ const AuditoriaPage: React.FC = () => {
 
     const fetchLogs = async () => {
         setLoading(true);
-        // Join with profiles to get the user name
         const { data: logsData, error } = await (supabase as any)
             .from("audit_logs")
             .select(`
@@ -46,7 +205,6 @@ const AuditoriaPage: React.FC = () => {
     useEffect(() => {
         fetchLogs();
 
-        // Subscribe to real-time changes
         const channel = supabase
             .channel('audit_log_changes')
             .on(
@@ -57,16 +215,13 @@ const AuditoriaPage: React.FC = () => {
                     table: 'audit_logs'
                 },
                 (payload) => {
-
                     const newLog = payload.new as unknown as AuditLog;
-                    
-                    // Fetch profile for the new log to show name
                     (supabase as any)
                         .from("profiles")
                         .select("nome_completo, email")
                         .eq("user_id", newLog.user_id)
                         .maybeSingle()
-                        .then(({ data: profile }) => {
+                        .then(({ data: profile }: any) => {
                             const logWithProfile = { ...newLog, profile: profile as any };
                             setLogs(prev => [logWithProfile, ...prev].slice(0, 500));
                         });
@@ -85,12 +240,12 @@ const AuditoriaPage: React.FC = () => {
         const searchLower = search.toLowerCase();
         const userName = log.profile?.nome_completo?.toLowerCase() || "";
         const email = log.profile?.email?.toLowerCase() || "";
-        const matchesSearch = 
-            userName.includes(searchLower) || 
+        const matchesSearch =
+            userName.includes(searchLower) ||
             email.includes(searchLower) ||
-            log.table_name.toLowerCase().includes(searchLower) || 
+            log.table_name.toLowerCase().includes(searchLower) ||
             log.action.toLowerCase().includes(searchLower);
-        
+
         const matchesTable = filterTable === "all" || log.table_name === filterTable;
         const matchesAction = filterAction === "all" || log.action === filterAction;
 
@@ -104,6 +259,108 @@ const AuditoriaPage: React.FC = () => {
             case 'DELETE': return 'bg-destructive/10 text-destructive border-destructive/20';
             default: return 'bg-muted text-muted-foreground border-border';
         }
+    };
+
+    // Gera um resumo amigável do que mudou para exibir na tabela principal
+    const getSummary = (log: AuditLog): string => {
+        const actionInfo = actionLabels[log.action] || { label: log.action };
+        const tableName = tableLabels[log.table_name] || log.table_name;
+
+        if (log.action === "UPDATE" && log.old_data && log.new_data) {
+            const changes = getChangedFields(log.old_data, log.new_data);
+            if (changes.length === 0) return `${actionInfo.label} em ${tableName}`;
+            const fieldNames = changes.slice(0, 3).map(c => getFieldLabel(c.key)).join(", ");
+            const extra = changes.length > 3 ? ` +${changes.length - 3}` : "";
+            return `Alterou ${fieldNames}${extra}`;
+        }
+        if (log.action === "INSERT" && log.new_data) {
+            const name = log.new_data.nome_empresa || log.new_data.nome_completo || log.new_data.nome || log.new_data.nome_cliente || log.new_data.titulo || "";
+            return name ? `Criou "${name}"` : `Novo registro`;
+        }
+        if (log.action === "DELETE" && log.old_data) {
+            const name = log.old_data.nome_empresa || log.old_data.nome_completo || log.old_data.nome || log.old_data.nome_cliente || log.old_data.titulo || "";
+            return name ? `Removeu "${name}"` : `Registro removido`;
+        }
+        return `${actionInfo.label} em ${tableName}`;
+    };
+
+    // Renderiza o conteúdo do modal de detalhes
+    const renderDetailContent = (log: AuditLog) => {
+        if (log.action === "UPDATE" && log.old_data && log.new_data) {
+            const changes = getChangedFields(log.old_data, log.new_data);
+            if (changes.length === 0) {
+                return <p className="text-sm text-muted-foreground italic py-4">Nenhuma alteração detectada nos campos visíveis.</p>;
+            }
+            return (
+                <div className="space-y-1">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                        {changes.length} campo{changes.length > 1 ? "s" : ""} alterado{changes.length > 1 ? "s" : ""}
+                    </p>
+                    <div className="space-y-2">
+                        {changes.map(({ key, oldVal, newVal }) => (
+                            <div key={key} className="p-3 bg-muted/30 rounded-xl border border-border hover:border-warning/30 transition-colors">
+                                <p className="text-xs font-bold text-card-foreground mb-2">{getFieldLabel(key)}</p>
+                                <div className="flex items-start gap-2">
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-[10px] uppercase font-bold text-destructive/70 block mb-0.5">Antes</span>
+                                        <p className="text-sm text-destructive bg-destructive/5 px-2.5 py-1.5 rounded-lg break-words border border-destructive/10">
+                                            {formatValue(oldVal)}
+                                        </p>
+                                    </div>
+                                    <ArrowRight size={16} className="text-muted-foreground mt-5 shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-[10px] uppercase font-bold text-success/70 block mb-0.5">Depois</span>
+                                        <p className="text-sm text-success bg-success/5 px-2.5 py-1.5 rounded-lg break-words border border-success/10">
+                                            {formatValue(newVal)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        if (log.action === "INSERT" && log.new_data) {
+            const fields = getVisibleFields(log.new_data);
+            return (
+                <div className="space-y-1">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                        Dados do novo registro
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {fields.map(({ key, value }) => (
+                            <div key={key} className="p-3 bg-success/5 rounded-xl border border-success/10">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">{getFieldLabel(key)}</p>
+                                <p className="text-sm text-card-foreground font-medium break-words">{formatValue(value)}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        if (log.action === "DELETE" && log.old_data) {
+            const fields = getVisibleFields(log.old_data);
+            return (
+                <div className="space-y-1">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                        Dados do registro removido
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {fields.map(({ key, value }) => (
+                            <div key={key} className="p-3 bg-destructive/5 rounded-xl border border-destructive/10">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">{getFieldLabel(key)}</p>
+                                <p className="text-sm text-card-foreground font-medium break-words line-through opacity-70">{formatValue(value)}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        return <p className="text-sm text-muted-foreground italic py-4">Sem dados para exibir.</p>;
     };
 
     if (loading) {
@@ -149,9 +406,9 @@ const AuditoriaPage: React.FC = () => {
                             className="w-full pl-8 pr-8 py-2.5 border border-border rounded-lg bg-background text-sm font-medium appearance-none focus:ring-2 focus:ring-primary outline-none cursor-pointer"
                         >
                             <option value="all">Ação: Todas</option>
-                            <option value="INSERT">Inserções (INSERT)</option>
-                            <option value="UPDATE">Edições (UPDATE)</option>
-                            <option value="DELETE">Exclusões (DELETE)</option>
+                            <option value="INSERT">Criações</option>
+                            <option value="UPDATE">Edições</option>
+                            <option value="DELETE">Exclusões</option>
                         </select>
                     </div>
 
@@ -162,8 +419,8 @@ const AuditoriaPage: React.FC = () => {
                             onChange={e => setFilterTable(e.target.value)}
                             className="w-full pl-8 pr-8 py-2.5 border border-border rounded-lg bg-background text-sm font-medium appearance-none focus:ring-2 focus:ring-primary outline-none cursor-pointer"
                         >
-                            <option value="all">Tabela: Todas</option>
-                            {tables.map(t => <option key={t} value={t}>{t}</option>)}
+                            <option value="all">Módulo: Todos</option>
+                            {tables.map(t => <option key={t} value={t}>{tableLabels[t] || t}</option>)}
                         </select>
                     </div>
                 </div>
@@ -176,48 +433,52 @@ const AuditoriaPage: React.FC = () => {
                             <tr>
                                 <th>Data e Hora</th>
                                 <th>Usuário</th>
-                                <th>Tabela</th>
+                                <th>Módulo</th>
                                 <th>Ação</th>
+                                <th>Resumo</th>
                                 <th className="text-right">Detalhes</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredLogs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="text-center py-12 text-muted-foreground">
+                                    <td colSpan={6} className="text-center py-12 text-muted-foreground">
                                         <ListIcon size={32} className="mx-auto mb-3 opacity-20" />
                                         <p>Nenhum log de auditoria encontrado.</p>
                                     </td>
                                 </tr>
                             ) : (
                                 filteredLogs.map(log => (
-                                    <tr key={log.id} className="hover:bg-muted/50 transition-colors">
+                                    <tr key={log.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedLog(log)}>
                                         <td className="whitespace-nowrap font-mono text-xs text-muted-foreground">
                                             {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
                                         </td>
                                         <td>
-                                            <div className="font-semibold text-card-foreground">
-                                                {log.profile?.nome_completo || "Sistema / Auto"}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground font-mono truncate max-w-[150px]" title={log.user_id || ""}>
-                                                {log.profile?.email || log.user_id || "N/A"}
+                                            <div className="font-semibold text-card-foreground text-sm">
+                                                {log.profile?.nome_completo || "Sistema"}
                                             </div>
                                         </td>
                                         <td>
-                                            <span className="font-mono text-xs bg-muted px-2 py-1 rounded border border-border">
-                                                {log.table_name}
+                                            <span className="text-xs font-semibold bg-muted px-2 py-1 rounded border border-border">
+                                                {tableLabels[log.table_name] || log.table_name}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className={`text-[10px] font-bold px-2 py-1 flex items-center justify-center w-20 rounded-md border ${getActionColor(log.action)}`}>
-                                                {log.action}
+                                            <span className={`text-[10px] font-bold px-2 py-1 flex items-center gap-1 w-fit rounded-md border ${getActionColor(log.action)}`}>
+                                                {actionLabels[log.action]?.icon}
+                                                {actionLabels[log.action]?.label || log.action}
+                                            </span>
+                                        </td>
+                                        <td className="max-w-[250px]">
+                                            <span className="text-xs text-muted-foreground truncate block">
+                                                {getSummary(log)}
                                             </span>
                                         </td>
                                         <td className="text-right">
                                             <button
-                                                onClick={() => setSelectedLog(log)}
+                                                onClick={(e) => { e.stopPropagation(); setSelectedLog(log); }}
                                                 className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors inline-flex"
-                                                title="Ver payload JSON"
+                                                title="Ver detalhes"
                                             >
                                                 <Eye size={16} />
                                             </button>
@@ -232,15 +493,14 @@ const AuditoriaPage: React.FC = () => {
 
             {/* Detail Modal */}
             {selectedLog && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-card w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl shadow-xl border border-border animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setSelectedLog(null)}>
+                    <div className="bg-card w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl shadow-xl border border-border animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
                             <h3 className="font-bold flex items-center gap-2">
-                                <Database size={18} className="text-primary" />
-                                Detalhes do Log
-                                <span className={`ml-2 text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${getActionColor(selectedLog.action)}`}>
-                                    {selectedLog.action}
-                                </span>
+                                {actionLabels[selectedLog.action]?.icon}
+                                <span>{actionLabels[selectedLog.action]?.label || selectedLog.action}</span>
+                                <span className="text-muted-foreground font-normal">em</span>
+                                <span className="text-primary">{tableLabels[selectedLog.table_name] || selectedLog.table_name}</span>
                             </h3>
                             <button onClick={() => setSelectedLog(null)} className="p-1 rounded-md hover:bg-muted">
                                 <X size={20} />
@@ -248,42 +508,23 @@ const AuditoriaPage: React.FC = () => {
                         </div>
 
                         <div className="p-6 overflow-y-auto space-y-6 flex-1">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Data Registrada</p>
-                                    <p className="text-sm font-mono">{format(new Date(selectedLog.created_at), "dd/MM/yyyy HH:mm:ss")}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Data</p>
+                                    <p className="text-sm font-medium">{format(new Date(selectedLog.created_at), "dd/MM/yyyy 'às' HH:mm:ss")}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Tabela Alvo</p>
-                                    <p className="text-sm font-mono">{selectedLog.table_name}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Usuário</p>
+                                    <p className="text-sm font-medium">{selectedLog.profile?.nome_completo || "Sistema"}</p>
                                 </div>
-                                <div className="space-y-1 md:col-span-2">
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">ID do Registro</p>
-                                    <p className="text-sm font-mono truncate">{selectedLog.record_id}</p>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Módulo</p>
+                                    <p className="text-sm font-medium">{tableLabels[selectedLog.table_name] || selectedLog.table_name}</p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {selectedLog.old_data && (
-                                    <div className="space-y-2">
-                                        <p className="text-sm font-bold text-destructive flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded-full bg-destructive" /> Dados Anteriores (OLD)
-                                        </p>
-                                        <pre className="bg-[#1e1e1e] text-[#d4d4d4] p-4 rounded-xl text-xs font-mono overflow-auto max-h-[400px]">
-                                            {JSON.stringify(selectedLog.old_data, null, 2)}
-                                        </pre>
-                                    </div>
-                                )}
-                                {selectedLog.new_data && (
-                                    <div className="space-y-2">
-                                        <p className="text-sm font-bold text-success flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded-full bg-success" /> Dados Novos (NEW)
-                                        </p>
-                                        <pre className="bg-[#1e1e1e] text-[#d4d4d4] p-4 rounded-xl text-xs font-mono overflow-auto max-h-[400px]">
-                                            {JSON.stringify(selectedLog.new_data, null, 2)}
-                                        </pre>
-                                    </div>
-                                )}
+                            <div className="border-t border-border pt-4">
+                                {renderDetailContent(selectedLog)}
                             </div>
                         </div>
                     </div>
@@ -295,3 +536,4 @@ const AuditoriaPage: React.FC = () => {
 };
 
 export default AuditoriaPage;
+

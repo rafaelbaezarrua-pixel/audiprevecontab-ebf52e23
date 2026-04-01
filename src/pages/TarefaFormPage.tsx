@@ -93,6 +93,7 @@ const TarefaFormPage: React.FC = () => {
         try {
             const payload = {
                 ...form,
+                empresa_id: form.empresa_id || null,
                 criado_por: user?.id,
                 competencia: form.data.slice(0, 7)
             };
