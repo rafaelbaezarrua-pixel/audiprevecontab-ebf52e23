@@ -43,6 +43,7 @@ const AVAILABLE_MODULES = [
   { id: 'ocorrencias', label: 'Ocorrências' },
   { id: 'documentos', label: 'Assinaturas' },
   { id: 'recibos', label: 'Recibos' },
+  { id: 'faturamento', label: 'Faturamento' },
   { id: 'fiscal', label: 'Fiscal' },
   { id: 'pessoal', label: 'Pessoal' },
   { id: 'simulador', label: 'Simulador' },

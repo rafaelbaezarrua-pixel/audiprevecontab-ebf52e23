@@ -23,6 +23,7 @@ const moduleLabels: Record<string, string> = {
     ocorrencias: "Ocorrências",
     documentos: "Assinaturas",
     recibos: "Recibos",
+    faturamento: "Faturamento",
     simulador: "Simulador",
     irpf: "IRPF",
     declaracoes_anuais: "Declarações Anuais",

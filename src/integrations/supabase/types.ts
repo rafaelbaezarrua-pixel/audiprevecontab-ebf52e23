@@ -411,6 +411,39 @@ export type Database = {
         }
         Relationships: []
       }
+      faturamentos: {
+        Row: {
+          competencia: string
+          created_at: string | null
+          criado_por: string | null
+          data_emissao: string
+          data_vencimento: string
+          id: string
+          nome_cliente: string
+          valor: number
+        }
+        Insert: {
+          competencia: string
+          created_at?: string | null
+          criado_por?: string | null
+          data_emissao: string
+          data_vencimento: string
+          id?: string
+          nome_cliente: string
+          valor: number
+        }
+        Update: {
+          competencia?: string
+          created_at?: string | null
+          criado_por?: string | null
+          data_emissao?: string
+          data_vencimento?: string
+          id?: string
+          nome_cliente?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       fiscal: {
         Row: {
           aliquota: number | null
