@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -247,7 +249,10 @@ const RecibosPage: React.FC = () => {
         <div className="space-y-8 animate-fade-in pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-card-foreground">Recibos</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-card-foreground">Recibos</h1>
+                        <FavoriteToggleButton moduleId="recibos" />
+                    </div>
                     <p className="text-muted-foreground text-sm flex items-center gap-1.5">
                         <Download size={14} className="text-primary" /> Emissão avulsa de recibos com 2 vias e histórico
                     </p>

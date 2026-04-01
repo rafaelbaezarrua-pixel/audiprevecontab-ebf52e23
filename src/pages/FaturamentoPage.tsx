@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -336,7 +337,7 @@ const FaturamentoPage: React.FC = () => {
             }
 
             const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
             const url = URL.createObjectURL(blob);
 
             const link = document.createElement("a");
@@ -613,7 +614,7 @@ const FaturamentoPage: React.FC = () => {
             page.drawText(valT, { x: width - margin - vW, y: currentY, size: 10, font: fontReg });
 
             const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
             const url = URL.createObjectURL(blob);
 
             const link = document.createElement("a");
@@ -669,7 +670,10 @@ const FaturamentoPage: React.FC = () => {
         <div className="space-y-8 animate-fade-in pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-card-foreground">Faturamento</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-card-foreground">Faturamento</h1>
+                        <FavoriteToggleButton moduleId="faturamento" />
+                    </div>
                     <p className="text-muted-foreground text-sm flex items-center gap-1.5 font-medium">
                         <DollarSign size={14} className="text-primary" /> Gestão de faturamentos
                     </p>

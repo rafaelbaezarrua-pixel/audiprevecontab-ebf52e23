@@ -8,6 +8,7 @@ import { IRPFForm } from "@/components/irpf/IRPFForm";
 import { IRPFRecordCard } from "@/components/irpf/IRPFRecordCard";
 import { IRPFRecord } from "@/types/irpf";
 import { List } from "lucide-react";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const IRPFPage = () => {
     const { user, userData } = useAuth();
@@ -59,7 +60,10 @@ const IRPFPage = () => {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-foreground tracking-tight">IRPF <span className="text-primary">{selectedYear}</span></h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-3xl font-black text-foreground tracking-tight">IRPF <span className="text-primary">{selectedYear}</span></h1>
+                        <FavoriteToggleButton moduleId="irpf" />
+                    </div>
                     <p className="text-sm text-muted-foreground">Gestão IRPF</p>
                 </div>
 

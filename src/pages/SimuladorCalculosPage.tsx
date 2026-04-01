@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Calculator, Calendar, DollarSign, Info, RefreshCw, FileText, Umbrella } from "lucide-react";
 import { format, differenceInMonths, differenceInDays, addYears, isBefore, startOfMonth, endOfMonth, addMonths } from "date-fns";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const SimuladorCalculosPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<"rescisao" | "ferias">("rescisao");
@@ -161,7 +162,10 @@ const SimuladorCalculosPage: React.FC = () => {
         <div className="space-y-6 animate-fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-black text-foreground tracking-tight">Simulador de Cálculos Trabalhistas</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-foreground tracking-tight">Simulador de Cálculos Trabalhistas</h1>
+                        <FavoriteToggleButton moduleId="simulador" />
+                    </div>
                     <p className="text-sm text-muted-foreground font-medium">Estime os custos de rescisão e férias (CLT).</p>
                 </div>
                 

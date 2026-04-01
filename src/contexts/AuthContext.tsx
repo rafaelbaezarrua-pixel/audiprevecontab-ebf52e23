@@ -41,6 +41,7 @@ export interface UserPermissions {
   firstAccessDone?: boolean;
   foto_url?: string;
   favoritos?: string[];
+  sidebar_config?: any[];
 }
 
 interface AuthContextType {
@@ -53,6 +54,7 @@ interface AuthContextType {
   refreshUserData: () => Promise<void>;
   loginAsClient: (cnpj: string, password: string) => Promise<void>;
   toggleFavorito: (moduleId: string) => Promise<void>;
+  updateSidebarConfig: (config: any[]) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -131,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           firstAccessDone,
           foto_url: profileData?.foto_url || currentUser.user_metadata?.avatar_url || "",
           favoritos: profileData?.favoritos || [],
+          sidebar_config: profileData?.sidebar_config || null,
         });
       } else {
         const { data: perms } = await supabase.from("user_module_permissions").select("module_name").eq("user_id", currentUser.id);
@@ -173,6 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           firstAccessDone,
           foto_url: profileData?.foto_url || currentUser.user_metadata?.avatar_url || "",
           favoritos: profileData?.favoritos || [],
+          sidebar_config: profileData?.sidebar_config || null,
         });
       }
     } catch (err) {
@@ -211,6 +215,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Erro ao salvar favoritos:", error);
       // Reverter em caso de erro
       setUserData({ ...userData, favoritos: currentFavoritos });
+    }
+  };
+  
+  const updateSidebarConfig = async (config: any[]) => {
+    if (!user || !userData) return;
+    
+    // Otimista local
+    setUserData({ ...userData, sidebar_config: config });
+    
+    // Salvar no banco de dados
+    const { error } = await (supabase
+      .from("profiles")
+      .update({ sidebar_config: config } as any)
+      .eq("user_id", user.id));
+      
+    if (error) {
+      console.error("Erro ao salvar configuração da barra lateral:", error);
     }
   };
 
@@ -316,7 +337,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const contextValue = React.useMemo(() => ({
-    user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito
+    user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito, updateSidebarConfig
   }), [user, session, userData, loading]);
 
   return (
