@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ClipboardList, Plus, Loader2, Eye, EyeOff, Trash2 } from "lucide-react";
 import { lacunaApi, Certificate } from "@/lib/lacuna";
@@ -393,13 +394,19 @@ const DocumentosPage = () => {
       <TabsContent value="assinaturas">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Assinador Digital</CardTitle>
-              <CardDescription>
-                Assine documentos com seu certificado digital local.
-              </CardDescription>
+            <div className="flex items-center gap-3">
+              <div>
+                <div className="flex items-center gap-3">
+                  <CardTitle>Assinador Digital</CardTitle>
+                  <FavoriteToggleButton moduleId="documentos" />
+                </div>
+                <CardDescription>
+                  Assine documentos com seu certificado digital local.
+                </CardDescription>
+              </div>
             </div>
             <div className="flex items-center gap-2">
+
               <Dialog open={isCertDialogOpen} onOpenChange={handleCertDialogChange}>
                 <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
                   <DialogHeader>

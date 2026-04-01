@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { format, isAfter, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -179,7 +180,9 @@ const AgendamentosPage: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
                 <div className="flex items-center gap-3">
                     <h1 className="text-2xl font-bold tracking-tight">Agendamentos</h1>
+                    <FavoriteToggleButton moduleId="agendamentos" />
                     {isFetching && !isLoading && (
+
                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
                             <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>

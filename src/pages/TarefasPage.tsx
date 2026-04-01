@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { format, parseISO, lastDayOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -333,100 +334,108 @@ const TarefasPage: React.FC = () => {
 
     return (
         <div className="space-y-6 flex flex-col min-h-[calc(100vh-100px)] animate-fade-in">
-            <div className="flex items-center gap-3 justify-end shrink-0">
-                {isFetching && !isLoading && (
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                        <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
-                    </div>
-                )}
-                <input
-                    type="month"
-                    value={competencia}
-                    onChange={e => setCompetencia(e.target.value)}
-                    className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold"
-                />
-                <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
-                    <DialogTrigger asChild>
-                        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/20 text-primary bg-primary/5 text-sm font-bold hover:bg-primary/10 transition-all">
-                            <ClipboardList size={18} /> Lançamentos
-                        </button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader><DialogTitle>Lançamentos de Tarefas</DialogTitle></DialogHeader>
-                        <div className="space-y-6 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Assunto</Label>
-                                    <input className="w-full px-4 py-2 border rounded-lg" value={batchForm.assunto} onChange={e => setBatchForm({ ...batchForm, assunto: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Responsável</Label>
-                                    <select className="w-full px-4 py-2 border rounded-lg" value={batchForm.responsavel_id} onChange={e => setBatchForm({ ...batchForm, responsavel_id: e.target.value })}>
-                                        <option value="">Selecione...</option>
-                                        {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Data</Label>
-                                    <input type="date" className="w-full px-4 py-2 border rounded-lg" value={batchForm.data} onChange={e => setBatchForm({ ...batchForm, data: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Horário</Label>
-                                    <input type="time" className="w-full px-4 py-2 border rounded-lg" value={batchForm.horario} onChange={e => setBatchForm({ ...batchForm, horario: e.target.value })} />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Informações Adicionais</Label>
-                                <textarea className="w-full px-4 py-2 border rounded-lg h-20 resize-none" value={batchForm.informacoes} onChange={e => setBatchForm({ ...batchForm, informacoes: e.target.value })} />
-                            </div>
-
-                            <div className="space-y-3">
-                                <Label className="flex items-center justify-between">
-                                    Selecione as Empresas ({selectedEmpresas.length})
-                                    <button className="text-xs text-primary font-bold" onClick={() => {
-                                        if (selectedEmpresas.length === empresas.length) setSelectedEmpresas([]);
-                                        else setSelectedEmpresas(empresas.map(e => e.id));
-                                    }}>
-                                        {selectedEmpresas.length === empresas.length ? "Desmarcar Todas" : "Selecionar Todas"}
-                                    </button>
-                                </Label>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-xl p-4 max-h-48 overflow-y-auto bg-muted/20">
-                                    {empresas.map(emp => (
-                                        <div key={emp.id} className="flex items-center gap-3 p-2 hover:bg-card rounded-lg transition-colors cursor-pointer" onClick={() => {
-                                            if (selectedEmpresas.includes(emp.id)) setSelectedEmpresas(prev => prev.filter(id => id !== emp.id));
-                                            else setSelectedEmpresas(prev => [...prev, emp.id]);
-                                        }}>
-                                            <Checkbox checked={selectedEmpresas.includes(emp.id)} />
-                                            <span className="text-xs font-medium truncate">{emp.nome_empresa}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <Button className="w-full button-premium" onClick={handleCreateBatch}>
-                                Criar Tarefas em Lote
-                            </Button>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold tracking-tight">Tarefas</h1>
+                    <FavoriteToggleButton moduleId="tarefas" />
+                    {isFetching && !isLoading && (
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                            <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
                         </div>
-                    </DialogContent>
-                </Dialog>
+                    )}
+                </div>
+                
+                <div className="flex items-center gap-3 justify-end">
+                    <input
+                        type="month"
+                        value={competencia}
+                        onChange={e => setCompetencia(e.target.value)}
+                        className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold"
+                    />
+                    <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
+                        <DialogTrigger asChild>
+                            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/20 text-primary bg-primary/5 text-sm font-bold hover:bg-primary/10 transition-all">
+                                <ClipboardList size={18} /> Lançamentos
+                            </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader><DialogTitle>Lançamentos de Tarefas</DialogTitle></DialogHeader>
+                            <div className="space-y-6 py-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Assunto</Label>
+                                        <input className="w-full px-4 py-2 border rounded-lg" value={batchForm.assunto} onChange={e => setBatchForm({ ...batchForm, assunto: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Responsável</Label>
+                                        <select className="w-full px-4 py-2 border rounded-lg" value={batchForm.responsavel_id} onChange={e => setBatchForm({ ...batchForm, responsavel_id: e.target.value })}>
+                                            <option value="">Selecione...</option>
+                                            {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Data</Label>
+                                        <input type="date" className="w-full px-4 py-2 border rounded-lg" value={batchForm.data} onChange={e => setBatchForm({ ...batchForm, data: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Horário</Label>
+                                        <input type="time" className="w-full px-4 py-2 border rounded-lg" value={batchForm.horario} onChange={e => setBatchForm({ ...batchForm, horario: e.target.value })} />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Informações Adicionais</Label>
+                                    <textarea className="w-full px-4 py-2 border rounded-lg h-20 resize-none" value={batchForm.informacoes} onChange={e => setBatchForm({ ...batchForm, informacoes: e.target.value })} />
+                                </div>
 
-                <button
-                    onClick={handleClonePreviousMonth}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/20 text-primary bg-primary/5 text-sm font-bold hover:bg-primary/10 transition-all"
-                >
-                    <RefreshCw size={18} /> Clonar Mês Anterior
-                </button>
+                                <div className="space-y-3">
+                                    <Label className="flex items-center justify-between">
+                                        Selecione as Empresas ({selectedEmpresas.length})
+                                        <button className="text-xs text-primary font-bold" onClick={() => {
+                                            if (selectedEmpresas.length === empresas.length) setSelectedEmpresas([]);
+                                            else setSelectedEmpresas(empresas.map(e => e.id));
+                                        }}>
+                                            {selectedEmpresas.length === empresas.length ? "Desmarcar Todas" : "Selecionar Todas"}
+                                        </button>
+                                    </Label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-xl p-4 max-h-48 overflow-y-auto bg-muted/20">
+                                        {empresas.map(emp => (
+                                            <div key={emp.id} className="flex items-center gap-3 p-2 hover:bg-card rounded-lg transition-colors cursor-pointer" onClick={() => {
+                                                if (selectedEmpresas.includes(emp.id)) setSelectedEmpresas(prev => prev.filter(id => id !== emp.id));
+                                                else setSelectedEmpresas(prev => [...prev, emp.id]);
+                                            }}>
+                                                <Checkbox checked={selectedEmpresas.includes(emp.id)} />
+                                                <span className="text-xs font-medium truncate">{emp.nome_empresa}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
 
-                <button
-                    onClick={() => navigate("/tarefas/novo")}
-                    className="button-premium shadow-md"
-                >
-                    <Plus size={18} /> Nova Tarefa
-                </button>
+                                <Button className="w-full button-premium" onClick={handleCreateBatch}>
+                                    Criar Tarefas em Lote
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    <button
+                        onClick={handleClonePreviousMonth}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/20 text-primary bg-primary/5 text-sm font-bold hover:bg-primary/10 transition-all"
+                    >
+                        <RefreshCw size={18} /> Clonar Mês Anterior
+                    </button>
+
+                    <button
+                        onClick={() => navigate("/tarefas/novo")}
+                        className="button-premium shadow-md"
+                    >
+                        <Plus size={18} /> Nova Tarefa
+                    </button>
+                </div>
             </div>
+
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
                 <div className="flex border-b border-border w-full sm:w-auto overflow-x-auto no-scrollbar">

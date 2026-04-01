@@ -13,6 +13,7 @@ import {
 } from "@/constants/reports";
 import { useReportGenerator } from "@/hooks/useReportGenerator";
 import { ModuleCard } from "@/components/reports/ModuleCard";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const RelatorioPersonalizadoPage: React.FC = () => {
     const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
@@ -89,7 +90,10 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                 <div className="p-8 space-y-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="space-y-1">
-                            <h1 className="text-3xl font-black text-card-foreground tracking-tight">Central de Relatórios</h1>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-3xl font-black text-card-foreground tracking-tight">Central de Relatórios</h1>
+                                <FavoriteToggleButton moduleId="relatorios" />
+                            </div>
                             <p className="text-muted-foreground text-sm">Configure e exporte documentos personalizados</p>
                         </div>
 

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { FileText, Download, Building2, User, Search, Plus, Trash2, Calendar, History as HistoryIcon, Settings2, Upload, LayoutGrid, List, Image as ImageIcon } from "lucide-react";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import logoCaduceu from "@/assets/logo-caduceu.png";
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
 import { useOcorrencias, Ocorrencia } from "@/hooks/useOcorrencias";
@@ -236,7 +237,10 @@ const OcorrenciasPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-card-foreground">Ocorrências</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-card-foreground">Ocorrências</h1>
+                        <FavoriteToggleButton moduleId="ocorrencias" />
+                    </div>
                     <p className="text-muted-foreground">Gerenciamento e geração de documentos de ocorrência</p>
                 </div>
                 <div className="flex items-center gap-3">
