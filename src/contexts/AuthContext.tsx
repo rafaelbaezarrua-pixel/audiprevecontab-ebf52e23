@@ -22,6 +22,15 @@ export interface UserPermissions {
     declaracoes_mensais: boolean;
     declaracoes_anuais: boolean;
     agendamentos: boolean;
+    tarefas: boolean;
+    ocorrencias: boolean;
+    documentos: boolean;
+    recibos: boolean;
+    faturamento: boolean;
+    simulador: boolean;
+    irpf: boolean;
+    relatorios: boolean;
+    [key: string]: boolean;
   };
   nome?: string;
   email?: string;
@@ -58,7 +67,9 @@ const allModulesTrue = {
   societario: true, fiscal: true, pessoal: true, certificados: true,
   procuracoes: true, vencimentos: true, parcelamentos: true, recalculos: true,
   honorarios: true, licencas: true, certidoes: true, declaracoes_mensais: true,
-  declaracoes_anuais: true, agendamentos: true,
+  declaracoes_anuais: true, agendamentos: true, tarefas: true, ocorrencias: true,
+  documentos: true, recibos: true, faturamento: true, simulador: true,
+  irpf: true, relatorios: true,
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -144,6 +155,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             declaracoes_mensais: moduleSet.has("declaracoes_mensais"),
             declaracoes_anuais: moduleSet.has("declaracoes_anuais"),
             agendamentos: moduleSet.has("agendamentos"),
+            tarefas: moduleSet.has("tarefas"),
+            ocorrencias: moduleSet.has("ocorrencias"),
+            documentos: moduleSet.has("documentos"),
+            recibos: moduleSet.has("recibos"),
+            faturamento: moduleSet.has("faturamento"),
+            simulador: moduleSet.has("simulador"),
+            irpf: moduleSet.has("irpf"),
+            relatorios: moduleSet.has("relatorios"),
           },
           nome: profileData?.nome_completo || currentUser.user_metadata?.full_name || currentUser.email || "Usuário",
           email: currentUser.email || "",

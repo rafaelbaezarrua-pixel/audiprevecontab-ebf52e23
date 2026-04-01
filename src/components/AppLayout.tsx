@@ -31,6 +31,7 @@ const navItems: NavItemConfig[] = [
   { id: "ocorrencias", label: "Ocorrências", icon: <FileText size={18} />, path: "/ocorrencias", moduleKey: "ocorrencias", section: "GERAL" },
   { id: "documentos", label: "Assinaturas", icon: <FileSignature size={18} />, path: "/documentos", moduleKey: "documentos", section: "GERAL" },
   { id: "recibos", label: "Recibos", icon: <Receipt size={18} />, path: "/recibos", moduleKey: "recibos", section: "GERAL" },
+  { id: "faturamento", label: "Faturamento", icon: <DollarSign size={18} />, path: "/faturamento", moduleKey: "faturamento", section: "GERAL" },
   { id: "societario", label: "Societário", icon: <Building2 size={18} />, path: "/societario", moduleKey: "societario", section: "DEPARTAMENTOS" },
   { id: "fiscal", label: "Fiscal", icon: <Receipt size={18} />, path: "/fiscal", moduleKey: "fiscal" },
   { id: "pessoal", label: "Pessoal", icon: <Users size={18} />, path: "/pessoal", moduleKey: "pessoal" },

@@ -64,6 +64,7 @@ const PortalDocumentosPage = lazy(() => import("@/pages/PortalDocumentosPage"));
 const PortalHelpDeskPage = lazy(() => import("@/pages/PortalHelpDeskPage"));
 const SimuladorCalculosPage = lazy(() => import("@/pages/SimuladorCalculosPage"));
 const DocumentosPage = lazy(() => import("@/pages/DocumentosPage"));
+const FaturamentoPage = lazy(() => import("@/pages/FaturamentoPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -206,6 +207,7 @@ const App = () => (
                   <Route path="/configuracoes/alertas" element={<AdminRoute><GestorAlertasPage /></AdminRoute>} />
                   <Route path="/configuracoes/auditoria" element={<AdminRoute><AuditoriaPage /></AdminRoute>} />
                   <Route path="/documentos" element={<DocumentosPage />} />
+                  <Route path="/faturamento" element={<FaturamentoPage />} />
                 </Route>
 
                 {/* Portal do Cliente Routes */}
