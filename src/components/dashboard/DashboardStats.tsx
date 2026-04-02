@@ -18,8 +18,8 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
       label: "Total de Empresas",
       value: stats.totalEmpresas,
       icon: <Building2 className="w-6 h-6" />,
-      color: "from-blue-500/20 to-indigo-500/20",
-      text: "text-blue-500",
+      color: "from-primary/20 to-primary/10",
+      text: "text-primary",
     },
     {
       label: "Empresas Ativas",

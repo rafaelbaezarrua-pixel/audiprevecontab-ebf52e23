@@ -57,7 +57,7 @@
     --sidebar-ring: 221 83% 53%;
     --sidebar-muted: 215 16% 40%;
 
-    --gradient-primary: hsl(217, 91%, 60%);
+    --gradient-primary: hsl(var(--primary));
     --gradient-bg: none;
   }
 
@@ -108,7 +108,7 @@
     --sidebar-ring: 217 91% 60%;
     --sidebar-muted: 215 20% 65%;
 
-    --gradient-primary: hsl(217, 91%, 60%);
+    --gradient-primary: hsl(var(--primary));
     --gradient-bg: linear-gradient(135deg, hsl(222, 47%, 11%) 0%, hsl(215, 28%, 17%) 100%);
   }
 }
@@ -120,7 +120,7 @@
 
   body {
     @apply bg-background text-foreground font-body;
-    background: var(--gradient-bg);
+    background-image: var(--gradient-bg);
     min-height: 100vh;
   }
 

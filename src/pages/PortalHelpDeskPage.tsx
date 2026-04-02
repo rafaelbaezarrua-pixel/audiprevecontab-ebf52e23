@@ -98,7 +98,7 @@ const PortalHelpDeskPage: React.FC = () => {
                     </button>
                     <div className="flex items-center gap-2">
                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                             selectedTicket.status === 'aberto' ? 'bg-blue-500/10 text-blue-500' : 
+                             selectedTicket.status === 'aberto' ? 'bg-primary/10 text-primary' : 
                              selectedTicket.status === 'em_atendimento' ? 'bg-amber-500/10 text-amber-500' : 'bg-green-500/10 text-green-500'
                          }`}>{selectedTicket.status}</span>
                     </div>
@@ -241,7 +241,7 @@ const PortalHelpDeskPage: React.FC = () => {
                         >
                             <div className="flex items-center gap-4">
                                 <div className={`p-4 rounded-2xl ${
-                                    t.status === 'aberto' ? 'bg-blue-500/10 text-blue-500' : 
+                                    t.status === 'aberto' ? 'bg-primary/10 text-primary' : 
                                     t.status === 'em_atendimento' ? 'bg-amber-500/10 text-amber-500' : 'bg-green-500/10 text-green-500'
                                 }`}>
                                     <MessageSquare size={24} />
@@ -258,7 +258,7 @@ const PortalHelpDeskPage: React.FC = () => {
                             <div className="flex items-center gap-4 shrink-0">
                                 <div className="flex flex-col items-end gap-1">
                                     <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                                        t.status === 'aberto' ? 'bg-blue-100 text-blue-600' : 
+                                        t.status === 'aberto' ? 'bg-primary/10 text-primary' : 
                                         t.status === 'em_atendimento' ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'
                                     }`}>
                                         {t.status.replace('_', ' ')}

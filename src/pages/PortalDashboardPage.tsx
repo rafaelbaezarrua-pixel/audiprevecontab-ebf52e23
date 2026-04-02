@@ -65,7 +65,7 @@ const PortalDashboardPage: React.FC = () => {
     const stats = [
         { label: "Licenças Ativas", value: counts.lics.toString(), icon: FileText, color: "text-amber-500", bg: "bg-amber-500/10" },
         { label: "Certidões Disponíveis", value: counts.certs.toString(), icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" },
-        { label: "Mensagens Não Lidas", value: counts.msgs.toString(), icon: MessageSquare, color: "text-blue-500", bg: "bg-blue-500/10" },
+        { label: "Mensagens Não Lidas", value: counts.msgs.toString(), icon: MessageSquare, color: "text-primary", bg: "bg-primary/10" },
     ];
 
     const chartData = [

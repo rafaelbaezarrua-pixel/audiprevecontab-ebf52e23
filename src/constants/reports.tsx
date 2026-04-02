@@ -93,7 +93,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     label: "Societário (Empresas)",
     table: "empresas",
     icon: <Building2 size={18} />,
-    color: "bg-blue-500",
+    color: "bg-primary",
     fields: [
       { id: "situacao", label: "Situação", accessor: (i) => {
           if (i.regime_tributario?.toLowerCase() === 'mei') return "MEI";
@@ -311,7 +311,7 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     label: "Declarações Mensais",
     table: "pessoal",
     icon: <ListChecks size={18} />,
-    color: "bg-blue-600",
+    color: "bg-primary",
     fields: [
       { id: "dctf_web_gerada", label: "DCTF Web Gerada", accessor: (i) => i.dctf_web_gerada ? "Sim" : "Não" },
       { id: "dctf_web_data_envio", label: "Data de Envio DCTF", accessor: (i) => safeFormatDate(i.dctf_web_data_envio) },

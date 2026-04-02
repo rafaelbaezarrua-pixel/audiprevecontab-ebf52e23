@@ -34,7 +34,7 @@ export const OcorrenciasKanban: React.FC<OcorrenciasKanbanProps> = ({
 }) => {
   const columns: KanbanColumn[] = [
     { id: "pendente", title: "Pendente", colorClass: "bg-orange-500/10 text-orange-600" },
-    { id: "em_andamento", title: "Em Andamento", colorClass: "bg-blue-500/10 text-blue-600" },
+    { id: "em_andamento", title: "Em Andamento", colorClass: "bg-primary/10 text-primary" },
     { id: "concluido", title: "Concluído", colorClass: "bg-emerald-500/10 text-emerald-600" }
   ];
 

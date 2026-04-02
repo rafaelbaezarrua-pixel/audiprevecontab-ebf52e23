@@ -88,7 +88,7 @@ const PortalLicencasPage: React.FC = () => {
                                         {lic.status && (
                                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${lic.status === "definitiva" ? "bg-green-500/10 text-green-500" :
                                                 lic.status === "com_vencimento" ? "bg-amber-500/10 text-amber-500" :
-                                                    "bg-blue-500/10 text-blue-500"
+                                                    "bg-primary/10 text-primary"
                                                 }`}>
                                                 {lic.status}
                                             </span>

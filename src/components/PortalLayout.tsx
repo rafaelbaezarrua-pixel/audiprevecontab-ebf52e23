@@ -7,6 +7,7 @@ import {
     ScrollText, FileBadge, CalendarClock, Search
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { ColorCustomizer } from "./ColorCustomizer";
 import { Button } from "./ui/button";
 import {
     DropdownMenu,
@@ -86,7 +87,11 @@ const PortalLayout: React.FC = () => {
                     <span className="font-bold">Audipreve</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <ThemeToggle />
+                    <div className="flex items-center gap-1 px-1 bg-muted/30 rounded-full border border-border/40 scale-90">
+                        <ColorCustomizer />
+                        <div className="w-[1px] h-4 bg-border/60 mx-1"></div>
+                        <ThemeToggle />
+                    </div>
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         className="p-2 rounded-lg hover:bg-muted transition-colors"
@@ -140,7 +145,11 @@ const PortalLayout: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <ThemeToggle />
+                        <div className="flex items-center gap-1 px-1 bg-muted/30 rounded-full border border-border/40">
+                            <ColorCustomizer />
+                            <div className="w-[1px] h-4 bg-border/60 mx-1"></div>
+                            <ThemeToggle />
+                        </div>
                         <button className="p-2 rounded-xl bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative">
                             <Bell size={18} />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-background"></span>

@@ -395,7 +395,7 @@ const SimuladorCalculosPage: React.FC = () => {
                                                         <span className="font-bold">{type === "com_justa_causa" || type === "pedido_demissao" ? "Bloqueado" : formatCurrency(results.fgtsBalance)}</span>
                                                     </div>
                                                     {results.fgtsFine > 0 && (
-                                                        <div className="flex justify-between items-center bg-background/50 p-3 rounded-lg border border-amber-500/20 bg-amber-500/5">
+                                                        <div className="flex justify-between items-center p-3 rounded-lg border border-amber-500/20 bg-amber-500/5">
                                                             <span className="text-sm font-bold text-amber-600">Multa FGTS ({type === "acordo" ? "20%" : "40%"})</span>
                                                             <span className="font-bold text-amber-600">{formatCurrency(results.fgtsFine)}</span>
                                                         </div>
@@ -425,13 +425,13 @@ const SimuladorCalculosPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-10 p-5 bg-blue-500/5 border border-blue-500/20 rounded-2xl flex gap-4">
-                                <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 shrink-0">
+                            <div className="mt-10 p-5 bg-primary/5 border border-primary/20 rounded-2xl flex gap-4">
+                                <div className="p-3 rounded-xl bg-primary/10 text-primary shrink-0">
                                     <Info size={24} />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs font-bold text-blue-700 uppercase tracking-wider italic">Aviso Importante</p>
-                                    <p className="text-[11px] text-blue-600/80 leading-relaxed italic">
+                                    <p className="text-xs font-bold text-primary uppercase tracking-wider italic">Aviso Importante</p>
+                                    <p className="text-[11px] text-primary/80 leading-relaxed italic">
                                         Esta é uma simulação simplificada e não substitui o cálculo oficial do sistema de folha ou do Ministério do Trabalho. 
                                         {results.type === 'rescisao' ? ' Não estão inclusos descontos de INSS, IRRF, faltas ou horas extras.' : ' Os descontos de INSS e IRRF são baseados em tabelas vigentes aproximadas.'}
                                     </p>
