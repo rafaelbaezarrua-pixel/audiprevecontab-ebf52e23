@@ -24,7 +24,7 @@ interface DashboardChartsProps {
   data: ChartData;
 }
 
-const COLORS = ['hsl(var(--primary))', '#10B981', '#F59E0B', '#6366F1', '#8B5CF6'];
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--primary) / 0.7)', 'hsl(var(--primary) / 0.5)', 'hsl(var(--primary) / 0.35)', 'hsl(var(--primary) / 0.2)'];
 
 export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
   const navigate = useNavigate();
@@ -126,7 +126,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
                   {data.processos.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
-                      fill={entry.name === 'Concluídos' ? '#10B981' : entry.name === 'Em Exigência' ? '#EF4444' : 'hsl(var(--primary))'} 
+                      fill={`hsl(var(--primary) / ${1 - (index * 0.2)})`} 
                       className="hover:opacity-80 transition-opacity"
                     />
                   ))}

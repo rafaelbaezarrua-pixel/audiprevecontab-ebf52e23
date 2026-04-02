@@ -25,22 +25,22 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
       label: "Empresas Ativas",
       value: stats.ativas,
       icon: <Users className="w-6 h-6" />,
-      color: "from-emerald-500/20 to-teal-500/20",
-      text: "text-emerald-500",
+      color: "from-primary/15 to-primary/5",
+      text: "text-primary",
     },
     {
       label: "Processos em Andamento",
       value: stats.processosAtivos,
       icon: <Activity className="w-6 h-6" />,
-      color: "from-purple-500/20 to-pink-500/20",
-      text: "text-purple-500",
+      color: "from-primary/20 to-primary/10",
+      text: "text-primary",
     },
     {
       label: "Tarefas Pendentes Hoje",
       value: stats.tarefasHoje,
       icon: <ClipboardList className="w-6 h-6" />,
-      color: "from-amber-500/20 to-orange-500/20",
-      text: "text-amber-500",
+      color: "from-primary/15 to-primary/5",
+      text: "text-primary",
     },
   ];
 

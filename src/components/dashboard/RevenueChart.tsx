@@ -32,8 +32,8 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
                 <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
               </linearGradient>
               <linearGradient id="colorPago" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.5}/>
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />

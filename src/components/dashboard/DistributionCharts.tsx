@@ -6,7 +6,7 @@ interface DistributionChartsProps {
   regimesData: { name: string; value: number }[];
 }
 
-const COLORS = ["hsl(var(--primary))", "#10B981", "#F59E0B", "#EF4444", "#3B82F6", "#EC4899"];
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--primary) / 0.8)', 'hsl(var(--primary) / 0.6)', 'hsl(var(--primary) / 0.4)', 'hsl(var(--primary) / 0.2)', 'hsl(var(--primary) / 0.1)'];
 
 export const DistributionCharts: React.FC<DistributionChartsProps> = ({ regimesData }) => {
   return (
