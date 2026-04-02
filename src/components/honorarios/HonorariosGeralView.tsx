@@ -160,8 +160,8 @@ export const HonorariosGeralView = ({
                     />
                     <Legend />
                     <Bar dataKey="total" name="Total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="pago" name="Pago" fill="#10B981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="pendente" name="Pendente" fill="#F59E0B" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="pago" name="Pago" fill="hsl(var(--primary)/0.6)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="pendente" name="Pendente" fill="hsl(var(--primary)/0.3)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
