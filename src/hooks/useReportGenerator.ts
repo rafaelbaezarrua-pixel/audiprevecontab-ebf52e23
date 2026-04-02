@@ -129,9 +129,27 @@ export function useReportGenerator() {
             usuario_nome: mappedUsers.find(u => u.id === t.usuario_id)?.nome || "Não encontrado"
           }));
         }
+        else if (modId === "faturamentos") {
+          const { data: indData } = await supabase.from("faturamentos" as any).select("*").eq("competencia", competencia);
+          const { data: relData } = await supabase.from("relacao_faturamentos" as any).select("*"); 
+          // Note: for Relacao, we might want to filter by periodo? But relData is usually less records, so we can filter in JS
+          
+          const mappedInd = (indData || []).map((d: any) => ({ ...d, tipo_descricao: "Faturamento Emitido" }));
+          const mappedRel = (relData || []).filter((r: any) => 
+            r.periodo_fim === competencia || r.periodo_inicio === competencia 
+          ).map((r: any) => ({ 
+            ...r, 
+            tipo_descricao: "Relação de Faturamento Real", 
+            nome_cliente: r.nome_empresa, 
+            valor: r.valor_total,
+            competencia: r.periodo_fim
+          }));
+          
+          moduleData = [...mappedInd, ...mappedRel];
+        }
         else {
           let mQuery = supabase.from(mod.table as any).select("*");
-          if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos", "servicos_esporadicos", "faturamentos", "recibos"].includes(modId)) mQuery = mQuery.eq("competencia", competencia);
+          if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos", "servicos_esporadicos", "recibos"].includes(modId)) mQuery = mQuery.eq("competencia", competencia);
           const { data } = await mQuery;
           moduleData = data || [];
         }
@@ -155,15 +173,14 @@ export function useReportGenerator() {
           continue;
         }
 
-        // Processos orphaned / Avulsos
-        if (["processos_societarios", "faturamentos", "recibos"].includes(modId)) {
+        // Processos orphaned / Avulsos / Standalone Modules
+        if (["processos_societarios", "recibos"].includes(modId)) {
           const orphaned = moduleData.filter(d => !d.empresa_id);
           if (orphaned.length > 0) {
             const activeFields = mod.fields.filter(f => fieldsToInclude.includes(f.id));
             let title = "AVULSOS";
             if (modId === "processos_societarios") title = "PROCESSOS SEM EMPRESA VINCULADA";
-            else if (modId === "faturamentos") title = "FATURAMENTOS AVULSOS (SEM VÍNCULO)";
-            else if (modId === "recibos") title = "RECIBOS AVULSOS (SEM VÍNCULO)";
+            else if (modId === "recibos") title = "RECIBOS AVULSOS (TOTALMENTE AVULSOS)";
 
             const head = [["Referência/Cliente", ...activeFields.map(f => f.label)]];
             const body = orphaned.map(p => [p.nome_empresa || p.nome_cliente || "—", ...activeFields.map(f => f.accessor ? f.accessor(p) : (p[f.id] ?? "—"))]);
@@ -171,6 +188,9 @@ export function useReportGenerator() {
             if (format === 'pdf' && doc) currentY = applyAutoTable(doc, head, body, currentY, title);
             else if (format === 'excel') excelAoA.push([], [`--- ${title} ---`], head[0], ...body);
           }
+          
+          // Se forem módulos totalmente avulsos, não processar o loop de empresas abaixo
+          if (modId === "recibos") continue;
         }
 
         // Situation Grouping
@@ -192,11 +212,23 @@ export function useReportGenerator() {
           
           const body: any[] = [];
           situationCompanies.forEach(company => {
-            const companyRecords = moduleData.filter(d => (modId === "societario" ? d.id : d.empresa_id) === company.id);
+            let companyRecords = [];
+            if (modId === "societario") {
+              companyRecords = moduleData.filter(d => d.id === company.id);
+            } else if (modId === "faturamentos") {
+              // Faturamento vincula por ID (Relação) ou Nome (Individual)
+              companyRecords = moduleData.filter(d => 
+                d.empresa_id === company.id || 
+                (d.nome_cliente && d.nome_cliente.toLowerCase() === company.nome_empresa.toLowerCase())
+              );
+            } else {
+              companyRecords = moduleData.filter(d => d.empresa_id === company.id);
+            }
             const compValues = extraHeaders.map(f => f.accessor ? f.accessor(company) : (company[f.id] ?? "—"));
             if (companyRecords.length > 0) {
               companyRecords.forEach(r => body.push([company.nome_empresa, ...compValues, ...activeFields.map(f => f.accessor ? f.accessor(r) : (r[f.id] ?? "—"))]));
-            } else {
+            } else if (modId !== "faturamentos") {
+              // Para faturamento, não mostrar empresas sem movimento. Para os outros, mostrar com traços.
               body.push([company.nome_empresa, ...compValues, ...activeFields.map(() => "—")]);
             }
           });

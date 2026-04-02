@@ -229,7 +229,7 @@ const AppLayout: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-muted/40 border border-transparent hover:border-border rounded-xl transition-all cursor-default">
               <Calendar size={14} className="text-primary" />
-              <p className="text-xs font-bold text-muted-foreground capitalize">{currentDate}</p>
+              <p className="text-xs font-bold text-muted-foreground">{currentDate.toLowerCase()}</p>
             </div>
 
             <div className="h-8 w-px bg-border/60 mx-1 hidden sm:block"></div>
