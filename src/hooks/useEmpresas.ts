@@ -13,7 +13,7 @@ export const useEmpresas = (moduloId: string) => {
             // 1. Fetch companies
             let query = supabase.from("empresas").select("*").order("nome_empresa");
 
-            if (moduloId && moduloId !== "declaracoes_mensais") {
+            if (moduloId && !['declaracoes_mensais', 'contabil'].includes(moduloId)) {
                 query = query.contains("modulos_ativos", [moduloId]);
             }
 

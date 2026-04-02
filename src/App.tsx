@@ -23,6 +23,7 @@ const CertificadosPage = lazy(() => import("@/pages/CertificadosPage"));
 const CertidoesPage = lazy(() => import("@/pages/CertidoesPage"));
 const LicencasPage = lazy(() => import("@/pages/LicencasPage"));
 const ProcuracoesPage = lazy(() => import("@/pages/ProcuracoesPage"));
+const ContabilPage = lazy(() => import("@/pages/ContabilPage"));
 const FiscalPage = lazy(() => import("@/pages/FiscalPage"));
 const PessoalPage = lazy(() => import("@/pages/PessoalPage"));
 const FuncionariosPage = lazy(() => import("@/pages/FuncionariosPage"));
@@ -179,7 +180,8 @@ const App = () => (
                   <Route path="/certificados" element={<CertificadosPage />} />
                   <Route path="/certidoes" element={<CertidoesPage />} />
                   <Route path="/procuracoes" element={<ProcuracoesPage />} />
-                  <Route path="/fiscal" element={<FiscalPage />} />
+                  <Route path="/contabil" element={<ContabilPage />} />
+                <Route path="/fiscal" element={<FiscalPage />} />
                   <Route path="/pessoal" element={<PessoalPage />} />
                   <Route path="/pessoal/simulador" element={<SimuladorCalculosPage />} />
                   <Route path="/pessoal/funcionarios/:empresaId" element={<FuncionariosPage />} />
