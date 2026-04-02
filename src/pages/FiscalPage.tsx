@@ -7,6 +7,8 @@ import { useFiscal } from "@/hooks/useFiscal";
 import { FiscalRecord, GuiaStatus } from "@/types/fiscal";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
+import { TaxGuideUploader, ProcessingResult } from "@/components/TaxGuideUploader";
+import { FileUp } from "lucide-react";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI" };
 
@@ -20,6 +22,7 @@ const FiscalPage: React.FC = () => {
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
+  const [isUploaderOpen, setIsUploaderOpen] = useState(false);
   
   const filtered = React.useMemo(() => {
     return empresas.filter(e => {
@@ -99,6 +102,40 @@ const FiscalPage: React.FC = () => {
     setEditForm(prev => ({ ...prev, [empresaId]: { ...prev[empresaId], [field]: value } }));
   };
 
+  const handleBulkConfirm = async (guides: ProcessingResult[]) => {
+    for (const guide of guides) {
+      if (!guide.data || !guide.empresa) continue;
+      
+      // Detect guide type and field
+      const guideType = guide.data.tipo;
+      let fieldPrefix = "";
+      
+      if (guideType?.includes("Simples")) fieldPrefix = ""; // status_guia
+      else if (guideType?.includes("INSS")) fieldPrefix = "irpj_csll_"; // Heuristic
+      else if (guideType?.includes("IRPJ")) fieldPrefix = "irpj_csll_";
+      else if (guideType?.includes("ISS")) fieldPrefix = "iss_";
+      
+      const payload: any = {
+        empresa_id: guide.empresa.id,
+        competencia: competencia, // Use current page competencia
+      };
+
+      if (fieldPrefix === "") {
+        payload.status_guia = "enviada";
+        payload.data_envio = new Date().toISOString().split('T')[0];
+      } else {
+        payload[`${fieldPrefix}status`] = "enviada";
+        payload[`${fieldPrefix}data_envio`] = new Date().toISOString().split('T')[0];
+      }
+      
+      try {
+        await saveFiscalRecord(payload);
+      } catch (e) {
+        console.error(`Failed to save guide for ${guide.empresa.nome_empresa}`, e);
+      }
+    }
+  };
+
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
@@ -129,6 +166,13 @@ const FiscalPage: React.FC = () => {
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
           <FavoriteToggleButton moduleId="fiscal" />
+          <button 
+            onClick={() => setIsUploaderOpen(true)}
+            className="flex items-center gap-2 px-4 h-10 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl transition-all font-bold text-sm"
+          >
+            <FileUp size={18} />
+            <span>Automação PDF</span>
+          </button>
           <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} /><input type="text" placeholder="Buscar empresa..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 pr-4 h-10 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-[13px] w-full sm:w-56" /></div>
           <input type="month" value={competencia} onChange={(e) => setCompetencia(e.target.value)} className="px-4 h-10 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-[13px] font-medium" />
         </div>
@@ -180,6 +224,15 @@ const FiscalPage: React.FC = () => {
           );
         })}
       </div>
+
+      {isUploaderOpen && (
+        <TaxGuideUploader 
+          empresas={empresas} 
+          onClose={() => setIsUploaderOpen(false)}
+          onConfirm={handleBulkConfirm}
+          competenciaFiltro={competencia}
+        />
+      )}
     </div>
   );
 };

@@ -13,6 +13,7 @@ export interface NavItemConfig {
   path: string;
   moduleKey?: string;
   section?: string;
+  color?: string;
 }
 
 export const DEFAULT_NAV_ITEMS: NavItemConfig[] = [
