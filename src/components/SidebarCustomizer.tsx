@@ -187,8 +187,7 @@ export const SidebarCustomizer: React.FC = () => {
                                   </button>
                                 </div>
                               </div>
-                            </div>
-                          ) : (
+                            ) : (
                             <div className="flex-1 flex flex-col justify-center min-w-0">
                               <span className="text-sm font-bold truncate pr-2">{item.label}</span>
                               {item.section && (
