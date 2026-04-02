@@ -1,7 +1,8 @@
 import React from "react";
 import { 
   Building2, Shield, Users, DollarSign, FileText, 
-  AlertCircle, Layers, ListChecks, Calendar, History, Calculator
+  AlertCircle, Layers, ListChecks, Calendar, History, Calculator,
+  Receipt, ClipboardList
 } from "lucide-react";
 import { tipoProcessoLabels } from "@/constants/societario";
 import { format } from "date-fns";
@@ -339,6 +340,49 @@ export const MODULES_CONFIG: ModuleConfig[] = [
       { id: "envio_taxa_at", label: "Envio Taxa", accessor: (i: any) => safeFormatDate(i.envio_taxa_at) },
       { id: "assinatura_contrato_at", label: "Assinatura", accessor: (i: any) => safeFormatDate(i.assinatura_contrato_at) },
       { id: "arquivamento_junta_at", label: "Arquivamento", accessor: (i: any) => safeFormatDate(i.arquivamento_junta_at) },
+    ]
+  },
+  {
+    id: "faturamentos",
+    label: "Faturamentos",
+    table: "faturamentos",
+    icon: <DollarSign size={18} />,
+    color: "bg-blue-600",
+    fields: [
+      { id: "nome_cliente", label: "Cliente" },
+      { id: "valor", label: "Valor", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor || 0) },
+      { id: "data_emissao", label: "Emissão", accessor: (i: any) => safeFormatDate(i.data_emissao) },
+      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
+      { id: "competencia", label: "Competência" },
+    ]
+  },
+  {
+    id: "recibos",
+    label: "Recibos",
+    table: "recibos",
+    icon: <Receipt size={18} />,
+    color: "bg-orange-600",
+    fields: [
+      { id: "nome_cliente", label: "Cliente" },
+      { id: "valor", label: "Valor", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor || 0) },
+      { id: "referente", label: "Referente" },
+      { id: "data_emissao", label: "Emissão", accessor: (i: any) => safeFormatDate(i.data_emissao) },
+      { id: "competencia", label: "Competência" },
+    ]
+  },
+  {
+    id: "tarefas",
+    label: "Tarefas",
+    table: "tarefas",
+    icon: <ClipboardList size={18} />,
+    color: "bg-indigo-500",
+    fields: [
+      { id: "assunto", label: "Assunto" },
+      { id: "usuario_nome", label: "Responsável" },
+      { id: "status", label: "Status", accessor: (i) => i.status ? i.status.charAt(0).toUpperCase() + i.status.slice(1).replace('_', ' ') : "—" },
+      { id: "data", label: "Data", accessor: (i: any) => safeFormatDate(i.data) },
+      { id: "horario", label: "Horário", accessor: (i) => i.horario?.slice(0, 5) || "—" },
+      { id: "competencia", label: "Competência" },
     ]
   }
 ];
