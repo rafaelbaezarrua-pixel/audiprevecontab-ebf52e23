@@ -28,6 +28,7 @@ export const DEFAULT_NAV_ITEMS: NavItemConfig[] = [
   { id: "tarefas", label: "Tarefas", icon: <ClipboardList size={18} />, path: "/tarefas", moduleKey: "tarefas", section: "GERAL" },
 
   // DEPARTAMENTOS
+  { id: "contabil", label: "Contábil", icon: <Calculator size={18} />, path: "/contabil", moduleKey: "contabil", section: "DEPARTAMENTOS" },
   { id: "fiscal", label: "Fiscal", icon: <Receipt size={18} />, path: "/fiscal", moduleKey: "fiscal", section: "DEPARTAMENTOS" },
   { id: "honorarios", label: "Financeiro", icon: <DollarSign size={18} />, path: "/honorarios", moduleKey: "honorarios", section: "DEPARTAMENTOS" },
   { id: "pessoal", label: "Pessoal", icon: <Users size={18} />, path: "/pessoal", moduleKey: "pessoal", section: "DEPARTAMENTOS" },
