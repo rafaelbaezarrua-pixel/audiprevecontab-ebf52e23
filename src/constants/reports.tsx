@@ -90,37 +90,61 @@ export const safeFormatDate = (dateStr: string | null | undefined) => {
 
 export const MODULES_CONFIG: ModuleConfig[] = [
   {
-    id: "societario",
-    label: "Societário (Empresas)",
-    table: "empresas",
-    icon: <Building2 size={18} />,
-    color: "bg-primary",
+    id: "agendamentos",
+    label: "Agendamentos",
+    table: "agendamentos",
+    icon: <Calendar size={18} />,
+    color: "bg-sky-500",
     fields: [
-      { id: "situacao", label: "Situação", accessor: (i) => {
-          if (i.regime_tributario?.toLowerCase() === 'mei') return "MEI";
-          if (!i.situacao) return "—";
-          const s = i.situacao.toLowerCase();
-          return s.charAt(0).toUpperCase() + s.slice(1);
-      } },
-      { id: "opcao_pelo_simples", label: "Optante Simples", accessor: (i) => i.opcao_pelo_simples ? "Sim" : "Não" },
-      { id: "data_opcao_pelo_simples", label: "Data Opção Simples", accessor: (i) => safeFormatDate(i.data_opcao_pelo_simples) },
-      { id: "opcao_pelo_mei", label: "Optante MEI", accessor: (i) => i.opcao_pelo_mei ? "Sim" : "Não" },
-      { id: "data_opcao_pelo_mei", label: "Data Opção MEI", accessor: (i) => safeFormatDate(i.data_opcao_pelo_mei) },
-      { id: "porte_rfb", label: "Porte (RFB)" },
+      { id: "assunto", label: "Assunto" },
+      { id: "data", label: "Data", accessor: (i: any) => safeFormatDate(i.data) },
+      { id: "horario", label: "Horário" },
+      { id: "status", label: "Status" },
     ]
   },
   {
-    id: "fiscal",
-    label: "Fiscal",
-    table: "fiscal",
-    icon: <Shield size={18} />,
-    color: "bg-purple-500",
+    id: "certidoes",
+    label: "Certidões Negativas",
+    table: "certidoes",
+    icon: <FileText size={18} />,
+    color: "bg-indigo-500",
     fields: [
-      { id: "tipo_nota", label: "Tipo de Nota" },
-      { id: "status_guia", label: "Status da Guia" },
-      { id: "competencia", label: "Competência" },
-      { id: "data_envio", label: "Data de Envio", accessor: (i: any) => safeFormatDate(i.data_envio) },
-      { id: "aliquota", label: "Alíquota (%)" },
+      { id: "tipo_certidao", label: "Tipo de Certidão" },
+      { id: "vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.vencimento) },
+    ]
+  },
+  {
+    id: "certificados",
+    label: "Certificados Digitais",
+    table: "certificados_digitais",
+    icon: <Shield size={18} />,
+    color: "bg-cyan-500",
+    fields: [
+      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
+      { id: "observacao", label: "Observação" },
+    ]
+  },
+  {
+    id: "declaracoes_anuais",
+    label: "Declarações Anuais",
+    table: "declaracoes_anuais",
+    icon: <FileText size={18} />,
+    color: "bg-violet-500",
+    fields: [
+      { id: "tipo_declaracao", label: "Tipo" },
+      { id: "ano", label: "Ano Base" },
+      { id: "enviada", label: "Enviada", accessor: (i) => i.enviada ? "Sim" : "Não" },
+    ]
+  },
+  {
+    id: "declaracoes_mensais",
+    label: "Declarações Mensais",
+    table: "pessoal",
+    icon: <ListChecks size={18} />,
+    color: "bg-primary",
+    fields: [
+      { id: "dctf_web_gerada", label: "DCTF Web Gerada", accessor: (i) => i.dctf_web_gerada ? "Sim" : "Não" },
+      { id: "dctf_web_data_envio", label: "Data de Envio DCTF", accessor: (i) => safeFormatDate(i.dctf_web_data_envio) },
     ]
   },
   {
@@ -139,6 +163,35 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     ]
   },
   {
+    id: "faturamentos",
+    label: "Faturamentos",
+    table: "faturamentos",
+    icon: <DollarSign size={18} />,
+    color: "bg-blue-600",
+    fields: [
+      { id: "tipo_descricao", label: "Tipo" },
+      { id: "nome_cliente", label: "Cliente" },
+      { id: "valor", label: "Valor", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor || 0) },
+      { id: "data_emissao", label: "Emissão", accessor: (i: any) => safeFormatDate(i.data_emissao) },
+      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
+      { id: "competencia", label: "Competência" },
+    ]
+  },
+  {
+    id: "fiscal",
+    label: "Fiscal",
+    table: "fiscal",
+    icon: <Shield size={18} />,
+    color: "bg-purple-500",
+    fields: [
+      { id: "tipo_nota", label: "Tipo de Nota" },
+      { id: "status_guia", label: "Status da Guia" },
+      { id: "competencia", label: "Competência" },
+      { id: "data_envio", label: "Data de Envio", accessor: (i: any) => safeFormatDate(i.data_envio) },
+      { id: "aliquota", label: "Alíquota (%)" },
+    ]
+  },
+  {
     id: "honorarios",
     label: "Honorários",
     table: "honorarios_mensal",
@@ -149,142 +202,6 @@ export const MODULES_CONFIG: ModuleConfig[] = [
       { id: "valor_total", label: "Valor Total", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor_total || 0) },
       { id: "pago", label: "Status de Pagamento", accessor: (i) => i.pago ? "Pago" : "Pendente" },
       { id: "data_vencimento", label: "Data de Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
-    ]
-  },
-  {
-    id: "certificados",
-    label: "Certificados Digitais",
-    table: "certificados_digitais",
-    icon: <Shield size={18} />,
-    color: "bg-cyan-500",
-    fields: [
-      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
-      { id: "observacao", label: "Observação" },
-    ]
-  },
-  {
-    id: "certidoes",
-    label: "Certidões Negativas",
-    table: "certidoes",
-    icon: <FileText size={18} />,
-    color: "bg-indigo-500",
-    fields: [
-      { id: "tipo_certidao", label: "Tipo de Certidão" },
-      { id: "vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.vencimento) },
-    ]
-  },
-  {
-    id: "licencas",
-    label: "Licenças Municipais",
-    table: "licencas",
-    icon: <AlertCircle size={18} />,
-    color: "bg-rose-500",
-    fields: [
-      { id: "tipo_licenca", label: "Tipo de Licença" },
-      { id: "status", label: "Situação" },
-      { id: "vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.vencimento) },
-      { id: "numero_processo", label: "Processo" },
-    ]
-  },
-  {
-    id: "procuracoes",
-    label: "Procurações",
-    table: "procuracoes",
-    icon: <FileText size={18} />,
-    color: "bg-orange-500",
-    fields: [
-      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
-      { id: "observacao", label: "Observação" },
-    ]
-  },
-  {
-    id: "parcelamentos",
-    label: "Parcelamentos",
-    table: "parcelamentos",
-    icon: <Layers size={18} />,
-    color: "bg-teal-500",
-    fields: [
-      { id: "tipo_parcelamento", label: "Tipo" },
-      { id: "qtd_parcelas", label: "Parcelas" },
-      { id: "data_inicio", label: "Início", accessor: (i: any) => safeFormatDate(i.data_inicio) },
-      { id: "previsao_termino", label: "Término Estimado", accessor: (i: any) => safeFormatDate(i.previsao_termino) },
-    ]
-  },
-  {
-    id: "licencas_taxas",
-    label: "Taxas de Licenças",
-    table: "licencas_taxas",
-    icon: <DollarSign size={18} />,
-    color: "bg-teal-600",
-    fields: [
-      { id: "tipo_licenca", label: "Tipo", accessor: (i: any) => licencaLabels[i.tipo_licenca] || i.tipo_licenca },
-      { id: "status", label: "Status", accessor: (i: any) => i.status ? i.status.charAt(0).toUpperCase() + i.status.slice(1) : "—" },
-      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
-      { id: "data_envio", label: "Data de Envio", accessor: (i: any) => safeFormatDate(i.data_envio) },
-      { id: "forma_envio", label: "Forma de Envio" },
-    ]
-  },
-  {
-    id: "servicos_esporadicos",
-    label: "Serviços Esporádicos",
-    table: "servicos_esporadicos",
-    icon: <Calculator size={18} />,
-    color: "bg-amber-600",
-    fields: [
-      { id: "descricao", label: "Descrição" },
-      { id: "valor", label: "Valor", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor || 0) },
-      { id: "status_pago", label: "Status", accessor: (i) => i.status_pago ? "Pago" : "Pendente" },
-      { id: "data_vencimento", label: "Vencimento", accessor: (i) => safeFormatDate(i.data_vencimento) },
-    ]
-  },
-  {
-    id: "recalculos",
-    label: "Recálculos",
-    table: "recalculos",
-    icon: <ListChecks size={18} />,
-    color: "bg-lime-500",
-    fields: [
-      { id: "guia", label: "Guia" },
-      { id: "competencia", label: "Competência" },
-      { id: "data_recalculo", label: "Data Recálculo", accessor: (i: any) => safeFormatDate(i.data_recalculo) },
-      { id: "status", label: "Status" },
-    ]
-  },
-  {
-    id: "ocorrencias",
-    label: "Ocorrências",
-    table: "ocorrencias",
-    icon: <AlertCircle size={18} />,
-    color: "bg-red-500",
-    fields: [
-      { id: "data_ocorrencia", label: "Data", accessor: (i: any) => safeFormatDate(i.data_ocorrencia) },
-      { id: "departamento", label: "Departamento" },
-      { id: "descricao", label: "Descrição" },
-    ]
-  },
-  {
-    id: "agendamentos",
-    label: "Agendamentos",
-    table: "agendamentos",
-    icon: <Calendar size={18} />,
-    color: "bg-sky-500",
-    fields: [
-      { id: "assunto", label: "Assunto" },
-      { id: "data", label: "Data", accessor: (i: any) => safeFormatDate(i.data) },
-      { id: "horario", label: "Horário" },
-      { id: "status", label: "Status" },
-    ]
-  },
-  {
-    id: "declaracoes_anuais",
-    label: "Declarações Anuais",
-    table: "declaracoes_anuais",
-    icon: <FileText size={18} />,
-    color: "bg-violet-500",
-    fields: [
-      { id: "tipo_declaracao", label: "Tipo" },
-      { id: "ano", label: "Ano Base" },
-      { id: "enviada", label: "Enviada", accessor: (i) => i.enviada ? "Sim" : "Não" },
     ]
   },
   {
@@ -308,14 +225,41 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     ]
   },
   {
-    id: "declaracoes_mensais",
-    label: "Declarações Mensais",
-    table: "pessoal",
-    icon: <ListChecks size={18} />,
-    color: "bg-primary",
+    id: "licencas",
+    label: "Licenças Municipais",
+    table: "licencas",
+    icon: <AlertCircle size={18} />,
+    color: "bg-rose-500",
     fields: [
-      { id: "dctf_web_gerada", label: "DCTF Web Gerada", accessor: (i) => i.dctf_web_gerada ? "Sim" : "Não" },
-      { id: "dctf_web_data_envio", label: "Data de Envio DCTF", accessor: (i) => safeFormatDate(i.dctf_web_data_envio) },
+      { id: "tipo_licenca", label: "Tipo de Licença" },
+      { id: "status", label: "Situação" },
+      { id: "vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.vencimento) },
+      { id: "numero_processo", label: "Processo" },
+    ]
+  },
+  {
+    id: "ocorrencias",
+    label: "Ocorrências",
+    table: "ocorrencias",
+    icon: <AlertCircle size={18} />,
+    color: "bg-red-500",
+    fields: [
+      { id: "data_ocorrencia", label: "Data", accessor: (i: any) => safeFormatDate(i.data_ocorrencia) },
+      { id: "departamento", label: "Departamento" },
+      { id: "descricao", label: "Descrição" },
+    ]
+  },
+  {
+    id: "parcelamentos",
+    label: "Parcelamentos",
+    table: "parcelamentos",
+    icon: <Layers size={18} />,
+    color: "bg-teal-500",
+    fields: [
+      { id: "tipo_parcelamento", label: "Tipo" },
+      { id: "qtd_parcelas", label: "Parcelas" },
+      { id: "data_inicio", label: "Início", accessor: (i: any) => safeFormatDate(i.data_inicio) },
+      { id: "previsao_termino", label: "Término Estimado", accessor: (i: any) => safeFormatDate(i.previsao_termino) },
     ]
   },
   {
@@ -343,17 +287,27 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     ]
   },
   {
-    id: "faturamentos",
-    label: "Faturamentos",
-    table: "faturamentos",
-    icon: <DollarSign size={18} />,
-    color: "bg-blue-600",
+    id: "procuracoes",
+    label: "Procurações",
+    table: "procuracoes",
+    icon: <FileText size={18} />,
+    color: "bg-orange-500",
     fields: [
-      { id: "nome_cliente", label: "Cliente" },
-      { id: "valor", label: "Valor", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor || 0) },
-      { id: "data_emissao", label: "Emissão", accessor: (i: any) => safeFormatDate(i.data_emissao) },
       { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
+      { id: "observacao", label: "Observação" },
+    ]
+  },
+  {
+    id: "recalculos",
+    label: "Recálculos",
+    table: "recalculos",
+    icon: <ListChecks size={18} />,
+    color: "bg-lime-500",
+    fields: [
+      { id: "guia", label: "Guia" },
       { id: "competencia", label: "Competência" },
+      { id: "data_recalculo", label: "Data Recálculo", accessor: (i: any) => safeFormatDate(i.data_recalculo) },
+      { id: "status", label: "Status" },
     ]
   },
   {
@@ -371,6 +325,39 @@ export const MODULES_CONFIG: ModuleConfig[] = [
     ]
   },
   {
+    id: "servicos_esporadicos",
+    label: "Serviços Esporádicos",
+    table: "servicos_esporadicos",
+    icon: <Calculator size={18} />,
+    color: "bg-amber-600",
+    fields: [
+      { id: "descricao", label: "Descrição" },
+      { id: "valor", label: "Valor", accessor: (i) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(i.valor || 0) },
+      { id: "status_pago", label: "Status", accessor: (i) => i.status_pago ? "Pago" : "Pendente" },
+      { id: "data_vencimento", label: "Vencimento", accessor: (i) => safeFormatDate(i.data_vencimento) },
+    ]
+  },
+  {
+    id: "societario",
+    label: "Societário (Empresas)",
+    table: "empresas",
+    icon: <Building2 size={18} />,
+    color: "bg-primary",
+    fields: [
+      { id: "situacao", label: "Situação", accessor: (i) => {
+          if (i.regime_tributario?.toLowerCase() === 'mei') return "MEI";
+          if (!i.situacao) return "—";
+          const s = i.situacao.toLowerCase();
+          return s.charAt(0).toUpperCase() + s.slice(1);
+      } },
+      { id: "opcao_pelo_simples", label: "Optante Simples", accessor: (i) => i.opcao_pelo_simples ? "Sim" : "Não" },
+      { id: "data_opcao_pelo_simples", label: "Data Opção Simples", accessor: (i) => safeFormatDate(i.data_opcao_pelo_simples) },
+      { id: "opcao_pelo_mei", label: "Optante MEI", accessor: (i) => i.opcao_pelo_mei ? "Sim" : "Não" },
+      { id: "data_opcao_pelo_mei", label: "Data Opção MEI", accessor: (i) => safeFormatDate(i.data_opcao_pelo_mei) },
+      { id: "porte_rfb", label: "Porte (RFB)" },
+    ]
+  },
+  {
     id: "tarefas",
     label: "Tarefas",
     table: "tarefas",
@@ -383,6 +370,20 @@ export const MODULES_CONFIG: ModuleConfig[] = [
       { id: "data", label: "Data", accessor: (i: any) => safeFormatDate(i.data) },
       { id: "horario", label: "Horário", accessor: (i) => i.horario?.slice(0, 5) || "—" },
       { id: "competencia", label: "Competência" },
+    ]
+  },
+  {
+    id: "licencas_taxas",
+    label: "Taxas de Licenças",
+    table: "licencas_taxas",
+    icon: <DollarSign size={18} />,
+    color: "bg-teal-600",
+    fields: [
+      { id: "tipo_licenca", label: "Tipo", accessor: (i: any) => licencaLabels[i.tipo_licenca] || i.tipo_licenca },
+      { id: "status", label: "Status", accessor: (i: any) => i.status ? i.status.charAt(0).toUpperCase() + i.status.slice(1) : "—" },
+      { id: "data_vencimento", label: "Vencimento", accessor: (i: any) => safeFormatDate(i.data_vencimento) },
+      { id: "data_envio", label: "Data de Envio", accessor: (i: any) => safeFormatDate(i.data_envio) },
+      { id: "forma_envio", label: "Forma de Envio" },
     ]
   }
 ];
