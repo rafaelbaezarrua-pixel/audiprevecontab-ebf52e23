@@ -12,6 +12,7 @@ import { useTheme } from "@/components/theme-provider";
 import NotificationHeader from "./NotificationHeader";
 import { GlobalSearch } from "./GlobalSearch";
 import { ThemeToggle } from "./ThemeToggle";
+import { ColorCustomizer } from "./ColorCustomizer";
 import { DEFAULT_NAV_ITEMS, NavItemConfig } from "@/constants/navigation";
 
 import { AlertasInteligentesProvider } from "@/contexts/AlertasInteligentesProvider";
@@ -97,7 +98,7 @@ const AppLayout: React.FC = () => {
         <div className="p-6 border-b border-sidebar-border flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <img src={logoAudipreve} alt="Audipreve" className="w-9 h-9 object-contain" />
+              <img src={logoAudipreve} alt="Audipreve" className="w-9 h-9 object-contain brightness-0 dark:invert" />
               <div>
                 <h1 className="text-lg font-bold text-card-foreground tracking-tight">Audipreve</h1>
                 <p className="text-[10px] uppercase tracking-widest font-bold text-primary/70">Contabilidade</p>
@@ -105,7 +106,7 @@ const AppLayout: React.FC = () => {
             </div>
           )}
           {collapsed && (
-            <img src={logoAudipreve} alt="Audipreve" className="w-9 h-9 object-contain mx-auto" />
+            <img src={logoAudipreve} alt="Audipreve" className="w-9 h-9 object-contain mx-auto brightness-0 dark:invert" />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -235,7 +236,11 @@ const AppLayout: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <NotificationHeader />
-              <ThemeToggle />
+              <div className="flex items-center gap-1 px-1 bg-muted/30 rounded-full border border-border/40">
+                <ColorCustomizer />
+                <div className="w-[1px] h-4 bg-border/60 mx-1"></div>
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </header>

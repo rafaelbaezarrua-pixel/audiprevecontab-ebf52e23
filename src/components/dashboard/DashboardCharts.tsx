@@ -24,7 +24,7 @@ interface DashboardChartsProps {
   data: ChartData;
 }
 
-const COLORS = ['#2563EB', '#10B981', '#F59E0B', '#6366F1', '#8B5CF6'];
+const COLORS = ['hsl(var(--primary))', '#10B981', '#F59E0B', '#6366F1', '#8B5CF6'];
 
 export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
   const navigate = useNavigate();
@@ -114,19 +114,19 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
                   }
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
                 <Tooltip
                   cursor={{fill: '#F3F4F6'}}
                   formatter={(value: number) => [`${value} Processos`, 'Quantidade']}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
-                <Bar dataKey="value" fill="#2563EB" radius={[4, 4, 0, 0]} maxBarSize={50}>
+                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={50}>
                   {data.processos.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
-                      fill={entry.name === 'Concluídos' ? '#10B981' : entry.name === 'Em Exigência' ? '#EF4444' : '#2563EB'} 
+                      fill={entry.name === 'Concluídos' ? '#10B981' : entry.name === 'Em Exigência' ? '#EF4444' : 'hsl(var(--primary))'} 
                       className="hover:opacity-80 transition-opacity"
                     />
                   ))}

@@ -18,7 +18,7 @@ export const SocietarioKanban: React.FC<SocietarioKanbanProps> = ({
   onViewDetails
 }) => {
   const columns: KanbanColumn[] = [
-    { id: "pending", title: "Novos / Pendentes", colorClass: "bg-blue-500/10 text-blue-600" },
+    { id: "pending", title: "Novos / Pendentes", colorClass: "bg-primary/10 text-primary" },
     ...passosConfig.map(p => ({
       id: p.id,
       title: p.label,
@@ -47,7 +47,7 @@ export const SocietarioKanban: React.FC<SocietarioKanbanProps> = ({
       >
         <div className="flex items-start justify-between gap-2">
           <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-            p.tipo === 'abertura' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+            p.tipo === 'abertura' ? 'bg-primary/10 text-primary' : 'bg-purple-100 text-purple-700'
           }`}>
             {tipoProcessoLabels[p.tipo] || p.tipo}
           </span>

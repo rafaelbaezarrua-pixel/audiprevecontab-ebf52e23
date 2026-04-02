@@ -19,7 +19,7 @@ export const IRPFKanban: React.FC<IRPFKanbanProps> = ({
 }) => {
   const columns: KanbanColumn[] = [
     { id: "pendente", title: "Pendente", colorClass: "bg-amber-500/10 text-amber-600" },
-    { id: "em_processamento", title: "Em Processamento", colorClass: "bg-blue-500/10 text-blue-600" },
+    { id: "em_processamento", title: "Em Processamento", colorClass: "bg-primary/10 text-primary" },
     { id: "transmitida", title: "Transmitida", colorClass: "bg-emerald-500/10 text-emerald-600" },
     { id: "exigencia", title: "Exigência", colorClass: "bg-destructive/10 text-destructive" }
   ];
