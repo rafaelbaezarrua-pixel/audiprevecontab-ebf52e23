@@ -117,9 +117,21 @@ export function useReportGenerator() {
         if (modId === "societario") moduleData = allCompanies;
         else if (modId === "vencimentos") moduleData = await fetchVencimentos(fieldsToInclude);
         else if (modId === "irpf") moduleData = await fetchIRPF(competencia);
+        else if (modId === "tarefas") {
+          const { data: usersData } = await supabase.from("profiles").select("id, full_name, user_id").eq("ativo", true);
+          const mappedUsers = (usersData || []).filter((u: any) => u.user_id).map((u: any) => ({
+            id: u.user_id,
+            nome: u.full_name || "Sem Nome"
+          }));
+          const { data } = await supabase.from("tarefas" as any).select("*, empresas(nome_empresa)").eq("competencia", competencia);
+          moduleData = (data || []).map((t: any) => ({
+            ...t,
+            usuario_nome: mappedUsers.find(u => u.id === t.usuario_id)?.nome || "Não encontrado"
+          }));
+        }
         else {
           let mQuery = supabase.from(mod.table as any).select("*");
-          if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos", "servicos_esporadicos"].includes(modId)) mQuery = mQuery.eq("competencia", competencia);
+          if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos", "servicos_esporadicos", "faturamentos", "recibos"].includes(modId)) mQuery = mQuery.eq("competencia", competencia);
           const { data } = await mQuery;
           moduleData = data || [];
         }
@@ -143,15 +155,21 @@ export function useReportGenerator() {
           continue;
         }
 
-        // Processos orphaned
-        if (modId === "processos_societarios") {
+        // Processos orphaned / Avulsos
+        if (["processos_societarios", "faturamentos", "recibos"].includes(modId)) {
           const orphaned = moduleData.filter(d => !d.empresa_id);
           if (orphaned.length > 0) {
             const activeFields = mod.fields.filter(f => fieldsToInclude.includes(f.id));
-            const head = [["Referência", ...activeFields.map(f => f.label)]];
-            const body = orphaned.map(p => [p.nome_empresa || "—", ...activeFields.map(f => f.accessor ? f.accessor(p) : (p[f.id] ?? "—"))]);
-            if (format === 'pdf' && doc) currentY = applyAutoTable(doc, head, body, currentY, "PROCESSOS SEM EMPRESA VINCULADA");
-            else if (format === 'excel') excelAoA.push([], ["--- PROCESSOS SEM EMPRESA ---"], head[0], ...body);
+            let title = "AVULSOS";
+            if (modId === "processos_societarios") title = "PROCESSOS SEM EMPRESA VINCULADA";
+            else if (modId === "faturamentos") title = "FATURAMENTOS AVULSOS (SEM VÍNCULO)";
+            else if (modId === "recibos") title = "RECIBOS AVULSOS (SEM VÍNCULO)";
+
+            const head = [["Referência/Cliente", ...activeFields.map(f => f.label)]];
+            const body = orphaned.map(p => [p.nome_empresa || p.nome_cliente || "—", ...activeFields.map(f => f.accessor ? f.accessor(p) : (p[f.id] ?? "—"))]);
+            
+            if (format === 'pdf' && doc) currentY = applyAutoTable(doc, head, body, currentY, title);
+            else if (format === 'excel') excelAoA.push([], [`--- ${title} ---`], head[0], ...body);
           }
         }
 
