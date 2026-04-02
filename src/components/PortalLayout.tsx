@@ -46,9 +46,11 @@ const PortalLayout: React.FC = () => {
             {/* Sidebar Desktop */}
             <aside className="hidden md:flex w-64 flex-col bg-card border-r border-border sticky top-0 h-screen overflow-y-auto">
                 <div className="p-6 border-b border-border mb-2">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">A</div>
-                        <span className="font-bold text-xl tracking-tight">Audipreve</span>
+                    <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">A</div>
+                        </div>
+                        <span className="font-bold text-xl tracking-tight text-foreground">Audipreve</span>
                     </div>
                     <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mt-1">Portal do Cliente</p>
                 </div>
@@ -58,8 +60,8 @@ const PortalLayout: React.FC = () => {
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${location.pathname === item.path
-                                ? "bg-primary text-primary-foreground shadow-md"
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${location.pathname === item.path
+                                ? "bg-primary/10 text-primary font-bold border-l-2 border-primary"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                 }`}
                         >
@@ -131,7 +133,7 @@ const PortalLayout: React.FC = () => {
             )}
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0">
+            <main className="flex-1 flex flex-col min-w-0 relative">
                 <header className="hidden md:flex items-center justify-between px-8 py-4 bg-background border-b border-border/50 sticky top-0 z-30">
                     <div className="flex items-center gap-4 flex-1">
                         <div className="relative w-full max-w-md group">

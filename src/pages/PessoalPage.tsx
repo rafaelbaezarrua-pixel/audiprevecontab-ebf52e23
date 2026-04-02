@@ -12,6 +12,8 @@ import { PessoalRecord, GuiaStatus } from "@/types/pessoal";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { PontoCalculoForm } from "@/components/pessoal/PontoCalculoForm";
+import { TaxGuideUploader, ProcessingResult } from "@/components/TaxGuideUploader";
+import { FileUp } from "lucide-react";
 
 const PessoalPage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +28,7 @@ const PessoalPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"ativas" | "mei">("ativas");
   const [activeSubTab, setActiveSubTab] = useState<"folha" | "prolabore" | "ponto">("folha");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
+  const [isUploaderOpen, setIsUploaderOpen] = useState(false);
   const [funcionarios, setFuncionarios] = useState<Record<string, any[]>>({});
   const [alertsSummary, setAlertsSummary] = useState({ aso: 0, ferias: 0 });
 
@@ -152,6 +155,35 @@ const PessoalPage: React.FC = () => {
     setEditForm(prev => ({ ...prev, [empresaId]: { ...prev[empresaId], [field]: value } }));
   };
 
+  const handleBulkConfirm = async (guides: ProcessingResult[]) => {
+    for (const guide of guides) {
+      if (!guide.data || !guide.empresa) continue;
+      
+      const guideType = guide.data.tipo;
+      const payload: any = {
+        empresa_id: guide.empresa.id,
+        competencia,
+      };
+
+      if (guideType?.includes("FGTS")) {
+        payload.fgts_status = "enviada";
+        payload.fgts_data_envio = new Date().toISOString().split('T')[0];
+      } else if (guideType?.includes("INSS")) {
+        payload.inss_status = "enviada";
+        payload.inss_data_envio = new Date().toISOString().split('T')[0];
+      } else if (guideType?.includes("Simples")) {
+        payload.dctf_web_gerada = true;
+        payload.dctf_web_data_envio = new Date().toISOString().split('T')[0];
+      }
+
+      try {
+        await savePessoalRecord(payload);
+      } catch (e) {
+        console.error(`Failed to save guide for ${guide.empresa.nome_empresa}`, e);
+      }
+    }
+  };
+
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
   const completedCount = filtered.filter(e => pessoalData[e.id]?.dctf_web_gerada).length;
@@ -201,6 +233,13 @@ const PessoalPage: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
           <FavoriteToggleButton moduleId="pessoal" />
+          <button 
+            onClick={() => setIsUploaderOpen(true)}
+            className="flex items-center gap-2 px-4 h-10 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl transition-all font-bold text-sm"
+          >
+            <FileUp size={18} />
+            <span>Automação PDF</span>
+          </button>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <input
@@ -332,6 +371,15 @@ const PessoalPage: React.FC = () => {
           );
         })}
       </div>
+
+      {isUploaderOpen && (
+        <TaxGuideUploader 
+          empresas={empresas} 
+          onClose={() => setIsUploaderOpen(false)}
+          onConfirm={handleBulkConfirm}
+          competenciaFiltro={competencia}
+        />
+      )}
     </div>
   );
 };

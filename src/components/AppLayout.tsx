@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -62,7 +62,8 @@ const AppLayout: React.FC = () => {
         sortedItems.push({
           ...baseItem,
           label: cItem.label || baseItem.label,
-          section: cItem.section !== undefined ? cItem.section : baseItem.section
+          section: cItem.section !== undefined ? cItem.section : baseItem.section,
+          color: cItem.color
         });
       }
     });
@@ -98,15 +99,19 @@ const AppLayout: React.FC = () => {
         <div className="p-6 border-b border-sidebar-border flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <img src={logoAudipreve} alt="Audipreve" className="w-9 h-9 object-contain brightness-0 dark:invert" />
+              <div className="h-9 w-9 flex items-center justify-center">
+                <img src={logoAudipreve} alt="Audipreve" className="w-8 h-8 object-contain brightness-0 dark:invert" />
+              </div>
               <div>
                 <h1 className="text-lg font-bold text-card-foreground tracking-tight">Audipreve</h1>
-                <p className="text-[10px] uppercase tracking-widest font-bold text-primary/70">Contabilidade</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Contabilidade</p>
               </div>
             </div>
           )}
           {collapsed && (
-            <img src={logoAudipreve} alt="Audipreve" className="w-9 h-9 object-contain mx-auto brightness-0 dark:invert" />
+            <div className="h-9 w-9 mx-auto flex items-center justify-center">
+              <img src={logoAudipreve} alt="Audipreve" className="w-8 h-8 object-contain mx-auto brightness-0 dark:invert" />
+            </div>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -133,14 +138,31 @@ const AppLayout: React.FC = () => {
                     <div className="relative group/nav w-full mb-0.5" key={`fav-${item.id}`}>
                       <button
                         onClick={() => handleNav(item.path)}
-                        className={`nav-item w-full group relative ${active ? "active" : ""}`}
+                        className={`nav-item w-full group relative ${active ? "active" : ""} hover:text-[var(--item-color)] active:text-[var(--item-color)]`}
+                        style={{ 
+                          "--item-color": item.color || "hsl(var(--primary))",
+                          color: active ? (item.color || "hsl(var(--primary))") : undefined
+                        } as React.CSSProperties}
                         aria-label={item.label}
                       >
-                        <div className={`transition-transform duration-300 group-hover:scale-110 ${active ? "text-primary" : ""}`}>
+                        <div 
+                          className="transition-all duration-300 group-hover:scale-110"
+                          style={{ color: active ? item.color : undefined }}
+                        >
                           {item.icon}
                         </div>
-                        <span className="flex-1 text-left whitespace-nowrap truncate">{item.label}</span>
-                        {active && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-l-full" />}
+                        <span 
+                          className="flex-1 text-left whitespace-nowrap truncate transition-colors duration-300"
+                          style={{ color: active ? item.color : undefined }}
+                        >
+                          {item.label}
+                        </span>
+                        {active && (
+                          <div 
+                            className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-l-full" 
+                            style={{ backgroundColor: item.color }}
+                          />
+                        )}
                       </button>
                     </div>
                   );
@@ -161,15 +183,34 @@ const AppLayout: React.FC = () => {
                 {showSection && !collapsed && <div className="menu-header">{item.section}</div>}
                 <button
                   onClick={() => accessible && handleNav(item.path)}
-                  className={`nav-item w-full group relative ${active ? "active" : ""} ${!accessible ? "opacity-30 cursor-not-allowed" : ""} ${collapsed ? "justify-center px-0 h-11 w-11 mx-auto" : ""}`}
+                  className={`nav-item w-full group relative ${active ? "active" : ""} ${!accessible ? "opacity-30 cursor-not-allowed" : ""} ${collapsed ? "justify-center px-0 h-11 w-11 mx-auto" : ""} hover:text-[var(--item-color)] active:text-[var(--item-color)]`}
+                  style={{ 
+                    "--item-color": item.color || "hsl(var(--primary))",
+                    color: active ? (item.color || "hsl(var(--primary))") : undefined
+                  } as React.CSSProperties}
                   aria-label={item.label}
                   title={collapsed ? item.label : undefined}
                 >
-                  <div className={`transition-transform duration-300 group-hover:scale-110 ${active ? "text-primary" : ""}`}>
+                  <div 
+                    className="transition-all duration-300 group-hover:scale-110"
+                    style={{ color: active ? item.color : undefined }}
+                  >
                     {item.icon}
                   </div>
-                  {!collapsed && <span className="flex-1 text-left whitespace-nowrap truncate">{item.label}</span>}
-                  {active && !collapsed && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-l-full" />}
+                  {!collapsed && (
+                    <span 
+                      className="flex-1 text-left whitespace-nowrap truncate transition-colors duration-300"
+                      style={{ color: active ? item.color : undefined }}
+                    >
+                      {item.label}
+                    </span>
+                  )}
+                  {active && !collapsed && (
+                    <div 
+                      className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-l-full" 
+                      style={{ backgroundColor: item.color }}
+                    />
+                  )}
                 </button>
               </React.Fragment>
             );

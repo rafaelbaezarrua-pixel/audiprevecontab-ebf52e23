@@ -13,13 +13,14 @@ interface SidebarItemConfig {
   label: string;
   section: string;
   hidden?: boolean;
+  color?: string;
 }
 
 export const SidebarCustomizer: React.FC = () => {
   const { userData, updateSidebarConfig } = useAuth();
   const [items, setItems] = useState<SidebarItemConfig[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ label: "", section: "" });
+  const [editForm, setEditForm] = useState({ label: "", section: "", color: "" });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -29,7 +30,8 @@ export const SidebarCustomizer: React.FC = () => {
       id: item.id,
       label: item.label,
       section: item.section || "",
-      hidden: false
+      hidden: false,
+      color: ""
     }));
 
     if (config.length === 0) {
@@ -66,12 +68,12 @@ export const SidebarCustomizer: React.FC = () => {
 
   const startEditing = (item: SidebarItemConfig) => {
     setEditingId(item.id);
-    setEditForm({ label: item.label, section: item.section });
+    setEditForm({ label: item.label, section: item.section, color: item.color || "" });
   };
 
   const saveEdit = () => {
     setItems(prev => prev.map(item => 
-      item.id === editingId ? { ...item, label: editForm.label, section: editForm.section } : item
+      item.id === editingId ? { ...item, label: editForm.label, section: editForm.section, color: editForm.color } : item
     ));
     setEditingId(null);
   };
@@ -93,7 +95,8 @@ export const SidebarCustomizer: React.FC = () => {
       id: item.id,
       label: item.label,
       section: item.section || "",
-      hidden: false
+      hidden: false,
+      color: ""
     }));
     setItems(defaultItems);
     toast.info("Configurações resetadas. Clique em salvar para confirmar.");
@@ -143,7 +146,13 @@ export const SidebarCustomizer: React.FC = () => {
                             <GripVertical size={20} />
                           </div>
 
-                          <div className={`p-2 rounded-lg ${item.hidden ? "bg-muted" : "bg-primary/10 text-primary"}`}>
+                          <div 
+                            className={`p-2 rounded-lg transition-colors ${item.hidden ? "bg-muted" : "text-primary"}`}
+                            style={{ 
+                              backgroundColor: !item.hidden && item.color ? `${item.color}15` : undefined,
+                              color: !item.hidden && item.color ? item.color : undefined
+                            }}
+                          >
                             {icon}
                           </div>
 
@@ -156,12 +165,28 @@ export const SidebarCustomizer: React.FC = () => {
                                 placeholder="Nome do Módulo"
                                 autoFocus
                               />
-                              <input 
-                                value={editForm.section} 
-                                onChange={e => setEditForm({ ...editForm, section: e.target.value.toUpperCase() })}
-                                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-background border border-border rounded-lg outline-none"
-                                placeholder="Seção (ex: GERAL)"
-                              />
+                                <input 
+                                  value={editForm.section} 
+                                  onChange={e => setEditForm({ ...editForm, section: e.target.value.toUpperCase() })}
+                                  className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-background border border-border rounded-lg outline-none"
+                                  placeholder="Seção (ex: GERAL)"
+                                />
+                                <div className="flex items-center gap-3 px-3 py-1.5 bg-background border border-border rounded-lg">
+                                  <span className="text-[10px] font-black uppercase text-muted-foreground">Cor do Ícone:</span>
+                                  <input 
+                                    type="color"
+                                    value={editForm.color || "#3b82f6"} 
+                                    onChange={e => setEditForm({ ...editForm, color: e.target.value })}
+                                    className="w-6 h-6 rounded-md cursor-pointer border-none bg-transparent"
+                                  />
+                                  <button 
+                                    onClick={() => setEditForm({ ...editForm, color: "" })}
+                                    className="text-[9px] font-bold text-muted-foreground hover:text-primary transition-colors ml-auto"
+                                  >
+                                    Limpar
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           ) : (
                             <div className="flex-1 flex flex-col justify-center min-w-0">
