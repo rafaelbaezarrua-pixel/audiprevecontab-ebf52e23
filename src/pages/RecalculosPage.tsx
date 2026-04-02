@@ -234,7 +234,7 @@ const RecalculosPage: React.FC = () => {
             )}
 
             <div>
-              <label className={labelCls}>Guia (Descrição manual)</label>
+              <label className={labelCls}>Guia (Descrição e competência)</label>
               <input value={newRecalculo.guia} onChange={e => setNewRecalculo({ ...newRecalculo, guia: e.target.value })} className={inputCls} placeholder="Ex: DAS Maior, INSS Ref..." />
             </div>
 
