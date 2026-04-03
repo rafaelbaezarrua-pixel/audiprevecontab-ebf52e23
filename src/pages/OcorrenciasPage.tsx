@@ -57,6 +57,17 @@ const OcorrenciasPage: React.FC = () => {
         staleTime: 60000 * 10
     });
 
+    // Fetch users for select
+    const { data: usuarios = [] } = useQuery({
+        queryKey: ["usuarios_profiles"],
+        queryFn: async () => {
+             const { data, error } = await supabase.from("profiles").select("user_id, nome_completo").not("nome_completo", "is", null).order("nome_completo");
+             if (error) throw error;
+             return data || [];
+        },
+        staleTime: 60000 * 30
+    });
+
     // Header Config
     const { data: headerConfigData } = useQuery({
         queryKey: ["app_config_header"],
@@ -82,10 +93,17 @@ const OcorrenciasPage: React.FC = () => {
 
     const [selectedEmpresaId, setSelectedEmpresaId] = useState("");
     const [selectedDepto, setSelectedDepto] = useState("");
+    const [selectedUsuarioId, setSelectedUsuarioId] = useState("");
     const [descricao, setDescricao] = useState("");
     const [cidade, setCidade] = useState("Fazenda Rio Grande");
     const [estado, setEstado] = useState("PR");
     const [dataOcorrencia, setDataOcorrencia] = useState(new Date().toISOString().split('T')[0]);
+
+    useEffect(() => {
+        if (userData?.userId && !selectedUsuarioId) {
+            setSelectedUsuarioId(userData.userId);
+        }
+    }, [userData, selectedUsuarioId]);
 
     const handleSave = async (generatePdf = false) => {
         if (!selectedEmpresaId || !selectedDepto || !descricao) {
@@ -102,7 +120,7 @@ const OcorrenciasPage: React.FC = () => {
                 cidade,
                 estado,
                 data_ocorrencia: dataOcorrencia,
-                usuario_id: userData?.userId
+                usuario_id: selectedUsuarioId || userData?.userId
             });
 
             toast.success("Ocorrência registrada com sucesso!");
@@ -131,9 +149,13 @@ const OcorrenciasPage: React.FC = () => {
 
         // Socio info
         const { data: manager } = await supabase.from("socios").select("nome, cpf").eq("empresa_id", oc.empresa_id).eq("administrador", true).maybeSingle();
-        const { data: profile } = await supabase.from("profiles").select("nome_completo, cpf").eq("user_id", userData?.userId).maybeSingle();
-        const usuarioNome = profile?.nome_completo || userData?.nome || "";
-        const usuarioCPF = profile?.cpf || userData?.cpf || "";
+        
+        // Use the user assigned to the occurrence, not necessarily the current user
+        const targetUserId = oc.usuario_id || userData?.userId;
+        const { data: profile } = await supabase.from("profiles").select("nome_completo, cpf").eq("user_id", targetUserId).maybeSingle();
+        
+        const usuarioNome = profile?.nome_completo || "Audipreve Contabilidade";
+        const usuarioCPF = profile?.cpf || "";
 
         try {
             const logoToUse = localHeaderConfig.logoUrl || logoCaduceu;
@@ -309,6 +331,8 @@ const OcorrenciasPage: React.FC = () => {
                             <select className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary" value={selectedEmpresaId} onChange={(e) => setSelectedEmpresaId(e.target.value)}><option value="">Selecione...</option>{empresas.map(e => <option key={e.id} value={e.id}>{e.nome_empresa}</option>)}</select></div>
                             <div><label className="text-xs font-bold text-muted-foreground block mb-1 uppercase">Departamento</label>
                             <select className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary" value={selectedDepto} onChange={(e) => setSelectedDepto(e.target.value)}><option value="">Selecione...</option>{DEPARTAMENTOS.map(d => <option key={d} value={d}>{d}</option>)}</select></div>
+                            <div><label className="text-xs font-bold text-muted-foreground block mb-1 uppercase">Usuário Responsável</label>
+                            <select className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary" value={selectedUsuarioId} onChange={(e) => setSelectedUsuarioId(e.target.value)}><option value="">Selecione...</option>{usuarios.map(u => <option key={u.user_id} value={u.user_id}>{u.nome_completo}</option>)}</select></div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="col-span-2"><label className="text-xs font-bold text-muted-foreground block mb-1 uppercase">Data</label><input type="date" className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary" value={dataOcorrencia} onChange={(e) => setDataOcorrencia(e.target.value)} /></div>
                             </div>
