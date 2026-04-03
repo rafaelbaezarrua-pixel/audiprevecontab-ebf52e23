@@ -17,6 +17,8 @@ export interface Certificate {
 class LacunaWebPkiClient {
   private pki: any;
   private isInitialized: boolean = false;
+  private isLoading: boolean = false;
+  private loadPromise: Promise<void> | null = null;
   
   /* 
    * CONFIGURAÇÃO DE LICENÇA LACUNA WEB PKI
@@ -31,20 +33,18 @@ class LacunaWebPkiClient {
   }
 
   async init(): Promise<void> {
-    if (this.isInitialized) return;
-
-    return new Promise((resolve, reject) => {
+    if (this.loadPromise) return this.loadPromise;
+    
+    this.loadPromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        this.loadPromise = null;
         reject(new Error("O Assinador Lacuna demorou muito para responder. Verifique sua conexão."));
       }, 10000);
 
       const onReady = () => {
         try {
-          // Se for localhost, NÃO passamos licença (ela é desnecessária e trava se for inválida)
           const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
           const licenseToUse = isLocal ? null : this.devLicense;
-          
-
           
           // @ts-expect-error - window.LacunaWebPKI comes from external script
           this.pki = new window.LacunaWebPKI(licenseToUse);
@@ -52,17 +52,18 @@ class LacunaWebPkiClient {
             ready: () => {
               clearTimeout(timeout);
               this.isInitialized = true;
-
               resolve();
             },
             defaultError: (message: string) => {
               clearTimeout(timeout);
+              this.loadPromise = null;
               console.error('[Lacuna] Erro de Licença/Inicialização:', message);
               reject(new Error(message));
             }
           });
         } catch (e: any) {
           clearTimeout(timeout);
+          this.loadPromise = null;
           console.error('[Lacuna] Falha crítica no construtor:', e);
           reject(new Error(`Erro ao inicializar componente Lacuna: ${e.message || e}`));
         }
@@ -72,19 +73,34 @@ class LacunaWebPkiClient {
       if (typeof window.LacunaWebPKI !== 'undefined') {
         onReady();
       } else {
+        // Verifica se o script já está no DOM para evitar duplicidade
+        const existingScript = document.querySelector('script[src="/lacuna-web-pki.js"]');
+        if (existingScript) {
+          // Se o script já existe mas o window.LacunaWebPKI não está pronto, aguardamos um pouco
+          const checkReady = setInterval(() => {
+            // @ts-expect-error
+            if (typeof window.LacunaWebPKI !== 'undefined') {
+              clearInterval(checkReady);
+              onReady();
+            }
+          }, 100);
+          return;
+        }
+
         const script = document.createElement('script');
         script.src = "/lacuna-web-pki.js";
-        script.onload = () => {
-
-          onReady();
-        };
+        script.async = true;
+        script.onload = () => onReady();
         script.onerror = () => {
           clearTimeout(timeout);
+          this.loadPromise = null;
           reject(new Error("Falha ao carregar arquivo local /lacuna-web-pki.js"));
         };
         document.head.appendChild(script);
       }
     });
+
+    return this.loadPromise;
   }
 
   async listCertificates(): Promise<Certificate[]> {
