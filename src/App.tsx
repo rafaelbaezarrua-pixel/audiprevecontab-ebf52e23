@@ -10,7 +10,7 @@ import { Analytics } from "@vercel/analytics/react";
 import React, { Suspense, lazy } from "react";
 
 // Layouts
-import AppLayout from "@/components/AppLayout";
+const AppLayout = lazy(() => import("@/components/AppLayout"));
 const PortalLayout = lazy(() => import("@/components/PortalLayout"));
 
 // Lazy Loaded Pages
