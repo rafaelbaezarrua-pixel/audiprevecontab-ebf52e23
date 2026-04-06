@@ -404,12 +404,21 @@ const SocietarioEmpresaPage: React.FC = () => {
       
       if (data.porte) setPorteRfb(data.porte);
       
+      // Map situation from RFB
+      const rfbSituacao = String(data.descricao_situacao_cadastral || "").toLowerCase();
+      if (["ativa", "baixada", "inapta", "suspensa", "nula"].includes(rfbSituacao)) {
+        setSituacao(rfbSituacao);
+      } else if (rfbSituacao === "paralisada") {
+        setSituacao("paralisada");
+      }
+
       // Heuristics for types
       const isMEIByOption = data.opcao_pelo_simei === true;
       const porteLabel = data.porte?.toLowerCase() || "";
       
       if (isMEIByOption || porteLabel.includes("mei")) {
-        setPorteEmpresa("mei"); setRegimeTributario("mei"); setNaturezaJuridica("mei"); setSituacao("mei");
+        setPorteEmpresa("mei"); setRegimeTributario("simei"); setNaturezaJuridica("mei");
+        if (rfbSituacao === "ativa") setSituacao("mei");
       } else {
          if (porteLabel.includes("me") || data.codigo_porte === 1) setPorteEmpresa("me");
          else if (porteLabel.includes("epp") || data.codigo_porte === 3) setPorteEmpresa("epp");
@@ -542,9 +551,9 @@ const SocietarioEmpresaPage: React.FC = () => {
                   {porteRfb && <p className="text-[10px] text-muted-foreground ml-1 italic">RFB: {porteRfb}</p>}
                 </div>
               </div>
-              <div><label className={labelCls}>Regime Tributário</label><select value={regimeTributario} onChange={e => setRegimeTributario(e.target.value)} className={inputCls}><option value="simples">Simples Nacional</option><option value="lucro_presumido">Lucro Presumido</option><option value="lucro_real">Lucro Real</option><option value="mei">MEI</option></select></div>
+              <div><label className={labelCls}>Regime Tributário</label><select value={regimeTributario} onChange={e => setRegimeTributario(e.target.value)} className={inputCls}><option value="simples">Simples Nacional</option><option value="lucro_presumido">Lucro Presumido</option><option value="lucro_real">Lucro Real</option><option value="simei">Simei (MEI)</option><option value="mei">MEI</option></select></div>
               <div><label className={labelCls}>Natureza Jurídica</label><select value={naturezaJuridica} onChange={e => setNaturezaJuridica(e.target.value)} className={inputCls}><option value="">Selecione</option><option value="ei">Empresário Individual (EI)</option><option value="eireli">EIRELI</option><option value="ltda">Sociedade Limitada (LTDA)</option><option value="slu">Sociedade Limitada Unipessoal (SLU)</option><option value="sa">Sociedade Anônima (S.A.)</option><option value="ss">Sociedade Simples</option><option value="mei">MEI</option></select></div>
-              <div><label className={labelCls}>Situação</label><select value={situacao} onChange={e => setSituacao(e.target.value)} className={inputCls}><option value="ativa">Ativa</option><option value="paralisada">Paralisada</option><option value="baixada">Baixada</option><option value="mei">MEI</option><option value="entregue">Empresa Entregue</option></select></div>
+              <div><label className={labelCls}>Situação Cadastral</label><select value={situacao} onChange={e => setSituacao(e.target.value)} className={inputCls}><option value="ativa">Ativa</option><option value="paralisada">Paralisada</option><option value="baixada">Baixada</option><option value="mei">MEI</option><option value="inapta">Inapta</option><option value="suspensa">Suspensa</option><option value="nula">Nula</option><option value="entregue">Empresa Entregue</option></select></div>
               
               <div className="md:col-span-2 p-4 bg-primary/5 rounded-xl border border-primary/10 grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-3">
@@ -715,7 +724,7 @@ const SocietarioEmpresaPage: React.FC = () => {
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl border border-border/50 bg-indigo-500/5 hover:bg-indigo-500/10 transition-colors border-indigo-500/20">
+                <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl border bg-indigo-500/5 hover:bg-indigo-500/10 transition-colors border-indigo-500/20">
                   <div className="mt-0.5">
                     <input 
                       type="checkbox" 

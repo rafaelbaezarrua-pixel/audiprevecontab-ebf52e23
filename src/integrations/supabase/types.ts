@@ -1514,14 +1514,14 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "client"
-      empresa_situacao: "ativa" | "paralisada" | "baixada" | "mei" | "entregue"
-      guia_status: "pendente" | "gerada" | "enviada"
+      empresa_situacao: "ativa" | "paralisada" | "baixada" | "mei" | "entregue" | "inapta" | "suspensa" | "nula"
+      guia_status: "pendente" | "gerada" | "enviada" | "isento"
       licenca_tipo:
         | "definitiva"
         | "dispensada"
         | "com_vencimento"
         | "em_processo"
-      regime_tributario: "simples" | "lucro_presumido" | "lucro_real" | "mei"
+      regime_tributario: "simples" | "lucro_presumido" | "lucro_real" | "mei" | "simei"
       status_assinatura: "pendente" | "assinado" | "rejeitado"
     }
     CompositeTypes: {
