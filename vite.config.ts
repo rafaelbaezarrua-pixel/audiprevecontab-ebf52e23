@@ -25,6 +25,23 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    chunkSizeWarningLimit: 2000,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("node_modules")) {
+            if (id.includes("pdfjs-dist") || id.includes("pdf-lib") || id.includes("jspdf") || id.includes("@signpdf")) {
+              return "vendor-pdf";
+            }
+            if (id.includes("xlsx")) {
+              return "vendor-excel";
+            }
+            if (id.includes("recharts") || id.includes("d3")) {
+              return "vendor-charts";
+            }
+          }
+        },
+      },
+    },
   },
 }));
