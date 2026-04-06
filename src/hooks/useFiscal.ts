@@ -27,11 +27,12 @@ export function useFiscal(competencia: string) {
                 .eq("competencia", record.competencia)
                 .maybeSingle();
 
+            const cleanRecord = Object.fromEntries(Object.entries(record).map(([k, v]) => [k, v === "" ? null : v]));
             if (existing) {
-                const { error } = await supabase.from("fiscal").update(record).eq("id", existing.id);
+                const { error } = await supabase.from("fiscal").update(cleanRecord).eq("id", existing.id);
                 if (error) throw error;
             } else {
-                const { error } = await supabase.from("fiscal").insert([record]);
+                const { error } = await supabase.from("fiscal").insert([cleanRecord]);
                 if (error) throw error;
             }
             return true;
