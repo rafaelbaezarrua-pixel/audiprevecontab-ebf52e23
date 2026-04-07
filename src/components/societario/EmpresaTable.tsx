@@ -50,7 +50,7 @@ export const EmpresaTable = ({
         const isEditing = editingId === emp.id + '-nome';
         return (
           <div className="flex items-center gap-4 py-2">
-            <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center transition-all group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/20 shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center transition-all group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/20 shrink-0">
               <Building2 size={22} />
             </div>
             <div className="flex flex-col">
@@ -126,7 +126,7 @@ export const EmpresaTable = ({
       header: () => <div className="text-center">Sócios</div>,
       cell: ({ row }) => (
         <div className="flex justify-center">
-            <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-muted/50 text-xs font-black text-card-foreground border border-border/50">
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-muted/50 text-xs font-black text-card-foreground border border-border/50">
               {row.original.socios_count || 0}
             </span>
         </div>
@@ -137,10 +137,10 @@ export const EmpresaTable = ({
       header: () => <div className="text-right pr-8">Ações</div>,
       cell: ({ row }) => (
         <div className="flex items-center justify-end gap-2 pr-8" onClick={(e) => e.stopPropagation()}>
-           <button onClick={() => navigate(`/societario/${row.original.id}`)} className="p-3 rounded-2xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all border border-transparent hover:border-primary/20" title="Ver Detalhes">
+           <button onClick={() => navigate(`/societario/${row.original.id}`)} className="p-3 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all border border-transparent hover:border-primary/20" title="Ver Detalhes">
              <Eye size={20} />
            </button>
-           <button onClick={() => navigate(`/societario/${row.original.id}`)} className="p-3 rounded-2xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all border border-transparent hover:border-primary/20" title="Editar">
+           <button onClick={() => navigate(`/societario/${row.original.id}`)} className="p-3 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all border border-transparent hover:border-primary/20" title="Editar">
              <Edit2 size={20} />
            </button>
         </div>
@@ -218,7 +218,7 @@ export const EmpresaTable = ({
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex items-center justify-between p-4 border-t border-border/50 bg-muted/10 rounded-b-2xl">
+      <div className="flex items-center justify-between p-4 border-t border-border/50 bg-muted/10 rounded-b-xl">
         <div className="text-sm font-bold text-muted-foreground flex items-center gap-2">
             Mostrando <span className="text-foreground">{table.getRowModel().rows.length}</span> de <span className="text-foreground">{totalCount}</span>
         </div>
@@ -251,7 +251,7 @@ export const EmpresaTable = ({
                onChange={e => {
                  table.setPageSize(Number(e.target.value))
                }}
-               className="p-2.5 rounded-xl border border-border/50 bg-card text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-primary/20"
+               className="p-2.5 rounded-lg border border-border/50 bg-card text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-primary/20"
             >
               {[10, 20, 50, 100].map(pageSize => (
                 <option key={pageSize} value={pageSize}>

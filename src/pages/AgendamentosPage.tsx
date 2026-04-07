@@ -175,29 +175,30 @@ const AgendamentosPage: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6 flex flex-col min-h-[calc(100vh-100px)] animate-fade-in">
-            {/* Header com Ações */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold tracking-tight">Agendamentos</h1>
-                    <FavoriteToggleButton moduleId="agendamentos" />
-                    {isFetching && !isLoading && (
-
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                            <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
-                        </div>
-                    )}
+        <div className="space-y-6 animate-fade-in relative pb-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                        <h1 className="header-title">Agendamentos</h1>
+                        <FavoriteToggleButton moduleId="agendamentos" />
+                        {isFetching && !isLoading && (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Sincronizando</span>
+                            </div>
+                        )}
+                    </div>
+                    <p className="subtitle-premium">Organização de visitas, reuniões e compromissos externos.</p>
                 </div>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <input
                         type="month"
                         value={competencia}
                         onChange={e => setCompetencia(e.target.value)}
-                        className="px-4 py-2 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold"
+                        className="w-full sm:w-40 px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold transition-all"
                     />
-                    <button onClick={() => navigate("/agendamentos/novo")} className="button-premium shadow-md py-2 px-4 whitespace-nowrap">
+                    <button onClick={() => navigate("/agendamentos/novo")} className="button-premium shadow-lg shadow-primary/20 w-full sm:w-auto">
                         <Plus size={18} /> Novo Agendamento
                     </button>
                 </div>

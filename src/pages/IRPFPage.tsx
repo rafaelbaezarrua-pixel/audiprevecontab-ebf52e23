@@ -57,34 +57,37 @@ const IRPFPage = () => {
     if (!user) return null;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
+        <div className="space-y-6 animate-fade-in pb-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+                <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                        <h1 className="text-3xl font-black text-foreground tracking-tight">IRPF <span className="text-primary">{selectedYear}</span></h1>
+                        <h1 className="header-title">IRPF <span className="text-primary">{selectedYear}</span></h1>
                         <FavoriteToggleButton moduleId="irpf" />
                     </div>
-                    <p className="text-sm text-muted-foreground">Gestão IRPF</p>
+                    <p className="subtitle-premium">Gestão de Declarações de Imposto de Renda Pessoa Física.</p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
-                        className="bg-card border border-border rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-primary outline-none shadow-sm"
-                    >
-                        {years.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border rounded-xl shadow-sm">
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Ano:</span>
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            className="bg-transparent text-foreground text-sm focus:outline-none font-bold"
+                        >
+                            {years.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    </div>
 
                     <button
                         onClick={() => {
                             setIsAdding(!isAdding);
                             if (!isAdding) setExpandedId(null);
                         }}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-bold shadow-md ${isAdding ? 'bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground hover:scale-105 active:scale-95'}`}
+                        className={`button-premium shadow-lg shadow-primary/20 w-full sm:w-auto ${isAdding ? 'bg-muted text-foreground !from-muted !to-muted !bg-none border border-border' : ''}`}
                     >
                         {isAdding ? <XCircle size={18} /> : <Plus size={18} />}
-                        {isAdding ? 'cancelar' : 'Novo Cliente'}
+                        {isAdding ? 'Cancelar' : 'Novo Cliente'}
                     </button>
                 </div>
             </div>

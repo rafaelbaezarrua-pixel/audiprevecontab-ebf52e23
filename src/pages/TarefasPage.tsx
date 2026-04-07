@@ -333,227 +333,262 @@ const TarefasPage: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6 flex flex-col min-h-[calc(100vh-100px)] animate-fade-in">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold tracking-tight">Tarefas</h1>
-                    <FavoriteToggleButton moduleId="tarefas" />
-                    {isFetching && !isLoading && (
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                            <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
-                        </div>
-                    )}
-                </div>
-                
-                <div className="flex items-center gap-3 justify-end">
-                    <input
-                        type="month"
-                        value={competencia}
-                        onChange={e => setCompetencia(e.target.value)}
-                        className="px-4 py-2.5 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none font-semibold"
-                    />
-                    <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
-                        <DialogTrigger asChild>
-                            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/20 text-primary bg-primary/5 text-sm font-bold hover:bg-primary/10 transition-all">
-                                <ClipboardList size={18} /> Lançamentos
-                            </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader><DialogTitle>Lançamentos de Tarefas</DialogTitle></DialogHeader>
-                            <div className="space-y-6 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Assunto</Label>
-                                        <input className="w-full px-4 py-2 border rounded-lg" value={batchForm.assunto} onChange={e => setBatchForm({ ...batchForm, assunto: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Responsável</Label>
-                                        <select className="w-full px-4 py-2 border rounded-lg" value={batchForm.responsavel_id} onChange={e => setBatchForm({ ...batchForm, responsavel_id: e.target.value })}>
-                                            <option value="">Selecione...</option>
-                                            {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Data</Label>
-                                        <input type="date" className="w-full px-4 py-2 border rounded-lg" value={batchForm.data} onChange={e => setBatchForm({ ...batchForm, data: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Horário</Label>
-                                        <input type="time" className="w-full px-4 py-2 border rounded-lg" value={batchForm.horario} onChange={e => setBatchForm({ ...batchForm, horario: e.target.value })} />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Informações Adicionais</Label>
-                                    <textarea className="w-full px-4 py-2 border rounded-lg h-20 resize-none" value={batchForm.informacoes} onChange={e => setBatchForm({ ...batchForm, informacoes: e.target.value })} />
-                                </div>
+    <div className="space-y-8 animate-fade-in pb-20 relative">
+      {/* Background decoration elements */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
 
-                                <div className="space-y-3">
-                                    <Label className="flex items-center justify-between">
-                                        Selecione as Empresas ({selectedEmpresas.length})
-                                        <button className="text-xs text-primary font-bold" onClick={() => {
-                                            if (selectedEmpresas.length === empresas.length) setSelectedEmpresas([]);
-                                            else setSelectedEmpresas(empresas.map(e => e.id));
-                                        }}>
-                                            {selectedEmpresas.length === empresas.length ? "Desmarcar Todas" : "Selecionar Todas"}
-                                        </button>
-                                    </Label>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-xl p-4 max-h-48 overflow-y-auto bg-muted/20">
-                                        {empresas.map(emp => (
-                                            <div key={emp.id} className="flex items-center gap-3 p-2 hover:bg-card rounded-lg transition-colors cursor-pointer" onClick={() => {
-                                                if (selectedEmpresas.includes(emp.id)) setSelectedEmpresas(prev => prev.filter(id => id !== emp.id));
-                                                else setSelectedEmpresas(prev => [...prev, emp.id]);
-                                            }}>
-                                                <Checkbox checked={selectedEmpresas.includes(emp.id)} />
-                                                <span className="text-xs font-medium truncate">{emp.nome_empresa}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+      {/* Main Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+             <h1 className="header-title">Gestão de <span className="text-primary/90">Tarefas</span></h1>
+             <FavoriteToggleButton moduleId="tarefas" />
+             {isFetching && !isLoading && (
+               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/20 animate-pulse">
+                 <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                 <span className="text-[9px] font-black text-primary uppercase tracking-widest">Sincronização Ativa</span>
+               </div>
+             )}
+          </div>
+          <p className="subtitle-premium">Organização de rotinas operacionais, prazos internos e acompanhamento de produtividade da equipe.</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex items-center gap-2 bg-card border border-primary/10 p-2 rounded-2xl shadow-xl shadow-primary/5">
+            <input
+              type="month"
+              value={competencia}
+              onChange={e => setCompetencia(e.target.value)}
+              className="bg-transparent border-none text-[11px] font-black uppercase tracking-widest text-primary outline-none px-4 py-2 font-ubuntu"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
+              <DialogTrigger asChild>
+                <button className="h-14 px-6 rounded-2xl bg-card border border-border/60 text-[10px] font-black uppercase tracking-widest hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-2 shadow-sm">
+                  <ClipboardList size={18} /> Lote
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-10 border-border/40 rounded-[2.5rem]">
+                <DialogHeader className="mb-8 border-b border-border/40 pb-6">
+                    <div className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/20 mb-4">
+                         <ClipboardList size={28} />
+                    </div>
+                    <DialogTitle className="text-xl font-black text-card-foreground uppercase tracking-tight">Novos Lançamentos em Lote</DialogTitle>
+                    <p className="text-xs text-muted-foreground font-medium">Crie a mesma tarefa para múltiplas empresas simultaneamente.</p>
+                </DialogHeader>
 
-                                <Button className="w-full button-premium" onClick={handleCreateBatch}>
-                                    Criar Tarefas em Lote
-                                </Button>
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Assunto da Tarefa</Label>
+                        <input className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase" value={batchForm.assunto} onChange={e => setBatchForm({ ...batchForm, assunto: e.target.value })} placeholder="EX: LANÇAMENTO DE NOTAS..." />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Responsável pela Execução</Label>
+                        <select className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer" value={batchForm.responsavel_id} onChange={e => setBatchForm({ ...batchForm, responsavel_id: e.target.value })}>
+                            <option value="">SELECIONE O ANALISTA...</option>
+                            {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                        </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data Efetiva</Label>
+                        <input type="date" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" value={batchForm.data} onChange={e => setBatchForm({ ...batchForm, data: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Horário Previsto</Label>
+                        <input type="time" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" value={batchForm.horario} onChange={e => setBatchForm({ ...batchForm, horario: e.target.value })} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Informações Adicionais / Observações</Label>
+                    <textarea className="w-full px-5 py-4 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all h-24 resize-none uppercase" value={batchForm.informacoes} onChange={e => setBatchForm({ ...batchForm, informacoes: e.target.value })} placeholder="DETALHES IMPORTANTES PARA A EXECUÇÃO..." />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empresas Selecionadas ({selectedEmpresas.length})</span>
+                        <button className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 px-3 py-1 rounded-full border border-primary/10 transition-all hover:bg-primary/10" onClick={() => {
+                            if (selectedEmpresas.length === empresas.length) setSelectedEmpresas([]);
+                            else setSelectedEmpresas(empresas.map(e => e.id));
+                        }}>
+                            {selectedEmpresas.length === empresas.length ? "DESMARCAR TODAS" : "SELECIONAR TODAS AS EMPRESAS"}
+                        </button>
+                    </Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border border-border/40 rounded-[1.8rem] p-6 max-h-56 overflow-y-auto no-scrollbar bg-card/50">
+                        {empresas.map(emp => (
+                            <div key={emp.id} className={`flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer border ${selectedEmpresas.includes(emp.id) ? 'bg-primary/5 border-primary/20' : 'hover:bg-muted/50 border-transparent'}`} onClick={() => {
+                                if (selectedEmpresas.includes(emp.id)) setSelectedEmpresas(prev => prev.filter(id => id !== emp.id));
+                                else setSelectedEmpresas(prev => [...prev, emp.id]);
+                            }}>
+                                <Checkbox checked={selectedEmpresas.includes(emp.id)} className="rounded-md" />
+                                <span className="text-[10px] font-black uppercase tracking-tight truncate">{emp.nome_empresa}</span>
                             </div>
-                        </DialogContent>
-                    </Dialog>
+                        ))}
+                    </div>
+                  </div>
 
-                    <button
-                        onClick={handleClonePreviousMonth}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/20 text-primary bg-primary/5 text-sm font-bold hover:bg-primary/10 transition-all"
-                    >
-                        <RefreshCw size={18} /> Clonar Mês Anterior
-                    </button>
-
-                    <button
-                        onClick={() => navigate("/tarefas/novo")}
-                        className="button-premium shadow-md"
-                    >
-                        <Plus size={18} /> Nova Tarefa
-                    </button>
+                  <button 
+                    onClick={handleCreateBatch}
+                    className="w-full h-16 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
+                  >
+                    <Plus size={20} /> CRIAR {selectedEmpresas.length} TAREFAS EM LOTE
+                  </button>
                 </div>
+              </DialogContent>
+            </Dialog>
+
+            <button
+              onClick={handleClonePreviousMonth}
+              className="h-14 px-6 rounded-2xl bg-card border border-border/60 text-[10px] font-black uppercase tracking-widest hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-2 shadow-sm"
+            >
+              <RefreshCw size={18} /> Clonar
+            </button>
+
+            <button
+              onClick={() => navigate("/tarefas/novo")}
+              className="h-14 px-8 rounded-2xl bg-primary text-primary-foreground text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3"
+            >
+              <Plus size={20} /> NOVA TAREFA
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Navigation and Visualization Controls */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="flex items-center gap-6">
+            <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 max-w-fit shadow-sm">
+                <button
+                    onClick={() => { setActiveTab("geral"); if (activeSubTab !== "arquivados") setActiveSubTab("em_aberto"); }}
+                    className={`px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === "geral" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
+                >
+                    Coordenação Geral
+                </button>
+                <button
+                    onClick={() => { setActiveTab("meus"); if (activeSubTab !== "arquivados") setActiveSubTab("em_aberto"); }}
+                    className={`px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === "meus" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
+                >
+                    Minhas Responsabilidades
+                </button>
             </div>
 
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-                <div className="flex border-b border-border w-full sm:w-auto overflow-x-auto no-scrollbar">
-                    <button
-                        className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === "geral" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-                        onClick={() => {
-                            setActiveTab("geral");
-                            if (activeSubTab !== "arquivados") setActiveSubTab("em_aberto");
-                        }}
-                    >
-                        Geral
-                    </button>
-                    <button
-                        className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === "meus" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-                        onClick={() => {
-                            setActiveTab("meus");
-                            if (activeSubTab !== "arquivados") setActiveSubTab("em_aberto");
-                        }}
-                    >
-                        Minhas Tarefas
-                    </button>
-                </div>
-
-                <div className="flex gap-2 p-1 bg-muted/30 rounded-lg w-fit">
-                    {[
-                        { id: "em_aberto", label: "Em Aberto", hideOnGeral: true },
-                        { id: "concluido", label: "Concluído", hideOnGeral: true },
-                        { id: "pendente", label: "Pendente", hideOnGeral: true },
-                        { id: "arquivados", label: "Arquivados", hideOnGeral: false }
-                    ].map(sub => {
-                        if (activeTab === "geral" && sub.hideOnGeral && sub.id !== "em_aberto") return null;
-                        const label = activeTab === "geral" && sub.id === "em_aberto" ? "Ativos" : sub.label;
-                        return (
-                            <button
-                                key={sub.id}
-                                onClick={() => setActiveSubTab(sub.id as any)}
-                                className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${activeSubTab === sub.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                            >
-                                {label}
-                            </button>
-                        );
-                    })}
-                </div>
-
-
-                <div className="flex gap-2 p-1 bg-muted/20 border border-border/50 rounded-xl shrink-0">
-                    <button
-                        onClick={() => setViewMode("list")}
-                        className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                        title="Lista"
-                    >
-                        <List size={18} />
-                    </button>
-                    <button
-                        onClick={() => setViewMode("kanban")}
-                        className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                        title="Kanban"
-                    >
-                        <LayoutDashboard size={18} />
-                    </button>
-                </div>
+            <div className="flex bg-muted/20 p-1.5 rounded-2xl border border-border/40 max-w-fit overflow-hidden">
+                {[
+                    { id: "em_aberto", label: "Em Aberto", hideOnGeral: true },
+                    { id: "concluido", label: "Concluido", hideOnGeral: true },
+                    { id: "pendente", label: "Pendente", hideOnGeral: true },
+                    { id: "arquivados", label: "Arquivados", hideOnGeral: false }
+                ].map(sub => {
+                    if (activeTab === "geral" && sub.hideOnGeral && sub.id !== "em_aberto") return null;
+                    const label = activeTab === "geral" && sub.id === "em_aberto" ? "ATIVOS" : sub.label.toUpperCase();
+                    return (
+                        <button
+                            key={sub.id}
+                            onClick={() => setActiveSubTab(sub.id as any)}
+                            className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeSubTab === sub.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}
+                        >
+                            {label}
+                        </button>
+                    );
+                })}
             </div>
+        </div>
 
-            <div className="relative max-w-sm shrink-0">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <div className="flex items-center gap-4">
+            <div className="relative group">
+                <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <input
                     type="text"
-                    placeholder="Buscar tarefa ou usuário..."
+                    placeholder="BUSCAR TAREFA, ANALISTA OU CLIENTE..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none"
+                    className="w-full lg:w-80 h-14 pl-14 pr-6 bg-card border border-border/60 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-hover:border-primary/20"
                 />
             </div>
 
-            {viewMode === "list" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
-                    {filtered.length === 0 ? (
-                        <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
-                            Nenhuma tarefa encontrada para este período.
-                        </div>
-                    ) : (
-                        filtered.map(a => <React.Fragment key={a.id}>{renderItemContent(a)}</React.Fragment>)
-                    )}
+            <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 shadow-sm shrink-0">
+                <button
+                    onClick={() => setViewMode("kanban")}
+                    className={`p-3.5 rounded-xl transition-all ${viewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground/50 hover:text-foreground hover:bg-card/50"}`}
+                    title="Visão Kanban"
+                >
+                    <LayoutDashboard size={20} />
+                </button>
+                <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-3.5 rounded-xl transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground/50 hover:text-foreground hover:bg-card/50"}`}
+                    title="Visão em Lista"
+                >
+                    <List size={20} />
+                </button>
+            </div>
+        </div>
+      </div>
+
+      {/* Main View Render */}
+      {viewMode === "list" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
+            {filtered.length === 0 ? (
+                <div className="col-span-full py-32 text-center bg-card border-2 border-dashed border-border/40 rounded-[2.5rem] opacity-40">
+                     <ClipboardList size={48} className="mx-auto mb-4 text-muted-foreground" />
+                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nenhuma tarefa localizada nos filtros atuais</p>
                 </div>
             ) : (
-                <div className="flex gap-6 pb-10 overflow-x-auto no-scrollbar min-h-[500px]">
-                    {[
-                        { id: "em_aberto", label: "Em Aberto", color: "bg-primary" },
-                        { id: "pendente", label: "Pendente", color: "bg-amber-500" },
-                        { id: "concluido", label: "Concluído", color: "bg-green-500" }
-                    ].map(col => {
-                        const colTasks = filtered.filter(a => a.status === col.id);
-                        return (
-                            <div key={col.id} className="flex-1 min-w-[300px] flex flex-col gap-4">
-                                <div className="flex items-center justify-between px-2">
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-2 h-2 rounded-full ${col.color}`} />
-                                        <h3 className="font-bold text-sm tracking-tight">{col.label}</h3>
-                                        <span className="text-[10px] font-black bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{colTasks.length}</span>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    {colTasks.length === 0 ? (
-                                        <div className="py-8 text-center text-[10px] text-muted-foreground bg-muted/10 rounded-xl border border-dashed border-border/50">Vazio</div>
-                                    ) : (
-                                        colTasks.map(a => (
-                                            <div key={a.id} className="rounded-xl overflow-hidden shadow-sm border border-border">
-                                                {renderItemContent(a)}
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                filtered.map(a => (
+                    <div key={a.id} className="group bg-card border border-border/60 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 rounded-[2rem] transition-all duration-500 overflow-hidden shadow-sm">
+                         {renderItemContent(a)}
+                    </div>
+                ))
             )}
         </div>
+      ) : (
+        <div className="flex gap-8 pb-12 overflow-x-auto no-scrollbar min-h-[600px] scroll-smooth">
+            {[
+                { id: "em_aberto", label: "Em Aberto", color: "bg-primary", icon: <Circle size={14} />, border: "border-primary/40" },
+                { id: "pendente", label: "Arquivado Interno / Pendente", color: "bg-amber-500", icon: <Clock size={14} />, border: "border-amber-500/40" },
+                { id: "concluido", label: "Tarefa Concluída", color: "bg-emerald-500", icon: <CheckCircle size={14} />, border: "border-emerald-500/40" }
+            ].map(col => {
+                const colTasks = filtered.filter(a => a.status === col.id);
+                return (
+                    <div key={col.id} className="flex-1 min-w-[360px] max-w-[450px] flex flex-col gap-6">
+                        <div className={`flex items-center justify-between p-6 rounded-[1.8rem] bg-card border ${col.border} shadow-sm backdrop-blur-sm self-start w-full`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${col.color} text-white shadow-lg`}>
+                                    {col.icon}
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-card-foreground">{col.label}</h3>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{colTasks.length} TAREFAS NESTE STATUS</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex flex-col gap-5">
+                            {colTasks.length === 0 ? (
+                                <div className="py-20 text-center bg-card/20 border-2 border-dashed border-border/40 rounded-[2rem] opacity-30 flex flex-col items-center gap-3">
+                                     <ClipboardList size={32} />
+                                     <span className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">Status Vazio</span>
+                                </div>
+                            ) : (
+                                colTasks.map(a => (
+                                    <div key={a.id} className="group bg-card border border-border/60 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/8 rounded-[2rem] transition-all duration-500 overflow-hidden shadow-sm">
+                                        {renderItemContent(a)}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+      )}
+    </div>
     );
 };
 

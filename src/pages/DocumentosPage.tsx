@@ -385,28 +385,46 @@ const DocumentosPage = () => {
   };
 
   return (
-    <Tabs defaultValue="assinaturas" className="w-full">
-      <TabsList className="mb-4">
-        <TabsTrigger value="assinaturas" className="gap-2"><FileSignature className="w-4 h-4" /> Assinador Digital</TabsTrigger>
-        <TabsTrigger value="solicitacoes" className="gap-2"><ClipboardList className="w-4 h-4" /> Solicitações de Documentos</TabsTrigger>
-      </TabsList>
+    <div className="space-y-6 animate-fade-in pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="header-title">Documentos e Assinaturas</h1>
+          </div>
+          <p className="subtitle-premium">Assine documentos digitalmente ou solicite arquivos para seus clientes.</p>
+        </div>
+      </div>
 
-      <TabsContent value="assinaturas">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div>
-                <div className="flex items-center gap-3">
-                  <CardTitle>Assinador Digital</CardTitle>
+      <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full sm:w-auto mb-6">
+        <button
+          onClick={() => setActiveTab('assinaturas')}
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'assinaturas' ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          <FileSignature size={16} /> Assinador Digital
+        </button>
+        <button
+          onClick={() => setActiveTab('solicitacoes')}
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'solicitacoes' ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          <ClipboardList size={16} /> Solicitações
+        </button>
+      </div>
+
+      {activeTab === 'assinaturas' ? (
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border/60 shadow-sm transition-all hover:shadow-md">
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-black text-card-foreground flex items-center gap-2">
+                  Assinador Digital
                   <FavoriteToggleButton moduleId="documentos" />
-                </div>
-                <CardDescription>
-                  Assine documentos com seu certificado digital local.
-                </CardDescription>
+                </h2>
               </div>
+              <p className="text-sm text-muted-foreground uppercase font-black tracking-widest opacity-70">
+                Certificação Digital ICP-Brasil • A1 e A3
+              </p>
             </div>
             <div className="flex items-center gap-2">
-
               <Dialog open={isCertDialogOpen} onOpenChange={handleCertDialogChange}>
                 <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
                   <DialogHeader>
@@ -422,7 +440,6 @@ const DocumentosPage = () => {
                         onSelection={(coords) => {
                           setSignCoords(coords);
                           setShowPositioner(false);
-                          // Chama o handleFinalSign novamente com os dados preservados
                           signMutation.mutate({
                             doc: docToSign,
                             method: signingMethod,
@@ -524,7 +541,7 @@ const DocumentosPage = () => {
 
               <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
                 <DialogTrigger asChild>
-                  <Button className="gap-2" size="sm">
+                  <Button className="button-premium gap-2 shrink-0">
                     <Plus className="h-4 w-4" /> Novo Documento
                   </Button>
                 </DialogTrigger>
@@ -538,7 +555,7 @@ const DocumentosPage = () => {
                       <Label>Empresa / Referência (Opcional)</Label>
                       <Select value={empresaId} onValueChange={setEmpresaId}>
                         <SelectTrigger><SelectValue placeholder="Selecione ou deixe em branco" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-[300px]">
                           <SelectItem value="geral">Geral / Sem Empresa</SelectItem>
                           {empresas.map((emp) => (
                             <SelectItem key={emp.id} value={emp.id}>{emp.nome_empresa}</SelectItem>
@@ -555,10 +572,10 @@ const DocumentosPage = () => {
                       <Input type="file" accept=".pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" className="w-full" disabled={uploadMutation.isPending} onClick={() => uploadMutation.mutate()}>
+                      <Button variant="outline" className="w-full h-11 font-bold" disabled={uploadMutation.isPending} onClick={() => uploadMutation.mutate()}>
                         {uploadMutation.isPending ? "Enviando..." : "SÓ ENVIAR"}
                       </Button>
-                      <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold" disabled={uploadMutation.isPending} onClick={() => {
+                      <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold h-11" disabled={uploadMutation.isPending} onClick={() => {
                         setShouldSignAfterUpload(true);
                         uploadMutation.mutate();
                       }}>
@@ -569,109 +586,104 @@ const DocumentosPage = () => {
                 </DialogContent>
               </Dialog>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Documento</TableHead>
-                    <TableHead>Empresa / Ref</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-4">Carregando...</TableCell></TableRow>
-                  ) : documentos.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum documento.</TableCell></TableRow>
-                  ) : (
-                    documentos.map((doc: any) => (
-                      <TableRow key={doc.id}>
-                        <TableCell className="font-bold">{doc.titulo}</TableCell>
-                        <TableCell>{doc.empresas?.nome_empresa}</TableCell>
-                        <TableCell>{format(new Date(doc.created_at), 'dd/MM/yyyy')}</TableCell>
-                        <TableCell>
-                          {doc.status === 'pendente' && <Badge variant="outline" className="text-orange-500">Pendente</Badge>}
-                          {doc.status === 'assinado' && <Badge variant="outline" className="text-green-500">Assinado</Badge>}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => window.open(doc.file_url, '_blank')} title="Ver PDF Original"><File className="w-4 h-4 mr-1" /> PDF</Button>
+          </div>
 
-                            {doc.status === 'assinado' && doc.assinatura_pkcs7 && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-green-500/30 text-green-600 hover:bg-green-500/5 items-center inline-flex"
-                                onClick={() => DownloadPKCS7(doc.assinatura_pkcs7, doc.titulo)}
-                              >
-                                <Download className="w-4 h-4 mr-1" /> .p7s
-                              </Button>
-                            )}
+          <div className="card-premium !p-0 overflow-hidden shadow-sm border border-border/40">
+            <Table>
+              <TableHeader className="bg-muted/30">
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Documento</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Empresa / Ref</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Data</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Status</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary opacity-50" /></TableCell></TableRow>
+                ) : documentos.length === 0 ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium italic opacity-60">Nenhum documento aguardando assinatura.</TableCell></TableRow>
+                ) : (
+                  documentos.map((doc: any) => (
+                    <TableRow key={doc.id} className="hover:bg-muted/30 transition-colors border-border/40">
+                      <TableCell className="font-black text-card-foreground py-4">{doc.titulo}</TableCell>
+                      <TableCell className="py-4 text-muted-foreground font-medium">{doc.empresas?.nome_empresa || "Geral"}</TableCell>
+                      <TableCell className="py-4 text-muted-foreground font-medium">{format(new Date(doc.created_at), 'dd/MM/yyyy')}</TableCell>
+                      <TableCell className="py-4 font-black">
+                        {doc.status === 'pendente' && <span className="badge-status badge-warning text-[9px]">PENDENTE</span>}
+                        {doc.status === 'assinado' && <span className="badge-status badge-success text-[9px]">ASSINADO</span>}
+                      </TableCell>
+                      <TableCell className="text-right py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => window.open(doc.file_url, '_blank')} className="hover:bg-primary/10 text-primary font-bold"><Eye size={16} /></Button>
 
-                            {doc.status === 'pendente' && (
-                              <Button
-                                size="sm"
-                                onClick={() => startSigning(doc)}
-                                disabled={!!isSigning}
-                                className="bg-orange-600 hover:bg-orange-700 text-white gap-2 font-bold"
-                              >
-                                {isSigning === doc.id ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  <FileSignature className="w-3 h-3" />
-                                )}
-                                Assinar
-                              </Button>
-                            )}
-
+                          {doc.status === 'assinado' && doc.assinatura_pkcs7 && (
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                              onClick={() => handleDeleteDoc(doc.id)}
+                              className="border-success/30 text-success hover:bg-success/5 font-black text-[10px] uppercase tracking-tighter"
+                              onClick={() => DownloadPKCS7(doc.assinatura_pkcs7, doc.titulo)}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Download className="w-4 h-4 mr-1" /> .p7s
                             </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
+                          )}
 
-      <TabsContent value="solicitacoes">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Solicitações de Documentos</CardTitle>
-              <CardDescription>Peça documentos específicos para os clientes.</CardDescription>
+                          {doc.status === 'pendente' && (
+                            <Button
+                              size="sm"
+                              onClick={() => startSigning(doc)}
+                              disabled={!!isSigning}
+                              className="bg-orange-600 hover:bg-orange-700 text-white gap-2 font-bold h-9 px-4"
+                            >
+                              {isSigning === doc.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileSignature className="w-3 h-3" />}
+                              Assinar
+                            </Button>
+                          )}
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => handleDeleteDoc(doc.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border/60 shadow-sm">
+            <div className="space-y-1">
+              <h2 className="text-xl font-black text-card-foreground">Solicitações de Documentos</h2>
+              <p className="text-sm text-muted-foreground uppercase font-black tracking-widest opacity-70">
+                Gestão de Pedidos aos Clientes
+              </p>
             </div>
             <Dialog open={isRequestOpen} onOpenChange={setIsRequestOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2" variant="outline" size="sm">
+                <Button className="button-premium gap-2 shrink-0" variant="outline">
                   <Plus className="h-4 w-4" /> Nova Solicitação
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Nova Solicitação</DialogTitle>
-                  <DialogDescription>Crie um pedido de documento para que seu cliente possa enviá-lo.</DialogDescription>
+                  <DialogDescription>Crie um pedido de documento para que seu cliente possa enviá-lo pelo portal.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label>Empresa / Cliente</Label>
                     <Select value={empresaId} onValueChange={setEmpresaId}>
                       <SelectTrigger><SelectValue placeholder="Selecione a empresa" /></SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-[300px]">
                         {empresas.map((emp) => (
                           <SelectItem key={emp.id} value={emp.id}>{emp.nome_empresa}</SelectItem>
                         ))}
@@ -690,59 +702,58 @@ const DocumentosPage = () => {
                     <Label>Data Limite</Label>
                     <Input type="date" value={dataVencimento} onChange={(e) => setDataVencimento(e.target.value)} />
                   </div>
-                  <Button className="w-full" disabled={requestMutation.isPending} onClick={() => requestMutation.mutate()}>
+                  <Button className="w-full h-11 bg-primary text-primary-foreground font-bold hover:scale-[1.01] transition-transform" disabled={requestMutation.isPending} onClick={() => requestMutation.mutate()}>
                     {requestMutation.isPending ? "Enviando..." : "Enviar Solicitação"}
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
-          </CardHeader>
-          <CardContent>
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Documento</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Vencimento</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Arquivo</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoadingSoli ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-4">Carregando...</TableCell></TableRow>
-                  ) : solicitacoes.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma solicitação ativa.</TableCell></TableRow>
-                  ) : (
-                    solicitacoes.map((sol: any) => (
-                      <TableRow key={sol.id}>
-                        <TableCell>
-                          <div className="font-bold">{sol.titulo}</div>
-                          <div className="text-xs text-muted-foreground">{sol.descricao}</div>
-                        </TableCell>
-                        <TableCell>{sol.empresas?.nome_empresa}</TableCell>
-                        <TableCell>{sol.data_vencimento ? format(new Date(sol.data_vencimento), 'dd/MM/yyyy') : '-'}</TableCell>
-                        <TableCell>
-                          {sol.status === 'pendente' && <Badge variant="outline" className="text-orange-500">Aguardando</Badge>}
-                          {sol.status === 'entregue' && <Badge variant="outline" className="text-green-500">Entregue</Badge>}
-                          {sol.status === 'arquivado' && <Badge variant="outline" className="text-muted-foreground">Arquivado</Badge>}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {sol.document_url ? (
-                            <Button variant="ghost" size="sm" onClick={() => window.open(sol.document_url, '_blank')}>Ver Arquivo</Button>
-                          ) : '-'}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+          </div>
+
+          <div className="card-premium !p-0 overflow-hidden shadow-sm border border-border/40">
+            <Table>
+              <TableHeader className="bg-muted/30">
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Documento / Instruções</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Cliente</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Vencimento</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Status</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 text-right">Arquivo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingSoli ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary opacity-50" /></TableCell></TableRow>
+                ) : solicitacoes.length === 0 ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium italic opacity-60">Nenhuma solicitação de documento ativa.</TableCell></TableRow>
+                ) : (
+                  solicitacoes.map((sol: any) => (
+                    <TableRow key={sol.id} className="hover:bg-muted/30 transition-colors border-border/40">
+                      <TableCell className="py-4">
+                        <div className="font-black text-card-foreground">{sol.titulo}</div>
+                        <div className="text-[10px] text-muted-foreground font-bold uppercase mt-0.5">{sol.descricao || "Sem instruções adicionais"}</div>
+                      </TableCell>
+                      <TableCell className="py-4 text-muted-foreground font-medium">{sol.empresas?.nome_empresa}</TableCell>
+                      <TableCell className="py-4 text-muted-foreground font-medium">{sol.data_vencimento ? format(new Date(sol.data_vencimento), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell className="py-4 font-black">
+                        {sol.status === 'pendente' && <span className="badge-status badge-warning text-[9px]">AGUARDANDO</span>}
+                        {sol.status === 'entregue' && <span className="badge-status badge-success text-[9px]">ENTREGUE</span>}
+                        {sol.status === 'arquivado' && <span className="badge-status badge-gray text-[9px]">ARQUIVADO</span>}
+                      </TableCell>
+                      <TableCell className="text-right py-4">
+                        {sol.document_url ? (
+                          <Button variant="ghost" size="sm" onClick={() => window.open(sol.document_url, '_blank')} className="text-primary font-bold hover:bg-primary/10">Ver Arquivo</Button>
+                        ) : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

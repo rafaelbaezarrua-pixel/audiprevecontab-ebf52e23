@@ -6,7 +6,7 @@ import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { AlertsSidebar } from "@/components/dashboard/AlertsSidebar";
 import { useDashboard } from "@/hooks/useDashboard";
 import { PageHeaderSkeleton } from "@/components/PageSkeleton";
-import { Sparkles, ArrowUpRight } from "lucide-react";
+import { Sparkles, ArrowUpRight, FileUp } from "lucide-react";
 
 const DashboardPage: React.FC = () => {
   const { userData } = useAuth();
@@ -28,26 +28,26 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-8 pb-10 animate-fade-in">
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shrink-0">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-black tracking-tight text-foreground">
-              Dashboard <span className="text-primary">Audipreve</span>
+          <div className="flex items-center gap-3">
+            <h1 className="header-title">
+              Dashboard <span className="text-primary/90">Audipreve</span>
             </h1>
-            <div className="p-1 rounded-lg bg-primary/10 text-primary">
-              <Sparkles size={16} />
+            <div className="p-1.5 rounded-xl bg-primary/10 text-primary animate-pulse">
+              <Sparkles size={20} />
             </div>
           </div>
-          <p className="text-muted-foreground font-medium flex items-center gap-2">
-            Bem-vindo de volta, <span className="text-foreground font-bold">{userData?.nome?.split(' ')[0]}</span>! Aqui está o resumo de hoje.
+          <p className="subtitle-premium flex items-center gap-2">
+            Bem-vindo de volta, <span className="text-card-foreground font-bold">{userData?.nome?.split(' ')[0]}</span>! Aqui está o resumo de hoje.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 p-1 rounded-2xl bg-muted/50 border border-border/50">
-          <button className="px-4 py-2 text-xs font-bold rounded-xl bg-card text-foreground shadow-sm">Vista Geral</button>
-          <button className="px-4 py-2 text-xs font-bold rounded-xl text-muted-foreground hover:text-foreground">Relatórios</button>
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-muted/30 border border-border/50 shadow-sm">
+          <button className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl bg-card text-primary shadow-sm ring-1 ring-border transition-all">Vista Geral</button>
+          <button className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all">Relatórios</button>
         </div>
       </div>
 

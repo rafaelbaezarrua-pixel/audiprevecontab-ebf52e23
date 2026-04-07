@@ -5,7 +5,7 @@ import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings, Shield, CheckCircle, Upload, Eye, Briefcase } from "lucide-react";
-import { maskCNPJ, maskCPF } from "@/lib/utils";
+import { maskCNPJ, maskCPF, maskCPFCNPJ } from "@/lib/utils";
 
 interface Socio { 
   id?: string; 
@@ -507,16 +507,25 @@ const SocietarioEmpresaPage: React.FC = () => {
               <Shield size={16} /> Criar Acesso Portal
             </button>
           )}
-          <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground shadow-md hover:shadow-lg transition-all disabled:opacity-50" style={{ background: "var(--gradient-primary)" }}>
-            <Save size={16} /> {saving ? "Salvando..." : "Salvar"}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="button-premium flex items-center gap-2"
+          >
+            <Save size={18} /> {saving ? "Salvando..." : "Salvar Empresa"}
           </button>
         </div>
       </div>
 
-      <div className="flex gap-1 bg-muted/50 rounded-xl p-1 overflow-x-auto">
-        {tabs.filter(t => isAdmin || t.id !== "configuracoes").map((tab) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? "bg-card text-card-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-            {tab.icon}{tab.label}
+      <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === tab.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            {tab.icon}
+            {tab.label}
           </button>
         ))}
       </div>
@@ -618,7 +627,7 @@ const SocietarioEmpresaPage: React.FC = () => {
               <p className="text-sm font-medium text-card-foreground">Adicionar Sócio</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
                 <div className="md:col-span-2"><label className={labelCls}>Nome Completo *</label><input value={newSocio.nome} onChange={e => setNewSocio({ ...newSocio, nome: e.target.value })} className={inputCls} placeholder="Nome do sócio" /></div>
-                <div><label className={labelCls}>CPF</label><input value={newSocio.cpf} onChange={e => setNewSocio({ ...newSocio, cpf: maskCPF(e.target.value) })} className={inputCls} placeholder="000.000.000-00" /></div>
+                <div><label className={labelCls}>CPF / CNPJ</label><input value={newSocio.cpf} onChange={e => setNewSocio({ ...newSocio, cpf: maskCPFCNPJ(e.target.value) })} className={inputCls} placeholder="000.000.000-00 ou 00.000.000/0000-00" /></div>
                 <div><label className={labelCls}>Capital (%)</label><input type="number" step="0.01" value={newSocio.percentual_cotas} onChange={e => setNewSocio({ ...newSocio, percentual_cotas: parseFloat(e.target.value) || 0 })} className={inputCls} placeholder="0.00" /></div>
                 <div><label className={labelCls}>E-mail</label><input type="email" value={newSocio.email} onChange={e => setNewSocio({ ...newSocio, email: e.target.value })} className={inputCls} placeholder="email@exemplo.com" /></div>
                 <div><label className={labelCls}>Telefone</label><input value={newSocio.telefone} onChange={e => setNewSocio({ ...newSocio, telefone: e.target.value })} className={inputCls} placeholder="(00) 00000-0000" /></div>
@@ -641,7 +650,7 @@ const SocietarioEmpresaPage: React.FC = () => {
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-card-foreground truncate">{socio.nome}</p>
                         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                          <p className="text-[11px] text-muted-foreground flex items-center gap-1.5"><Shield size={10} /> {socio.cpf || "CPF não inf."}</p>
+                          <p className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"><Shield size={10} /> {socio.cpf || "Documento não inf."}</p>
                           <p className="text-[11px] text-muted-foreground flex items-center gap-1.5"><Briefcase size={10} /> {socio.percentual_cotas || 0}% de Capital</p>
                           {socio.data_entrada && <p className="text-[11px] text-muted-foreground flex items-center gap-1.5"><CalendarIcon size={10} /> Entrou em {formatDateBR(socio.data_entrada)}</p>}
                           {socio.email && <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">@ {socio.email}</p>}

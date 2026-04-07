@@ -58,14 +58,62 @@ export function useReportGenerator() {
   const fetchIRPF = async (competencia: string) => {
     const ano = competencia.split('-')[0];
     const { data: irpfClientes } = await (supabase.from("controle_irpf" as any).select("*").eq("ano_exercicio", ano) as any);
-    const { data: irpfSocios } = await supabase.from("declaracoes_irpf" as any).select(`*, socios(nome, cpf, empresas(nome_empresa))`).eq("ano", ano);
+    const { data: irpfSocios } = await supabase.from("declaracoes_irpf" as any).select(`*, socios(id, nome, cpf, empresa_id, empresas(nome_empresa))`).eq("ano", ano);
+    const { data: allAdmins } = await supabase.from("socios").select(`id, nome, cpf, empresa_id, empresas(nome_empresa)`).eq("administrador", true);
 
     const unified: any[] = [];
     if (irpfClientes) {
       (irpfClientes as any[]).forEach(c => unified.push({ categoria: "IRPF Clientes", nome_completo: c.nome_completo, cpf: c.cpf, empresa: "—", ano_exercicio: c.ano_exercicio, valor_a_pagar: c.valor_a_pagar, status_pago: c.status_pago, data_pagamento: c.data_pagamento, status_transmissao: c.status_transmissao, data_transmissao: c.data_transmissao, feito_por: c.feito_por, forma_pagamento: c.forma_pagamento }));
     }
+
+    // Map existing records
+    const sociosWithRecords = new Set();
     if (irpfSocios) {
-      (irpfSocios as any[]).forEach((s: any) => unified.push({ categoria: "IRPF Clientes Empresa", nome_completo: s.socios?.nome || "—", cpf: s.socios?.cpf || "—", empresa: s.socios?.empresas?.nome_empresa || "—", ano_exercicio: s.ano, valor_a_pagar: null, status_pago: null, data_pagamento: null, status_transmissao: s.transmitida ? "transmitida" : "pendente", data_transmissao: s.data_transmissao, transmitido_por: s.quem_transmitiu }));
+      (irpfSocios as any[]).forEach((s: any) => {
+        sociosWithRecords.add(s.socio_id);
+        unified.push({ 
+          categoria: "IRPF Clientes Empresa", 
+          nome_completo: s.socios?.nome || "—", 
+          cpf: s.socios?.cpf || "—", 
+          empresa: s.socios?.empresas?.nome_empresa || "—", 
+          ano_exercicio: s.ano, 
+          valor_a_pagar: null, 
+          status_pago: null, 
+          data_pagamento: null, 
+          faz_pelo_escritorio: s.faz_pelo_escritorio,
+          situacao: s.situacao,
+          transmitida: s.transmitida,
+          status_transmissao: s.situacao === 'finalizada' ? "transmitida" : s.situacao || "pendente", 
+          data_transmissao: s.data_transmissao, 
+          quem_transmitiu: s.quem_transmitiu,
+          feito_por: s.quem_transmitiu 
+        });
+      });
+    }
+
+    // Add administrators without records
+    if (allAdmins) {
+      (allAdmins as any[]).forEach((adm: any) => {
+        if (!sociosWithRecords.has(adm.id)) {
+          unified.push({ 
+            categoria: "IRPF Clientes Empresa", 
+            nome_completo: adm.nome || "—", 
+            cpf: adm.cpf || "—", 
+            empresa: adm.empresas?.nome_empresa || "—", 
+            ano_exercicio: ano, 
+            valor_a_pagar: null, 
+            status_pago: null, 
+            data_pagamento: null, 
+            faz_pelo_escritorio: false,
+            situacao: 'pendente',
+            transmitida: false,
+            status_transmissao: "pendente", 
+            data_transmissao: null, 
+            quem_transmitiu: null,
+            feito_por: null 
+          });
+        }
+      });
     }
     return unified;
   };
@@ -77,7 +125,8 @@ export function useReportGenerator() {
     selectedCompanyFields: string[],
     selectedSituations: string[],
     headerConfig?: HeaderConfig,
-    format: 'pdf' | 'excel' = 'pdf'
+    format: 'pdf' | 'excel' = 'pdf',
+    moduleFilters: Record<string, string[]> = {}
   ) => {
     setLoadingType(format);
     try {
@@ -147,9 +196,74 @@ export function useReportGenerator() {
           
           moduleData = [...mappedInd, ...mappedRel];
         }
+        else if (modId === "declaracoes_anuais") {
+          const ano = competencia.split('-')[0];
+          const selectedTypes = moduleFilters[modId] || [];
+          let combinedData: any[] = [];
+          
+          // 1. Outras Declarações (DEFIS, ECD, etc)
+          if (selectedTypes.length === 0 || selectedTypes.some(t => t !== "IRPF")) {
+            let q = supabase.from("declaracoes_anuais").select("*").eq("ano", parseInt(ano));
+            if (selectedTypes.length > 0) {
+              q = q.in("tipo_declaracao", selectedTypes.filter(t => t !== "IRPF"));
+            }
+            const { data } = await q;
+            if (data) combinedData = [...combinedData, ...data];
+          }
+          
+          // 2. IRPF de Sócios (específico)
+          if (selectedTypes.length === 0 || selectedTypes.includes("IRPF")) {
+            const { data: irpf } = await supabase.from("declaracoes_irpf" as any).select(`
+              *,
+              socios(id, nome, empresa_id)
+            `).eq("ano", parseInt(ano));
+            
+            const companyIds = allCompanies.map(c => c.id);
+            const { data: admins } = await supabase.from("socios").select("id, nome, empresa_id").in("empresa_id", companyIds).eq("administrador", true);
+            
+            const sociosWithRecords = new Set();
+            if (irpf) {
+              const mapped = (irpf as any[]).map(i => {
+                sociosWithRecords.add(i.socio_id);
+                return {
+                  ...i,
+                  tipo_declaracao: "IRPF",
+                  empresa_id: i.socios?.empresa_id,
+                  socio_nome: i.socios?.nome
+                };
+              });
+              combinedData = [...combinedData, ...mapped];
+            }
+
+            // Add missing administrators
+            if (admins) {
+              const virtualRecords = (admins as any[])
+                .filter(a => !sociosWithRecords.has(a.id))
+                .map(a => ({
+                  tipo_declaracao: "IRPF",
+                  empresa_id: a.empresa_id,
+                  socio_nome: a.nome,
+                  ano: parseInt(ano),
+                  situacao: 'pendente',
+                  transmitida: false,
+                  faz_pelo_escritorio: false
+                }));
+              combinedData = [...combinedData, ...virtualRecords];
+            }
+          }
+          moduleData = combinedData;
+        }
         else {
           let mQuery = supabase.from(mod.table as any).select("*");
-          if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos", "servicos_esporadicos", "recibos"].includes(modId)) mQuery = mQuery.eq("competencia", competencia);
+          if (["fiscal", "pessoal", "declaracoes_mensais", "honorarios", "recalculos", "licencas_taxas", "agendamentos", "servicos_esporadicos", "recibos"].includes(modId)) {
+            mQuery = mQuery.eq("competencia", competencia);
+          }
+
+          // Aplicar filtros específicos do módulo (ex: tipo de declaração)
+          if (mod.filterField && moduleFilters[modId]) {
+            mQuery = mQuery.in(mod.filterField, moduleFilters[modId]);
+          }
+
           const { data } = await mQuery;
           moduleData = data || [];
         }

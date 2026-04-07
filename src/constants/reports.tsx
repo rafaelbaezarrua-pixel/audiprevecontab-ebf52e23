@@ -75,6 +75,8 @@ export interface ModuleConfig {
   icon: React.ReactNode;
   color: string;
   fields: ModuleField[];
+  filterField?: string;
+  filterOptions?: { id: string; label: string }[];
 }
 
 export const licencaLabels: Record<string, string> = {
@@ -134,6 +136,21 @@ export const MODULES_CONFIG: ModuleConfig[] = [
       { id: "tipo_declaracao", label: "Tipo" },
       { id: "ano", label: "Ano Base" },
       { id: "enviada", label: "Enviada", accessor: (i) => i.enviada ? "Sim" : "Não" },
+      { id: "socio_nome", label: "Sócio" },
+      { id: "faz_pelo_escritorio", label: "Escritório?", accessor: (i) => i.faz_pelo_escritorio === true ? "Sim" : i.faz_pelo_escritorio === false ? "Não" : "—" },
+      { id: "situacao", label: "Situação", accessor: (i) => i.situacao ? i.situacao.charAt(0).toUpperCase() + i.situacao.slice(1).replace('_', ' ') : "—" },
+      { id: "transmitida", label: "Transmitida", accessor: (i) => i.transmitida ? "Sim" : "Não" },
+      { id: "data_transmissao", label: "Transmissão", accessor: (i) => safeFormatDate(i.data_transmissao) },
+      { id: "quem_transmitiu", label: "Responsável" },
+    ],
+    filterField: "tipo_declaracao",
+    filterOptions: [
+      { id: "DEFIS", label: "DEFIS" },
+      { id: "ECD", label: "ECD" },
+      { id: "ECF", label: "ECF" },
+      { id: "DASN", label: "DASN" },
+      { id: "DIRF", label: "DIRF" },
+      { id: "IRPF", label: "IRPF" },
     ]
   },
   {

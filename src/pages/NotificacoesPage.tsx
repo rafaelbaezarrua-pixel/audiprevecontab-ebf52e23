@@ -51,48 +51,37 @@ const NotificacoesPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 py-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border border-border p-6 rounded-2xl shadow-sm">
+    <div className="max-w-5xl mx-auto space-y-6 py-6 animate-fade-in pb-20">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <button 
             onClick={() => navigate(-1)}
-            className="rounded-full flex-shrink-0"
+            className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-muted/50 transition-all shadow-sm"
           >
             <ArrowLeft size={20} />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-black text-foreground flex items-center gap-2">
-              <Bell className="text-primary" /> Notificações
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium">
-              Gerencie seus alertas e comunicações do sistema
-            </p>
+          </button>
+          <div className="space-y-1">
+            <h1 className="header-title">Notificações</h1>
+            <p className="subtitle-premium">Gerencie seus alertas e comunicações do sistema em tempo real.</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {unreadCount > 0 && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <button 
               onClick={handleAllRead}
-              className="rounded-xl font-bold uppercase text-[10px] tracking-widest gap-2"
+              className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-card border border-border text-primary hover:bg-muted/50 transition-all shadow-sm flex items-center gap-2"
             >
               <CheckCheck size={14} /> Marcar todas
-            </Button>
+            </button>
           )}
           {notifications.length > 0 && (
-            <Button 
-              variant="destructive" 
-              size="sm" 
+            <button 
               onClick={handleDeleteAll}
-              className="rounded-xl font-bold uppercase text-[10px] tracking-widest gap-2"
+              className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-all shadow-sm flex items-center gap-2"
             >
               <Trash size={14} /> Excluir todas
-            </Button>
+            </button>
           )}
         </div>
       </div>

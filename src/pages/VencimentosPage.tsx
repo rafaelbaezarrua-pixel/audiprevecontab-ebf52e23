@@ -149,92 +149,157 @@ const VencimentosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full">
-        <FavoriteToggleButton moduleId="vencimentos" />
-        <div>
-          <h2 className="text-lg font-bold text-card-foreground">Gestão de Vencimentos</h2>
-          <p className="text-xs text-muted-foreground">Acompanhamento consolidado de todos os despachos próximos ao prazo.</p>
+    <div className="space-y-8 animate-fade-in pb-20 relative">
+      {/* Background decoration elements */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
+
+      {/* Main Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+             <h1 className="header-title">Controle de <span className="text-primary/90">Vencimentos</span></h1>
+             <FavoriteToggleButton moduleId="vencimentos" />
+          </div>
+          <p className="subtitle-premium">Acompanhamento centralizado de prazos, licenças, certificados e certidões do grupo.</p>
         </div>
       </div>
 
-      <div className="flex border-b border-border overflow-x-auto no-scrollbar">
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "ativas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("ativas")}
-        >
-          Empresas Ativas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "mei"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("mei")}
-        >
-          Empresas MEI
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "paralisadas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("paralisadas")}
-        >
-          Empresas Paralisadas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "baixadas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("baixadas")}
-        >
-          Empresas Baixadas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "entregue"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("entregue")}
-        >
-          Empresas Entregues
-        </button>
+      {/* Situation Tabs (Ativas, MEI, etc) */}
+      <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar max-w-fit shadow-sm">
+        {[
+          { key: "ativas", label: "Empresas Ativas" },
+          { key: "mei", label: "Microempreendedores (MEI)" },
+          { key: "paralisadas", label: "Paralisadas" },
+          { key: "baixadas", label: "Baixadas" },
+          { key: "entregue", label: "Entregues" }
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveStatusTab(tab.key as any)}
+            className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === tab.key ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="stat-card flex items-center justify-between cursor-pointer" onClick={() => setFilter("vencido")}><div><p className="text-xs text-muted-foreground uppercase">Vencidos</p><p className="text-2xl font-bold text-destructive mt-1">{counts.vencido}</p></div><AlertTriangle className="text-destructive" size={22} /></div>
-        <div className="stat-card flex items-center justify-between cursor-pointer" onClick={() => setFilter("próximo")}><div><p className="text-xs text-muted-foreground uppercase">Próximos</p><p className="text-2xl font-bold text-warning mt-1">{counts.proximo}</p></div><Clock className="text-warning" size={22} /></div>
-        <div className="stat-card flex items-center justify-between cursor-pointer" onClick={() => setFilter("em dia")}><div><p className="text-xs text-muted-foreground uppercase">Em Dia</p><p className="text-2xl font-bold text-success mt-1">{counts.emDia}</p></div><CheckCircle className="text-success" size={22} /></div>
+      {/* KPI Stats Grid - Acting as Status Filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {[
+          { key: "vencido", label: "Títulos Vencidos", count: counts.vencido, cls: "text-destructive", bg: "bg-destructive/5", icon: <AlertTriangle size={24} /> },
+          { key: "próximo", label: "Vencimentos Próximos", count: counts.proximo, cls: "text-amber-500", bg: "bg-amber-500/5", icon: <Clock size={24} /> },
+          { key: "em dia", label: "Prazos Vigentes", count: counts.emDia, cls: "text-emerald-500", bg: "bg-emerald-500/5", icon: <CheckCircle size={24} /> }
+        ].map(s => (
+          <button
+            key={s.key}
+            onClick={() => setFilter(s.key)}
+            className={`group bg-card border rounded-[2rem] p-8 flex items-center justify-between transition-all duration-500 ${filter === s.key ? "border-primary/40 shadow-2xl shadow-primary/5 ring-1 ring-primary/20 scale-[1.02]" : "border-border/60 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5"}`}
+          >
+            <div className="text-left space-y-2">
+              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">{s.label}</p>
+              <p className={`text-4xl font-black tracking-tight ${s.cls}`}>{s.count}</p>
+            </div>
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${s.bg} ${s.cls} border border-current/10 group-hover:scale-110 transition-transform duration-500`}>
+              {s.icon}
+            </div>
+          </button>
+        ))}
       </div>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-        <div className="flex flex-wrap gap-2">
+
+      {/* Enhanced Filters Section */}
+      <div className="flex flex-col lg:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full group">
+          <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <input
+            type="text"
+            placeholder="PESQUISAR POR CLIENTE OU NATUREZA DO VENCIMENTO..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full h-16 pl-14 pr-8 bg-card border border-border/60 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-hover:border-primary/20"
+          />
+        </div>
+        
+        <div className="flex gap-4 w-full lg:w-auto">
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-foreground border border-border focus:ring-2 focus:ring-primary outline-none cursor-pointer"
+            className="flex-1 lg:w-64 h-16 px-6 bg-card border border-border/60 rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm appearance-none cursor-pointer"
           >
-            <option value="todos">Todos os Tipos</option>
-            <option value="certificado">Certificados</option>
-            <option value="licença">Licenças</option>
-            <option value="taxa">Taxas</option>
-            <option value="certidão">Certidões</option>
-            <option value="procuração">Procurações</option>
+            <option value="todos">FILTRAR POR CATEGORIA</option>
+            <option value="certificado">CERTIFICADOS DIGITAIS</option>
+            <option value="licença">LICENÇAS DE FUNCIONAMENTO</option>
+            <option value="taxa">TAXAS E EMOLUMENTOS</option>
+            <option value="certidão">CERTIDÕES NEGATIVAS (CND)</option>
+            <option value="procuração">PROCURAÇÕES ELETRÔNICAS</option>
           </select>
+
+          <button
+            onClick={() => {setFilter("todos"); setCategoryFilter("todos");}}
+            className="h-16 px-10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-border/60"
+          >
+            RESTAURAR
+          </button>
         </div>
-        <div className="flex gap-2">{["todos", "vencido", "próximo", "em dia"].map(f => (<button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>))}</div>
       </div>
-      <div className="module-card overflow-x-auto">
-        <table className="data-table"><thead><tr><th>Empresa</th><th>Tipo</th><th>Vencimento</th><th>Dias</th><th>Status</th></tr></thead>
-          <tbody>{searchFiltered.length === 0 ? <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum vencimento</td></tr> : searchFiltered.map((v, i) => (
-            <tr key={i}><td className="font-medium text-card-foreground">{v.empresa}</td><td className="text-muted-foreground">{v.tipo}</td><td className="text-muted-foreground">{formatDateBR(v.data)}</td><td className="text-card-foreground font-medium">{v.diasRestantes}d</td><td><span className={`badge-status ${v.status === "vencido" ? "badge-danger" : v.status === "próximo" ? "badge-warning" : "badge-success"}`}>{v.status}</span></td></tr>
-          ))}</tbody>
-        </table>
+
+      {/* Vencimentos List - Mobile Card Grid Pattern */}
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
+        {searchFiltered.length === 0 ? (
+          <div className="col-span-full py-32 text-center bg-card border-2 border-dashed border-border/40 rounded-[2.5rem] opacity-40">
+             <Clock size={48} className="mx-auto mb-4 text-muted-foreground" />
+             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nenhum vencimento identificado nos filtros atuais</p>
+          </div>
+        ) : (
+          searchFiltered.map((v, i) => {
+            const isVencido = v.status === "vencido";
+            const isProximo = v.status === "próximo";
+            
+            return (
+              <div key={i} className="group bg-card border border-border/60 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 rounded-[2rem] p-8 transition-all duration-500 flex flex-col justify-between gap-6 relative overflow-hidden">
+                {/* Visual indicator for status */}
+                <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-10 transition-colors ${isVencido ? 'bg-destructive' : isProximo ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                
+                <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                        <span className={`h-8 flex items-center px-4 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                            isVencido ? 'bg-destructive/10 border-destructive/20 text-destructive' : 
+                            isProximo ? 'bg-amber-50 border-amber-200 text-amber-600' : 
+                            'bg-emerald-50 border-emerald-200 text-emerald-600'
+                        }`}>
+                            {isVencido ? "EXPIRADO" : isProximo ? "VENCE LOGO" : "VIGENTE"}
+                        </span>
+                        <div className="text-right">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Expira em</p>
+                            <p className="font-ubuntu font-bold text-sm text-card-foreground">{formatDateBR(v.data)}</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <h3 className="font-black text-sm text-card-foreground uppercase tracking-tight group-hover:text-primary transition-colors line-clamp-1">{v.empresa}</h3>
+                        <p className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 w-fit">
+                            {v.tipo}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="pt-6 border-t border-border/40 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isVencido ? 'bg-destructive/10 text-destructive' : isProximo ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                             {isVencido ? <AlertTriangle size={18} /> : <Clock size={18} />}
+                        </div>
+                        <div>
+                             <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Contagem</p>
+                             <p className={`text-sm font-black ${isVencido ? 'text-destructive' : 'text-card-foreground'}`}>
+                                {isVencido ? `${Math.abs(v.diasRestantes)}d atrasado` : `${v.diasRestantes} dias restantes`}
+                             </p>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

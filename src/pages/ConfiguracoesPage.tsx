@@ -191,45 +191,37 @@ const ConfiguracoesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h1 className="header-title text-3xl font-black tracking-tight text-foreground">
-            Gerenciamento de Usuários
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Controle de acessos, permissões e configurações do sistema.
-          </p>
+    <div className="space-y-8 animate-fade-in pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="header-title">Configurações</h1>
+          </div>
+          <p className="subtitle-premium">Gerencie usuários, permissões, acessos ao portal e auditoria.</p>
         </div>
-        <button onClick={() => navigate("/configuracoes/usuarios/novo")} className="button-premium">
+        <button onClick={() => navigate("/configuracoes/usuarios/novo")} className="button-premium shadow-lg shadow-primary/20">
           <Plus size={18} /> Novo Usuário
         </button>
       </div>
 
-      <div className="flex border-b border-border overflow-x-auto no-scrollbar pt-2">
+      <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full sm:w-auto">
         <button
           onClick={() => setActiveTab('interna')}
-          className={`px-6 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === 'interna' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'interna' ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
         >
-          <div className="flex items-center gap-2">
-            <Users size={16} /> Equipe Interna
-          </div>
+          <Users size={16} /> Equipe Interna
         </button>
         <button
           onClick={() => setActiveTab('cliente')}
-          className={`px-6 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === 'cliente' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'cliente' ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
         >
-          <div className="flex items-center gap-2">
-            <Building size={16} /> Portal Cliente
-          </div>
+          <Building size={16} /> Portal Cliente
         </button>
         <button
           onClick={() => setActiveTab('auditoria')}
-          className={`px-6 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === 'auditoria' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'auditoria' ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
         >
-          <div className="flex items-center gap-2">
-            <Shield size={16} /> Auditoria do Sistema
-          </div>
+          <Shield size={16} /> Auditoria do Sistema
         </button>
       </div>
 

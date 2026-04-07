@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 interface Message {
     id: string;
@@ -86,18 +87,17 @@ const MessagesPage: React.FC = () => {
         }
     };
 
-    return (
-        <div className="h-[calc(100vh-12rem)] flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                        <MessageSquare className="text-primary" /> Central de Mensagens
-                    </h1>
-                    <p className="text-muted-foreground text-sm">
-                        Comunicação direta entre você e o escritório Audipreve.
-                    </p>
-                </div>
-            </div>
+  return (
+    <div className="h-[calc(100vh-12rem)] flex flex-col gap-6 animate-fade-in pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="header-title">Central de Mensagens</h1>
+            <FavoriteToggleButton moduleId="messages" />
+          </div>
+          <p className="subtitle-premium">Comunicação direta entre você e o escritório Audipreve.</p>
+        </div>
+      </div>
 
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-hidden">
                 {/* Sidebar - Conversas/Filtros */}

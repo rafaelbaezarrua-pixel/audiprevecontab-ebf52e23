@@ -19,6 +19,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
     const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
     const [selectedModules, setSelectedModules] = useState<string[]>([]);
     const [selectedFields, setSelectedFields] = useState<Record<string, string[]>>({});
+    const [moduleFilters, setModuleFilters] = useState<Record<string, string[]>>({});
     const [selectedCompanyFields, setSelectedCompanyFields] = useState<string[]>(["cnpj", "regime_tributario"]);
     const [selectedSituations, setSelectedSituations] = useState<string[]>(["ativa", "mei", "paralisada", "baixada", "entregue"]);
     const [headerConfig, setHeaderConfig] = useState<any>(null);
@@ -42,10 +43,18 @@ const RelatorioPersonalizadoPage: React.FC = () => {
             const newFields = { ...selectedFields };
             delete newFields[id];
             setSelectedFields(newFields);
+            const newFilters = { ...moduleFilters };
+            delete newFilters[id];
+            setModuleFilters(newFilters);
         } else {
             setSelectedModules(prev => [...prev, id]);
             const mod = MODULES_CONFIG.find(m => m.id === id);
             setSelectedFields(prev => ({ ...prev, [id]: mod?.fields.map(f => f.id) || [] }));
+            
+            // Inicializar filtros com todos os valores disponíveis
+            if (mod?.filterOptions) {
+                setModuleFilters(prev => ({ ...prev, [id]: mod.filterOptions!.map(o => o.id) }));
+            }
         }
     };
 
@@ -79,15 +88,25 @@ const RelatorioPersonalizadoPage: React.FC = () => {
             selectedCompanyFields,
             selectedSituations,
             headerConfig || DEFAULT_HEADER,
-            format
+            format,
+            moduleFilters
         );
     };
 
-    return (
-        <div className="space-y-6 animate-fade-in pb-20">
-            {/* Header Area */}
-            <div className="bg-card rounded-[2rem] border border-border/50 shadow-sm shadow-primary/5 overflow-hidden">
-                <div className="p-8 space-y-8">
+  return (
+    <div className="space-y-6 animate-fade-in pb-20">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="header-title">Relatórios Personalizados</h1>
+            <FavoriteToggleButton moduleId="reports-custom" />
+          </div>
+          <p className="subtitle-premium">Gere relatórios complexos cruzando dados de múltiplos departamentos.</p>
+        </div>
+      </div>
+
+      <div className="bg-card rounded-[2rem] border border-border/50 shadow-sm shadow-primary/5 overflow-hidden">
+        <div className="p-8 space-y-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="space-y-1">
                             <div className="flex items-center gap-3">
@@ -286,6 +305,40 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                                                         </button>
                                                     ))}
                                             </div>
+
+                                            {/* Sub-filtros por valor (ex: Tipos de Declaração) */}
+                                            {mod.filterOptions && (
+                                                <div className="mt-6 pt-6 border-t border-border/40 space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <Filter size={14} className="text-primary" />
+                                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-xs">
+                                                            Quais {mod.label} incluir?
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {mod.filterOptions.map(opt => (
+                                                            <button
+                                                                key={opt.id}
+                                                                onClick={() => {
+                                                                    const current = moduleFilters[modId] || [];
+                                                                    if (current.includes(opt.id)) {
+                                                                        setModuleFilters(prev => ({ ...prev, [modId]: current.filter(val => val !== opt.id) }));
+                                                                    } else {
+                                                                        setModuleFilters(prev => ({ ...prev, [modId]: [...current, opt.id] }));
+                                                                    }
+                                                                }}
+                                                                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
+                                                                    (moduleFilters[modId] || []).includes(opt.id)
+                                                                    ? "bg-primary text-white border-primary shadow-sm"
+                                                                    : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/20"
+                                                                }`}
+                                                            >
+                                                                {opt.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );

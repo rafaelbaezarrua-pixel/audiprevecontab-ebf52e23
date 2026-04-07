@@ -160,193 +160,210 @@ const HonorariosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in relative">
-      {isFetchingHonorarios && (
-        <div className="fixed top-20 right-8 z-50 flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 shadow-sm animate-pulse">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-            <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
-        </div>
-      )}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full sm:w-auto">
-          <FavoriteToggleButton moduleId="honorarios" />
-          <div>
-            <h2 className="text-lg font-bold text-card-foreground">Honorários</h2>
-            <p className="text-xs text-muted-foreground">Gestão de honorários e faturamento.</p>
+    <div className="space-y-8 animate-fade-in pb-20 relative">
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <h1 className="header-title">Gestão <span className="text-primary/90">Financeira</span></h1>
+            <FavoriteToggleButton moduleId="honorarios" />
+            {isFetchingHonorarios && (
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 shadow-sm animate-pulse ml-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                  <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
+              </div>
+            )}
           </div>
+          <p className="subtitle-premium">Controle de honorários, serviços extras e faturamento mensal.</p>
         </div>
-        <div className="flex bg-muted/30 p-1 rounded-xl w-full sm:w-fit">
+        
+        <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/50 w-full max-w-sm shadow-sm h-14 items-center">
           <button
-            className={`flex-1 sm:flex-none uppercase tracking-wider text-xs font-bold px-6 py-2.5 rounded-lg transition-all duration-200 ${mainTab === "empresas" ? "bg-background text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
             onClick={() => setMainTab("empresas")}
+            className={`flex-1 flex items-center justify-center py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mainTab === "empresas" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
           >
-            Painel de Empresas
+            Individual
           </button>
           <button
-            className={`flex-1 sm:flex-none uppercase tracking-wider text-xs font-bold px-6 py-2.5 rounded-lg transition-all duration-200 ${mainTab === "geral" ? "bg-background text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
             onClick={() => setMainTab("geral")}
+            className={`flex-1 flex items-center justify-center py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mainTab === "geral" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
           >
-            Controle Geral (Resumo)
+            Consolidado
           </button>
         </div>
       </div>
 
       {mainTab === "geral" ? (
-        <HonorariosGeralView
-          geralData={listGeral}
-          esporadicosData={listEsporadicos}
-          revenueTrend={revenueTrend}
-          todasEmpresas={todasEmpresas as any}
-          globalCompetencia={globalCompetencia}
-          setGlobalCompetencia={setGlobalCompetencia}
-          onToggleMensalPago={(id, current) => saveMensal.mutate({ id, pago: !current })}
-          onToggleMensalStatus={(id, current) => saveMensal.mutate({ id, status: current === "enviada" ? "gerada" : "enviada" })}
-          onToggleEsporadicoPago={(id, current) => saveEsporadico.mutate({ id, pago: !current } as ServicoEsporadico)}
-          onDeleteEsporadico={(id) => deleteEsporadico.mutate(id)}
-          onSaveEsporadico={(data) => saveEsporadico.mutate({ ...data, competencia: globalCompetencia } as ServicoEsporadico)}
-          onActionGerar={async (empresaId) => {
-            // 1. Identify correct sub-tab for the company
-            const empresa = todasEmpresas.find(e => e.id === empresaId);
-            if (empresa) {
-              if (empresa.situacao === "paralisada") setActiveStatusTab("paralisadas");
-              else if (empresa.situacao === "baixada") setActiveStatusTab("baixadas");
-              else if (empresa.porte_empresa === "mei") setActiveStatusTab("mei");
-              else setActiveStatusTab("ativas");
-            }
-
-            // 2. Switch tab and expand
-            setMainTab("empresas");
-            setExpanded(empresaId);
-            setActiveTabs(prev => ({ ...prev, [empresaId]: "mensal" }));
-            setCompetenciaSelecionada(prev => ({ ...prev, [empresaId]: globalCompetencia }));
-
-            // 3. Load config and generate (mimic toggleExpand + handleGenerateMonth)
-            const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
-            const finalConfig: Partial<HonorarioConfig> = (config as unknown as Partial<HonorarioConfig>) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
-
-            setConfigs(prev => ({ ...prev, [empresaId]: finalConfig }));
-            setConfigForms(prev => ({ ...prev, [empresaId]: { ...finalConfig } }));
-
-            const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empresaId).order('competencia', { ascending: false });
-            setMensalData(prev => ({ ...prev, [empresaId]: (mensal as unknown as HonorarioMensal[]) || [] }));
-
-            // 4. Trigger generation with the loaded config
-            const { data: pessoalData } = await supabase.from("pessoal").select("*").eq("empresa_id", empresaId).eq("competencia", globalCompetencia).maybeSingle();
-            const qtdFunc = (pessoalData?.qtd_funcionarios || 0) + (pessoalData?.qtd_pro_labore || 0);
-            const qtdRecibos = (pessoalData?.qtd_recibos || 0);
-            const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
-            const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", globalCompetencia);
-
-            const { total: valorTotal, detalhes } = calculateTotal(finalConfig, qtdFunc, (qtdRecalculos as number) || 0, teveTrabalhista || false, qtdRecibos);
-
-            setMensalForms(prev => ({
-              ...prev, [empresaId]: {
-                competencia: globalCompetencia,
-                qtd_funcionarios: qtdFunc,
-                qtd_recalculos: (qtdRecalculos as number) || 0,
-                qtd_recibos: qtdRecibos,
-                teve_encargo_trabalhista: teveTrabalhista || false,
-                valor_total: valorTotal,
-                detalhes_calculo: detalhes,
-                empresa_id: empresaId,
-                data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: { texto: "" }
+        <div className="animate-in slide-in-from-right-4 duration-500">
+          <HonorariosGeralView
+            geralData={listGeral}
+            esporadicosData={listEsporadicos}
+            revenueTrend={revenueTrend}
+            todasEmpresas={todasEmpresas as any}
+            globalCompetencia={globalCompetencia}
+            setGlobalCompetencia={setGlobalCompetencia}
+            onToggleMensalPago={(id, current) => saveMensal.mutate({ id, pago: !current })}
+            onToggleMensalStatus={(id, current) => saveMensal.mutate({ id, status: current === "enviada" ? "gerada" : "enviada" })}
+            onToggleEsporadicoPago={(id, current) => saveEsporadico.mutate({ id, pago: !current } as ServicoEsporadico)}
+            onDeleteEsporadico={(id) => deleteEsporadico.mutate(id)}
+            onSaveEsporadico={(data) => saveEsporadico.mutate({ ...data, competencia: globalCompetencia } as ServicoEsporadico)}
+            onActionGerar={async (empresaId) => {
+              const empresa = todasEmpresas.find(e => e.id === empresaId);
+              if (empresa) {
+                if (empresa.situacao === "paralisada") setActiveStatusTab("paralisadas");
+                else if (empresa.situacao === "baixada") setActiveStatusTab("baixadas");
+                else if (empresa.porte_empresa === "mei") setActiveStatusTab("mei");
+                else setActiveStatusTab("ativas");
               }
-            }));
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onUpdateValor={(id, val) => saveMensal.mutate({ id, valor_total: val })}
-        />
-      ) : (
-        <div className="space-y-4 animate-fade-in">
-          <div className="flex border-b border-border overflow-x-auto no-scrollbar">
-            {["ativas", "mei", "paralisadas", "baixadas", "entregue"].map(t => (
-              <button
-                key={t}
-                className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-                onClick={() => setActiveStatusTab(t as any)}
-              >
-                {t === "ativas" ? "Empresas Ativas" : t === "mei" ? "Empresas MEI" : t === "paralisadas" ? "Empresas Paralisadas" : t === "entregue" ? "Empresas Entregues" : "Empresas Baixadas"}
-              </button>
-            ))}
-          </div>
+              setMainTab("empresas");
+              setExpanded(empresaId);
+              setActiveTabs(prev => ({ ...prev, [empresaId]: "mensal" }));
+              setCompetenciaSelecionada(prev => ({ ...prev, [empresaId]: globalCompetencia }));
 
-          <div className="relative max-w-sm">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className={inputCls + " pl-9"} />
-          </div>
+              const { data: config } = await supabase.from("honorarios_config").select("*").eq("empresa_id", empresaId).maybeSingle();
+              const finalConfig: Partial<HonorarioConfig> = (config as unknown as Partial<HonorarioConfig>) || { empresa_id: empresaId, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
 
-          <HonorariosEmpresasView
-            empresas={paginatedData as any}
-            expanded={expanded}
-            onToggleExpand={toggleExpand}
-            activeTabs={activeTabs}
-            setActiveTab={(id, tab) => setActiveTabs(prev => ({ ...prev, [id]: tab }))}
-            configs={configs}
-            configForms={configForms}
-            onUpdateConfigField={(id, f, v) => setConfigForms(prev => ({ ...prev, [id]: { ...prev[id], [f]: v } }))}
-            onAddOutroServico={(id) => setConfigForms(prev => ({ ...prev, [id]: { ...prev[id], outros_servicos: [...(prev[id]?.outros_servicos || []), { descricao: "", valor: 0 }] } }))}
-            onUpdateOutroServico={(id, idx, f, v) => setConfigForms(prev => {
-              const outros = [...(prev[id]?.outros_servicos || [])];
-              outros[idx] = { ...outros[idx], [f]: v };
-              return { ...prev, [id]: { ...prev[id], outros_servicos: outros } };
-            })}
-            onRemoveOutroServico={(id, idx) => setConfigForms(prev => {
-              const outros = [...(prev[id]?.outros_servicos || [])];
-              outros.splice(idx, 1);
-              return { ...prev, [id]: { ...prev[id], outros_servicos: outros } };
-            })}
-            onSaveConfig={(id) => {
-              const form = configForms[id];
-              const finalizedFields = {
-                valor_honorario: parseCurrency(form?.valor_honorario),
-                valor_por_funcionario: parseCurrency(form?.valor_por_funcionario),
-                valor_por_recalculo: parseCurrency(form?.valor_por_recalculo),
-                valor_trabalhista: parseCurrency(form?.valor_trabalhista),
-                valor_por_recibo: parseCurrency(form?.valor_por_recibo),
-                outros_servicos: (form?.outros_servicos || []).map((s: any) => ({ ...s, valor: parseCurrency(s.valor) }))
-              };
-              const payload = { ...form, ...finalizedFields };
+              setConfigs(prev => ({ ...prev, [empresaId]: finalConfig }));
+              setConfigForms(prev => ({ ...prev, [empresaId]: { ...finalConfig } }));
 
-              saveConfig.mutate(payload as any, {
-                onSuccess: () => {
-                  setConfigs(prev => ({ ...prev, [id]: payload }));
+              const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empresaId).order('competencia', { ascending: false });
+              setMensalData(prev => ({ ...prev, [empresaId]: (mensal as unknown as HonorarioMensal[]) || [] }));
+
+              const { data: pessoalData } = await supabase.from("pessoal").select("*").eq("empresa_id", empresaId).eq("competencia", globalCompetencia).maybeSingle();
+              const qtdFunc = (pessoalData?.qtd_funcionarios || 0) + (pessoalData?.qtd_pro_labore || 0);
+              const qtdRecibos = (pessoalData?.qtd_recibos || 0);
+              const teveTrabalhista = pessoalData?.possui_vt || pessoalData?.possui_va || pessoalData?.possui_vc;
+              const { count: qtdRecalculos } = await supabase.from("recalculos").select("*", { count: 'exact', head: true }).eq("empresa_id", empresaId).eq("competencia", globalCompetencia);
+
+              const { total: valorTotal, detalhes } = calculateTotal(finalConfig, qtdFunc, (qtdRecalculos as number) || 0, teveTrabalhista || false, qtdRecibos);
+
+              setMensalForms(prev => ({
+                ...prev, [empresaId]: {
+                  competencia: globalCompetencia,
+                  qtd_funcionarios: qtdFunc,
+                  qtd_recalculos: (qtdRecalculos as number) || 0,
+                  qtd_recibos: qtdRecibos,
+                  teve_encargo_trabalhista: teveTrabalhista || false,
+                  valor_total: valorTotal,
+                  detalhes_calculo: detalhes,
+                  empresa_id: empresaId,
+                  data_vencimento: "", data_envio: "", forma_envio: "", status: "pendente", pago: false, observacoes: { texto: "" }
                 }
-              });
+              }));
+
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            mensalData={mensalData}
-            mensalForms={mensalForms as any}
-            onUpdateMensalField={(id, f, v) => setMensalForms(prev => ({ ...prev, [id]: { ...prev[id], [f]: v } }))}
-            onSaveMensal={async (id) => {
-              const form = mensalForms[id];
-              await saveMensal.mutateAsync({
-                ...form,
-                data_vencimento: form?.data_vencimento || null,
-                data_envio: form?.data_envio || null,
-                observacoes: form?.observacoes ? { texto: typeof form.observacoes === 'string' ? form.observacoes : form.observacoes.texto } : null
-              } as any);
-              setMensalForms(prev => { const n = { ...prev }; delete n[id]; return n; });
-              const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", id).order('competencia', { ascending: false });
-              setMensalData(prev => ({ ...prev, [id]: (mensal as unknown as HonorarioMensal[]) || [] }));
-            }}
-            onGenerateMonth={handleGenerateMonth}
-            onStartEditMensal={(id, record) => {
-              setCompetenciaSelecionada(prev => ({ ...prev, [id]: record.competencia }));
-              setMensalForms(prev => ({ ...prev, [id]: { ...record, observacoes: { texto: record.observacoes?.texto || "" } } }));
-            }}
-            competenciaSelecionada={competenciaSelecionada}
-            setCompetenciaSelecionada={(id, v) => setCompetenciaSelecionada(prev => ({ ...prev, [id]: v }))}
-            onCancelMensalForm={(id) => setMensalForms(prev => { const n = { ...prev }; delete n[id]; return n; })}
-            pagination={pagination}
-            onPageChange={(page) => setPagination(prev => ({ ...prev, pageIndex: page }))}
-            totalCount={totalCount}
-            loading={loadingPaginated}
-            onUpdateMensalValor={async (empId, recId, val) => {
-              await saveMensal.mutateAsync({ id: recId, valor_total: val } as any);
-              const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empId).order('competencia', { ascending: false });
-              setMensalData(prev => ({ ...prev, [empId]: (mensal as unknown as HonorarioMensal[]) || [] }));
-            }}
+            onUpdateValor={(id, val) => saveMensal.mutate({ id, valor_total: val })}
           />
+        </div>
+      ) : (
+        <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+             <div className="relative flex-1 w-full md:max-w-md">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Buscar empresa por nome ou CNPJ..." 
+                  value={search} 
+                  onChange={e => setSearch(e.target.value)} 
+                  className="w-full pl-12 pr-4 h-14 bg-card border border-border/60 rounded-2xl focus:ring-2 focus:ring-primary outline-none text-xs shadow-sm font-bold transition-all placeholder:text-muted-foreground/60" 
+                />
+              </div>
+
+              <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/50 overflow-x-auto no-scrollbar gap-1 w-full md:w-auto h-14 items-center">
+                {[
+                  { id: "ativas", label: "Ativas" }, 
+                  { id: "mei", label: "MEI" }, 
+                  { id: "paralisadas", label: "Paralisadas" }, 
+                  { id: "baixadas", label: "Baixadas" }, 
+                  { id: "entregue", label: "Entregues" }
+                ].map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveStatusTab(t.id as any)}
+                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === t.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+          </div>
+
+          <div className="animate-in fade-in zoom-in-95 duration-500">
+            <HonorariosEmpresasView
+              empresas={paginatedData as any}
+              expanded={expanded}
+              onToggleExpand={toggleExpand}
+              activeTabs={activeTabs}
+              setActiveTab={(id, tab) => setActiveTabs(prev => ({ ...prev, [id]: tab }))}
+              configs={configs}
+              configForms={configForms}
+              onUpdateConfigField={(id, f, v) => setConfigForms(prev => ({ ...prev, [id]: { ...prev[id], [f]: v } }))}
+              onAddOutroServico={(id) => setConfigForms(prev => ({ ...prev, [id]: { ...prev[id], outros_servicos: [...(prev[id]?.outros_servicos || []), { descricao: "", valor: 0 }] } }))}
+              onUpdateOutroServico={(id, idx, f, v) => setConfigForms(prev => {
+                const outros = [...(prev[id]?.outros_servicos || [])];
+                outros[idx] = { ...outros[idx], [f]: v };
+                return { ...prev, [id]: { ...prev[id], outros_servicos: outros } };
+              })}
+              onRemoveOutroServico={(id, idx) => setConfigForms(prev => {
+                const outros = [...(prev[id]?.outros_servicos || [])];
+                outros.splice(idx, 1);
+                return { ...prev, [id]: { ...prev[id], outros_servicos: outros } };
+              })}
+              onSaveConfig={(id) => {
+                const form = configForms[id];
+                const finalizedFields = {
+                  valor_honorario: parseCurrency(form?.valor_honorario),
+                  valor_por_funcionario: parseCurrency(form?.valor_por_funcionario),
+                  valor_por_recalculo: parseCurrency(form?.valor_por_recalculo),
+                  valor_trabalhista: parseCurrency(form?.valor_trabalhista),
+                  valor_por_recibo: parseCurrency(form?.valor_por_recibo),
+                  outros_servicos: (form?.outros_servicos || []).map((s: any) => ({ ...s, valor: parseCurrency(s.valor) }))
+                };
+                const payload = { ...form, ...finalizedFields };
+
+                saveConfig.mutate(payload as any, {
+                  onSuccess: () => {
+                    setConfigs(prev => ({ ...prev, [id]: payload }));
+                  }
+                });
+              }}
+              mensalData={mensalData}
+              mensalForms={mensalForms as any}
+              onUpdateMensalField={(id, f, v) => setMensalForms(prev => ({ ...prev, [id]: { ...prev[id], [f]: v } }))}
+              onSaveMensal={async (id) => {
+                const form = mensalForms[id];
+                await saveMensal.mutateAsync({
+                  ...form,
+                  data_vencimento: form?.data_vencimento || null,
+                  data_envio: form?.data_envio || null,
+                  observacoes: form?.observacoes ? { texto: typeof form.observacoes === 'string' ? form.observacoes : form.observacoes.texto } : null
+                } as any);
+                setMensalForms(prev => { const n = { ...prev }; delete n[id]; return n; });
+                const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", id).order('competencia', { ascending: false });
+                setMensalData(prev => ({ ...prev, [id]: (mensal as unknown as HonorarioMensal[]) || [] }));
+              }}
+              onGenerateMonth={handleGenerateMonth}
+              onStartEditMensal={(id, record) => {
+                setCompetenciaSelecionada(prev => ({ ...prev, [id]: record.competencia }));
+                setMensalForms(prev => ({ ...prev, [id]: { ...record, observacoes: { texto: record.observacoes?.texto || "" } } }));
+              }}
+              competenciaSelecionada={competenciaSelecionada}
+              setCompetenciaSelecionada={(id, v) => setCompetenciaSelecionada(prev => ({ ...prev, [id]: v }))}
+              onCancelMensalForm={(id) => setMensalForms(prev => { const n = { ...prev }; delete n[id]; return n; })}
+              pagination={pagination}
+              onPageChange={(page) => setPagination(prev => ({ ...prev, pageIndex: page }))}
+              totalCount={totalCount}
+              loading={loadingPaginated}
+              onUpdateMensalValor={async (empId, recId, val) => {
+                await saveMensal.mutateAsync({ id: recId, valor_total: val } as any);
+                const { data: mensal } = await supabase.from("honorarios_mensal").select("*").eq("empresa_id", empId).order('competencia', { ascending: false });
+                setMensalData(prev => ({ ...prev, [empId]: (mensal as unknown as HonorarioMensal[]) || [] }));
+              }}
+            />
+          </div>
         </div>
       )}
     </div>
