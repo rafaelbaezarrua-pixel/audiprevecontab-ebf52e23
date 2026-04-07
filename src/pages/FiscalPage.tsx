@@ -26,13 +26,13 @@ const FiscalPage: React.FC = () => {
   const [filterRecebimento, setFilterRecebimento] = useState<string>("todos");
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
   const [dialogEmpresa, setDialogEmpresa] = useState<any>(null);
-  
+
   const filtered = React.useMemo(() => {
     return empresas.filter(e => {
       const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
       let matchTab = false;
       const isOutra = e.situacao === "paralisada" || e.situacao === "baixada" || e.situacao === "entregue";
-      
+
       if (activeTab === "simples") {
         matchTab = !isOutra && e.regime_tributario === "simples" && e.porte_empresa !== "mei";
       } else if (activeTab === "lucro") {
@@ -46,9 +46,9 @@ const FiscalPage: React.FC = () => {
       let matchStatus = true;
       if (filterStatus !== "todos") {
         const record = fiscalData[e.id];
-        const items = e.regime_tributario === 'simples' ? ['status_guia'] : 
-                      e.regime_tributario === 'lucro_presumido' || e.regime_tributario === 'lucro_real' ? 
-                      ['irpj_csll_status', 'pis_cofins_status', 'icms_status', 'iss_status'] : [];
+        const items = e.regime_tributario === 'simples' ? ['status_guia'] :
+          e.regime_tributario === 'lucro_presumido' || e.regime_tributario === 'lucro_real' ?
+            ['irpj_csll_status', 'pis_cofins_status', 'icms_status', 'iss_status'] : [];
         if (items.length > 0) {
           const statuses = items.map(field => record?.[field as keyof FiscalRecord] || 'pendente');
           const isAllConcluido = statuses.every(s => s === 'enviada' || s === 'gerada' || s === 'isento');
@@ -62,7 +62,7 @@ const FiscalPage: React.FC = () => {
         const recFormatado = record?.recebimento_arquivos?.trim() || "";
         matchRecebimento = recFormatado.toLowerCase() === filterRecebimento.toLowerCase();
       }
-      
+
       return matchSearch && matchTab && matchStatus && matchRecebimento;
     });
   }, [empresas, fiscalData, search, activeTab, filterStatus, filterRecebimento]);
@@ -122,16 +122,16 @@ const FiscalPage: React.FC = () => {
   const handleBulkConfirm = async (guides: ProcessingResult[]) => {
     for (const guide of guides) {
       if (!guide.data || !guide.empresa) continue;
-      
+
       // Detect guide type and field
       const guideType = guide.data.tipo;
       let fieldPrefix = "";
-      
+
       if (guideType?.includes("Simples")) fieldPrefix = ""; // status_guia
       else if (guideType?.includes("INSS")) fieldPrefix = "irpj_csll_"; // Heuristic
       else if (guideType?.includes("IRPJ")) fieldPrefix = "irpj_csll_";
       else if (guideType?.includes("ISS")) fieldPrefix = "iss_";
-      
+
       const payload: any = {
         empresa_id: guide.empresa.id,
         competencia: competencia, // Use current page competencia
@@ -144,7 +144,7 @@ const FiscalPage: React.FC = () => {
         payload[`${fieldPrefix}status`] = "enviada";
         payload[`${fieldPrefix}data_envio`] = new Date().toISOString().split('T')[0];
       }
-      
+
       try {
         await saveFiscalRecord(payload);
       } catch (e) {
@@ -163,7 +163,7 @@ const FiscalPage: React.FC = () => {
       };
       await saveFiscalRecord(payload);
       toast.success("Parâmetros atualizados!");
-      
+
       if (expanded === dialogEmpresa.id) {
         setEditForm(prev => ({
           ...prev,
@@ -184,7 +184,7 @@ const FiscalPage: React.FC = () => {
     // Default options that always appear
     options.add("EMAIL");
     options.add("FLY NOTAS");
-    
+
     Object.values(fiscalData).forEach(r => {
       if (r?.recebimento_arquivos && r.recebimento_arquivos.trim() !== "") {
         options.add(r.recebimento_arquivos.trim().toUpperCase());
@@ -211,8 +211,8 @@ const FiscalPage: React.FC = () => {
     <div className="space-y-6 animate-fade-in relative">
       {(empresasFetching || fiscalFetching) && (
         <div className="fixed top-20 right-8 z-50 flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 shadow-sm animate-pulse">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-            <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+          <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
         </div>
       )}
       <div className="flex flex-col gap-4 pb-2">
@@ -226,7 +226,7 @@ const FiscalPage: React.FC = () => {
 
           <div className="flex items-center gap-2 shrink-0">
             <FavoriteToggleButton moduleId="fiscal" />
-            <button 
+            <button
               onClick={() => setIsUploaderOpen(true)}
               className="flex items-center gap-2 px-4 h-12 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl transition-all font-bold text-sm shrink-0 border border-primary/20 shadow-sm"
             >
@@ -255,10 +255,10 @@ const FiscalPage: React.FC = () => {
           </div>
 
           <div className="flex bg-muted/40 p-1.5 rounded-xl border border-border/50 shrink-0">
-            {[{id: "todos", label: "Visão Geral"}, {id: "pendente", label: "Pendentes"}, {id: "concluido", label: "Concluídos"}].map(s => (
-              <button 
-                key={s.id} 
-                onClick={() => setFilterStatus(s.id as any)} 
+            {[{ id: "todos", label: "Visão Geral" }, { id: "pendente", label: "Pendentes" }, { id: "concluido", label: "Concluídos" }].map(s => (
+              <button
+                key={s.id}
+                onClick={() => setFilterStatus(s.id as any)}
                 className={`px-6 py-2.5 rounded-lg text-xs font-black transition-all whitespace-nowrap tracking-wide min-w-[120px] ${filterStatus === s.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {s.label.toUpperCase()}
@@ -269,7 +269,7 @@ const FiscalPage: React.FC = () => {
       </div>
 
       <div className="flex border-b border-border overflow-x-auto no-scrollbar">
-        {[{id: "simples", l: "Simples Nacional"}, {id: "lucro", l: "Lucro Presumido/Real"}, {id: "mei", l: "MEI"}, {id: "outras", l: "Paralisadas/Baixadas"}].map(t => <button key={t.id} className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === t.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`} onClick={() => setActiveTab(t.id as any)}>{t.l}</button>)}
+        {[{ id: "simples", l: "Simples Nacional" }, { id: "lucro", l: "Lucro Presumido/Real" }, { id: "mei", l: "MEI" }, { id: "outras", l: "Paralisadas/Baixadas" }].map(t => <button key={t.id} className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === t.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`} onClick={() => setActiveTab(t.id as any)}>{t.l}</button>)}
       </div>
 
       <div className="space-y-3">
@@ -289,34 +289,34 @@ const FiscalPage: React.FC = () => {
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-bold text-foreground">Status Mensal e Fechamento</h3>
                     <button onClick={() => setDialogEmpresa(emp)} className="text-xs font-bold text-primary hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors border border-primary/20">
-                      Ajustar Parâmetros Fixos
+                      Ajustar Parâmetros
                     </button>
                   </div>
-                  
+
                   <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-wrap gap-x-6 gap-y-4 mb-4">
-                    {[{l: 'Tipo de Nota', v: form.tipo_nota}, {l: 'Recebimento', v: form.recebimento_arquivos}, {l: 'Forma de Envio', v: form.forma_envio}, {l: 'Ramo', v: form.ramo_empresarial}]
-                    .map(x => <div key={x.l} className="flex-1 min-w-[120px]"><span className="block text-[10px] uppercase text-muted-foreground font-bold">{x.l}</span><span className="text-sm font-black text-foreground">{x.v || "—"}</span></div>)}
+                    {[{ l: 'Tipo de Nota', v: form.tipo_nota }, { l: 'Recebimento', v: form.recebimento_arquivos }, { l: 'Forma de Envio', v: form.forma_envio }, { l: 'Ramo', v: form.ramo_empresarial }]
+                      .map(x => <div key={x.l} className="flex-1 min-w-[120px]"><span className="block text-[10px] uppercase text-muted-foreground font-bold">{x.l}</span><span className="text-sm font-black text-foreground">{x.v || "—"}</span></div>)}
                   </div>
 
                   {emp.regime_tributario === "lucro_real" || emp.regime_tributario === "lucro_presumido" ? (
                     <div className="space-y-6">
                       <div className="bg-card p-4 rounded-xl border border-border shadow-sm space-y-4">
                         <h4 className="text-sm font-bold text-foreground border-b border-border pb-2">Federais</h4>
-                        {[{l: 'IRPJ/CSLL', ak1: 'aliquota_irpj', ak2: 'aliquota_csll', sk: 'irpj_csll_status', dk: 'irpj_csll_data_envio'}, {l: 'PIS/COFINS', ak1: 'aliquota_pis', ak2: 'aliquota_cofins', sk: 'pis_cofins_status', dk: 'pis_cofins_data_envio'}]
-                        .map(x => (
-                          <div key={x.l} className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <p className="text-[10px] font-black text-foreground uppercase">{x.l}</p>
-                              <span className="text-[10px] font-bold bg-muted px-2 py-0.5 rounded-md border border-border">Alíq: {form[x.ak1] || "—"}% / {form[x.ak2] || "—"}%</span>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[{ l: 'IRPJ/CSLL', ak1: 'aliquota_irpj', ak2: 'aliquota_csll', sk: 'irpj_csll_status', dk: 'irpj_csll_data_envio' }, { l: 'PIS/COFINS', ak1: 'aliquota_pis', ak2: 'aliquota_cofins', sk: 'pis_cofins_status', dk: 'pis_cofins_data_envio' }]
+                          .map(x => (
+                            <div key={x.l} className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <p className="text-[10px] font-black text-foreground uppercase">{x.l}</p>
+                                <span className="text-[10px] font-bold bg-muted px-2 py-0.5 rounded-md border border-border">Alíq: {form[x.ak1] || "—"}% / {form[x.ak2] || "—"}%</span>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div><label className={labelCls}>Status</label><select value={form[x.sk] || "pendente"} onChange={e => updateForm(emp.id, x.sk, e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option><option value="isento">Isento</option></select></div>
                                 <div><label className={labelCls}>Data</label><input type="date" value={form[x.dk] || ""} onChange={e => updateForm(emp.id, x.dk, e.target.value)} className={inputCls} /></div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
-                      {[{l: 'Estaduais (ICMS)', ak: 'aliquota_icms', sk: 'icms_status', dk: 'icms_data_envio'}, {l: 'Municipais (ISS)', ak: 'aliquota_iss', sk: 'iss_status', dk: 'iss_data_envio'}].map(x => (
+                      {[{ l: 'Estaduais (ICMS)', ak: 'aliquota_icms', sk: 'icms_status', dk: 'icms_data_envio' }, { l: 'Municipais (ISS)', ak: 'aliquota_iss', sk: 'iss_status', dk: 'iss_data_envio' }].map(x => (
                         <div key={x.l} className="bg-card p-4 rounded-xl border border-border shadow-sm space-y-3"><div className="flex items-center gap-2"><h4 className="text-[10px] font-black text-foreground uppercase">{x.l}</h4><span className="text-[10px] font-bold bg-muted px-2 py-0.5 rounded-md border border-border">Alíq: {form[x.ak] || "—"}%</span></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className={labelCls}>Status</label><select value={form[x.sk] || "pendente"} onChange={e => updateForm(emp.id, x.sk, e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option><option value="isento">Isento</option></select></div><div><label className={labelCls}>Data</label><input type="date" value={form[x.dk] || ""} onChange={e => updateForm(emp.id, x.dk, e.target.value)} className={inputCls} /></div></div></div>
                       ))}
                     </div>
@@ -332,8 +332,8 @@ const FiscalPage: React.FC = () => {
       </div>
 
       {isUploaderOpen && (
-        <TaxGuideUploader 
-          empresas={empresas} 
+        <TaxGuideUploader
+          empresas={empresas}
           onClose={() => setIsUploaderOpen(false)}
           onConfirm={handleBulkConfirm}
           competenciaFiltro={competencia}
