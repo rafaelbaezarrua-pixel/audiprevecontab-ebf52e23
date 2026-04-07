@@ -198,172 +198,262 @@ const PessoalPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-20 relative">
       {(empresasFetching || pessoalFetching) && (
         <div className="fixed top-20 right-8 z-50 flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 shadow-sm animate-pulse">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-            <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+          <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
         </div>
       )}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex bg-card border border-border/60 rounded-xl shadow-sm overflow-hidden h-12">
-          <div className="px-4 flex items-center gap-2 border-r border-border/60">
-            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Empresas</span>
-            <span className="text-lg font-black text-primary">{filtered.length}</span>
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="header-title">Departamento <span className="text-primary/90">Pessoal</span></h1>
+            <FavoriteToggleButton moduleId="pessoal" />
           </div>
-          <div className="px-4 flex items-center gap-2 border-r border-border/60">
-            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Concluídas</span>
-            <span className="text-lg font-black text-emerald-500">{completedCount}</span>
-          </div>
-          <div className="px-4 flex items-center gap-2 bg-warning/5">
-            <span className="text-[10px] text-warning font-bold uppercase tracking-wider">Pendentes</span>
-            <span className="text-lg font-black text-warning">{filtered.length - completedCount}</span>
-          </div>
-          <div className="px-4 flex items-center gap-4 bg-destructive/5 border-l border-border/60">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-destructive font-bold uppercase tracking-wider">ASO Vencendo</span>
-              <span className="text-lg font-black text-destructive">{alertsSummary.aso}</span>
-            </div>
-            <div className="flex items-center gap-2 border-l border-destructive/10 pl-4">
-              <span className="text-[10px] text-destructive font-bold uppercase tracking-wider">Férias 30d</span>
-              <span className="text-lg font-black text-destructive">{alertsSummary.ferias}</span>
-            </div>
-          </div>
+          <p className="subtitle-premium">Gestão de funcionários, folha de pagamento e obrigações trabalhistas.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
-          <FavoriteToggleButton moduleId="pessoal" />
-          <button 
+        <div className="flex items-center gap-3">
+          <button
             onClick={() => setIsUploaderOpen(true)}
-            className="flex items-center gap-2 px-4 h-10 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl transition-all font-bold text-sm"
+            className="flex items-center gap-2 px-6 h-12 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest shrink-0 border border-primary/20 shadow-sm"
           >
             <FileUp size={18} />
             <span>Automação PDF</span>
           </button>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-            <input
-              type="text"
-              placeholder="Buscar empresa..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 h-10 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-[13px] w-full sm:w-56"
+          
+          <div className="flex items-center gap-2 px-4 h-12 bg-card border border-border/60 rounded-xl shadow-sm">
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Competência:</span>
+            <input 
+              type="month" 
+              value={competencia} 
+              onChange={(e) => setCompetencia(e.target.value)} 
+              className="bg-transparent border-none focus:ring-0 text-sm font-black outline-none text-center h-full pt-0.5 w-[120px]" 
             />
           </div>
-          <input
-            type="month"
-            value={competencia}
-            onChange={(e) => setCompetencia(e.target.value)}
-            className="px-4 h-10 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-[13px] font-medium"
-          />
-        </div>
-
-        <div className="flex bg-muted/50 p-1 rounded-lg self-end">
-          <button onClick={() => setFilterStatus("todos")} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "todos" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Todos</button>
-          <button onClick={() => setFilterStatus("pendente")} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "pendente" ? "bg-card text-orange-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Pendentes</button>
-          <button onClick={() => setFilterStatus("concluido")} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "concluido" ? "bg-card text-green-500 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Concluídos</button>
         </div>
       </div>
 
-      <div className="flex border-b border-border overflow-x-auto no-scrollbar">
-        {["ativas", "mei"].map(t => <button key={t} className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`} onClick={() => setActiveTab(t as any)}>Empresas {t === "ativas" ? "Ativas" : "MEI"}</button>)}
-      </div>
+      <div className="flex flex-col gap-4 pb-2">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 w-full md:w-auto">
+             <div className="flex bg-card border border-border/60 rounded-xl shadow-sm overflow-hidden h-12 shrink-0">
+              <div className="px-5 py-2 flex flex-col justify-center border-r border-border/60">
+                <span className="text-[8px] text-muted-foreground font-black uppercase tracking-wider leading-none mb-1">Empresas</span>
+                <span className="text-lg font-black text-primary leading-none">{filtered.length}</span>
+              </div>
+              <div className="px-5 py-2 flex flex-col justify-center border-r border-border/60">
+                <span className="text-[8px] text-muted-foreground font-black uppercase tracking-wider leading-none mb-1">Concluídas</span>
+                <span className="text-lg font-black text-emerald-500 leading-none">{completedCount}</span>
+              </div>
+              <div className="px-5 py-2 flex flex-col justify-center bg-orange-500/5">
+                <span className="text-[8px] text-orange-600 font-black uppercase tracking-wider leading-none mb-1">Pendentes</span>
+                <span className="text-lg font-black text-orange-500">{filtered.length - completedCount}</span>
+              </div>
+              <div className="px-5 py-2 flex flex-col justify-center bg-destructive/5">
+                <span className="text-[8px] text-destructive font-black uppercase tracking-wider leading-none mb-1">Alertas RH</span>
+                <span className="text-lg font-black text-destructive">{alertsSummary.aso + alertsSummary.ferias}</span>
+              </div>
+            </div>
 
-      <div className="flex gap-2 mb-2">
-        {[
-          { id: "folha", label: "Folha de Pagamento" },
-          { id: "prolabore", label: "Pró-labore" },
-          { id: "ponto", label: "Ponto e Recibos" }
-        ].map(s => (
-          <button 
-            key={s.id} 
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors ${activeSubTab === s.id ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`} 
-            onClick={() => setActiveSubTab(s.id as any)}
-          >
-            {s.label}
-          </button>
-        ))}
+            <div className="relative flex-1 md:w-80 md:flex-initial">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+              <input 
+                type="text" 
+                placeholder="Buscar funcionário ou empresa..." 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+                className="w-full pl-11 pr-4 h-12 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-xs shadow-sm font-bold transition-all" 
+              />
+            </div>
+          </div>
+
+          <div className="flex bg-muted/30 p-1 rounded-xl border border-border/50 shrink-0 h-12 items-center">
+            {[{ id: "todos", label: "Geral" }, { id: "pendente", label: "Pendentes" }, { id: "concluido", label: "Concluídos" }].map(s => (
+              <button
+                key={s.id}
+                onClick={() => setFilterStatus(s.id as any)}
+                className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${filterStatus === s.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-2">
+          <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/50 overflow-x-auto no-scrollbar gap-1 w-full md:w-auto">
+            {[{ id: "ativas", label: "Ativas" }, { id: "mei", label: "MEI" }].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id as any)}
+                className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/50 overflow-x-auto no-scrollbar gap-1 w-full md:w-auto">
+            {[
+              { id: "folha", label: "Folha / VT / VR" },
+              { id: "prolabore", label: "Pró-Labore" },
+              { id: "ponto", label: "Cartão Ponto" }
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setActiveSubTab(t.id as any)}
+                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === t.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-3">
         {filtered.map(emp => {
           const isOpen = expanded === emp.id;
           const form = editForm[emp.id] || {};
-          const done = pessoalData[emp.id]?.dctf_web_gerada;
+          const record = pessoalData[emp.id];
+          const done = record?.dctf_web_gerada;
+
           return (
-            <div key={emp.id} className="module-card !p-0 overflow-hidden">
-              <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => toggleExpand(emp.id)}>
-                <div className="flex items-center gap-3">{done ? <CheckCircle size={18} className="text-success" /> : <Circle size={18} className="text-muted-foreground" />}<div><p className="font-medium text-card-foreground">{emp.nome_empresa}</p><p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p></div></div>
-                <div className="flex items-center gap-2"><span className={`badge-status ${done ? "badge-success" : "badge-warning"}`}>{done ? "Concluído" : "Pendente"}</span>{isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}</div>
+            <div key={emp.id} className="module-card !p-0 overflow-hidden shadow-sm hover:shadow-md transition-all border border-border/60">
+              <div 
+                className="grid grid-cols-1 md:grid-cols-[1fr_auto] items-center gap-4 p-4 cursor-pointer hover:bg-muted/30 transition-colors" 
+                onClick={() => toggleExpand(emp.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${done ? "bg-emerald-100 text-emerald-600" : "bg-warning/10 text-warning"}`}>
+                    <Users size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-card-foreground">{emp.nome_empresa}</p>
+                    <p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3">
+                  <span className={`badge-status ${done ? "badge-success" : "badge-warning"}`}>
+                    {done ? "Concluído" : "Pendente"}
+                  </span>
+                  {isOpen ? <ChevronUp size={18} className="text-muted-foreground" /> : <ChevronDown size={18} className="text-muted-foreground" />}
+                </div>
               </div>
+
               {isOpen && (
-                <div className="border-t border-border p-5 space-y-5 bg-muted/10">
-                  {activeSubTab === "prolabore" && (
-                    <>
-                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3><div className="grid grid-cols-1 gap-4"><div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div></div></div>
-                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Obrigações - {competencia}</h3><div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">DCTF Web (Pró-labore)</span><select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}><option value="nao">Não Gerada</option><option value="sim">Gerada</option></select>{form.dctf_web_gerada ? <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} /> : <div />}</div></div>
-                    </>
-                  )}
-                  {activeSubTab === "folha" && (
-                    <>
-                      <div>
-                        <h3 className="text-sm font-semibold text-card-foreground mb-3">Informações</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className={inputCls} /></div>
-                          <div><label className={labelCls}>Qtd Funcionários</label><input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className={inputCls} /></div>
-                          <div><label className={labelCls}>Qtd Pró-labore</label><input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className={inputCls} /></div>
-                          <div>
-                            <label className={labelCls}>Módulo Ponto?</label>
-                            <label className="flex items-center gap-2 cursor-pointer p-2 rounded border border-border bg-background hover:bg-muted/30 h-[38px] transition-colors">
-                              <input 
-                                type="checkbox" 
-                                checked={!!form.possui_ponto_manual} 
-                                onChange={e => updateForm(emp.id, "possui_ponto_manual", e.target.checked)} 
-                                className="w-4 h-4 rounded border-border text-primary" 
-                              />
-                              <span className="text-xs font-bold text-primary whitespace-nowrap">Ponto Manual</span>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Trabalhistas - {competencia}</h3>
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-3 gap-3 items-center"><label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer"><input type="checkbox" checked={form.possui_recibos || false} onChange={e => updateForm(emp.id, "possui_recibos", e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> Recibos </label>{form.possui_recibos ? <div><label className={labelCls}>Qtd Recibos</label><input type="number" value={form.qtd_recibos || 0} onChange={e => updateForm(emp.id, "qtd_recibos", e.target.value)} className={inputCls} /></div> : <div />}<div /></div>
-                          {[{ label: "VT", k: "vt" }, { label: "VA", k: "va" }, { label: "VC", k: "vc" }].map(x => (
-                            <div key={x.k} className="grid grid-cols-3 gap-3 items-center"><label className="flex items-center gap-2 text-sm font-medium text-card-foreground cursor-pointer"><input type="checkbox" checked={form[`possui_${x.k}`] || false} onChange={e => updateForm(emp.id, `possui_${x.k}`, e.target.checked)} className="w-4 h-4 rounded border-border text-primary" /> {x.label} </label>{form[`possui_${x.k}`] ? <><select value={form[`${x.k}_status`] || "pendente"} onChange={e => updateForm(emp.id, `${x.k}_status`, e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select><input type="date" value={form[`${x.k}_data_envio`] || ""} onChange={e => updateForm(emp.id, `${x.k}_data_envio`, e.target.value)} className={inputCls} /></> : <><div /><div /></>}</div>
-                          ))}
-                        </div>
-                      </div>
-                      <div><h3 className="text-sm font-semibold text-card-foreground mb-3">Encargos - {competencia}</h3>
-                        <div className="space-y-3">
-                          {[{ l: "INSS", s: "inss_status", d: "inss_data_envio" }, { l: "FGTS", s: "fgts_status", d: "fgts_data_envio" }].map(enc => (
-                             <div key={enc.l} className="grid grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">{enc.l}</span><select value={form[enc.s] || "pendente"} onChange={e => updateForm(emp.id, enc.s, e.target.value)} className={inputCls}><option value="pendente">Pendente</option><option value="gerada">Gerada</option><option value="enviada">Enviada</option></select><input type="date" value={form[enc.d] || ""} onChange={e => updateForm(emp.id, enc.d, e.target.value)} className={inputCls} /></div>
-                          ))}
-                          <div className="grid grid-cols-3 gap-3 items-center"><span className="text-sm font-medium text-card-foreground">DCTF Web</span><select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className={inputCls}><option value="nao">Não Gerada</option><option value="sim">Gerada</option></select>{form.dctf_web_gerada ? <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className={inputCls} /> : <div />}</div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-3 pt-3 border-t border-border"><h3 className="text-sm font-semibold text-card-foreground flex items-center gap-2"><Users size={16} className="text-primary" /> Funcionários & Alertas</h3><button onClick={(e) => { e.stopPropagation(); navigate(`/pessoal/funcionarios/${emp.id}`); }} className="text-[10px] font-bold uppercase tracking-widest text-primary hover:underline flex items-center gap-1"><Settings size={12} /> Gerenciar</button></div>
-                        <div className="space-y-2">
-                          {(funcionarios[emp.id] || []).length === 0 ? <p className="text-xs text-muted-foreground italic bg-background/50 p-2 rounded-lg border border-dashed border-border">Nenhum funcionário cadastrado.</p> : (
-                            funcionarios[emp.id].map(func => (<div key={func.id} className="p-3 bg-background/50 rounded-lg border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><p className="text-sm font-medium">{func.nome}</p><div className="flex flex-wrap gap-3 mt-1"><div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${func.vencimento_aso && isBefore(parseISO(func.vencimento_aso), addDays(new Date(), 30)) ? "text-destructive" : "text-muted-foreground"}`}><AlertTriangle size={12} /> ASO: {func.vencimento_aso ? formatDateBR(func.vencimento_aso) : "N/D"}</div><div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${func.vencimento_ferias && isBefore(parseISO(func.vencimento_ferias), addDays(new Date(), 30)) ? "text-destructive" : "text-muted-foreground"}`}><Calendar size={12} /> Férias: {func.vencimento_ferias ? formatDateBR(func.vencimento_ferias) : "N/D"}</div></div></div></div>))
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  {activeSubTab === "ponto" && (
+                <div className="border-t border-border p-6 space-y-6 bg-muted/10 animate-in slide-in-from-top-2 duration-200">
+                  {activeSubTab === "ponto" ? (
                     <PontoCalculoForm 
                       empresa={emp as any} 
                       funcionarios={funcionarios[emp.id] || []} 
                     />
-                  )}
-                  {activeSubTab !== "ponto" && (
-                    <div className="flex justify-end pt-2">
-                      <button onClick={() => handleSaveAction(emp.id)} className="button-premium shadow-md">
-                        <Save size={14} /> Salvar
-                      </button>
-                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Section: Configurações & Informações */}
+                        <div className="space-y-4">
+                          <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1 mb-2">Configurações & Informações</h3>
+                          <div className="bg-card p-4 rounded-2xl border border-border/60 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div>
+                                <label className="text-[9px] font-black text-muted-foreground uppercase block mb-1">Qtd Funcionários</label>
+                                <input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className="w-full h-10 bg-transparent border-b-2 border-border focus:border-primary outline-none transition-all text-sm font-bold" />
+                            </div>
+                            <div>
+                                <label className="text-[9px] font-black text-muted-foreground uppercase block mb-1">Qtd Pró-labore</label>
+                                <input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className="w-full h-10 bg-transparent border-b-2 border-border focus:border-primary outline-none transition-all text-sm font-bold" />
+                            </div>
+                            <div>
+                                <label className="text-[9px] font-black text-muted-foreground uppercase block mb-1">Forma de Envio</label>
+                                <input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className="w-full h-10 bg-transparent border-b-2 border-border focus:border-primary outline-none transition-all text-sm font-bold" />
+                            </div>
+                            <div className="flex flex-col justify-center">
+                                <label className="text-[9px] font-black text-muted-foreground uppercase block mb-1">Ponto Manual?</label>
+                                <label className="flex items-center gap-2 cursor-pointer pt-1">
+                                    <input type="checkbox" checked={!!form.possui_ponto_manual} onChange={e => updateForm(emp.id, "possui_ponto_manual", e.target.checked)} className="w-4 h-4 rounded border-border text-primary cursor-pointer" />
+                                    <span className="text-[10px] font-black text-primary uppercase">SIM</span>
+                                </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Section: Obrigações Mensais */}
+                        <div className="space-y-4">
+                          <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1 mb-2">Obrigações Mensais - {competencia}</h3>
+                          <div className="bg-card p-4 rounded-2xl border border-border/60 shadow-sm space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-4">
+                                <span className="text-[11px] font-black text-card-foreground uppercase">DCTF Web</span>
+                                <select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className="h-10 bg-muted/30 border border-border/60 rounded-xl px-3 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20">
+                                    <option value="nao">NÃO GERADA</option>
+                                    <option value="sim">GERADA</option>
+                                </select>
+                                {form.dctf_web_gerada && <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className="h-10 bg-muted/30 border border-border/60 rounded-xl px-3 text-xs font-bold outline-none" />}
+                            </div>
+
+                            {activeSubTab === "folha" && (
+                              <div className="pt-3 border-t border-border/40 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {[{ label: "INSS", s: "inss_status", d: "inss_data_envio" }, { label: "FGTS", s: "fgts_status", d: "fgts_data_envio" }].map(enc => (
+                                  <div key={enc.label} className="space-y-1">
+                                    <label className="text-[9px] font-black text-muted-foreground uppercase pl-1">{enc.label}</label>
+                                    <div className="flex gap-2">
+                                        <select value={form[enc.s] || "pendente"} onChange={e => updateForm(emp.id, enc.s, e.target.value)} className="flex-1 h-10 bg-muted/30 border border-border/60 rounded-xl px-3 text-[10px] font-black outline-none">
+                                            <option value="pendente">PENDENTE</option>
+                                            <option value="gerada">GERADA</option>
+                                            <option value="enviada">ENVIADA</option>
+                                        </select>
+                                        <input type="date" value={form[enc.d] || ""} onChange={e => updateForm(emp.id, enc.d, e.target.value)} className="flex-1 h-10 bg-muted/30 border border-border/60 rounded-xl px-2 text-[10px] font-medium outline-none" />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section: Funcionários & Alertas */}
+                      <div className="space-y-4">
+                         <div className="flex items-center justify-between pl-1">
+                            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Funcionários & Alertas</h3>
+                            <button onClick={(e) => { e.stopPropagation(); navigate(`/pessoal/funcionarios/${emp.id}`); }} className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors">
+                                <Settings size={14} /> GERENCIAR EQUIPE
+                            </button>
+                         </div>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {(funcionarios[emp.id] || []).length === 0 ? (
+                                <div className="col-span-full p-6 text-center bg-card border border-dashed border-border/60 rounded-2xl">
+                                    <p className="text-xs text-muted-foreground font-medium italic">Nenhum funcionário cadastrado nesta empresa.</p>
+                                </div>
+                            ) : (
+                                funcionarios[emp.id].map(func => (
+                                    <div key={func.id} className="p-4 bg-card border border-border/60 rounded-2xl shadow-sm space-y-3">
+                                        <p className="text-sm font-black text-card-foreground truncate">{func.nome}</p>
+                                        <div className="flex flex-col gap-2">
+                                            <div className={`flex items-center justify-between p-2 rounded-xl border ${func.vencimento_aso && isBefore(parseISO(func.vencimento_aso), addDays(new Date(), 30)) ? "bg-destructive/5 border-destructive/20 text-destructive" : "bg-muted/30 border-border/40 text-muted-foreground"}`}>
+                                                <span className="text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"><AlertTriangle size={12} /> ASO</span>
+                                                <span className="text-xs font-black">{func.vencimento_aso ? formatDateBR(func.vencimento_aso) : "N/D"}</span>
+                                            </div>
+                                            <div className={`flex items-center justify-between p-2 rounded-xl border ${func.vencimento_ferias && isBefore(parseISO(func.vencimento_ferias), addDays(new Date(), 30)) ? "bg-destructive/5 border-destructive/20 text-destructive" : "bg-muted/30 border-border/40 text-muted-foreground"}`}>
+                                                <span className="text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"><Calendar size={12} /> FÉRIAS</span>
+                                                <span className="text-xs font-black">{func.vencimento_ferias ? formatDateBR(func.vencimento_ferias) : "N/D"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                         </div>
+                      </div>
+
+                      <div className="flex justify-end pt-4 border-t border-border/50">
+                        <button onClick={() => handleSaveAction(emp.id)} className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                          <Save size={16} /> Salvar Alterações
+                        </button>
+                      </div>
+                    </>
                   )}
                 </div>
               )}

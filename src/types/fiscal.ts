@@ -12,6 +12,7 @@ export interface FiscalRecord {
   ramo_empresarial: string | null;
   aliquota: number | null;
   status_guia: GuiaStatus | null;
+  xml_status: GuiaStatus | null;
   data_envio: string | null;
   
   aliquota_irpj: number | null;

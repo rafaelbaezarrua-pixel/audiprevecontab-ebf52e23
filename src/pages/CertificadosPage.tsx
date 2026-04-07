@@ -122,90 +122,184 @@ const CertificadosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full">
-        <FavoriteToggleButton moduleId="certificados" />
-        <div>
-          <h2 className="text-lg font-bold text-card-foreground">Certificados Digitais</h2>
-          <p className="text-xs text-muted-foreground">Gestão e alertas de vencimentos estruturados.</p>
+    <div className="space-y-8 animate-fade-in pb-20 relative">
+      {/* Background decoration elements */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
+
+      {/* Main Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+             <h1 className="header-title">Certificados <span className="text-primary/90">Digitais</span></h1>
+             <FavoriteToggleButton moduleId="certificados" />
+          </div>
+          <p className="subtitle-premium">Gestão centralizada e alertas inteligentes de validade para certificados A1, A3 e e-CNPJ.</p>
         </div>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[{ label: "Ativos", count: counts.ativos, cls: "text-success", bg: "bg-success/10", icon: <CheckCircle size={20} /> }, { label: "Próximos", count: counts.proximos, cls: "text-warning", bg: "bg-warning/10", icon: <Clock size={20} /> }, { label: "Vencidos", count: counts.vencidos, cls: "text-destructive", bg: "bg-destructive/10", icon: <AlertTriangle size={20} /> }, { label: "Sem Dados", count: counts.semDados, cls: "text-muted-foreground", bg: "bg-muted", icon: <AlertTriangle size={20} /> }].map(s => (
-          <div key={s.label} className="stat-card flex items-center justify-between"><div><p className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</p><p className={`text-2xl font-bold mt-1 ${s.cls}`}>{s.count}</p></div><div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.bg} ${s.cls}`}>{s.icon}</div></div>
+
+      {/* KPI Status Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Ativos", count: counts.ativos, cls: "text-emerald-500", bg: "bg-emerald-500/10", icon: <CheckCircle size={20} /> },
+          { label: "Próximos", count: counts.proximos, cls: "text-amber-500", bg: "bg-amber-500/10", icon: <Clock size={20} /> },
+          { label: "Vencidos", count: counts.vencidos, cls: "text-rose-500", bg: "bg-rose-500/10", icon: <AlertTriangle size={20} /> },
+          { label: "Sem Dados", count: counts.semDados, cls: "text-slate-400", bg: "bg-slate-400/10", icon: <AlertTriangle size={20} /> }
+        ].map(s => (
+          <div key={s.label} className="card-premium !p-6 flex items-center justify-between group hover:scale-[1.02] transition-all duration-300 border-none shadow-lg shadow-black/5">
+            <div className="space-y-1">
+              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{s.label}</p>
+              <p className={`text-3xl font-black ${s.cls} tracking-tight`}>{s.count}</p>
+            </div>
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${s.bg} ${s.cls} border border-current/10 shadow-inner group-hover:scale-110 transition-transform`}>
+              {s.icon}
+            </div>
+          </div>
         ))}
       </div>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-        <div className="flex gap-2">{[{ key: "todos", label: "Todos" }, { key: "ativo", label: "Ativos" }, { key: "proximo", label: "Próximos" }, { key: "vencido", label: "Vencidos" }, { key: "sem_dados", label: "Sem Dados" }].map(f => (<button key={f.key} onClick={() => setFilterStatus(f.key)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filterStatus === f.key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>{f.label}</button>))}</div>
+
+      {/* Filters & Search */}
+      <div className="space-y-6">
+        <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-muted/30 p-6 rounded-3xl border border-border/60">
+          <div className="relative w-full lg:max-w-md">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Pesquisar empresa ou CNPJ..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full h-14 pl-12 pr-4 bg-card border border-border/40 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm placeholder:font-normal placeholder:tracking-normal"
+            />
+          </div>
+          
+          <div className="flex bg-card p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full lg:w-auto shadow-sm">
+            {[
+              { key: "todos", label: "Todos" },
+              { key: "ativo", label: "Ativos" },
+              { key: "proximo", label: "Próximos" },
+              { key: "vencido", label: "Vencidos" },
+              { key: "sem_dados", label: "Sem Dados" }
+            ].map(f => (
+              <button
+                key={f.key}
+                onClick={() => setFilterStatus(f.key)}
+                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === f.key ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary hover:bg-primary/5"}`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Category Tabs */}
+        <div className="flex bg-muted/20 p-1.5 rounded-2xl border border-border/40 overflow-x-auto no-scrollbar w-full">
+            {[
+                { id: "ativas", label: "Empresas Ativas" },
+                { id: "mei", label: "Empresas MEI" },
+                { id: "paralisadas", label: "Paralisadas" },
+                { id: "baixadas", label: "Baixadas" },
+                { id: "entregue", label: "Entregues" }
+            ].map(tab => (
+                <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex-1 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                    {tab.label}
+                </button>
+            ))}
+        </div>
       </div>
-      <div className="flex border-b border-border overflow-x-auto no-scrollbar">
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "ativas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("ativas")}
-        >
-          Empresas Ativas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "mei"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("mei")}
-        >
-          Empresas MEI
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "paralisadas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("paralisadas")}
-        >
-          Empresas Paralisadas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "baixadas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("baixadas")}
-        >
-          Empresas Baixadas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "entregue"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveTab("entregue")}
-        >
-          Empresas Entregues
-        </button>
-      </div>
-      <div className="space-y-3">
+
+      <div className="space-y-4">
         {filtered.map(emp => {
           const isOpen = expanded === emp.id;
           const form = editForm[emp.id] || {};
-          const statusCls = emp.status === "vencido" ? "badge-danger" : emp.status === "proximo" ? "badge-warning" : emp.status === "ativo" ? "badge-success" : "badge-gray";
-          const statusLabel = emp.status === "vencido" ? "Vencido" : emp.status === "proximo" ? "Próximo" : emp.status === "ativo" ? "Ativo" : "Sem dados";
+          const isVencido = emp.status === "vencido";
+          const isProximo = emp.status === "proximo";
+          const isAtivo = emp.status === "ativo";
+          
           return (
-            <div key={emp.id} className="module-card !p-0 overflow-hidden">
-              <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => toggleExpand(emp.id)}>
-                <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"><User size={16} className="text-primary" /></div><div><p className="font-medium text-card-foreground">{emp.nome_empresa}</p><p className="text-xs text-muted-foreground">{emp.cnpj || "—"} • Responsável: {emp.adminNome}</p></div></div>
-                <div className="flex items-center gap-3"><span className={`badge-status ${statusCls}`}>{statusLabel}</span>{isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}</div>
-              </div>
-              {isOpen && (
-                <div className="border-t border-border p-5 space-y-4 bg-muted/10">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><label className={labelCls}>Data de Validade</label><input type="date" value={form.data_vencimento || ""} onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], data_vencimento: e.target.value } }))} className={inputCls} /></div>
-                    <div><label className={labelCls}>Modalidade</label><select value={form.tipo_emissao || "presencial"} onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], tipo_emissao: e.target.value } }))} className={inputCls}><option value="presencial">Presencial</option><option value="videoconferencia">Videoconferência</option></select></div>
-                    <div><label className={labelCls}>Responsável (Auto)</label><input value={emp.adminNome} className={inputCls} readOnly /></div>
+            <div key={emp.id} className={`group bg-card border ${isOpen ? 'border-primary/30 shadow-lg' : 'border-border/60 hover:border-primary/20'} rounded-3xl transition-all duration-300 overflow-hidden`}>
+              <div 
+                className={`flex items-center justify-between p-5 cursor-pointer transition-colors ${isOpen ? 'bg-primary/5' : 'hover:bg-muted/30'}`} 
+                onClick={() => toggleExpand(emp.id)}
+              >
+                <div className="flex items-center gap-5">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${isOpen ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-primary/10 text-primary'}`}>
+                    <User size={24} />
                   </div>
-                  <div className="flex justify-end"><button onClick={() => handleSave(emp.id)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" style={{ background: "var(--gradient-primary)" }}><Save size={14} /> Salvar</button></div>
+                  <div className="space-y-1">
+                    <p className="font-black text-sm uppercase tracking-tight text-card-foreground line-clamp-1">{emp.nome_empresa}</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{emp.cnpj || "NÃO INFORMADO"}</p>
+                        <span className="w-1 h-1 rounded-full bg-border" />
+                        <p className="text-[10px] font-black text-primary/80 uppercase tracking-tighter">RESP: {emp.adminNome}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isVencido ? 'bg-destructive/10 text-destructive' : isProximo ? 'bg-warning/10 text-warning' : isAtivo ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>
+                    {isVencido ? "Vencido" : isProximo ? "Próximo" : isAtivo ? "Ativo" : "Pendente"}
+                  </span>
+                  <div className={`p-2 rounded-xl bg-muted/50 text-muted-foreground group-hover:text-primary transition-all ${isOpen ? 'rotate-180 bg-primary/10 text-primary' : ''}`}>
+                    <ChevronDown size={18} />
+                  </div>
+                </div>
+              </div>
+
+              {isOpen && (
+                <div className="border-t border-border/40 p-8 space-y-8 animate-in slide-in-from-top-4 duration-300">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data de Validade</label>
+                        <input 
+                            type="date" 
+                            value={form.data_vencimento || ""} 
+                            onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], data_vencimento: e.target.value } }))} 
+                            className="w-full h-14 px-5 bg-muted/30 border border-border/60 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" 
+                        />
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Modalidade de Emissão</label>
+                        <select 
+                            value={form.tipo_emissao || "presencial"} 
+                            onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], tipo_emissao: e.target.value } }))} 
+                            className="w-full h-14 px-5 bg-muted/30 border border-border/60 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer transition-all appearance-none"
+                        >
+                            <option value="presencial">Presencial</option>
+                            <option value="videoconferencia">Videoconferência</option>
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Responsável Associado</label>
+                        <div className="w-full h-14 px-5 bg-muted/10 border border-border/40 rounded-2xl text-xs font-bold flex items-center text-muted-foreground/60">
+                           {emp.adminNome}
+                        </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observações do Certificado</label>
+                    <textarea 
+                        value={form.observacao || ""} 
+                        onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], observacao: e.target.value } }))} 
+                        placeholder="Informações adicionais sobre o certificado, token ou senha de acesso..."
+                        className="w-full min-h-[100px] p-5 bg-muted/30 border border-border/60 rounded-2xl text-xs font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end pt-4 border-t border-border/40">
+                      <button 
+                        onClick={() => handleSave(emp.id)} 
+                        className="px-12 h-14 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
+                      >
+                        <Save size={18} /> ATUALIZAR DADOS
+                      </button>
+                  </div>
                 </div>
               )}
             </div>

@@ -99,6 +99,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         xl: "calc(var(--radius) * 1.5)",
         '2xl': "calc(var(--radius) * 2)",
+        '3xl': "calc(var(--radius) * 3)",
       },
       keyframes: {
         "accordion-down": {
@@ -115,9 +116,9 @@ export default {
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.1s ease-out",
-        "accordion-up": "accordion-up 0.1s ease-out",
-        "fade-in": "fade-in 0.15s ease-out",
+        "accordion-down": "accordion-down 0.05s ease-out",
+        "accordion-up": "accordion-up 0.05s ease-out",
+        "fade-in": "fade-in 0.05s ease-out",
       },
     },
   },

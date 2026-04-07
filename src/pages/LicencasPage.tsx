@@ -222,128 +222,181 @@ const LicencasPage: React.FC = () => {
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-  }
+  }  return (
+    <div className="space-y-8 animate-fade-in pb-20 relative">
+      {/* Background decoration elements */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full">
-        <FavoriteToggleButton moduleId="licencas" />
-        <div>
-          <h2 className="text-lg font-bold text-card-foreground">Licenças e Taxas</h2>
-          <p className="text-xs text-muted-foreground">Gestão de alvarás e taxas municipais/estaduais.</p>
+      {/* Main Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+             <h1 className="header-title">Licenças <span className="text-primary/90">& Taxas</span></h1>
+             <FavoriteToggleButton moduleId="licencas" />
+          </div>
+          <p className="subtitle-premium">Monitoramento de alvarás, vigilância sanitária, corpo de bombeiros e controle de taxas municipais.</p>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-border">
-        <button
-          onClick={() => { setActiveTab("licencas"); setExpanded(null); }}
-          className={`pb-3 px-4 text-sm font-semibold transition-colors border-b-2 ${activeTab === "licencas" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-        >
-          Status das Licenças
-        </button>
-        <button
-          onClick={() => { setActiveTab("taxas"); setExpanded(null); }}
-          className={`pb-3 px-4 text-sm font-semibold transition-colors border-b-2 ${activeTab === "taxas" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-        >
-          Taxas das Licenças
-        </button>
-      </div>
+      {/* Main Navigation Tabs */}
+      <div className="flex flex-col gap-6">
+        <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full sm:w-max shadow-sm">
+            <button
+                onClick={() => { setActiveTab("licencas"); setExpanded(null); }}
+                className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === "licencas" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
+            >
+                <Shield size={14} /> Status das Licenças
+            </button>
+            <button
+                onClick={() => { setActiveTab("taxas"); setExpanded(null); }}
+                className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === "taxas" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
+            >
+                <FileText size={14} /> Taxas Mensais
+            </button>
+        </div>
 
-      {/* Status Tabs */}
-      <div className="flex border-b border-border overflow-x-auto no-scrollbar pt-2">
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "ativas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("ativas")}
-        >
-          Empresas Ativas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "mei"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("mei")}
-        >
-          Empresas MEI
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "paralisadas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("paralisadas")}
-        >
-          Empresas Paralisadas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "baixadas"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("baixadas")}
-        >
-          Empresas Baixadas
-        </button>
-        <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeStatusTab === "entregue"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          onClick={() => setActiveStatusTab("entregue")}
-        >
-          Empresas Entregues
-        </button>
+        {/* Sub-Tabs for Portfolios */}
+        <div className="flex bg-muted/20 p-1.5 rounded-2xl border border-border/40 overflow-x-auto no-scrollbar w-full shadow-inner">
+            {[
+            { key: "ativas", label: "Empresas Ativas" },
+            { key: "mei", label: "Empresas MEI" },
+            { key: "paralisadas", label: "Paralisadas" },
+            { key: "baixadas", label: "Baixadas" },
+            { key: "entregue", label: "Entregues" }
+            ].map(tab => (
+            <button
+                key={tab.key}
+                onClick={() => setActiveStatusTab(tab.key as any)}
+                className={`flex-1 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === tab.key ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+            >
+                {tab.label}
+            </button>
+            ))}
+        </div>
       </div>
 
       {activeTab === "licencas" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[{ label: "Definitivas", count: counts.definitiva, cls: "text-success", bg: "bg-success/10", icon: <CheckCircle size={20} /> }, { label: "Com Vencimento", count: counts.com_vencimento, cls: "text-warning", bg: "bg-warning/10", icon: <Clock size={20} /> }, { label: "Em Processo", count: counts.em_processo, cls: "text-primary", bg: "bg-primary/10", icon: <Shield size={20} /> }, { label: "Dispensadas", count: counts.dispensada, cls: "text-muted-foreground", bg: "bg-muted", icon: <AlertTriangle size={20} /> }].map(s => (
-              <div key={s.label} className="stat-card flex items-center justify-between"><div><p className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</p><p className={`text-2xl font-bold mt-1 ${s.cls}`}>{s.count}</p></div><div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.bg} ${s.cls}`}>{s.icon}</div></div>
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* KPI Cards for Licenses */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "Definitivas", count: counts.definitiva, cls: "text-emerald-500", bg: "bg-emerald-500/10", icon: <CheckCircle size={20} /> },
+              { label: "Vencimentos", count: counts.com_vencimento, cls: "text-amber-500", bg: "bg-amber-500/10", icon: <Clock size={20} /> },
+              { label: "Em Processo", count: counts.em_processo, cls: "text-primary", bg: "bg-primary/10", icon: <Shield size={20} /> },
+              { label: "Dispensadas", count: counts.dispensada, cls: "text-slate-400", bg: "bg-slate-400/10", icon: <AlertTriangle size={20} /> }
+            ].map(s => (
+              <div key={s.label} className="card-premium !p-6 flex items-center justify-between group hover:scale-[1.02] transition-all duration-300 border-none shadow-lg shadow-black/5">
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{s.label}</p>
+                  <p className={`text-3xl font-black ${s.cls} tracking-tight`}>{s.count}</p>
+                </div>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${s.bg} ${s.cls} border border-current/10 shadow-inner group-hover:scale-110 transition-transform`}>
+                  {s.icon}
+                </div>
+              </div>
             ))}
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1 max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" /></div>
-            <div className="flex gap-2 flex-wrap">
-              {[{ key: "todos", label: "Todos" }, { key: "definitiva", label: "Definitivas" }, { key: "com_vencimento", label: "Com Vencimento" }, { key: "em_processo", label: "Em Processo" }, { key: "dispensada", label: "Dispensadas" }].map(f => (
-                <button key={f.key} onClick={() => setFilterStatus(f.key)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filterStatus === f.key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>{f.label}</button>
-              ))}
-            </div>
+
+          {/* Search and Filters */}
+          <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-muted/30 p-6 rounded-3xl border border-border/60">
+              <div className="relative w-full lg:max-w-md">
+                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Pesquisar por empresa ou CNPJ..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full h-14 pl-12 pr-4 bg-card border border-border/40 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm placeholder:font-normal placeholder:tracking-normal"
+                />
+              </div>
+              
+              <div className="flex bg-card p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full lg:w-auto shadow-sm">
+                {[
+                  { key: "todos", label: "Todos" },
+                  { key: "definitiva", label: "Definitivas" },
+                  { key: "com_vencimento", label: "Vencimentos" },
+                  { key: "em_processo", label: "Processo" },
+                  { key: "dispensada", label: "Dispensadas" }
+                ].map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setFilterStatus(f.key)}
+                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === f.key ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary hover:bg-primary/5"}`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
           </div>
-          <div className="space-y-3">
-            {filteredLicencas.length === 0 ? <div className="module-card text-center py-12 text-muted-foreground">Nenhuma empresa encontrada</div> : filteredLicencas.map(emp => {
+
+          <div className="space-y-4">
+            {filteredLicencas.length === 0 ? (
+                <div className="py-20 text-center border-2 border-dashed border-border/40 rounded-3xl opacity-40">
+                    <Shield size={48} className="mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nenhuma empresa encontrada</p>
+                </div>
+            ) : filteredLicencas.map(emp => {
               const isOpen = expanded === emp.id;
               const empLicencas = licByEmpresa(emp.id);
+              
               return (
-                <div key={emp.id} className="module-card !p-0 overflow-hidden">
-                  <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => setExpanded(isOpen ? null : emp.id)}>
-                    <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><Building2 size={16} className="text-primary" /></div><div><p className="font-medium text-card-foreground">{emp.nome_empresa}</p><p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p></div></div>
-                    <div className="flex items-center gap-2">{empLicencas.map((l: LicencaRecord, i: number) => { const cfg = tipoStatusLabels[l.status || ""] || { label: "—", cls: "badge-gray" }; return <span key={i} className={`badge-status ${cfg.cls} text-[10px]`}>{cfg.label}</span>; })}{isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}</div>
+                <div key={emp.id} className={`group bg-card border ${isOpen ? 'border-primary/30 shadow-lg' : 'border-border/60 hover:border-primary/20'} rounded-3xl transition-all duration-300 overflow-hidden`}>
+                  <div 
+                    className={`flex items-center justify-between p-5 cursor-pointer transition-colors ${isOpen ? 'bg-primary/5' : 'hover:bg-muted/30'}`} 
+                    onClick={() => setExpanded(isOpen ? null : emp.id)}
+                  >
+                    <div className="flex items-center gap-5">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${isOpen ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-primary/10 text-primary'}`}>
+                        <Building2 size={24} />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-black text-sm uppercase tracking-tight text-card-foreground line-clamp-1">{emp.nome_empresa}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{emp.cnpj || "CNPJ NÃO INFORMADO"}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                        <div className="hidden sm:flex gap-2">
+                             {empLicencas.map((l: LicencaRecord, i: number) => { 
+                                 const cfg = tipoStatusLabels[l.status || ""] || { label: "—", cls: "badge-gray" }; 
+                                 return <span key={i} className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${cfg.cls.replace('badge-', 'bg-').replace('gray', 'muted').replace('info', 'primary')}/10 ${cfg.cls.replace('badge-', 'text-').replace('gray', 'muted-foreground').replace('info', 'primary')}`}>{cfg.label}</span>; 
+                             })}
+                        </div>
+                      <div className={`p-2 rounded-xl bg-muted/50 text-muted-foreground group-hover:text-primary transition-all ${isOpen ? 'rotate-180 bg-primary/10 text-primary' : ''}`}>
+                        <ChevronDown size={18} />
+                      </div>
+                    </div>
                   </div>
+
                   {isOpen && (
-                    <div className="border-t border-border p-5 bg-muted/10">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border-t border-border/40 p-8 bg-muted/5 animate-in slide-in-from-top-4 duration-300">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {Object.entries(licencaLabels).map(([key, label]) => {
                           const lic = empLicencas.find((l: LicencaRecord) => l.tipo_licenca === key);
                           const cfg = lic ? tipoStatusLabels[lic.status] || { label: "Não definido", cls: "badge-gray" } : { label: "Não definido", cls: "badge-gray" };
                           const dias = lic?.status === "com_vencimento" ? calcDias(lic.vencimento) : null;
+                          const isExpired = dias !== null && dias < 0;
+                          const isNear = dias !== null && dias >= 0 && dias <= 30;
+
                           return (
-                            <div key={key} className="p-4 rounded-xl border border-border bg-card">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="text-sm font-semibold text-card-foreground">{label}</h4>
+                            <div key={key} className="p-6 rounded-3xl border border-border/60 bg-card group/item hover:border-primary/30 transition-all shadow-sm">
+                              <div className="flex items-center justify-between mb-6">
+                                <div className="space-y-1">
+                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-primary/80">{label}</h4>
+                                    <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${cfg.cls.replace('badge-', 'bg-').replace('gray', 'muted').replace('info', 'primary')}/10 ${cfg.cls.replace('badge-', 'text-').replace('gray', 'muted-foreground').replace('info', 'primary')}`}>
+                                        {cfg.label}
+                                    </span>
+                                </div>
+                                
                                 <div className="flex items-center gap-2">
-                                  <span className={`badge-status ${cfg.cls}`}>{cfg.label}</span>
                                   {lic?.file_url ? (
                                     <button
                                       onClick={() => window.open(lic.file_url, "_blank")}
-                                      className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+                                      className="w-10 h-10 rounded-xl bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center border border-primary/20"
                                       title="Visualizar anexo"
                                     >
-                                      <Eye size={14} />
+                                      <Eye size={16} />
                                     </button>
                                   ) : (
                                     <div className="relative">
@@ -355,45 +408,48 @@ const LicencasPage: React.FC = () => {
                                         onChange={async (e) => {
                                           const file = e.target.files?.[0];
                                           if (!file) return;
-
                                           toast.loading("Enviando...", { id: "up-lic" });
                                           const path = `licencas/${emp.id}/${key}_${Date.now()}.pdf`;
-
                                           const { error: upErr } = await supabase.storage.from("documentos").upload(path, file);
-                                          if (upErr) {
-                                            toast.error("Erro: " + upErr.message, { id: "up-lic" });
-                                            return;
-                                          }
-
+                                          if (upErr) { toast.error("Erro: " + upErr.message, { id: "up-lic" }); return; }
                                           const { data: { publicUrl } } = supabase.storage.from("documentos").getPublicUrl(path);
-
-                                          // Update database
-                                          const { error: dbErr } = await supabase.from("licencas")
-                                            .update({ file_url: publicUrl })
-                                            .eq("empresa_id", emp.id)
-                                            .eq("tipo_licenca", key);
-
-                                          if (dbErr) {
-                                            toast.error("Erro DB: " + dbErr.message, { id: "up-lic" });
-                                          } else {
-                                            toast.success("Anexo salvo!", { id: "up-lic" });
-                                            loadBaseData();
-                                          }
+                                          const { error: dbErr } = await supabase.from("licencas").update({ file_url: publicUrl }).eq("empresa_id", emp.id).eq("tipo_licenca", key);
+                                          if (dbErr) { toast.error("Erro DB: " + dbErr.message, { id: "up-lic" }); } else { toast.success("Anexo salvo!", { id: "up-lic" }); loadBaseData(); }
                                         }}
                                       />
                                       <label
                                         htmlFor={`upload-${emp.id}-${key}`}
-                                        className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground cursor-pointer transition-all flex items-center justify-center"
+                                        className="w-10 h-10 rounded-xl bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all cursor-pointer flex items-center justify-center border border-border/60"
                                         title="Anexar PDF"
                                       >
-                                        <Upload size={14} />
+                                        <Upload size={16} />
                                       </label>
                                     </div>
                                   )}
                                 </div>
                               </div>
-                              {lic?.status === "com_vencimento" && lic.vencimento && <div className="text-xs text-muted-foreground">Vencimento: {formatDateBR(lic.vencimento)}{dias !== null && <span className={`ml-2 font-medium ${dias < 0 ? "text-destructive" : dias <= 30 ? "text-warning" : "text-success"}`}>({dias}d)</span>}</div>}
-                              {lic?.status === "em_processo" && lic.numero_processo && <div className="text-xs text-muted-foreground">Processo: {lic.numero_processo}</div>}
+                              
+                              <div className="space-y-3">
+                                  {lic?.status === "com_vencimento" && lic.vencimento && (
+                                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-2xl border border-border/40">
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter">VENCIMENTO</span>
+                                            <span className="text-[10px] font-bold">{formatDateBR(lic.vencimento)}</span>
+                                        </div>
+                                        {dias !== null && (
+                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${isExpired ? 'bg-destructive text-destructive-foreground animate-pulse' : isNear ? 'bg-warning/20 text-warning' : 'bg-emerald-500/20 text-emerald-500'}`}>
+                                                {isExpired ? "Vencida" : `${dias} dias`}
+                                            </span>
+                                        )}
+                                    </div>
+                                  )}
+                                  {lic?.status === "em_processo" && lic.numero_processo && (
+                                    <div className="p-3 bg-muted/30 rounded-2xl border border-border/40">
+                                        <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter block">Nº PROCESSO</span>
+                                        <span className="text-[10px] font-bold text-primary">{lic.numero_processo}</span>
+                                    </div>
+                                  )}
+                              </div>
                             </div>
                           );
                         })}
@@ -408,105 +464,133 @@ const LicencasPage: React.FC = () => {
       )}
 
       {activeTab === "taxas" && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="relative max-w-sm w-full">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input type="text" placeholder="Buscar empresa..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-muted-foreground">Competência:</span>
-              <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="px-4 py-2 border border-border rounded-lg bg-background text-foreground font-semibold text-sm outline-none focus:ring-2 focus:ring-primary" />
-            </div>
-          </div>
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+           {/* Taxes Header Controls */}
+           <div className="flex flex-col lg:flex-row items-center justify-between gap-6 bg-muted/30 p-8 rounded-3xl border border-border/60">
+              <div className="relative w-full lg:max-w-md">
+                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input 
+                  type="text" 
+                  placeholder="Pesquisar por empresa ou CNPJ..." 
+                  value={search} 
+                  onChange={e => setSearch(e.target.value)} 
+                  className="w-full h-14 pl-12 pr-4 bg-card border border-border/40 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm placeholder:font-normal placeholder:tracking-normal" 
+                />
+              </div>
+              <div className="flex items-center gap-4 bg-card p-2 rounded-2xl border border-border/60 shadow-sm">
+                <div className="flex flex-col pl-3">
+                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Competência</span>
+                    <input 
+                        type="month" 
+                        value={competencia} 
+                        onChange={e => setCompetencia(e.target.value)} 
+                        className="bg-transparent border-none p-0 text-sm font-black text-primary outline-none focus:ring-0 cursor-pointer font-ubuntu h-5" 
+                    />
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Clock size={18} />
+                </div>
+              </div>
+           </div>
 
-          <div className="space-y-3">
-            {filteredTaxas.length === 0 ? <div className="module-card text-center py-12 text-muted-foreground">Nenhuma empresa com licenças encontradas</div> : filteredTaxas.map(emp => {
+          <div className="space-y-4">
+            {filteredTaxas.length === 0 ? (
+                <div className="py-20 text-center border-2 border-dashed border-border/40 rounded-3xl opacity-40">
+                    <FileText size={48} className="mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nenhuma empresa com licenças encontradas</p>
+                </div>
+            ) : filteredTaxas.map(emp => {
               const isOpen = expanded === emp.id;
               const empLicencas = licByEmpresa(emp.id);
+              
               return (
-                <div key={emp.id} className="module-card !p-0 overflow-hidden">
-                  <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => setExpanded(isOpen ? null : emp.id)}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><Building2 size={16} className="text-primary" /></div>
-                      <div>
-                        <p className="font-semibold text-card-foreground">{emp.nome_empresa}</p>
-                        <p className="text-xs text-muted-foreground">{emp.cnpj || "—"} • {empLicencas.length} Licença(s)</p>
+                <div key={emp.id} className={`group bg-card border ${isOpen ? 'border-primary/30 shadow-lg' : 'border-border/60 hover:border-primary/20'} rounded-3xl transition-all duration-300 overflow-hidden`}>
+                  <div 
+                    className={`flex items-center justify-between p-5 cursor-pointer transition-colors ${isOpen ? 'bg-primary/5' : 'hover:bg-muted/30'}`} 
+                    onClick={() => setExpanded(isOpen ? null : emp.id)}
+                  >
+                    <div className="flex items-center gap-5">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${isOpen ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-primary/10 text-primary'}`}>
+                        <Building2 size={24} />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-black text-sm uppercase tracking-tight text-card-foreground line-clamp-1">{emp.nome_empresa}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{emp.cnpj || "CNPJ NÃO INFORMADO"} • {empLicencas.length} LICENÇA(S)</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+                    
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-xl bg-muted/50 text-muted-foreground group-hover:text-primary transition-all ${isOpen ? 'rotate-180 bg-primary/10 text-primary' : ''}`}>
+                        <ChevronDown size={18} />
+                      </div>
                     </div>
                   </div>
 
                   {isOpen && (
-                    <div className="border-t border-border p-5 bg-muted/10 space-y-4">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="border-t border-border/40 p-8 space-y-8 bg-muted/5 animate-in slide-in-from-top-4 duration-300">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {Object.entries(licencaLabels).map(([key, label]) => {
                           const lic = empLicencas.find((l: LicencaRecord) => l.tipo_licenca === key);
-                          if (!lic) return null; // Only show taxes blocks for licenses they actually have
-
+                          if (!lic) return null;
                           const taxaData = (taxasForm[emp.id] && taxasForm[emp.id][key]) || { status: 'pendente', data_envio: '', forma_envio: '' };
 
                           return (
-                            <div key={key} className="p-4 rounded-xl border border-border bg-card flex flex-col gap-3">
-                              <h4 className="text-sm font-bold text-primary flex items-center justify-between gap-2 w-full">
-                                <span className="flex items-center gap-2">
-                                  <Shield size={14} /> {label}
-                                </span>
+                            <div key={key} className="p-8 rounded-3xl border border-border/60 bg-card group/item hover:border-primary/30 transition-all shadow-sm space-y-6">
+                              <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-5">
+                                <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                                  <Shield size={16} /> {label}
+                                </h4>
                                 {key === 'alvara' && (
                                   <button
                                     onClick={() => handleConsultarGuiaAlvara(emp.cnpj)}
                                     disabled={isConsultandoGuia === emp.cnpj}
-                                    className="px-3 py-1 bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs rounded-md flex items-center gap-1 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="h-10 px-5 bg-info text-info-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-info/10 disabled:opacity-50"
                                   >
                                     {isConsultandoGuia === emp.cnpj ? (
-                                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                      <Search size={12} />
-                                    )}
-                                    {isConsultandoGuia === emp.cnpj ? 'Consultando...' : 'Consultar Guia'}
+                                      <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : <Search size={14} />}
+                                    {isConsultandoGuia === emp.cnpj ? 'CONSULTANDO...' : 'BUSCAR GUIA'}
                                   </button>
                                 )}
-                              </h4>
+                              </div>
 
-                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                                <div>
-                                  <label className={labelCls}>Status Atual</label>
+                              <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Status da Guia</label>
                                   <select
-                                    className={inputCls}
+                                    className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer transition-all"
                                     value={taxaData.status}
-                                    onChange={(e) => handleTaxaChange(emp.id, key, 'status', e.target.value)}
+                                    onChange={(e) => handleTaxaChange(emp.id, key, 'status', e.target.value as any)}
                                   >
                                     <option value="pendente">Pendente</option>
                                     <option value="gerada">Gerada</option>
                                     <option value="enviada">Enviada</option>
                                   </select>
                                 </div>
-                                <div>
-                                  <label className={labelCls}>Vencimento</label>
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vencimento</label>
                                   <input
                                     type="date"
-                                    className={inputCls}
+                                    className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu"
                                     value={taxaData.data_vencimento || ''}
                                     onChange={(e) => handleTaxaChange(emp.id, key, 'data_vencimento', e.target.value)}
                                   />
                                 </div>
-                                <div>
-                                  <label className={labelCls}>Data do Envio</label>
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data de Envio</label>
                                   <input
                                     type="date"
-                                    className={inputCls}
+                                    className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu"
                                     value={taxaData.data_envio || ''}
                                     onChange={(e) => handleTaxaChange(emp.id, key, 'data_envio', e.target.value)}
                                   />
                                 </div>
-                                <div>
-                                  <label className={labelCls}>Envio</label>
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Forma de Envio</label>
                                   <input
                                     type="text"
                                     placeholder="Ex: WhatsApp"
-                                    className={inputCls}
+                                    className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                     value={taxaData.forma_envio || ''}
                                     onChange={(e) => handleTaxaChange(emp.id, key, 'forma_envio', e.target.value)}
                                   />
@@ -517,13 +601,12 @@ const LicencasPage: React.FC = () => {
                         })}
                       </div>
 
-                      <div className="flex justify-end pt-2 border-t border-border/50">
+                      <div className="flex justify-end pt-6 border-t border-border/40">
                         <button
                           onClick={() => saveTaxas(emp.id)}
-                          className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md transition-all hover:opacity-90 active:scale-95"
-                          style={{ background: "var(--gradient-primary)" }}
+                          className="h-14 px-12 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
                         >
-                          <Save size={16} /> Salvar Taxas deste Mês
+                          <Save size={18} /> SALVAR TAXAS DO MÊS
                         </button>
                       </div>
                     </div>

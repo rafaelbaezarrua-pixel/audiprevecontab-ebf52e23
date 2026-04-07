@@ -101,31 +101,33 @@ const ContabilPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+    <div className="space-y-6 animate-fade-in pb-20">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+        <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">Departamento Contábil</h1>
+            <h1 className="header-title">Departamento <span className="text-primary/90">Contábil</span></h1>
             <FavoriteToggleButton moduleId="contabil" />
           </div>
-          <p className="text-muted-foreground text-sm">Controle de rotinas, fechamentos e obrigações integradas.</p>
+          <p className="subtitle-premium">Gestão de rotinas contábeis, fechamentos e indicadores financeiros.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Input 
+
+        <div className="flex items-center gap-3 bg-card border border-border/60 rounded-xl px-4 h-12 shadow-sm">
+          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Competência:</span>
+          <input 
             type="month" 
             value={competencia} 
             onChange={(e) => setCompetencia(e.target.value)}
-            className="w-40"
+            className="px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold transition-all"
           />
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-4 rounded-xl border border-border/50">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-          <Input 
+      <div className="card-premium !p-6">
+        <div className="relative w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+          <input 
             placeholder="Buscar empresa por nome ou CNPJ..." 
-            className="pl-10"
+            className="w-full pl-12 pr-4 py-3 bg-muted/20 border border-border/40 rounded-2xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

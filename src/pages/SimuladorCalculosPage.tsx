@@ -158,32 +158,32 @@ const SimuladorCalculosPage: React.FC = () => {
     const formatCurrency = (val: number) => 
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
-    return (
-        <div className="space-y-6 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-black text-foreground tracking-tight">Simulador de Cálculos Trabalhistas</h1>
-                        <FavoriteToggleButton moduleId="simulador" />
-                    </div>
-                    <p className="text-sm text-muted-foreground font-medium">Estime os custos de rescisão e férias (CLT).</p>
-                </div>
-                
-                <div className="flex p-1 bg-muted/50 rounded-2xl border border-border/50 shrink-0">
-                    <button 
-                        onClick={() => { setActiveTab("rescisao"); setResults(null); }}
-                        className={`px-6 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === "rescisao" ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                        Rescisão
-                    </button>
-                    <button 
-                        onClick={() => { setActiveTab("ferias"); setResults(null); }}
-                        className={`px-6 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === "ferias" ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                        Férias
-                    </button>
-                </div>
-            </div>
+  return (
+    <div className="space-y-6 animate-fade-in pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="header-title">Simulador de Cálculos</h1>
+            <FavoriteToggleButton moduleId="simulador" />
+          </div>
+          <p className="subtitle-premium">Estime os custos de rescisão e férias (CLT) de forma ágil.</p>
+        </div>
+        
+        <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full sm:w-auto">
+          <button
+            onClick={() => { setActiveTab("rescisao"); setResults(null); }}
+            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === "rescisao" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Rescisão
+          </button>
+          <button
+            onClick={() => { setActiveTab("ferias"); setResults(null); }}
+            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === "ferias" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Férias
+          </button>
+        </div>
+      </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-6">

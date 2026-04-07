@@ -228,23 +228,35 @@ export type Database = {
       declaracoes_anuais: {
         Row: {
           ano: number | null
+          data_envio: string | null
           empresa_id: string | null
           enviada: boolean | null
           id: string
+          obrigatorio: boolean | null
+          observacoes: string | null
+          situacao: string | null
           tipo_declaracao: string | null
         }
         Insert: {
           ano?: number | null
+          data_envio?: string | null
           empresa_id?: string | null
           enviada?: boolean | null
           id?: string
+          obrigatorio?: boolean | null
+          observacoes?: string | null
+          situacao?: string | null
           tipo_declaracao?: string | null
         }
         Update: {
           ano?: number | null
+          data_envio?: string | null
           empresa_id?: string | null
           enviada?: boolean | null
           id?: string
+          obrigatorio?: boolean | null
+          observacoes?: string | null
+          situacao?: string | null
           tipo_declaracao?: string | null
         }
         Relationships: [
@@ -260,19 +272,34 @@ export type Database = {
       declaracoes_irpf: {
         Row: {
           ano: number | null
+          data_transmissao: string | null
+          faz_pelo_escritorio: boolean | null
           id: string
+          observacoes: string | null
+          quem_transmitiu: string | null
+          situacao: string | null
           socio_id: string | null
           transmitida: boolean | null
         }
         Insert: {
           ano?: number | null
+          data_transmissao?: string | null
+          faz_pelo_escritorio?: boolean | null
           id?: string
+          observacoes?: string | null
+          quem_transmitiu?: string | null
+          situacao?: string | null
           socio_id?: string | null
           transmitida?: boolean | null
         }
         Update: {
           ano?: number | null
+          data_transmissao?: string | null
+          faz_pelo_escritorio?: boolean | null
           id?: string
+          observacoes?: string | null
+          quem_transmitiu?: string | null
+          situacao?: string | null
           socio_id?: string | null
           transmitida?: boolean | null
         }
@@ -478,6 +505,7 @@ export type Database = {
           recebimento_arquivos: string | null
           status_guia: Database["public"]["Enums"]["guia_status"] | null
           tipo_nota: string | null
+          xml_status: Database["public"]["Enums"]["guia_status"] | null
         }
         Insert: {
           aliquota?: number | null
@@ -512,6 +540,7 @@ export type Database = {
           recebimento_arquivos?: string | null
           status_guia?: Database["public"]["Enums"]["guia_status"] | null
           tipo_nota?: string | null
+          xml_status?: Database["public"]["Enums"]["guia_status"] | null
         }
         Update: {
           aliquota?: number | null
@@ -546,6 +575,7 @@ export type Database = {
           recebimento_arquivos?: string | null
           status_guia?: Database["public"]["Enums"]["guia_status"] | null
           tipo_nota?: string | null
+          xml_status?: Database["public"]["Enums"]["guia_status"] | null
         }
         Relationships: [
           {
@@ -1515,7 +1545,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user" | "client"
       empresa_situacao: "ativa" | "paralisada" | "baixada" | "mei" | "entregue" | "inapta" | "suspensa" | "nula"
-      guia_status: "pendente" | "gerada" | "enviada" | "isento"
+      guia_status: "pendente" | "gerada" | "enviada" | "isento" | "ok"
       licenca_tipo:
         | "definitiva"
         | "dispensada"
@@ -1655,7 +1685,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user", "client"],
       empresa_situacao: ["ativa", "paralisada", "baixada", "entregue"],
-      guia_status: ["pendente", "gerada", "enviada"],
+      guia_status: ["pendente", "gerada", "enviada", "ok"],
       licenca_tipo: [
         "definitiva",
         "dispensada",

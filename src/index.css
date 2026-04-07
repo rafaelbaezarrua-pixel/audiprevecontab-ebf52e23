@@ -114,7 +114,7 @@
 
 @layer components {
   .module-card {
-    @apply bg-card border border-border/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-0.5;
+    @apply bg-card border border-border/50 rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20;
   }
   
   .glass-card {
@@ -128,18 +128,17 @@
   }
 
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body font-normal;
+    font-size: 14px;
+    line-height: 1.5;
     background-image: var(--gradient-bg);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-title;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-title tracking-tight;
   }
 }
 
@@ -154,10 +153,6 @@
     border-left: 3px solid hsl(var(--primary));
   }
 
-  /* Efeito de transição suave para cores de departamento */
-  *, *::before, *::after {
-    transition: border-color 0.4s ease, background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
-  }
 
   .menu-header {
     @apply px-4 pt-6 pb-2 text-[0.65rem] font-bold uppercase tracking-wider text-sidebar-muted;
@@ -208,19 +203,27 @@
   }
 
   .module-card {
-    @apply bg-card rounded-2xl border border-border/60 p-6;
+    @apply bg-card rounded-2xl border border-border/50 p-8 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20;
   }
 
   .card-premium {
-    @apply bg-card rounded-2xl border border-border/60 p-6;
+    @apply bg-card rounded-3xl border border-border/50 p-8 shadow-sm;
   }
 
   .glass-morphism {
-    @apply bg-background border border-border/40;
+    @apply bg-background/60 backdrop-blur-xl border border-border/40;
   }
 
   .header-title {
-    @apply text-2xl font-bold tracking-tight text-foreground;
+    @apply text-3xl md:text-4xl font-black tracking-tight text-card-foreground;
+  }
+
+  .subtitle-premium {
+    @apply text-sm text-muted-foreground font-medium;
+  }
+
+  .section-title {
+    @apply text-lg font-bold text-card-foreground tracking-tight;
   }
 
   .button-action {

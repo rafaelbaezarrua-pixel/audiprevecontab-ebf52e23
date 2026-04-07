@@ -49,25 +49,6 @@ export const FiscalParametersDialog: React.FC<Props> = ({ empresa, initialData, 
             <div><label className={labelCls}>Ramo Empresarial</label><input value={form.ramo_empresarial ?? ""} onChange={e => updateForm('ramo_empresarial', e.target.value)} className={inputCls} placeholder="Comércio, Serviço..." /></div>
           </div>
 
-          <div className="space-y-4 pt-2">
-            <h3 className="text-sm font-bold border-b border-border pb-2">Alíquotas (%)</h3>
-            {empresa.regime_tributario === "lucro_real" || empresa.regime_tributario === "lucro_presumido" ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div><label className={labelCls}>IRPJ</label><input type="number" step="0.01" value={form.aliquota_irpj ?? ""} onChange={e => updateForm('aliquota_irpj', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-                <div><label className={labelCls}>CSLL</label><input type="number" step="0.01" value={form.aliquota_csll ?? ""} onChange={e => updateForm('aliquota_csll', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-                <div><label className={labelCls}>PIS</label><input type="number" step="0.01" value={form.aliquota_pis ?? ""} onChange={e => updateForm('aliquota_pis', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-                <div><label className={labelCls}>COFINS</label><input type="number" step="0.01" value={form.aliquota_cofins ?? ""} onChange={e => updateForm('aliquota_cofins', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-                <div><label className={labelCls}>ICMS</label><input type="number" step="0.01" value={form.aliquota_icms ?? ""} onChange={e => updateForm('aliquota_icms', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-                <div><label className={labelCls}>ISS</label><input type="number" step="0.01" value={form.aliquota_iss ?? ""} onChange={e => updateForm('aliquota_iss', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-                <div><label className={labelCls}>CBS</label><input type="number" step="0.01" value={form.aliquota_cbs ?? ""} onChange={e => updateForm('aliquota_cbs', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-                <div><label className={labelCls}>IBS</label><input type="number" step="0.01" value={form.aliquota_ibs ?? ""} onChange={e => updateForm('aliquota_ibs', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelCls}>Alíquota Geral</label><input type="number" step="0.01" value={form.aliquota ?? ""} onChange={e => updateForm('aliquota', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="p-4 border-t border-border flex justify-end gap-2 bg-muted/20">

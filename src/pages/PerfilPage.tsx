@@ -137,23 +137,23 @@ const PerfilPage: React.FC = () => {
   if (loading) return <div className="flex items-center justify-center p-8"><p className="text-muted-foreground">Carregando...</p></div>;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto py-8">
-      <div className="flex flex-col items-center gap-4 mb-8 text-center">
+    <div className="space-y-6 max-w-5xl mx-auto py-8 pb-20">
+      <div className="flex flex-col items-center gap-6 mb-10 text-center animate-fade-in">
         <div className="relative group">
-          <div className="w-32 h-32 rounded-full border-4 border-background shadow-xl overflow-hidden bg-primary/10 flex items-center justify-center relative">
+          <div className="w-36 h-36 rounded-full border-4 border-card shadow-2xl overflow-hidden bg-primary/5 flex items-center justify-center relative ring-4 ring-primary/10">
             {form.foto_url ? (
-              <img src={form.foto_url} alt="Profile" className="w-full h-full object-cover" />
+              <img src={form.foto_url} alt="Profile" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
             ) : (
-              <User size={64} className="text-primary" />
+              <User size={72} className="text-primary/40" />
             )}
             {upLoading && (
-              <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
-                <Loader2 className="animate-spin text-primary" size={32} />
+              <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                <Loader2 className="animate-spin text-primary" size={36} />
               </div>
             )}
           </div>
-          <label htmlFor="foto-upload" className="absolute bottom-1 right-1 p-2.5 rounded-full bg-primary text-primary-foreground shadow-lg cursor-pointer hover:scale-110 active:scale-95 transition-all">
-            <Camera size={18} />
+          <label htmlFor="foto-upload" className="absolute bottom-1 right-1 p-3 rounded-full bg-primary text-primary-foreground shadow-xl cursor-pointer hover:scale-110 active:scale-95 transition-all border-4 border-card">
+            <Camera size={20} />
             <input 
               id="foto-upload" 
               type="file" 
@@ -164,9 +164,9 @@ const PerfilPage: React.FC = () => {
             />
           </label>
         </div>
-        <div>
-          <h3 className="text-2xl font-bold text-card-foreground">Meu Perfil</h3>
-          <p className="text-muted-foreground">Gerencie suas informações pessoais e de acesso</p>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black text-card-foreground tracking-tight">Meu Perfil</h1>
+          <p className="text-muted-foreground font-medium">Gerencie suas informações pessoais, segurança e customização do sistema.</p>
         </div>
       </div>
 

@@ -16,6 +16,9 @@ export interface Ocorrencia {
         nome_empresa: string;
         cnpj: string | null;
     };
+    usuarios?: {
+        nome_completo: string | null;
+    };
 }
 
 export const useOcorrencias = () => {
@@ -25,7 +28,7 @@ export const useOcorrencias = () => {
         queryKey: ["ocorrencias"],
         queryFn: async () => {
             const { data, error } = await (supabase.from("ocorrencias") as any)
-                .select("*, empresas(nome_empresa, cnpj)")
+                .select("*, empresas(nome_empresa, cnpj), usuarios:usuario_id(nome_completo)")
                 .order("created_at", { ascending: false });
             if (error) throw error;
             return data as Ocorrencia[];
@@ -37,7 +40,7 @@ export const useOcorrencias = () => {
         mutationFn: async (newOc: any) => {
             const { data, error } = await (supabase.from("ocorrencias") as any)
                 .insert([newOc])
-                .select("*, empresas(nome_empresa, cnpj)")
+                .select("*, empresas(nome_empresa, cnpj), usuarios:usuario_id(nome_completo)")
                 .single();
             if (error) throw error;
             return data;

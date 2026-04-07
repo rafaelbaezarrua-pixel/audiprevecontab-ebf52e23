@@ -16,12 +16,22 @@ export function maskCNPJ(value: string) {
 }
 
 export function maskCPF(value: string) {
+  if (!value) return "";
+  if (value.includes("*")) return value; // Mantém versão mascarada da RFB
   return value
     .replace(/\D/g, "")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
     .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4")
-    .replace(/(-\d{2})\d+?$/, "$1");
+    .substring(0, 14);
+}
+
+export function maskCPFCNPJ(value: string) {
+  if (!value) return "";
+  if (value.includes("*")) return value;
+  const clean = value.replace(/\D/g, "");
+  if (clean.length <= 11) return maskCPF(clean);
+  return maskCNPJ(clean);
 }
 
 export function formatCurrency(value: number | string) {

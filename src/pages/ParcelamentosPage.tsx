@@ -10,6 +10,7 @@ import {
   Circle,
   Plus,
   Trash2,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -76,7 +77,7 @@ const ParcelamentosPage: React.FC = () => {
     let matchesStatus = true;
     if (filterStatus !== "todos") {
       const record = mensalData[p.id];
-      const isConcluido = record?.status === "concluido" || record?.status === "isento";
+      const isConcluido = record?.status === "enviada" || record?.status === "isento" || record?.status === "ok";
       matchesStatus = filterStatus === "concluido" ? isConcluido : !isConcluido;
     }
 
@@ -213,267 +214,267 @@ const ParcelamentosPage: React.FC = () => {
   ).length;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm w-full sm:w-auto">
-          <FavoriteToggleButton moduleId="parcelamentos" />
-          <div>
-            <h2 className="text-lg font-bold text-card-foreground">Parcelamentos</h2>
-            <p className="text-xs text-muted-foreground">Gestão de parcelamentos, acompanhamento e emissão de guias mensais.</p>
+    <div className="space-y-8 animate-fade-in pb-20 relative">
+      {/* Background decoration elements */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
+
+      {/* Main Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+             <h1 className="header-title">Gestão de <span className="text-primary/90">Parcelamentos</span></h1>
+             <FavoriteToggleButton moduleId="parcelamentos" />
           </div>
+          <p className="subtitle-premium">Acompanhamento estratégico de débitos, emissão de guias e controle de vigência.</p>
         </div>
-        <div className="flex gap-3">
-          <input
-            type="month"
-            value={competencia}
-            onChange={(e) => setCompetencia(e.target.value)}
-            className="px-4 py-2 border border-border rounded-xl bg-background text-foreground font-semibold outline-none focus:ring-2 focus:ring-primary"
-          />
+        
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex items-center gap-2 bg-card border border-primary/10 p-2 rounded-2xl shadow-xl shadow-primary/5">
+            <input
+              type="month"
+              value={competencia}
+              onChange={(e) => setCompetencia(e.target.value)}
+              className="bg-transparent border-none text-[11px] font-black uppercase tracking-widest text-primary outline-none px-4 py-2 font-ubuntu"
+            />
+          </div>
           <button
             onClick={() => navigate("/parcelamentos/novo")}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground shadow-md transition-all hover:opacity-90 active:scale-95"
-            style={{ background: "var(--gradient-primary)" }}
+            className="h-14 px-8 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
           >
-            <Plus size={18} /> Novo Parcelamento
+            <Plus size={20} /> NOVO PARCELAMENTO
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="stat-card">
-          <p className="text-xs text-muted-foreground font-medium uppercase">
-            Total Cadastrados
-          </p>
-          <p className="text-2xl font-bold text-primary mt-1">
-            {parcelamentos.length}
-          </p>
-        </div>
-        <div className="stat-card">
-          <p className="text-xs text-muted-foreground font-medium uppercase">
-            Mês Concluído
-          </p>
-          <p className="text-2xl font-bold text-success mt-1">
-            {completedCount}
-          </p>
-        </div>
-        <div className="stat-card">
-          <p className="text-xs text-muted-foreground font-medium uppercase">
-            Pendentes
-          </p>
-          <p className="text-2xl font-bold text-warning mt-1">
-            {parcelamentos.length - completedCount}
-          </p>
-        </div>
+      {/* KPI Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {[
+          { label: "Total Cadastrados", count: parcelamentos.length, cls: "text-primary", bg: "bg-primary/5", icon: <Circle size={24} /> },
+          { label: "Guias Concluídas", count: completedCount, cls: "text-emerald-500", bg: "bg-emerald-500/5", icon: <CheckCircle size={24} /> },
+          { label: "Pendências do Mês", count: parcelamentos.length - completedCount, cls: "text-amber-500", bg: "bg-amber-500/5", icon: <Clock size={24} /> }
+        ].map(s => (
+          <div key={s.label} className="group bg-card border border-border/60 rounded-[2rem] p-8 flex items-center justify-between hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500">
+            <div className="space-y-2">
+              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">{s.label}</p>
+              <p className={`text-4xl font-black tracking-tight ${s.cls}`}>{s.count}</p>
+            </div>
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${s.bg} ${s.cls} border border-current/10 group-hover:scale-110 transition-transform duration-500`}>
+              {s.icon}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="relative max-w-sm">
-        <Search
-          size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-        <input
-          type="text"
-          placeholder="Buscar por nome ou CPF/CNPJ..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none"
-        />
-      </div>
-
-      <div className="flex border-b border-border overflow-x-auto no-scrollbar">
+      {/* View Switch / Tabs */}
+      <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar max-w-fit shadow-sm">
         <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "andamento"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
           onClick={() => setActiveTab("andamento")}
+          className={`px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === "andamento" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
         >
-          Em Andamento
+          Parcelamentos em Andamento
         </button>
         <button
-          className={`px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${activeTab === "encerrados"
-            ? "border-primary text-primary"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
           onClick={() => setActiveTab("encerrados")}
+          className={`px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === "encerrados" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
         >
-          Parcelamentos Encerrados
+          Histórico de Encerrados
         </button>
       </div>
 
-      <div className="space-y-3">
+      {/* Search & Filters */}
+      <div className="flex flex-col lg:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full group">
+          <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <input
+            type="text"
+            placeholder="BUSCAR POR NOME, CPF OU CNPJ..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full h-14 pl-14 pr-6 bg-card border border-border/60 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-hover:border-primary/20"
+          />
+        </div>
+        
+        <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full sm:w-auto shadow-sm">
+          {[{ key: "todos", label: "Todos" }, { key: "pendente", label: "Pendentes" }, { key: "concluido", label: "Concluídos" }].map(f => (
+            <button
+              key={f.key}
+              onClick={() => setFilterStatus(f.key as any)}
+              className={`px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === f.key ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main List Grid */}
+      <div className="space-y-4">
         {filtered.length === 0 ? (
-          <div className="text-center py-12 bg-card border border-border rounded-xl text-muted-foreground">
-            {search
-              ? "Nenhum parcelamento encontrado na busca."
-              : "Nenhum parcelamento cadastrado. Clique em Novo Parcelamento para começar."}
+          <div className="py-24 text-center bg-card border-2 border-dashed border-border/40 rounded-[2.5rem] opacity-40">
+            <Search size={48} className="mx-auto mb-4 text-muted-foreground" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              {search ? "Nenhum resultado para os termos buscados" : "Nenhum parcelamento registrado nesta categoria"}
+            </p>
           </div>
         ) : (
           filtered.map((p) => {
             const isOpen = expanded === p.id;
             const form = editForm[p.id] || {};
-            const done =
-              mensalData[p.id]?.status === "enviada" ||
-              mensalData[p.id]?.status === "gerada";
+            const itemMensal = mensalData[p.id];
+            const done = itemMensal?.status === "enviada" || itemMensal?.status === "ok" || itemMensal?.status === "isento";
 
             return (
-              <div key={p.id} className="module-card !p-0 overflow-hidden">
+              <div key={p.id} className={`group bg-card border ${isOpen ? 'border-primary/30 shadow-2xl' : 'border-border/60 hover:border-primary/20'} rounded-[2rem] transition-all duration-300 overflow-hidden`}>
                 <div
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors gap-4"
+                  className={`flex flex-col lg:flex-row lg:items-center justify-between p-6 cursor-pointer transition-colors ${isOpen ? 'bg-primary/5' : 'hover:bg-muted/30'}`}
                   onClick={() => toggleExpand(p.id)}
                 >
-                  <div className="flex items-center gap-3">
-                    {done ? (
-                      <CheckCircle size={18} className="text-success" />
-                    ) : (
-                      <Circle size={18} className="text-muted-foreground" />
-                    )}
-                    <div>
-                      <p className="font-semibold text-card-foreground">
+                  <div className="flex items-center gap-5">
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-inner ${done ? 'bg-emerald-500 text-white shadow-emerald-500/10' : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'}`}>
+                      {done ? <CheckCircle size={28} /> : <Clock size={28} />}
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="font-black text-sm uppercase tracking-tight text-card-foreground">
                         {p.nome_pessoa_fisica}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {p.cpf_pessoa_fisica || "S/N"} • {p.tipo_parcelamento} •{" "}
-                        {p.qtd_parcelas} Parcelas
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-3">
+                        <span>{p.cpf_pessoa_fisica || "S/N"}</span>
+                        <span className="w-1 h-1 rounded-full bg-border" />
+                        <span>{p.tipo_parcelamento}</span>
+                        <span className="w-1 h-1 rounded-full bg-border" />
+                        <span className="text-primary">{p.qtd_parcelas} PARCELAS</span>
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-                    <span
-                      className={`badge-status ${done ? "badge-success" : "badge-warning"
-                        }`}
-                    >
-                      {mensalData[p.id]?.status === "enviada"
-                        ? "Enviada"
-                        : mensalData[p.id]?.status === "gerada"
-                          ? "Gerada"
-                          : "Pendente"}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleEncerrado(p);
-                      }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${calcIsEncerrado(p) ? 'border-border text-foreground bg-muted/50 hover:bg-muted' : 'border-destructive text-destructive bg-destructive/10 hover:bg-destructive/20'}`}
-                    >
-                      {calcIsEncerrado(p) ? 'Reabrir' : 'Encerrar'}
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteParcelamento(p.id);
-                      }}
-                      className="p-1.5 text-muted-foreground hover:text-destructive transition-colors ml-2"
-                      title="Excluir este parcelamento de todos os meses"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                    {isOpen ? (
-                      <ChevronUp size={16} className="text-muted-foreground" />
-                    ) : (
-                      <ChevronDown
-                        size={16}
-                        className="text-muted-foreground"
-                      />
-                    )}
+
+                  <div className="flex items-center gap-4 mt-6 lg:mt-0">
+                    <div className="flex items-center gap-3 mr-4">
+                        <span className={`h-8 flex items-center px-4 rounded-full text-[9px] font-black uppercase tracking-widest border ${done ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm shadow-emerald-100' : 'bg-amber-50 border-amber-200 text-amber-600 shadow-sm shadow-amber-100'}`}>
+                          {itemMensal?.status === "enviada" ? "ENVIADA" : itemMensal?.status === "gerada" ? "GERADA" : "PENDENTE"}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleToggleEncerrado(p); }}
+                          className={`h-11 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${calcIsEncerrado(p) ? 'bg-muted/50 border-border/60 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20' : 'bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive hover:text-white hover:scale-[1.02]'}`}
+                        >
+                          {calcIsEncerrado(p) ? 'REABRIR' : 'ENCERRAR'}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteParcelamento(p.id); }}
+                          className="h-11 w-11 flex items-center justify-center rounded-xl bg-muted/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 border border-border/40 transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        <div className={`p-2.5 rounded-xl bg-muted/50 text-muted-foreground transition-all duration-300 ${isOpen ? 'rotate-180 bg-primary/10 text-primary' : ''}`}>
+                            <ChevronDown size={20} />
+                        </div>
+                    </div>
                   </div>
                 </div>
 
                 {isOpen && (
-                  <div className="border-t border-border bg-muted/20">
-                    <div className="p-5 border-b border-border/50 grid grid-cols-2 md:grid-cols-4 gap-4 bg-muted/10 text-xs">
-                      <div>
-                        <span className="text-muted-foreground block mb-1">
-                          Início
-                        </span>
-                        <span className="font-medium text-foreground">
-                          {p.data_inicio
-                            ? formatDateBR(p.data_inicio)
-                            : "—"}
-                        </span>
+                  <div className="border-t border-border/40 p-10 space-y-10 bg-muted/5 animate-in slide-in-from-top-4 duration-300">
+                    {/* Header Details Info */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b border-border/40">
+                      <div className="space-y-2">
+                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Data Início</span>
+                        <div className="h-11 flex items-center px-4 bg-card border border-border/40 rounded-xl text-xs font-bold text-card-foreground shadow-sm">
+                           {p.data_inicio ? formatDateBR(p.data_inicio) : "—"}
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="description-label">Término Estimado</p>
-                        <p className="description-value">
-                          {p.previsao_termino ? formatDateBR(p.previsao_termino) : "—"}
-                        </p>
+                      <div className="space-y-2">
+                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Previsão Término</span>
+                        <div className="h-11 flex items-center px-4 bg-card border border-border/40 rounded-xl text-xs font-bold text-card-foreground shadow-sm">
+                           {p.previsao_termino ? formatDateBR(p.previsao_termino) : "—"}
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground block mb-1">
-                          Envio Fixo
-                        </span>
-                        <span className="font-medium text-foreground">
-                          {p.forma_envio || "—"}
-                        </span>
+                      <div className="space-y-2">
+                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Forma de Envio</span>
+                        <div className="h-11 flex items-center px-4 bg-card border border-border/40 rounded-xl text-xs font-bold text-card-foreground shadow-sm uppercase">
+                           {p.forma_envio || "NÃO INFORMADA"}
+                        </div>
                       </div>
-                      <div className="md:col-span-1">
-                        <span className="text-muted-foreground block mb-1">
-                          Acesso:{" "}
-                          <strong className="text-primary font-medium">
-                            {p.metodo_login === "gov_br"
-                              ? "Gov.br"
-                              : p.metodo_login === "codigo_sn"
-                                ? "Cód. AC. Simples Nacional"
-                                : "Procuração"}
-                          </strong>
-                        </span>
-                        <span className="font-mono text-foreground tracking-tight">
-                          {p.metodo_login === "gov_br" &&
-                            `L: ${p.login_gov_br || "-"} | S: ${p.senha_gov_br || "-"
-                            }`}
-                          {p.metodo_login === "codigo_sn" &&
-                            `Cód: ${p.codigo_sn || "-"}`}
-                          {p.metodo_login === "procuracao" && "Acesso Padrão"}
-                        </span>
+                      <div className="space-y-2">
+                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Metodologia de Acesso</span>
+                        <div className="h-11 flex items-center px-4 bg-primary/10 border border-primary/20 rounded-xl text-[10px] font-black text-primary uppercase shadow-sm">
+                           {p.metodo_login === "gov_br" ? "CONTA GOV.BR" : p.metodo_login === "codigo_sn" ? "CÓD. ACESSO SN" : "PROCURAÇÃO ELETRÔNICA"}
+                        </div>
                       </div>
                     </div>
-                    <div className="p-5 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className={labelCls}>Status no Mês</label>
+
+                    {/* Access Credentials Box */}
+                    {(p.login_gov_br || p.codigo_sn) && (
+                      <div className="bg-card border border-primary/10 rounded-2xl p-6 flex flex-wrap gap-10 shadow-sm">
+                         {p.metodo_login === "gov_br" && (
+                           <>
+                             <div className="space-y-1">
+                               <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Login Gov.br</p>
+                               <p className="font-mono text-sm font-bold text-card-foreground">{p.login_gov_br}</p>
+                             </div>
+                             <div className="space-y-1">
+                               <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Senha Gov.br</p>
+                               <p className="font-mono text-sm font-bold text-card-foreground">••••••••</p>
+                             </div>
+                           </>
+                         )}
+                         {p.metodo_login === "codigo_sn" && (
+                           <div className="space-y-1">
+                             <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Código de Acesso</p>
+                             <p className="font-mono text-sm font-bold text-card-foreground">{p.codigo_sn}</p>
+                           </div>
+                         )}
+                      </div>
+                    )}
+
+                    {/* Monthly Form */}
+                    <div className="space-y-8 pt-4">
+                      <div className="flex items-center gap-3">
+                         <div className="w-2 h-6 bg-primary rounded-full" />
+                         <h4 className="text-[11px] font-black uppercase tracking-widest text-card-foreground">ATUALIZAÇÃO DO MÊS ({competencia.split("-").reverse().join("/")})</h4>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Status da Guia</label>
                           <select
                             value={form.status || "pendente"}
-                            onChange={(e) =>
-                              updateForm(p.id, "status", e.target.value)
-                            }
-                            className={inputCls}
+                            onChange={(e) => updateForm(p.id, "status", e.target.value)}
+                            className="w-full h-12 px-4 bg-card border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer transition-all shadow-sm"
                           >
-                            <option value="pendente">Pendente para Envio</option>
-                            <option value="gerada">Em Andamento</option>
-                            <option value="enviada">Concluída / Enviada</option>
+                            <option value="pendente">🔴 PENDENTE PARA ENVIO</option>
+                            <option value="gerada">🟡 GUIA GERADA / EM ANDAMENTO</option>
+                            <option value="enviada">🟢 CONCLUÍDO / ENVIADO AO CLIENTE</option>
                           </select>
                         </div>
-                        <div>
-                          <label className={labelCls}>Data do Envio (Opcional)</label>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data Efetiva de Envio</label>
                           <input
                             type="date"
                             value={form.data_envio || ""}
-                            onChange={(e) =>
-                              updateForm(p.id, "data_envio", e.target.value)
-                            }
-                            className={inputCls}
+                            onChange={(e) => updateForm(p.id, "data_envio", e.target.value)}
+                            className="w-full h-12 px-4 bg-card border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu shadow-sm"
                           />
                         </div>
-                        <div>
-                          <label className={labelCls}>Anotação Breve</label>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observações Internas</label>
                           <input
                             value={form.observacoes || ""}
-                            onChange={(e) =>
-                              updateForm(p.id, "observacoes", e.target.value)
-                            }
-                            className={inputCls}
-                            placeholder="Ex: Falta emitir boleto atualizado"
+                            onChange={(e) => updateForm(p.id, "observacoes", e.target.value)}
+                            className="w-full h-12 px-4 bg-card border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+                            placeholder="EX: FALTA EMITIR BOLETO ATUALIZADO..."
                           />
                         </div>
                       </div>
-                      <div className="flex justify-end pt-2">
+
+                      <div className="flex justify-end pt-4">
                         <button
                           onClick={() => handleSaveMensal(p.id)}
-                          className="flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md transition-all hover:opacity-90 active:scale-95"
-                          style={{ background: "var(--gradient-primary)" }}
+                          className="h-14 px-12 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
                         >
-                          <Save size={16} /> Salvar Mês de{" "}
-                          {competencia.split("-").reverse().join("/")}
+                          <Save size={18} /> SALVAR ATUALIZAÇÃO MENSAL
                         </button>
                       </div>
                     </div>
