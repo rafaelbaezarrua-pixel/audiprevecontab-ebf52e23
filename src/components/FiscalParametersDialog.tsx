@@ -35,12 +35,12 @@ export const FiscalParametersDialog: React.FC<Props> = ({ empresa, initialData, 
       <div className="bg-card w-full max-w-2xl rounded-xl shadow-xl border border-border/60 overflow-hidden flex flex-col max-h-[90vh] animate-scale-in">
         <div className="flex items-center justify-between p-4 border-b border-border bg-muted/20">
           <div>
-            <h2 className="text-lg font-bold">Parâmetros Fixos</h2>
+            <h2 className="text-lg font-bold">Parâmetros</h2>
             <p className="text-xs text-muted-foreground font-medium">{empresa.nome_empresa} ({empresa.cnpj || "Sem CNPJ"})</p>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:bg-muted p-2 rounded-full transition-colors"><X size={18} /></button>
         </div>
-        
+
         <div className="p-6 overflow-y-auto space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label className={labelCls}>Tipo de Nota</label><input value={form.tipo_nota ?? ""} onChange={e => updateForm('tipo_nota', e.target.value)} className={inputCls} placeholder="NFE, NFCE, NFSE" /></div>
@@ -63,9 +63,9 @@ export const FiscalParametersDialog: React.FC<Props> = ({ empresa, initialData, 
                 <div><label className={labelCls}>IBS</label><input type="number" step="0.01" value={form.aliquota_ibs ?? ""} onChange={e => updateForm('aliquota_ibs', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
               </div>
             ) : (
-                <div className="grid grid-cols-2 gap-4">
-                    <div><label className={labelCls}>Alíquota Geral</label><input type="number" step="0.01" value={form.aliquota ?? ""} onChange={e => updateForm('aliquota', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelCls}>Alíquota Geral</label><input type="number" step="0.01" value={form.aliquota ?? ""} onChange={e => updateForm('aliquota', e.target.value === "" ? null : parseFloat(e.target.value))} className={inputCls} /></div>
+              </div>
             )}
           </div>
         </div>
