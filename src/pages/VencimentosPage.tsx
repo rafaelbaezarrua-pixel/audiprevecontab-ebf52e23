@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { formatCurrency, formatDateBR } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, AlertTriangle, CheckCircle, Search } from "lucide-react";
+import { Clock, AlertTriangle, CheckCircle, Search, LayoutGrid, List } from "lucide-react";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { LicencaTaxaRecord, CertidaoRecord } from "@/types/administrative";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
@@ -20,6 +20,7 @@ const VencimentosPage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState("todos");
   const [search, setSearch] = useState("");
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
     const load = async () => {
@@ -163,6 +164,10 @@ const VencimentosPage: React.FC = () => {
           </div>
           <p className="subtitle-premium">Acompanhamento centralizado de prazos, licenças, certificados e certidões do grupo.</p>
         </div>
+        <div className="flex bg-muted/30 p-1 rounded-xl border border-border/60">
+            <button onClick={() => setViewMode("grid")} className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}><LayoutGrid size={18} /></button>
+            <button onClick={() => setViewMode("list")} className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}><List size={18} /></button>
+        </div>
       </div>
 
       {/* Situation Tabs (Ativas, MEI, etc) */}
@@ -243,30 +248,23 @@ const VencimentosPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Vencimentos List - Mobile Card Grid Pattern */}
-      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-        {searchFiltered.length === 0 ? (
-          <div className="col-span-full py-32 text-center bg-card border-2 border-dashed border-border/40 rounded-[2.5rem] opacity-40">
+      {/* Vencimentos List/Grid */}
+      {searchFiltered.length === 0 ? (
+          <div className="py-32 text-center bg-card border-2 border-dashed border-border/40 rounded-[2.5rem] opacity-40">
              <Clock size={48} className="mx-auto mb-4 text-muted-foreground" />
              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nenhum vencimento identificado nos filtros atuais</p>
           </div>
-        ) : (
-          searchFiltered.map((v, i) => {
+      ) : viewMode === "grid" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
+          {searchFiltered.map((v, i) => {
             const isVencido = v.status === "vencido";
             const isProximo = v.status === "próximo";
-            
             return (
               <div key={i} className="group bg-card border border-border/60 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 rounded-[2rem] p-8 transition-all duration-500 flex flex-col justify-between gap-6 relative overflow-hidden">
-                {/* Visual indicator for status */}
                 <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-10 transition-colors ${isVencido ? 'bg-destructive' : isProximo ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                
                 <div className="space-y-4">
                     <div className="flex items-start justify-between gap-4">
-                        <span className={`h-8 flex items-center px-4 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                            isVencido ? 'bg-destructive/10 border-destructive/20 text-destructive' : 
-                            isProximo ? 'bg-amber-50 border-amber-200 text-amber-600' : 
-                            'bg-emerald-50 border-emerald-200 text-emerald-600'
-                        }`}>
+                        <span className={`h-8 flex items-center px-4 rounded-full text-[9px] font-black uppercase tracking-widest border ${isVencido ? 'bg-destructive/10 border-destructive/20 text-destructive' : isProximo ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'}`}>
                             {isVencido ? "EXPIRADO" : isProximo ? "VENCE LOGO" : "VIGENTE"}
                         </span>
                         <div className="text-right">
@@ -274,15 +272,11 @@ const VencimentosPage: React.FC = () => {
                             <p className="font-ubuntu font-bold text-sm text-card-foreground">{formatDateBR(v.data)}</p>
                         </div>
                     </div>
-
                     <div className="space-y-1">
                         <h3 className="font-black text-sm text-card-foreground uppercase tracking-tight group-hover:text-primary transition-colors line-clamp-1">{v.empresa}</h3>
-                        <p className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 w-fit">
-                            {v.tipo}
-                        </p>
+                        <p className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 w-fit">{v.tipo}</p>
                     </div>
                 </div>
-
                 <div className="pt-6 border-t border-border/40 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isVencido ? 'bg-destructive/10 text-destructive' : isProximo ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
@@ -290,17 +284,58 @@ const VencimentosPage: React.FC = () => {
                         </div>
                         <div>
                              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Contagem</p>
-                             <p className={`text-sm font-black ${isVencido ? 'text-destructive' : 'text-card-foreground'}`}>
-                                {isVencido ? `${Math.abs(v.diasRestantes)}d atrasado` : `${v.diasRestantes} dias restantes`}
-                             </p>
+                             <p className={`text-sm font-black ${isVencido ? 'text-destructive' : 'text-card-foreground'}`}>{isVencido ? `${Math.abs(v.diasRestantes)}d atrasado` : `${v.diasRestantes} dias restantes`}</p>
                         </div>
                     </div>
                 </div>
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      ) : (
+        <div className="bg-card border border-border/60 rounded-2xl overflow-hidden shadow-sm">
+            <table className="w-full text-left border-collapse">
+                <thead>
+                    <tr className="bg-muted/30 border-b border-border/60">
+                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Empresa</th>
+                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo</th>
+                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vencimento</th>
+                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Dias</th>
+                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {searchFiltered.map((v, i) => {
+                        const isVencido = v.status === "vencido";
+                        const isProximo = v.status === "próximo";
+                        return (
+                        <tr key={i} className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors group">
+                            <td className="px-6 py-4 font-black text-[11px] uppercase tracking-tight text-card-foreground max-w-[220px]">
+                                <span className="block truncate group-hover:text-primary transition-colors">{v.empresa}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                                <span className="text-[9px] font-black text-primary uppercase tracking-widest bg-primary/5 px-2.5 py-1 rounded-md border border-primary/10 whitespace-nowrap">{v.tipo}</span>
+                            </td>
+                            <td className="px-6 py-4 text-[11px] font-bold text-card-foreground whitespace-nowrap">{formatDateBR(v.data)}</td>
+                            <td className={`px-6 py-4 text-[11px] font-black whitespace-nowrap ${isVencido ? "text-destructive" : "text-card-foreground"}`}>
+                                {isVencido ? `${Math.abs(v.diasRestantes)}d atrasado` : `${v.diasRestantes} dias`}
+                            </td>
+                            <td className="px-6 py-4">
+                                <span className={`h-7 inline-flex items-center px-3 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                                    isVencido ? "bg-destructive/10 border-destructive/20 text-destructive" :
+                                    isProximo ? "bg-amber-50 border-amber-200 text-amber-600" :
+                                    "bg-emerald-50 border-emerald-200 text-emerald-600"
+                                }`}>
+                                    {isVencido ? "Expirado" : isProximo ? "Vence Logo" : "Vigente"}
+                                </span>
+                            </td>
+                        </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+      )}
     </div>
   );
 };
