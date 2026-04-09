@@ -6,6 +6,9 @@ import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { ProcuracaoRecord } from "@/types/administrative";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FolderOpen } from "lucide-react";
 
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
 
@@ -221,8 +224,17 @@ const ProcuracoesPage: React.FC = () => {
               </div>
 
               {isOpen && (
-                <div className="border-t border-border/40 p-8 space-y-8 animate-in slide-in-from-top-4 duration-300">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="border-t border-border/40 p-8 bg-muted/5 animate-in slide-in-from-top-4 duration-300">
+                  <Tabs defaultValue="dados" className="w-full">
+                    <TabsList className="bg-muted/50 p-1 rounded-xl h-12 mb-8">
+                      <TabsTrigger value="dados" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Dados da Procuração</TabsTrigger>
+                      <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap flex items-center gap-2">
+                        <FolderOpen size={14} /> Arquivos / Pastas
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="dados" className="space-y-8 animate-in fade-in duration-300">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data de Cadastro</label>
                         <input 
@@ -254,14 +266,13 @@ const ProcuracoesPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex justify-end pt-4 border-t border-border/40">
-                      <button 
-                        onClick={() => handleSave(emp.id)} 
-                        className="px-12 h-14 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
-                      >
-                        <Save size={18} /> ATUALIZAR PROCURAÇÃO
-                      </button>
-                  </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                       <ModuleFolderView empresa={emp} departamentoId="geral" />
+                    </TabsContent>
+                  </Tabs>
                 </div>
               )}
             </div>

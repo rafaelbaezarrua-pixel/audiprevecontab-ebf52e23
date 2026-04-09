@@ -4,12 +4,14 @@ import { formatDateBR } from "@/lib/utils";
 import {
   Search, Building2, ChevronDown, ChevronUp,
   Shield, CheckCircle, Clock, AlertTriangle, Save,
-  Upload, Eye, FileText
+  Upload, Eye, FileText, FolderOpen
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { LicencaRecord, LicencaTaxaRecord, GuiaStatus } from "@/types/administrative";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const licencaLabels: Record<string, string> = {
   alvara: "Alvará de Funcionamento",
@@ -222,7 +224,9 @@ const LicencasPage: React.FC = () => {
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-  }  return (
+  }
+  
+  return (
     <div className="space-y-8 animate-fade-in pb-20 relative">
       {/* Background decoration elements */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
@@ -371,89 +375,102 @@ const LicencasPage: React.FC = () => {
 
                   {isOpen && (
                     <div className="border-t border-border/40 p-8 bg-muted/5 animate-in slide-in-from-top-4 duration-300">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {Object.entries(licencaLabels).map(([key, label]) => {
-                          const lic = empLicencas.find((l: LicencaRecord) => l.tipo_licenca === key);
-                          const cfg = lic ? tipoStatusLabels[lic.status] || { label: "Não definido", cls: "badge-gray" } : { label: "Não definido", cls: "badge-gray" };
-                          const dias = lic?.status === "com_vencimento" ? calcDias(lic.vencimento) : null;
-                          const isExpired = dias !== null && dias < 0;
-                          const isNear = dias !== null && dias >= 0 && dias <= 30;
+                      <Tabs defaultValue="licencas" className="w-full">
+                        <TabsList className="bg-muted/50 p-1 rounded-xl h-12 mb-8">
+                           <TabsTrigger value="licencas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Status das Licenças</TabsTrigger>
+                           <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Arquivos / Pastas</TabsTrigger>
+                        </TabsList>
 
-                          return (
-                            <div key={key} className="p-6 rounded-3xl border border-border/60 bg-card group/item hover:border-primary/30 transition-all shadow-sm">
-                              <div className="flex items-center justify-between mb-6">
-                                <div className="space-y-1">
-                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-primary/80">{label}</h4>
-                                    <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${cfg.cls.replace('badge-', 'bg-').replace('gray', 'muted').replace('info', 'primary')}/10 ${cfg.cls.replace('badge-', 'text-').replace('gray', 'muted-foreground').replace('info', 'primary')}`}>
-                                        {cfg.label}
-                                    </span>
-                                </div>
-                                
-                                <div className="flex items-center gap-2">
-                                  {lic?.file_url ? (
-                                    <button
-                                      onClick={() => window.open(lic.file_url, "_blank")}
-                                      className="w-10 h-10 rounded-xl bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center border border-primary/20"
-                                      title="Visualizar anexo"
-                                    >
-                                      <Eye size={16} />
-                                    </button>
-                                  ) : (
-                                    <div className="relative">
-                                      <input
-                                        type="file"
-                                        accept=".pdf"
-                                        className="hidden"
-                                        id={`upload-${emp.id}-${key}`}
-                                        onChange={async (e) => {
-                                          const file = e.target.files?.[0];
-                                          if (!file) return;
-                                          toast.loading("Enviando...", { id: "up-lic" });
-                                          const path = `licencas/${emp.id}/${key}_${Date.now()}.pdf`;
-                                          const { error: upErr } = await supabase.storage.from("documentos").upload(path, file);
-                                          if (upErr) { toast.error("Erro: " + upErr.message, { id: "up-lic" }); return; }
-                                          const { data: { publicUrl } } = supabase.storage.from("documentos").getPublicUrl(path);
-                                          const { error: dbErr } = await supabase.from("licencas").update({ file_url: publicUrl }).eq("empresa_id", emp.id).eq("tipo_licenca", key);
-                                          if (dbErr) { toast.error("Erro DB: " + dbErr.message, { id: "up-lic" }); } else { toast.success("Anexo salvo!", { id: "up-lic" }); loadBaseData(); }
-                                        }}
-                                      />
-                                      <label
-                                        htmlFor={`upload-${emp.id}-${key}`}
-                                        className="w-10 h-10 rounded-xl bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all cursor-pointer flex items-center justify-center border border-border/60"
-                                        title="Anexar PDF"
-                                      >
-                                        <Upload size={16} />
-                                      </label>
+                        <TabsContent value="licencas" className="animate-in fade-in duration-300">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {Object.entries(licencaLabels).map(([key, label]) => {
+                              const lic = empLicencas.find((l: LicencaRecord) => l.tipo_licenca === key);
+                              const cfg = lic ? tipoStatusLabels[lic.status] || { label: "Não definido", cls: "badge-gray" } : { label: "Não definido", cls: "badge-gray" };
+                              const dias = lic?.status === "com_vencimento" ? calcDias(lic.vencimento) : null;
+                              const isExpired = dias !== null && dias < 0;
+                              const isNear = dias !== null && dias >= 0 && dias <= 30;
+
+                              return (
+                                <div key={key} className="p-6 rounded-3xl border border-border/60 bg-card group/item hover:border-primary/30 transition-all shadow-sm">
+                                  <div className="flex items-center justify-between mb-6">
+                                    <div className="space-y-1">
+                                        <h4 className="text-[11px] font-black uppercase tracking-widest text-primary/80">{label}</h4>
+                                        <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${cfg.cls.replace('badge-', 'bg-').replace('gray', 'muted').replace('info', 'primary')}/10 ${cfg.cls.replace('badge-', 'text-').replace('gray', 'muted-foreground').replace('info', 'primary')}`}>
+                                            {cfg.label}
+                                        </span>
                                     </div>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-3">
-                                  {lic?.status === "com_vencimento" && lic.vencimento && (
-                                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-2xl border border-border/40">
-                                        <div className="flex flex-col">
-                                            <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter">VENCIMENTO</span>
-                                            <span className="text-[10px] font-bold">{formatDateBR(lic.vencimento)}</span>
+                                    
+                                    <div className="flex items-center gap-2">
+                                      {lic?.file_url ? (
+                                        <button
+                                          onClick={() => window.open(lic.file_url, "_blank")}
+                                          className="w-10 h-10 rounded-xl bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center border border-primary/20"
+                                          title="Visualizar anexo"
+                                        >
+                                          <Eye size={16} />
+                                        </button>
+                                      ) : (
+                                        <div className="relative">
+                                          <input
+                                            type="file"
+                                            accept=".pdf"
+                                            className="hidden"
+                                            id={`upload-${emp.id}-${key}`}
+                                            onChange={async (e) => {
+                                              const file = e.target.files?.[0];
+                                              if (!file) return;
+                                              toast.loading("Enviando...", { id: "up-lic" });
+                                              const path = `licencas/${emp.id}/${key}_${Date.now()}.pdf`;
+                                              const { error: upErr } = await supabase.storage.from("documentos").upload(path, file);
+                                              if (upErr) { toast.error("Erro: " + upErr.message, { id: "up-lic" }); return; }
+                                              const { data: { publicUrl } } = supabase.storage.from("documentos").getPublicUrl(path);
+                                              const { error: dbErr } = await supabase.from("licencas").update({ file_url: publicUrl }).eq("empresa_id", emp.id).eq("tipo_licenca", key);
+                                              if (dbErr) { toast.error("Erro DB: " + dbErr.message, { id: "up-lic" }); } else { toast.success("Anexo salvo!", { id: "up-lic" }); loadBaseData(); }
+                                            }}
+                                          />
+                                          <label
+                                            htmlFor={`upload-${emp.id}-${key}`}
+                                            className="w-10 h-10 rounded-xl bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all cursor-pointer flex items-center justify-center border border-border/60"
+                                            title="Anexar PDF"
+                                          >
+                                            <Upload size={16} />
+                                          </label>
                                         </div>
-                                        {dias !== null && (
-                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${isExpired ? 'bg-destructive text-destructive-foreground animate-pulse' : isNear ? 'bg-warning/20 text-warning' : 'bg-emerald-500/20 text-emerald-500'}`}>
-                                                {isExpired ? "Vencida" : `${dias} dias`}
-                                            </span>
-                                        )}
+                                      )}
                                     </div>
-                                  )}
-                                  {lic?.status === "em_processo" && lic.numero_processo && (
-                                    <div className="p-3 bg-muted/30 rounded-2xl border border-border/40">
-                                        <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter block">Nº PROCESSO</span>
-                                        <span className="text-[10px] font-bold text-primary">{lic.numero_processo}</span>
-                                    </div>
-                                  )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                                  </div>
+                                  
+                                  <div className="space-y-3">
+                                      {lic?.status === "com_vencimento" && lic.vencimento && (
+                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-2xl border border-border/40">
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter">VENCIMENTO</span>
+                                                <span className="text-[10px] font-bold">{formatDateBR(lic.vencimento)}</span>
+                                            </div>
+                                            {dias !== null && (
+                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${isExpired ? 'bg-destructive text-destructive-foreground animate-pulse' : isNear ? 'bg-warning/20 text-warning' : 'bg-emerald-500/20 text-emerald-500'}`}>
+                                                    {isExpired ? "Vencida" : `${dias} dias`}
+                                                </span>
+                                            )}
+                                        </div>
+                                      )}
+                                      {lic?.status === "em_processo" && lic.numero_processo && (
+                                        <div className="p-3 bg-muted/30 rounded-2xl border border-border/40">
+                                            <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter block">Nº PROCESSO</span>
+                                            <span className="text-[10px] font-bold text-primary">{lic.numero_processo}</span>
+                                        </div>
+                                      )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                           <ModuleFolderView empresa={emp} departamentoId="geral" />
+                        </TabsContent>
+                      </Tabs>
                     </div>
                   )}
                 </div>
@@ -528,87 +545,100 @@ const LicencasPage: React.FC = () => {
 
                   {isOpen && (
                     <div className="border-t border-border/40 p-8 space-y-8 bg-muted/5 animate-in slide-in-from-top-4 duration-300">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {Object.entries(licencaLabels).map(([key, label]) => {
-                          const lic = empLicencas.find((l: LicencaRecord) => l.tipo_licenca === key);
-                          if (!lic) return null;
-                          const taxaData = (taxasForm[emp.id] && taxasForm[emp.id][key]) || { status: 'pendente', data_envio: '', forma_envio: '' };
+                      <Tabs defaultValue="taxas" className="w-full">
+                        <TabsList className="bg-muted/50 p-1 rounded-xl h-12 mb-8">
+                           <TabsTrigger value="taxas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Taxas e Controle</TabsTrigger>
+                           <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Arquivos / Pastas</TabsTrigger>
+                        </TabsList>
 
-                          return (
-                            <div key={key} className="p-8 rounded-3xl border border-border/60 bg-card group/item hover:border-primary/30 transition-all shadow-sm space-y-6">
-                              <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-5">
-                                <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                                  <Shield size={16} /> {label}
-                                </h4>
-                                {key === 'alvara' && (
-                                  <button
-                                    onClick={() => handleConsultarGuiaAlvara(emp.cnpj)}
-                                    disabled={isConsultandoGuia === emp.cnpj}
-                                    className="h-10 px-5 bg-info text-info-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-info/10 disabled:opacity-50"
-                                  >
-                                    {isConsultandoGuia === emp.cnpj ? (
-                                      <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : <Search size={14} />}
-                                    {isConsultandoGuia === emp.cnpj ? 'CONSULTANDO...' : 'BUSCAR GUIA'}
-                                  </button>
-                                )}
-                              </div>
+                        <TabsContent value="taxas" className="animate-in fade-in duration-300">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {Object.entries(licencaLabels).map(([key, label]) => {
+                              const lic = empLicencas.find((l: LicencaRecord) => l.tipo_licenca === key);
+                              if (!lic) return null;
+                              const taxaData = (taxasForm[emp.id] && taxasForm[emp.id][key]) || { status: 'pendente', data_envio: '', forma_envio: '' };
 
-                              <div className="grid grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Status da Guia</label>
-                                  <select
-                                    className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer transition-all"
-                                    value={taxaData.status}
-                                    onChange={(e) => handleTaxaChange(emp.id, key, 'status', e.target.value as any)}
-                                  >
-                                    <option value="pendente">Pendente</option>
-                                    <option value="gerada">Gerada</option>
-                                    <option value="enviada">Enviada</option>
-                                  </select>
-                                </div>
-                                <div className="space-y-2">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vencimento</label>
-                                  <input
-                                    type="date"
-                                    className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu"
-                                    value={taxaData.data_vencimento || ''}
-                                    onChange={(e) => handleTaxaChange(emp.id, key, 'data_vencimento', e.target.value)}
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data de Envio</label>
-                                  <input
-                                    type="date"
-                                    className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu"
-                                    value={taxaData.data_envio || ''}
-                                    onChange={(e) => handleTaxaChange(emp.id, key, 'data_envio', e.target.value)}
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Forma de Envio</label>
-                                  <input
-                                    type="text"
-                                    placeholder="Ex: WhatsApp"
-                                    className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                    value={taxaData.forma_envio || ''}
-                                    onChange={(e) => handleTaxaChange(emp.id, key, 'forma_envio', e.target.value)}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                              return (
+                                <div key={key} className="p-8 rounded-3xl border border-border/60 bg-card group/item hover:border-primary/30 transition-all shadow-sm space-y-6">
+                                  <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-5">
+                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                                      <Shield size={16} /> {label}
+                                    </h4>
+                                    {key === 'alvara' && (
+                                      <button
+                                        onClick={() => handleConsultarGuiaAlvara(emp.cnpj)}
+                                        disabled={isConsultandoGuia === emp.cnpj}
+                                        className="h-10 px-5 bg-info text-info-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-info/10 disabled:opacity-50"
+                                      >
+                                        {isConsultandoGuia === emp.cnpj ? (
+                                          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : <Search size={14} />}
+                                        {isConsultandoGuia === emp.cnpj ? 'CONSULTANDO...' : 'BUSCAR GUIA'}
+                                      </button>
+                                    )}
+                                  </div>
 
-                      <div className="flex justify-end pt-6 border-t border-border/40">
-                        <button
-                          onClick={() => saveTaxas(emp.id)}
-                          className="h-14 px-12 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
-                        >
-                          <Save size={18} /> SALVAR TAXAS DO MÊS
-                        </button>
-                      </div>
+                                  <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                      <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Status da Guia</label>
+                                      <select
+                                        className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer transition-all"
+                                        value={taxaData.status}
+                                        onChange={(e) => handleTaxaChange(emp.id, key, 'status', e.target.value as any)}
+                                      >
+                                        <option value="pendente">Pendente</option>
+                                        <option value="gerada">Gerada</option>
+                                        <option value="enviada">Enviada</option>
+                                      </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vencimento</label>
+                                      <input
+                                        type="date"
+                                        className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu"
+                                        value={taxaData.data_vencimento || ''}
+                                        onChange={(e) => handleTaxaChange(emp.id, key, 'data_vencimento', e.target.value)}
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data de Envio</label>
+                                      <input
+                                        type="date"
+                                        className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu"
+                                        value={taxaData.data_envio || ''}
+                                        onChange={(e) => handleTaxaChange(emp.id, key, 'data_envio', e.target.value)}
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Forma de Envio</label>
+                                      <input
+                                        type="text"
+                                        placeholder="Ex: WhatsApp"
+                                        className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                        value={taxaData.forma_envio || ''}
+                                        onChange={(e) => handleTaxaChange(emp.id, key, 'forma_envio', e.target.value)}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="flex justify-end pt-6 border-t border-border/40">
+                            <button
+                              onClick={() => saveTaxas(emp.id)}
+                              className="h-14 px-12 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
+                            >
+                              <Save size={18} /> SALVAR TAXAS DO MÊS
+                            </button>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                           <ModuleFolderView empresa={emp} departamentoId="geral" />
+                        </TabsContent>
+                      </Tabs>
                     </div>
                   )}
                 </div>

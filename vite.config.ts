@@ -16,6 +16,11 @@ export default defineConfig(({ mode }) => ({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      '/fb-api': {
+        target: 'http://192.168.100.3:8081',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/fb-api/, ''),
+      },
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

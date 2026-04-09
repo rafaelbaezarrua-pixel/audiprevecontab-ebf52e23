@@ -1,6 +1,7 @@
 
 import React from "react";
-import { Building2, ChevronDown, ChevronUp, Plus, Clock } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, Plus, Clock, FolderOpen } from "lucide-react";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { Empresa } from "@/types/societario";
 import { HonorarioConfig, HonorarioMensal } from "@/types/honorarios";
 import { HonorarioConfigForm } from "./HonorarioConfigForm";
@@ -10,8 +11,8 @@ interface HonorariosEmpresasViewProps {
   empresas: Empresa[];
   expanded: string | null;
   onToggleExpand: (id: string) => void;
-  activeTabs: Record<string, "mensal" | "configuracao">;
-  setActiveTab: (id: string, tab: "mensal" | "configuracao") => void;
+  activeTabs: Record<string, "mensal" | "configuracao" | "pastas">;
+  setActiveTab: (id: string, tab: "mensal" | "configuracao" | "pastas") => void;
   configs: Record<string, Partial<HonorarioConfig>>;
   configForms: Record<string, Partial<HonorarioConfig>>;
   onUpdateConfigField: (id: string, field: string, value: string | number | boolean) => void;
@@ -114,6 +115,15 @@ export const HonorariosEmpresasView = ({
                   >
                     Configuração
                   </button>
+                  <button 
+                    className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === "pastas" ? "text-primary border-b-2 border-primary bg-background/50" : "text-muted-foreground hover:bg-muted/50"}`} 
+                    onClick={() => setActiveTab(emp.id, "pastas")}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                       <FolderOpen size={14} />
+                       Pastas
+                    </div>
+                  </button>
                 </div>
 
                 <div className="p-5">
@@ -212,6 +222,12 @@ export const HonorariosEmpresasView = ({
                             </tbody>
                           </table>
                         </div>
+                      )}
+
+                      {tab === "pastas" && (
+                         <div className="animate-in slide-in-from-right-4 duration-300">
+                           <ModuleFolderView empresa={emp} departamentoId="financeiro" />
+                         </div>
                       )}
                     </div>
                   )}

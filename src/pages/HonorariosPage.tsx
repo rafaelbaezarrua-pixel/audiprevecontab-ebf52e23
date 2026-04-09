@@ -27,7 +27,7 @@ const HonorariosPage: React.FC = () => {
   } = useHonorarios(globalCompetencia);
 
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [activeTabs, setActiveTabs] = useState<Record<string, "mensal" | "configuracao">>({});
+  const [activeTabs, setActiveTabs] = useState<Record<string, "mensal" | "configuracao" | "pastas">>({});
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
 
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 12 });

@@ -14,6 +14,8 @@ import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { PontoCalculoForm } from "@/components/pessoal/PontoCalculoForm";
 import { TaxGuideUploader, ProcessingResult } from "@/components/TaxGuideUploader";
 import { FileUp } from "lucide-react";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const PessoalPage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ const PessoalPage: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<"folha" | "prolabore" | "ponto">("folha");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
+  const [rowTabs, setRowTabs] = useState<Record<string, 'dados' | 'pastas'>>({});
   const [funcionarios, setFuncionarios] = useState<Record<string, any[]>>({});
   const [alertsSummary, setAlertsSummary] = useState({ aso: 0, ferias: 0 });
 
@@ -353,8 +356,19 @@ const PessoalPage: React.FC = () => {
                       funcionarios={funcionarios[emp.id] || []} 
                     />
                   ) : (
-                    <>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="max-w-6xl mx-auto">
+                      <Tabs 
+                        value={rowTabs[emp.id] || 'dados'} 
+                        onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))}
+                        className="space-y-6"
+                      >
+                        <TabsList className="bg-muted/50 p-1 rounded-xl h-12">
+                          <TabsTrigger value="dados" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Processamento RH</TabsTrigger>
+                          <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Arquivos / Pastas</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="dados" className="space-y-6 animate-in fade-in duration-300">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Section: Configurações & Informações */}
                         <div className="space-y-4">
                           <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1 mb-2">Configurações & Informações</h3>
@@ -453,7 +467,13 @@ const PessoalPage: React.FC = () => {
                           <Save size={16} /> Salvar Alterações
                         </button>
                       </div>
-                    </>
+                    </TabsContent>
+
+                    <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                       <ModuleFolderView empresa={emp} departamentoId="pessoal" />
+                    </TabsContent>
+                  </Tabs>
+                </div>
                   )}
                 </div>
               )}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle, Building2, FileUp } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Save, CheckCircle, Circle, Building2, FileUp, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { useFiscal } from "@/hooks/useFiscal";
@@ -9,6 +9,8 @@ import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { TaxGuideUploader, ProcessingResult } from "@/components/TaxGuideUploader";
 import { FiscalParametersDialog } from "@/components/FiscalParametersDialog";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI", simei: "Simei" };
 
@@ -32,6 +34,7 @@ const FiscalPage: React.FC = () => {
   const [filterRecebimento, setFilterRecebimento] = useState<string>("todos");
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
   const [dialogEmpresa, setDialogEmpresa] = useState<any>(null);
+  const [rowTabs, setRowTabs] = useState<Record<string, 'dados' | 'pastas'>>({});
 
   const filtered = React.useMemo(() => {
     return empresas.filter(e => {
@@ -405,20 +408,37 @@ const FiscalPage: React.FC = () => {
                     </tr>
                     {isOpen && (
                       <tr className="bg-muted/10 border-t border-border shadow-inner">
-                        <td colSpan={7} className="px-2 py-6">
-                           <div className="space-y-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                  <h3 className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
-                                     <span className="w-1.5 h-6 bg-primary rounded-full" />
-                                     Status Mensal e Fechamento
-                                  </h3>
-                                  <p className="text-[11px] text-muted-foreground font-bold">Configure os parâmetros e envie as guias para a competência {competencia}.</p>
-                                </div>
-                                <button onClick={() => setDialogEmpresa(emp)} className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 px-4 py-2 rounded-lg transition-colors border border-primary/20 bg-card shadow-sm">
-                                  Ajustar Parâmetros
+                        <td colSpan={7} className="px-2 py-6 bg-muted/5">
+                        <div className="max-w-6xl mx-auto">
+                          <Tabs 
+                            value={rowTabs[emp.id] || 'dados'} 
+                            onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))}
+                            className="space-y-6"
+                          >
+                            <div className="flex items-center justify-between border-b border-border/40 pb-4 mb-6">
+                              <TabsList className="bg-muted/50 p-1 rounded-xl h-12">
+                                <TabsTrigger value="dados" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Dados do Fechamento</TabsTrigger>
+                                <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Arquivos / Pastas</TabsTrigger>
+                              </TabsList>
+                              
+                              {rowTabs[emp.id] !== 'pastas' && (
+                                <button onClick={() => setDialogEmpresa(emp)} className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 px-4 py-2 rounded-lg transition-colors border border-primary/20 bg-card shadow-sm flex items-center gap-2">
+                                  <Settings size={14} /> Ajustar Parâmetros
                                 </button>
-                              </div>
+                              )}
+                            </div>
+
+                            <TabsContent value="dados" className="space-y-6 animate-in fade-in duration-300">
+                               <div className="space-y-6">
+                                  <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                      <h3 className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                                         <span className="w-1.5 h-6 bg-primary rounded-full" />
+                                         Status Mensal e Fechamento
+                                      </h3>
+                                      <p className="text-[11px] text-muted-foreground font-bold">Configure os parâmetros e envie as guias para a competência {competencia}.</p>
+                                    </div>
+                                  </div>
 
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[{ l: 'Tipo de Nota', v: form.tipo_nota }, { l: 'Recebimento', v: form.recebimento_arquivos }, { l: 'Forma de Envio', v: form.forma_envio }, { l: 'Ramo', v: form.ramo_empresarial }]
@@ -564,14 +584,21 @@ const FiscalPage: React.FC = () => {
                                   </div>
                                 </div>
                               )}
+                              </div>
                               
                               <div className="flex justify-end pt-4">
                                 <button onClick={() => handleSaveAction(emp.id)} className="button-premium px-10 h-14 rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
                                   <Save size={20} /> <span className="text-xs uppercase tracking-widest font-black">Salvar Alterações</span>
                                 </button>
                               </div>
-                           </div>
-                        </td>
+                            </TabsContent>
+
+                            <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                               <ModuleFolderView empresa={emp} departamentoId="fiscal" />
+                            </TabsContent>
+                          </Tabs>
+                        </div>
+                      </td>
                       </tr>
                     )}
                   </React.Fragment>
