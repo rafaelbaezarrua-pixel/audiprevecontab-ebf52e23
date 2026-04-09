@@ -6,6 +6,9 @@ import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { CertidaoRecord } from "@/types/administrative";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FolderOpen } from "lucide-react";
 
 const tiposCertidao = ["CND Federal", "CND Estadual", "CND Municipal", "CND FGTS", "CND Trabalhista", "CNDT", "Certidão INSS", "Certidão Tributos Federais", "Outra"];
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
@@ -244,6 +247,13 @@ const CertidoesPage: React.FC = () => {
 
               {isOpen && (
                 <div className="border-t border-border/40 p-6 space-y-8 animate-in slide-in-from-top-4 duration-300">
+                  <Tabs defaultValue="dados" className="w-full">
+                    <TabsList className="bg-muted/50 p-1 rounded-xl h-12 mb-8">
+                       <TabsTrigger value="dados" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Certidões e Downloads</TabsTrigger>
+                       <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Arquivos / Pastas</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="dados" className="space-y-8 animate-in fade-in duration-300">
                   {empCerts.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {empCerts.map((c: CertidaoRecord) => {
@@ -393,15 +403,21 @@ const CertidoesPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex justify-end pt-4">
-                       <button 
-                         onClick={() => addCertidao(emp.id)} 
-                         className="px-10 h-14 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
-                       >
-                         <Plus size={18} /> SALVAR CERTIDÃO
-                       </button>
+                      <div className="flex justify-end pt-4">
+                         <button 
+                           onClick={() => addCertidao(emp.id)} 
+                           className="px-10 h-14 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
+                         >
+                           <Plus size={18} /> SALVAR CERTIDÃO
+                         </button>
+                      </div>
                     </div>
-                  </div>
+                    </TabsContent>
+
+                    <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                       <ModuleFolderView empresa={emp} departamentoId="certidoes" />
+                    </TabsContent>
+                  </Tabs>
                 </div>
               )}
             </div>

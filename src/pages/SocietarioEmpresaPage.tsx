@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings, Shield, CheckCircle, Upload, Eye, Briefcase } from "lucide-react";
+import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings, Shield, CheckCircle, Upload, Eye, Briefcase, FolderOpen } from "lucide-react";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { maskCNPJ, maskCPF, maskCPFCNPJ } from "@/lib/utils";
 
 interface Socio { 
@@ -29,6 +30,7 @@ const tabs = [
   { id: "socios", label: "Sócios", icon: <Users size={16} /> },
   { id: "licencas", label: "Licenças Municipais", icon: <ScrollText size={16} /> },
   { id: "depto_pessoal", label: "Departamento Pessoal", icon: <Briefcase size={16} /> },
+  { id: "arquivos", label: "Pastas / Arquivos", icon: <FolderOpen size={16} /> },
   { id: "configuracoes", label: "Configurações", icon: <Settings size={16} /> },
 ];
 
@@ -749,6 +751,23 @@ const SocietarioEmpresaPage: React.FC = () => {
                 </label>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === "arquivos" && (
+          <div className="space-y-6 animate-fade-in">
+             <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2"><FolderOpen size={20} className="text-primary" /> Pastas no Servidor</h2>
+                {isNew && <span className="text-[10px] font-black text-warning uppercase border border-warning/20 px-3 py-1 rounded-lg bg-warning/5">Disponível após o cadastro</span>}
+             </div>
+             {!isNew ? (
+               <ModuleFolderView empresa={{ id: id!, nome_empresa: nomeEmpresa }} departamentoId="societario" />
+             ) : (
+               <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border-2 border-dashed rounded-3xl text-muted-foreground opacity-50">
+                  <FolderOpen size={40} className="mb-4" />
+                  <p className="text-sm font-bold uppercase tracking-widest">Salve a empresa para habilitar as pastas</p>
+               </div>
+             )}
           </div>
         )}
 

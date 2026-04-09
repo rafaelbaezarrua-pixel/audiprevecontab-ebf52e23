@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Save, User } from "lucide-react";
+import { Search, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Save, User, FolderOpen } from "lucide-react";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { useAlertasInteligentes } from "@/contexts/AlertasInteligentesProvider";
@@ -251,7 +253,14 @@ const CertificadosPage: React.FC = () => {
 
               {isOpen && (
                 <div className="border-t border-border/40 p-8 space-y-8 animate-in slide-in-from-top-4 duration-300">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <Tabs defaultValue="dados" className="w-full">
+                    <TabsList className="bg-muted/50 p-1 rounded-xl h-12 mb-8">
+                       <TabsTrigger value="dados" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Dados do Certificado</TabsTrigger>
+                       <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Arquivos / Pastas</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="dados" className="space-y-8 animate-in fade-in duration-300">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data de Validade</label>
                         <input 
@@ -300,6 +309,12 @@ const CertificadosPage: React.FC = () => {
                         <Save size={18} /> ATUALIZAR DADOS
                       </button>
                   </div>
+                    </TabsContent>
+
+                    <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                       <ModuleFolderView empresa={emp} departamentoId="geral" />
+                    </TabsContent>
+                  </Tabs>
                 </div>
               )}
             </div>

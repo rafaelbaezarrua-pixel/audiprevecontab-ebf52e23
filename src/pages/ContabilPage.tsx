@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Search, ChevronDown, ChevronUp, Save, CheckCircle2, Circle, Calculator, BookOpen, ClipboardCheck, BarChart3 } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Save, CheckCircle2, Circle, Calculator, BookOpen, ClipboardCheck, BarChart3, FolderOpen } from "lucide-react";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { useContabil } from "@/hooks/useContabil";
@@ -34,7 +35,7 @@ const ContabilPage: React.FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
-  const [activeSubTab, setActiveSubTab] = useState<"rotinas" | "fechamentos" | "obrigacoes" | "gestao">("rotinas");
+  const [activeSubTab, setActiveSubTab] = useState<"rotinas" | "fechamentos" | "obrigacoes" | "gestao" | "pastas">("rotinas");
 
   const filteredEmpresas = useMemo(() => {
     return empresas.filter(e => {
@@ -220,6 +221,9 @@ const ContabilPage: React.FC = () => {
                               <TabsTrigger value="gestao" className="gap-2">
                                 <BarChart3 size={16} /> Gestão/Consultoria
                               </TabsTrigger>
+                              <TabsTrigger value="pastas" className="gap-2">
+                                <FolderOpen size={16} /> Arquivos / Pastas
+                              </TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="rotinas" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -346,6 +350,10 @@ const ContabilPage: React.FC = () => {
                                     </select>
                                   </div>
                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                               <ModuleFolderView empresa={empresa} departamentoId="contabil" />
                             </TabsContent>
 
                             <div className="mt-8 flex justify-end gap-3 border-t border-border pt-6">

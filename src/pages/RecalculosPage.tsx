@@ -6,6 +6,9 @@ import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { RecalculoRecord, ParcelamentoRecord, GuiaStatus } from "@/types/administrative";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FolderOpen } from "lucide-react";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI" };
 
@@ -400,8 +403,17 @@ const RecalculosPage: React.FC = () => {
                 </div>
 
                 {isOpen && (
-                  <div className="border-t border-border/40 p-10 space-y-10 bg-muted/5 animate-in slide-in-from-top-4 duration-300">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="border-t border-border/40 p-10 bg-muted/5 animate-in slide-in-from-top-4 duration-300">
+                    <Tabs defaultValue="dados" className="w-full">
+                      <TabsList className="bg-muted/50 p-1 rounded-xl h-12 mb-8">
+                        <TabsTrigger value="dados" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Dados do Recálculo</TabsTrigger>
+                        <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap flex items-center gap-2">
+                           <FolderOpen size={14} /> Pastas
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="dados" className="space-y-10 animate-in fade-in duration-300">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Status da Guia</label>
                           <select
@@ -434,18 +446,19 @@ const RecalculosPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-6 border-t border-border/40">
-                        <div className="flex items-center gap-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/30 px-6 py-4 rounded-2xl border border-border/40">
-                             <Clock size={16} className="text-primary" /> 
-                             DATA BASE DO RECÁLCULO: <span className="text-card-foreground ml-1">{r.data_recalculo ? formatDateBR(r.data_recalculo) : "NÃO INFORMADA"}</span>
                         </div>
-                        <button 
-                            onClick={() => handleSaveUpdate(r.id)} 
-                            className="h-14 px-12 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary/20 w-full sm:w-auto"
-                        >
-                             <Save size={18} /> ATUALIZAR STATUS DA GUIA
-                        </button>
-                    </div>
+                      </TabsContent>
+
+                      <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                         {r.empresas ? (
+                            <ModuleFolderView empresa={{ id: r.empresa_id, ...r.empresas } as any} departamentoId="geral" />
+                         ) : (
+                            <div className="py-20 text-center opacity-40">
+                               <p className="text-[10px] font-black uppercase tracking-widest">Acesso a pastas disponível apenas para Recálculos de Empresas</p>
+                            </div>
+                         )}
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 )}
               </div>

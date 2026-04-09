@@ -10,6 +10,7 @@ import logoCaduceu from "@/assets/logo-caduceu.png";
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
 import { useOcorrencias, Ocorrencia } from "@/hooks/useOcorrencias";
 import { useQuery } from "@tanstack/react-query";
+import GerenciadorArquivosPage from "./GerenciadorArquivosPage";
 
 interface HeaderConfig {
     logoUrl: string;
@@ -82,7 +83,7 @@ const OcorrenciasPage: React.FC = () => {
     const headerConfig = headerConfigData || DEFAULT_HEADER;
 
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<"geral" | "config">("geral");
+    const [activeTab, setActiveTab] = useState<"geral" | "config" | "pastas">("geral");
     const [savingConfig, setSavingConfig] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
     const [localHeaderConfig, setLocalHeaderConfig] = useState<HeaderConfig>(DEFAULT_HEADER);
@@ -292,6 +293,12 @@ const OcorrenciasPage: React.FC = () => {
             >
               <Settings2 size={16} /> Header PDF
             </button>
+            <button
+              onClick={() => setActiveTab("pastas")}
+              className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === "pastas" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
+            >
+              <HistoryIcon size={16} /> Pastas
+            </button>
           </div>
         </div>
       </div>
@@ -390,6 +397,15 @@ const OcorrenciasPage: React.FC = () => {
                 </div>
             </div>
         </div>
+      ) : activeTab === "pastas" ? (
+         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-card border border-border/60 rounded-[2.5rem] p-8">
+                  <h2 className="text-xl font-black text-card-foreground uppercase tracking-tight mb-8">Gerenciador de Arquivos do Servidor</h2>
+                  <div className="bg-muted/10 rounded-2xl border border-dashed border-border/40 p-1">
+                      <GerenciadorArquivosPage />
+                  </div>
+              </div>
+         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Form Column */}

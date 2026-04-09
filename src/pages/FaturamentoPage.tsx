@@ -20,7 +20,8 @@ import {
     Table as TableIcon,
     PlusCircle,
     X,
-    Printer
+    Printer,
+    FolderOpen
 } from "lucide-react";
 
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
@@ -32,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { useRelacaoFaturamentos, RelacaoFaturamento, RelacaoItem as RelacaoItemType } from "@/hooks/useRelacaoFaturamentos";
+import GerenciadorArquivosPage from "./GerenciadorArquivosPage";
 
 interface HeaderConfig {
     logoUrl: string;
@@ -703,6 +705,12 @@ const FaturamentoPage: React.FC = () => {
           >
             <TableIcon size={16} className="mr-2 inline" /> Relação de Faturamento
           </TabsTrigger>
+          <TabsTrigger
+            value="pastas"
+            className="px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border transition-all whitespace-nowrap"
+          >
+            <FolderOpen size={16} className="mr-2 inline" /> Pastas
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="emissao" className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
@@ -1087,6 +1095,15 @@ const FaturamentoPage: React.FC = () => {
                             ))
                         )}
                     </div>
+                </div>
+            </div>
+        </TabsContent>
+
+        <TabsContent value="pastas" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-card border border-border/60 rounded-[2.5rem] p-8">
+                <h2 className="text-xl font-black text-card-foreground uppercase tracking-tight mb-8">Gerenciador de Arquivos do Servidor</h2>
+                <div className="bg-muted/10 rounded-2xl border border-dashed border-border/40 p-1">
+                    <GerenciadorArquivosPage />
                 </div>
             </div>
         </TabsContent>

@@ -1,7 +1,9 @@
 
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, CheckCircle2, XCircle, ChevronUp, ChevronDown, DollarSign, FileText, Save, Trash2, Plus } from "lucide-react";
+import { User, CheckCircle2, XCircle, ChevronUp, ChevronDown, DollarSign, FileText, Save, Trash2, Plus, FolderOpen } from "lucide-react";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IRPFRecord } from "@/types/irpf";
 
 interface IRPFRecordCardProps {
@@ -80,8 +82,17 @@ export const IRPFRecordCard = ({
       </div>
 
       {isExpanded && (
-        <div className="p-6 border-t border-border/50 bg-background/40 space-y-8 animate-in slide-in-from-top-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="p-6 border-t border-border/50 bg-background/40 animate-in slide-in-from-top-2">
+          <Tabs defaultValue="dados" className="w-full">
+            <TabsList className="bg-muted/50 p-1 rounded-lg h-10 mb-6">
+              <TabsTrigger value="dados" className="text-[10px] font-black uppercase tracking-widest px-6 h-8 data-[state=active]:bg-card shadow-sm transition-all">Dados da Declaração</TabsTrigger>
+              <TabsTrigger value="pastas" className="text-[10px] font-black uppercase tracking-widest px-6 h-8 data-[state=active]:bg-card shadow-sm transition-all flex items-center gap-2">
+                <FolderOpen size={14} /> Arquivos / Pastas
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dados" className="space-y-8 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Dados Básicos */}
             <div className="space-y-4">
               <h3 className="text-xs font-black text-primary/60 uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary pl-2">Dados Básicos</h3>
@@ -181,14 +192,20 @@ export const IRPFRecordCard = ({
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-border mt-6">
-            <button onClick={() => onDelete(record.id)} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-destructive hover:bg-destructive/10 transition-all">
-              <Trash2 size={16} /> Excluir Registro
-            </button>
-            <button onClick={() => onSave(record)} className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-10 py-3 rounded-xl hover:scale-105 transition-all font-black uppercase tracking-widest shadow-lg">
-              <Save size={18} /> Finalizar Edição
-            </button>
-          </div>
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-border mt-6">
+              <button onClick={() => onDelete(record.id)} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-destructive hover:bg-destructive/10 transition-all">
+                <Trash2 size={16} /> Excluir Registro
+              </button>
+              <button onClick={() => onSave(record)} className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-10 py-3 rounded-xl hover:scale-105 transition-all font-black uppercase tracking-widest shadow-lg">
+                <Save size={18} /> Finalizar Edição
+              </button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+             <ModuleFolderView empresa={{ id: record.id, nome_empresa: record.nome_completo } as any} departamentoId="geral" />
+          </TabsContent>
+          </Tabs>
         </div>
       )}
     </div>
