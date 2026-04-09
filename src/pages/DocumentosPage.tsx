@@ -41,6 +41,7 @@ const DocumentosPage = () => {
     }
   };
   const [docToSign, setDocToSign] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'assinaturas' | 'solicitacoes'>('assinaturas');
 
   // Novos estados para Assinatura PFX (Backend)
   const [signingMethod, setSigningMethod] = useState<'lacuna' | 'pfx'>('pfx');
