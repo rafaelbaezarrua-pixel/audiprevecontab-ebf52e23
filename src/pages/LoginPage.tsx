@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, Navigate } from "react-router-dom";
-import { Loader2, ShieldCheck, Lock, Mail, ArrowRight } from "lucide-react";
+import { Loader2, ShieldCheck, Lock, Mail, ArrowRight, ShieldAlert } from "lucide-react";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 import ReCAPTCHA from "react-google-recaptcha";
 import { toast } from "sonner";
@@ -12,19 +12,64 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Security States
+  const [attempts, setAttempts] = useState(0);
+  const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const RATE_LIMIT_KEY = "admin_login_attempts";
   const BLOCK_TIME_KEY = "admin_login_block";
 
+  // Initialize security states
+  useEffect(() => {
+    const storedAttempts = parseInt(localStorage.getItem(RATE_LIMIT_KEY) || "0", 10);
+    const storedBlock = localStorage.getItem(BLOCK_TIME_KEY);
+
+    setAttempts(storedAttempts);
+
+    if (storedBlock) {
+      const blockTime = parseInt(storedBlock, 10);
+      if (Date.now() < blockTime) {
+        setBlockedUntil(blockTime);
+        setTimeLeft(Math.ceil((blockTime - Date.now()) / 1000));
+      } else {
+        localStorage.removeItem(BLOCK_TIME_KEY);
+        localStorage.setItem(RATE_LIMIT_KEY, "0");
+        setAttempts(0);
+      }
+    }
+  }, []);
+
+  // Countdown timer
+  useEffect(() => {
+    if (!blockedUntil) return;
+
+    const interval = setInterval(() => {
+      const remaining = Math.ceil((blockedUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setBlockedUntil(null);
+        localStorage.removeItem(BLOCK_TIME_KEY);
+        localStorage.setItem(RATE_LIMIT_KEY, "0");
+        setAttempts(0);
+        clearInterval(interval);
+      } else {
+        setTimeLeft(remaining);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [blockedUntil]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background font-ubuntu">
         <div className="text-center animate-in fade-in duration-700">
-          <img src={logoAudipreve} alt="Audipreve" className="w-24 h-24 object-contain mx-auto mb-6 drop-shadow-2xl" />
+          <img src={logoAudipreve} alt="Audipreve" className="w-24 h-24 object-contain mx-auto mb-8 drop-shadow-2xl" />
           <div className="flex flex-col items-center gap-4">
-              <Loader2 className="animate-spin text-primary" size={32} />
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Iniciando Ambiente Seguro</p>
+            <Loader2 className="animate-spin text-primary" size={32} />
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Autenticando Protocolos</p>
           </div>
         </div>
       </div>
@@ -37,26 +82,13 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError("");
 
-    // 1. Rate Limiting Protection (Frontend mitigado)
-    const blockedUntilStr = localStorage.getItem(BLOCK_TIME_KEY);
-    if (blockedUntilStr) {
-      const blockedUntil = parseInt(blockedUntilStr, 10);
-      if (Date.now() < blockedUntil) {
-        toast.error("Acesso bloqueado temporariamente por múltiplas falhas.");
-        setError("Muitas tentativas falhas. Aguarde alguns minutos.");
-        return;
-      } else {
-        localStorage.removeItem(BLOCK_TIME_KEY);
-        localStorage.setItem(RATE_LIMIT_KEY, "0");
-      }
+    if (blockedUntil) {
+      toast.error(`Acesso bloqueado. Aguarde ${timeLeft}s.`);
+      return;
     }
 
-    const attemptsLocal = parseInt(localStorage.getItem(RATE_LIMIT_KEY) || "0", 10);
-    
-    // Ativar Recaptcha após 2 falhas na sessão atual do navegador
-    if (attemptsLocal >= 2 && !recaptchaToken) {
-      toast.error("Por favor, valide o CAPTCHA de segurança.");
-      setError("Validação humana necessária.");
+    if (attempts >= 2 && !recaptchaToken) {
+      toast.warning("Validação humana requerida.");
       return;
     }
 
@@ -65,138 +97,159 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
-      // Sucesso: Limpar histórico de falhas
       localStorage.removeItem(RATE_LIMIT_KEY);
       localStorage.removeItem(BLOCK_TIME_KEY);
+      toast.success("Bem-vindo de volta!");
     } catch (err: any) {
-      // Conta Falhas
-      const attempts = parseInt(localStorage.getItem(RATE_LIMIT_KEY) || "0", 10) + 1;
-      localStorage.setItem(RATE_LIMIT_KEY, attempts.toString());
-      
-      if (attempts >= 5) {
-        // Bloqueia por 30 minutos
-        localStorage.setItem(BLOCK_TIME_KEY, (Date.now() + 30 * 60 * 1000).toString());
-        toast.error("Segurança ativada: Múltiplas tentativas falhas detectadas.");
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      localStorage.setItem(RATE_LIMIT_KEY, newAttempts.toString());
+
+      if (newAttempts >= 5) {
+        const blockTime = Date.now() + 30 * 60 * 1000;
+        setBlockedUntil(blockTime);
+        localStorage.setItem(BLOCK_TIME_KEY, blockTime.toString());
+        toast.error("Segurança ativada: Múltiplas tentativas falhas.");
       }
 
       setError(
-        err.message === "Invalid login credentials" || err.message === "Invalid credentials" 
-          ? "Credenciais de acesso incorretas" 
-          : "Falha na autenticação. Tente novamente."
+        err.message?.includes("Invalid login credentials")
+          ? "Usuário ou senha inválidos."
+          : "Falha na comunicação com servidor seguro."
       );
     } finally {
-      // 2. Timing Attack Prevention (Enforce min 1200ms delay)
       const elapsed = Date.now() - startTime;
-      if (elapsed < 1200) {
-        await new Promise((resolve) => setTimeout(resolve, 1200 - elapsed));
-      }
+      if (elapsed < 1200) await new Promise(r => setTimeout(r, 1200 - elapsed));
       setSubmitting(false);
     }
   };
 
-  const attempts = parseInt(localStorage.getItem(RATE_LIMIT_KEY) || "0", 10);
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
-      {/* Dynamic Background */}
+    <div className="min-h-screen flex items-center justify-center p-6 bg-background relative overflow-hidden font-ubuntu text-foreground">
+      {/* Dynamic System Orbs */}
       <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] animate-pulse" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
 
-      <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-1000">
-        <div className="bg-card/50 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10 relative">
-          
-          {/* Header Branding */}
-          <div className="p-10 pb-6 text-center">
-            <div className="relative inline-block mb-8">
-               <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 animate-pulse" />
-               <img src={logoAudipreve} alt="Audipreve" className="w-24 h-24 object-contain mx-auto relative z-10 drop-shadow-xl" />
-            </div>
-            <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Internal <span className="text-primary">Portal</span></h1>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mt-2">Acesso Administrativo Restrito</p>
+      <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 relative z-10">
+
+        {/* Logo Section */}
+        <div className="text-center space-y-4">
+          <div className="inline-block relative">
+            <div className="absolute inset-0 bg-primary/10 blur-3xl rounded-full scale-150 animate-pulse" />
+            <img src={logoAudipreve} alt="Audipreve" className="w-32 h-32 object-contain mx-auto relative z-10 drop-shadow-2xl" />
+          </div>
+          <div className="space-y-1">
+            <h1 className="header-title !text-4xl text-center">Audipreve <span className="text-primary italic">Contabilidade</span></h1>
+            <p className="subtitle-premium uppercase tracking-[0.4em] text-[10px] opacity-60">Sistema de Gestão</p>
+          </div>
+        </div>
+
+        <div className="card-premium !p-10 !rounded-[2.5rem] border-white/10 shadow-2xl bg-card/60 backdrop-blur-3xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+
+          <div className="mb-10 text-center">
+            <h2 className="text-xl font-black text-card-foreground uppercase tracking-tight">Portal <span className="text-primary">Administrativo</span></h2>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-50">Ambiente Restrito — Protocolo TLS 1.3</p>
           </div>
 
-          <div className="px-10 pb-10">
-            <form onSubmit={handleSubmit} className="space-y-6">
+          {blockedUntil ? (
+            <div className="space-y-6 text-center py-6 animate-in zoom-in-95 duration-500">
+              <div className="w-20 h-20 rounded-3xl bg-destructive/10 flex items-center justify-center text-destructive mx-auto shadow-inner">
+                <ShieldAlert size={40} />
+              </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
-                  <Mail size={12} className="text-primary" /> Endereço de E-mail
+                <p className="text-sm font-black text-card-foreground uppercase tracking-widest">Acesso Temporariamente Suspenso</p>
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                  Múltiplas falhas detectadas. Por segurança, este terminal foi bloqueado.<br />
+                  Tente novamente em <span className="text-primary font-bold">{timeLeft} seg</span>.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary ml-1 flex items-center gap-2">
+                  <Mail size={12} /> ID de Usuário (E-mail)
                 </label>
-                <div className="relative group">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="username"
-                    className="w-full h-14 pl-5 pr-5 border border-white/5 rounded-2xl bg-background/50 text-foreground text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all shadow-inner"
-                    placeholder="E-mail profissional"
-                  />
-                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full h-14 px-6 border border-white/5 rounded-2xl bg-background/40 text-sm font-bold text-card-foreground focus:ring-4 focus:ring-primary/10 focus:border-primary/40 outline-none transition-all shadow-inner"
+                  placeholder="exemplo@audipreve.com.br"
+                />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center ml-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                    <Lock size={12} className="text-primary" /> Senha Pessoal
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                    <Lock size={12} /> Credencial Secreta
                   </label>
-                  <Link to="/esqueci-senha" title="Esqueci minha senha" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/70 transition-colors">
-                    Esqueci a Senha
+                  <Link to="/esqueci-senha" title="Redefinir acesso" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
+                    Esqueceu a senha?
                   </Link>
                 </div>
-                <div className="relative group">
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    className="w-full h-14 pl-5 pr-5 border border-white/5 rounded-2xl bg-background/50 text-foreground text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all shadow-inner"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
+                <input
+                  type="password"
+                  placeholder="••••••••••••"
+                  className="w-full h-14 px-6 border border-white/5 rounded-2xl bg-background/40 text-sm font-bold text-card-foreground focus:ring-4 focus:ring-primary/10 focus:border-primary/40 outline-none transition-all shadow-inner"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
 
-              {/* Security: ReCaptcha after failures */}
               {attempts >= 2 && (
-                <div className="flex justify-center py-4 animate-in zoom-in-95 duration-500">
-                  <ReCAPTCHA 
-                    sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" 
-                    onChange={(token) => setRecaptchaToken(token)}
-                    theme="dark"
-                  />
+                <div className="flex justify-center py-2 animate-in slide-in-from-top-4 duration-500">
+                  <div className="p-2 bg-white/5 rounded-2xl border border-white/10">
+                    <ReCAPTCHA
+                      sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                      onChange={setRecaptchaToken}
+                      theme="dark"
+                    />
+                  </div>
                 </div>
               )}
 
               {error && (
-                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-2xl flex items-center gap-3 animate-in shake-in duration-500">
-                   <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
-                   <p className="text-[11px] font-black uppercase tracking-widest text-destructive">{error}</p>
+                <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-2xl flex items-center gap-3 animate-in shake-in duration-500">
+                  <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-destructive">{error}</p>
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={submitting || (attempts >= 2 && !recaptchaToken)}
-                className="w-full h-14 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
+                className="button-premium w-full h-16 !rounded-2xl !text-[11px] uppercase tracking-[0.3em] font-black shadow-2xl shadow-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-30"
               >
                 {submitting ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
-                  <>Autenticar Credenciais <ArrowRight size={18} /></>
+                  <>Autenticar no Sistema <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" /></>
                 )}
               </button>
             </form>
-          </div>
+          )}
 
-          <div className="bg-muted/30 px-10 py-5 border-t border-white/5 flex items-center justify-center gap-3">
-             <ShieldCheck size={16} className="text-emerald-500" />
-             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Sistema de Acesso Criptografado</p>
+          <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-between text-muted-foreground/40">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={14} className="text-emerald-500/60" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Acesso Seguro</span>
+            </div>
+            <p className="text-[9px] font-black uppercase tracking-widest">v2.4.0</p>
           </div>
         </div>
 
-        <p className="text-[9px] font-bold text-muted-foreground/40 text-center mt-8 uppercase tracking-[0.3em]">
-          © 2026 Audipreve Contabilidade • Todos os direitos reservados
-        </p>
+        <div className="flex flex-col items-center gap-4 py-4">
+          <Link to="/portal" className="text-[11px] font-black uppercase tracking-[0.3em] text-primary/80 hover:text-primary transition-all flex items-center gap-2 hover:gap-3">
+            Portal do Cliente <ArrowRight size={14} />
+          </Link>
+          <p className="text-[9px] font-bold text-muted-foreground/30 text-center uppercase tracking-[0.3em]">
+            Audipreve Contabilidade • Todos os direitos reservados
+          </p>
+        </div>
       </div>
     </div>
   );

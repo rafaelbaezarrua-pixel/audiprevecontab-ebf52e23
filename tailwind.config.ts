@@ -17,13 +17,10 @@ export default {
       // ─── Tipografia Apple ───
       fontFamily: {
         sans: [
+          'Ubuntu',
           '-apple-system',
           'BlinkMacSystemFont',
-          '"SF Pro Display"',
-          '"SF Pro Text"',
           'system-ui',
-          '"Helvetica Neue"',
-          'Arial',
           'sans-serif',
         ],
         mono: [
@@ -35,33 +32,20 @@ export default {
           'monospace',
         ],
         // Aliases semânticos (mantêm compatibilidade com o existente)
+        ubuntu: [
+          'Ubuntu',
+          'sans-serif',
+        ],
         montserrat: [
-          '-apple-system',
-          'BlinkMacSystemFont',
-          '"SF Pro Display"',
-          '"SF Pro Text"',
-          'system-ui',
-          '"Helvetica Neue"',
-          'Arial',
+          'Ubuntu',
           'sans-serif',
         ],
         title: [
-          '-apple-system',
-          'BlinkMacSystemFont',
-          '"SF Pro Display"',
-          '"SF Pro Text"',
-          'system-ui',
-          '"Helvetica Neue"',
-          'Arial',
+          'Ubuntu',
           'sans-serif',
         ],
         body: [
-          '-apple-system',
-          'BlinkMacSystemFont',
-          '"SF Pro Text"',
-          'system-ui',
-          '"Helvetica Neue"',
-          'Arial',
+          'Ubuntu',
           'sans-serif',
         ],
       },

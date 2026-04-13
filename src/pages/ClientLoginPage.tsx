@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { Building2, Lock, ArrowRight, ShieldCheck, Mail, ShieldAlert, Fingerprint } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Building2, Lock, ArrowRight, ShieldCheck, Mail, ShieldAlert, Fingerprint, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";
 import { supabase } from "@/integrations/supabase/client";
+import logoAudipreve from "@/assets/logo-audipreve.png";
 
 const ClientLoginPage: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -193,81 +193,87 @@ const ClientLoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-[#050505] p-6 relative overflow-hidden font-ubuntu">
+        <div className="min-h-screen flex items-center justify-center p-6 bg-background relative overflow-hidden font-ubuntu">
             {/* Background elements aligned with global aesthetic */}
             <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
             <div className="absolute bottom-[-10%] left-[-20%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px]" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] pointer-events-none" />
 
-            <Card className="w-full max-w-md border-border/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] relative z-10 bg-[#0c0c0c]/80 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden">
-                <CardHeader className="space-y-6 text-center pt-10 pb-6">
-                    <div className="flex justify-center">
-                        <div className="w-20 h-20 rounded-3xl bg-primary flex items-center justify-center text-primary-foreground shadow-2xl shadow-primary/30 group transition-all duration-500 hover:scale-110">
-                            <Building2 size={40} className="group-hover:rotate-12 transition-transform" />
-                        </div>
+            <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 relative z-10">
+                
+                {/* Logo Section */}
+                <div className="text-center space-y-4">
+                    <div className="inline-block relative">
+                        <div className="absolute inset-0 bg-primary/10 blur-3xl rounded-full scale-150 animate-pulse" />
+                        <img src={logoAudipreve} alt="Audipreve" className="w-32 h-32 object-contain mx-auto relative z-10 drop-shadow-2xl" />
                     </div>
-                    <div className="space-y-2">
-                        <CardTitle className="text-3xl font-black tracking-tight text-white uppercase italic">
-                            Portal <span className="text-primary">Cliente</span>
-                        </CardTitle>
-                        <p className="text-muted-foreground text-xs font-bold uppercase tracking-[0.2em] opacity-60">
-                            {requiresMfa ? "Validação Biométrica" : "Gestão Contábil Segura"}
+                    <div className="space-y-1">
+                        <h1 className="header-title !text-4xl text-center">Portal <span className="text-primary italic">Cliente</span></h1>
+                        <p className="subtitle-premium uppercase tracking-[0.4em] text-[10px] opacity-60 text-center">Audipreve Contabilidade Digital</p>
+                    </div>
+                </div>
+
+                <div className="card-premium !p-10 !rounded-[2.5rem] border-white/10 shadow-2xl bg-card/60 backdrop-blur-3xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                    
+                    <div className="mb-10 text-center">
+                        <h2 className="text-xl font-black text-card-foreground uppercase tracking-tight">
+                            {requiresMfa ? "Segurança Biométrica" : "Acesso à Área do Cliente"}
+                        </h2>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-50 text-center">
+                           Conexão Criptografada Ponto-a-Ponto
                         </p>
                     </div>
-                </CardHeader>
 
-                <CardContent className="px-8 pb-8">
                     {blockedUntil ? (
-                        <div className="bg-destructive/10 border border-destructive/20 rounded-3xl p-8 text-center space-y-4 animate-in zoom-in-95 duration-300">
-                             <div className="w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center text-destructive mx-auto">
-                                <ShieldAlert size={32} />
-                             </div>
-                             <div className="space-y-1">
-                                <p className="text-sm font-black text-destructive uppercase tracking-widest">Acesso Suspenso</p>
-                                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                                    Detectamos atividades incomuns. Por segurança, o acesso está bloqueado temporariamente.
+                        <div className="space-y-6 text-center py-6 animate-in zoom-in-95 duration-500">
+                            <div className="w-20 h-20 rounded-3xl bg-destructive/10 flex items-center justify-center text-destructive mx-auto shadow-inner">
+                                <ShieldAlert size={40} />
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-sm font-black text-card-foreground uppercase tracking-widest text-center">Acesso Temporariamente Suspenso</p>
+                                <p className="text-xs text-muted-foreground font-medium leading-relaxed text-center">
+                                    Detectamos atividades incomuns neste terminal.<br/>
+                                    Por motivos de segurança, o acesso foi bloqueado.<br/>
+                                    Tente novamente em <span className="text-primary font-bold">{timeLeft} seg</span>.
                                 </p>
-                             </div>
-                             <div className="pt-2">
-                                <span className="px-6 py-2 bg-destructive/20 rounded-full text-destructive text-sm font-black font-mono">
-                                    00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}s
-                                </span>
-                             </div>
+                            </div>
                         </div>
                     ) : !requiresMfa ? (
-                        <form id="client-login-form" onSubmit={handleLogin} className="space-y-6">
-                            <div className="space-y-2.5">
+                        <form id="client-login-form" onSubmit={handleLogin} className="space-y-8">
+                            <div className="space-y-3">
                                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                                    <Mail size={12} /> E-mail (RFB)
-                                </label>
-                                <div className="relative group">
-                                    <Input
-                                        type="email"
-                                        placeholder="seu@email.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-2 focus:ring-primary/20 transition-all text-sm font-bold text-white placeholder:text-white/20 pl-4"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2.5">
-                                <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                                    <Lock size={12} /> Senha Privada
+                                    <Mail size={12} /> E-mail de Cadastro
                                 </label>
                                 <Input
+                                    type="email"
+                                    placeholder="seu@contato.com.br"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    autoComplete="username"
+                                    className="h-14 bg-background/40 border-white/5 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-bold text-card-foreground placeholder:opacity-30"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center ml-1">
+                                    <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                                        <Lock size={12} /> Senha de Serviço
+                                    </label>
+                                </div>
+                                <Input
                                     type="password"
-                                    placeholder="••••••••"
+                                    placeholder="••••••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-2 focus:ring-primary/20 transition-all text-sm font-bold text-white placeholder:text-white/20 pl-4"
+                                    autoComplete="current-password"
+                                    className="h-14 bg-background/40 border-white/5 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-bold text-card-foreground placeholder:opacity-30"
                                     required
                                 />
                             </div>
 
                             {attempts >= 2 && (
-                                <div className="flex justify-center p-2 rounded-2xl bg-white/5 border border-white/10">
+                                <div className="flex justify-center p-2 rounded-2xl bg-white/5 border border-white/10 animate-in slide-in-from-top-4 duration-500">
                                     <ReCAPTCHA 
                                         sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" 
                                         theme="dark"
@@ -275,6 +281,18 @@ const ClientLoginPage: React.FC = () => {
                                     />
                                 </div>
                             )}
+
+                            <Button
+                                type="submit"
+                                className="button-premium w-full h-16 !rounded-2xl !text-[11px] uppercase tracking-[0.3em] font-black shadow-2xl shadow-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-30"
+                                disabled={loading || (attempts >= 2 && !recaptchaToken)}
+                            >
+                                {loading ? (
+                                    <Loader2 className="animate-spin" size={20} />
+                                ) : (
+                                    <>Acessar Área Restrita <ArrowRight size={20} /></>
+                                )}
+                            </Button>
                         </form>
                     ) : (
                         <form id="client-mfa-form" onSubmit={handleMfaSubmit} className="space-y-8 animate-in slide-in-from-right-8 duration-500">
@@ -283,70 +301,65 @@ const ClientLoginPage: React.FC = () => {
                                      <div className="bg-white p-3 rounded-2xl shadow-[0_0_40px_rgba(255,255,255,0.1)] [&>svg]:w-44 [&>svg]:h-44" 
                                           dangerouslySetInnerHTML={{ __html: mfaQrCode }} />
                                      <p className="text-[10px] text-center text-primary font-black uppercase tracking-widest leading-relaxed">
-                                        Escaneie para ativar seu dispositivo de segurança de 2 fatores (TOTP).
+                                        Vincule seu dispositivo de segurança gerando o token TOTP.
                                      </p>
                                      <div className="w-full h-px bg-primary/10" />
-                                     <p className="text-[9px] font-mono text-white/40 break-all select-all">Secret: {mfaSecret}</p>
+                                     <p className="text-[9px] font-mono text-muted-foreground/40 break-all select-all">MFA Token: {mfaSecret}</p>
                                 </div>
                             )}
 
                             <div className="space-y-4">
                                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] text-center block w-full">
-                                    Digite o código gerado no App
+                                    Código de Segurança Dinâmico
                                 </label>
                                 <Input
                                     type="text"
-                                    placeholder="0 0 0 - 0 0 0"
+                                    placeholder="0 0 0  0 0 0"
                                     maxLength={6}
                                     value={totpCode}
                                     onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                                    className="h-20 bg-white/5 border-white/10 rounded-3xl focus:ring-2 focus:ring-primary/20 transition-all font-mono text-center text-4xl font-black text-primary tracking-[0.3em] pl-6 placeholder:text-white/5"
+                                    className="h-20 bg-background/40 border-white/5 rounded-3xl focus:ring-4 focus:ring-primary/10 transition-all font-mono text-center text-4xl font-black text-primary tracking-[0.3em] placeholder:opacity-5"
                                     required
                                     autoFocus
                                 />
                             </div>
+
+                            <Button
+                                type="submit"
+                                className="button-premium w-full h-16 !rounded-2xl !text-[11px] uppercase tracking-[0.3em] font-black shadow-2xl shadow-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-30"
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <Loader2 className="animate-spin" size={20} />
+                                ) : (
+                                    <>Verificar Identidade <ArrowRight size={20} /></>
+                                )}
+                            </Button>
                         </form>
                     )}
-                </CardContent>
+                </div>
 
-                <CardFooter className="px-8 pb-10 flex flex-col gap-6">
-                    {!blockedUntil && (
-                        <Button
-                            form={!requiresMfa ? "client-login-form" : "client-mfa-form"}
-                            type="submit"
-                            className="w-full h-16 text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 group overflow-hidden relative"
-                            disabled={loading || (attempts >= 2 && !recaptchaToken && !requiresMfa)}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-100 group-hover:opacity-90 transition-opacity" />
-                            <div className="relative z-10 flex items-center justify-center gap-3">
-                                {loading ? (
-                                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <>
-                                        {requiresMfa ? "AUTENTICAR DISPOSITIVO" : "ENTRAR NO PORTAL"}
-                                        <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
-                                    </>
-                                )}
-                            </div>
-                        </Button>
-                    )}
-
-                    <div className="flex flex-col items-center gap-3 w-full">
-                        <div className="flex items-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest opacity-80 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
-                            <ShieldCheck size={14} />
-                            SSL 256-BIT ENCRYPTED
+                <div className="flex flex-col items-center gap-4 pb-10">
+                    <div className="flex items-center gap-4 opacity-40">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-card border border-white/5 rounded-full shadow-inner">
+                            <ShieldCheck size={12} className="text-emerald-500" />
+                            <span className="text-[9px] font-black uppercase tracking-widest text-card-foreground">SSL Secure</span>
                         </div>
-                        <p className="text-[9px] text-white/30 font-bold uppercase tracking-tighter">
-                            Audipreve Contábil © {new Date().getFullYear()} - Todos os direitos reservados
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-card border border-white/5 rounded-full shadow-inner">
+                            <Fingerprint size={12} className="text-primary" />
+                            <span className="text-[9px] font-black uppercase tracking-widest text-card-foreground">Anti-Bruteforce</span>
+                        </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center gap-2">
+                        <Link to="/login" className="text-[11px] font-black uppercase tracking-[0.3em] text-primary/80 hover:text-primary transition-all flex items-center gap-2">
+                           Acesso Colaborador <ArrowRight size={14} />
+                        </Link>
+                        <p className="text-[9px] font-bold text-muted-foreground/30 text-center uppercase tracking-[0.3em] mt-4">
+                           Audipreve Contabilidade Digital © {new Date().getFullYear()}
                         </p>
                     </div>
-                </CardFooter>
-            </Card>
-
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 opacity-20 hover:opacity-100 transition-opacity cursor-default">
-                 <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                 <p className="text-[10px] text-white font-black uppercase tracking-[0.5em]">AUDIPREVE SECURITY STACK</p>
-                 <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                </div>
             </div>
         </div>
     );
