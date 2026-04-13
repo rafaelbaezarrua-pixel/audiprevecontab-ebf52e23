@@ -156,21 +156,17 @@ const RecalculosPage: React.FC = () => {
     }
   };
 
-  const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none transition-all";
-  const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
   const completedCount = filtered.filter(r => r.status === "enviada" || r.status === "gerada").length;
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   }
 
-    return (
+  return (
     <div className="space-y-8 animate-fade-in pb-20 relative">
-      {/* Background decoration elements */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
       <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
 
-      {/* Main Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
         <div className="space-y-1.5">
           <div className="flex items-center gap-3">
@@ -198,7 +194,6 @@ const RecalculosPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Novo Recalculo Form */}
       {showNovoForm && (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="bg-card border border-primary/20 rounded-[2.5rem] p-10 shadow-2xl shadow-primary/5">
@@ -287,7 +282,6 @@ const RecalculosPage: React.FC = () => {
         </div>
       )}
 
-      {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[
           { label: "Total de Guias", count: filtered.length, cls: "text-primary", bg: "bg-primary/5", icon: <Circle size={24} /> },
@@ -306,7 +300,6 @@ const RecalculosPage: React.FC = () => {
         ))}
       </div>
 
-      {/* View Switch / Tabs */}
       <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar max-w-fit shadow-sm">
         <button
           onClick={() => setActiveTab("ativas")}
@@ -328,7 +321,6 @@ const RecalculosPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Search Filter */}
       <div className="relative max-w-md group">
         <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
         <input 
@@ -340,7 +332,6 @@ const RecalculosPage: React.FC = () => {
         />
       </div>
 
-      {/* Recalculus List Grid */}
       <div className="space-y-4">
         {filtered.length === 0 ? (
           <div className="py-24 text-center bg-card border-2 border-dashed border-border/40 rounded-[2.5rem] opacity-40">
@@ -445,9 +436,7 @@ const RecalculosPage: React.FC = () => {
                           />
                         </div>
                     </div>
-
-                        </div>
-                      </TabsContent>
+                  </TabsContent>
 
                       <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
                          {r.empresas ? (
