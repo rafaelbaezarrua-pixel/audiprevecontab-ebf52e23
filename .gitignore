@@ -1,26 +1,164 @@
-# Logs
-logs
+# ============================================================
+# SECRETS E VARIÁVEIS DE AMBIENTE
+# ============================================================
+.env
+.env.*
+!.env.example
+!.env.template
+*.env
+.envrc
+.direnv/
+
+# ============================================================
+# CHAVES E CERTIFICADOS
+# ============================================================
+*.pem
+*.key
+*.p12
+*.pfx
+*.cert
+*.crt
+*.csr
+*.der
+*.cer
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+id_dsa
+id_ecdsa
+*.ppk
+*.jks
+*.keystore
+*.truststore
+
+# ============================================================
+# CREDENCIAIS DE CLOUD E SERVIÇOS
+# ============================================================
+# AWS
+.aws/
+aws-credentials
+aws_credentials
+credentials.csv
+
+# Google Cloud / Firebase
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+serviceAccount*.json
+firebase-adminsdk*.json
+gcloud/
+
+# Supabase
+supabase/.env
+supabase/config.toml.local
+
+# Azure
+.azure/
+azure-credentials.json
+
+# Terraform
+*.tfvars
+*.tfvars.json
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+
+# ============================================================
+# BANCO DE DADOS
+# ============================================================
+*.sqlite
+*.sqlite3
+*.db
+*.sql
+database.yml
+storage.yml
+mongodump/
+dump.rdb
+
+# ============================================================
+# FRAMEWORKS ESPECÍFICOS
+# ============================================================
+# Ruby on Rails
+config/master.key
+config/credentials.yml.enc
+config/database.yml
+
+# Laravel / PHP
+.env.backup
+storage/
+bootstrap/cache/
+wp-config.php
+
+# Django
+local_settings.py
+db.sqlite3
+
+# Next.js / Node.js
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ============================================================
+# DOCKER
+# ============================================================
+docker-compose.override.yml
+.docker/
+docker-compose.local.yml
+
+# ============================================================
+# LOGS E DADOS SENSÍVEIS
+# ============================================================
 *.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 lerna-debug.log*
+.pnpm-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
+# ============================================================
+# IDEs E EDITORES (podem conter tokens)
+# ============================================================
+.idea/
+*.iml
+.vscode/settings.json
+.vscode/launch.json
 *.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.vercel
-.env*.local
+*.user
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# DEPENDÊNCIAS
+# ============================================================
+node_modules/
+vendor/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# ============================================================
+# BUILD E CACHE
+# ============================================================
+.next/
+.nuxt/
+dist/
+build/
+.cache/
+.parcel-cache/
+.turbo/
+
+# ============================================================
+# TESTES COM DADOS REAIS
+# ============================================================
+*.test.env
+cypress/downloads/
+playwright-report/
+test-results/
