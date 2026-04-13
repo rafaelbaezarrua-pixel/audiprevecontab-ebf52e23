@@ -1,12 +1,24 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
+const ALLOWED_ORIGINS = [
+  "https://audiprevecontabilidade.com.br",
+  "https://www.audiprevecontabilidade.com.br",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
 const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS[0],
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
+    const origin = req.headers.get("origin");
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+      corsHeaders["Access-Control-Allow-Origin"] = origin;
+    }
+
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
     }
@@ -21,11 +33,7 @@ Deno.serve(async (req) => {
         if (!RESEND_API_KEY || !supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
             console.error("send-verification-code: [ERRO 500] Env vars faltando");
             return new Response(JSON.stringify({
-                error: "Configuração do servidor incompleta (Env vars missing)",
-                resend_present: !!RESEND_API_KEY,
-                url_present: !!supabaseUrl,
-                service_present: !!supabaseServiceKey,
-                anon_present: !!supabaseAnonKey
+                error: "Configuração do servidor incompleta"
             }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
 
@@ -152,7 +160,7 @@ Deno.serve(async (req) => {
 
     } catch (err: any) {
         console.error("send-verification-code: [ERRO FATAL]", err.message);
-        return new Response(JSON.stringify({ error: err.message, stack: err.stack }), {
+        return new Response(JSON.stringify({ error: "Erro interno do servidor" }), {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

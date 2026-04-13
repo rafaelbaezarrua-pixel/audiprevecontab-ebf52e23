@@ -1,14 +1,20 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-expect-error: Deno imports
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
-// @ts-expect-error: Deno imports
-import { decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
+
+const ALLOWED_ORIGINS = [
+  "https://audiprevecontabilidade.com.br",
+  "https://www.audiprevecontabilidade.com.br",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
 
 // @ts-expect-error: Deno env
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   const corsHeaders = {
-    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   };
@@ -23,7 +29,7 @@ Deno.serve(async (req: Request) => {
 
     if (!authHeader) {
       console.error("Erro: Cabeçalho de autorização ausente");
-      return new Response(JSON.stringify({ error: "Cabeçalho de autorização ausente", status: 'error' }), {
+      return new Response(JSON.stringify({ error: "Cabeçalho de autorização ausente" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -34,8 +40,8 @@ Deno.serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("Erro: Variáveis de ambiente SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não configuradas");
-      return new Response(JSON.stringify({ error: "Configuração do servidor incompleta", status: 'error' }), {
+      console.error("Erro: Variáveis de ambiente não configuradas");
+      return new Response(JSON.stringify({ error: "Configuração do servidor incompleta" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -43,18 +49,15 @@ Deno.serve(async (req: Request) => {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "").trim();
 
-    // Decode JWT to get user_id (sub) without hitting Auth database for session
-    let userId: string;
-    try {
-      const [_header, payload, _signature] = decode(token);
-      userId = (payload as { sub: string }).sub;
-      if (!userId) throw new Error("ID do usuário não encontrado no token");
-    } catch (err) {
-      console.error("Erro ao decodificar token:", err);
-      return new Response(JSON.stringify({ error: "Token inválido ou malformado", status: 'error' }), {
+    // Verify JWT via Supabase Auth (validates signature + expiration)
+    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !authUser) {
+      console.error("Token verification failed:", authError?.message);
+      return new Response(JSON.stringify({ error: "Token inválido ou expirado" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+    const userId = authUser.id;
 
     // Check if the caller is an admin in the database
     console.log("Checking admin permissions for user:", userId);
@@ -62,7 +65,7 @@ Deno.serve(async (req: Request) => {
     
     if (rolesError) {
       console.error("Erro ao buscar roles:", rolesError);
-      return new Response(JSON.stringify({ error: "Falha ao verificar permissões do usuário.", status: 'error' }), {
+      return new Response(JSON.stringify({ error: "Falha ao verificar permissões do usuário." }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -70,7 +73,7 @@ Deno.serve(async (req: Request) => {
     const isAdmin = roles?.some((r: { role: string }) => r.role === 'admin');
     if (!isAdmin) {
       console.warn("Usuário não tem permissão de admin:", userId);
-      return new Response(JSON.stringify({ error: "Apenas administradores podem gerenciar usuários.", status: 'error' }), {
+      return new Response(JSON.stringify({ error: "Apenas administradores podem gerenciar usuários." }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -128,7 +131,7 @@ Deno.serve(async (req: Request) => {
 
   } catch (err: any) {
     console.error("manage-user error:", err);
-    return new Response(JSON.stringify({ error: err.message, status: 'error' }), {
+    return new Response(JSON.stringify({ error: "Erro interno" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

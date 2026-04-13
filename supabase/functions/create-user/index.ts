@@ -1,16 +1,28 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-expect-error: Deno imports
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
-// @ts-expect-error: Deno imports
-import { decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
+
+const ALLOWED_ORIGINS = [
+  "https://audiprevecontabilidade.com.br",
+  "https://www.audiprevecontabilidade.com.br",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
 
 const allowedModules = ["societario", "fiscal", "pessoal", "certidoes", "certificados", "licencas", "procuracoes", "honorarios", "obrigacoes", "parcelamentos", "recalculos", "vencimentos"];
+
+function generateTempPassword(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, b => b.toString(36).padStart(2, '0')).join('').slice(0, 16) + '@A1!';
+}
 
 // @ts-expect-error: Deno
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   const corsHeaders = {
-    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   };
@@ -36,25 +48,22 @@ Deno.serve(async (req) => {
     if (!supabaseUrl || !supabaseServiceKey) {
       return new Response(JSON.stringify({
         error: "Configuração do servidor incompleta",
-        code: "env_vars_missing"
+        code: "server_config_error"
       }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "").trim();
 
-    // Decode JWT for caller ID (more resilient than getUser)
-    let callerId: string;
-    try {
-      const [_header, payload, _signature] = decode(token);
-      callerId = (payload as any).sub;
-      if (!callerId) throw new Error("ID do chamador não encontrado");
-    } catch (err) {
-      console.error("Erro ao decodificar token:", err);
-      return new Response(JSON.stringify({ error: "Token inválido ou malformado", code: "auth_token_invalid" }), {
+    // Verify JWT via Supabase Auth (validates signature + expiration)
+    const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !caller) {
+      console.error("Token verification failed:", authError?.message);
+      return new Response(JSON.stringify({ error: "Token inválido ou expirado", code: "auth_token_invalid" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+    const callerId = caller.id;
 
     // MANDATORY: Check if the caller is an admin
     const { data: roles, error: rolesError } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", callerId);
@@ -82,7 +91,7 @@ Deno.serve(async (req) => {
 
     if (existingUser) {
       const { data: updated, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
-        password: password || "Mudar@Audipreve123",
+        password: password || generateTempPassword(),
         email_confirm: true,
         user_metadata: {
           full_name: nome,
@@ -96,7 +105,7 @@ Deno.serve(async (req) => {
     } else {
       const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
-        password: password || "Mudar@Audipreve123",
+        password: password || generateTempPassword(),
         email_confirm: true,
         user_metadata: {
           full_name: nome,
@@ -250,8 +259,7 @@ Deno.serve(async (req) => {
   } catch (err: any) {
     console.error("create-user error:", err);
     return new Response(JSON.stringify({
-      error: "Erro interno",
-      details: err.message
+      error: "Erro interno"
     }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
