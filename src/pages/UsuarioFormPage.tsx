@@ -4,9 +4,16 @@ import { useNavigate } from "react-router-dom";
 import { User, Mail, Lock, Shield, ArrowLeft, Save, ChevronRight, Fingerprint } from "lucide-react";
 import { toast } from "sonner";
 import { maskCPF } from "@/lib/utils";
+import { z } from "zod";
 
-
-const moduleLabels: Record<string, string> = {
+// Schema estrito de segurança (Zod) mitigando SQLi, XSS via Payload e garantindo a santidade do Banco
+const userSchema = z.object({
+  nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres").max(100, "Maximum de 100 caracteres suportados").regex(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/, "Nome deve conter apenas letras e espaços"),
+  cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}\-\d{2}$/, "Formato de CPF corrompido ou malicioso"),
+  email: z.string().email("Formato de e-mail inválido nas credenciais"),
+  isAdmin: z.boolean(),
+  modules: z.record(z.string(), z.boolean())
+});const moduleLabels: Record<string, string> = {
     societario: "Societário",
     fiscal: "Fiscal",
     pessoal: "Pessoal",
@@ -45,10 +52,17 @@ const UsuarioFormPage: React.FC = () => {
 
 
     const handleCreateUser = async () => {
-        if (!form.nome.trim() || !form.email.trim() || !form.cpf.trim()) {
-            toast.error("Nome, CPF e e-mail são obrigatórios");
+        // Zod validation de schema estrita com early-return
+        const validation = userSchema.safeParse(form);
+        
+        if (!validation.success) {
+            // Varre as chaves de erro e reporta para mitigar spam de requests inválidos na API
+            const firstError = validation.error.errors[0];
+            toast.error(firstError.message);
             return;
         }
+
+        const validBody = validation.data;
 
         setLoading(true);
         try {
@@ -69,11 +83,11 @@ const UsuarioFormPage: React.FC = () => {
                     Authorization: `Bearer ${token}`
                 },
                 body: {
-                    email: form.email,
-                    nome: form.nome,
-                    cpf: form.cpf,
-                    isAdmin: form.isAdmin,
-                    modules: form.modules
+                    email: validBody.email,
+                    nome: validBody.nome,
+                    cpf: validBody.cpf,
+                    isAdmin: validBody.isAdmin,
+                    modules: validBody.modules
                 }
             });
 
