@@ -1,126 +1,217 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════
+   AUDIPREVE — Apple Design System CSS Variables
+   Light + Dark mode with full semantic token coverage
+   ═══════════════════════════════════════════════════════════════ */
+
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    /* ─── Background & Foreground ─── */
+    --background: 0 0% 98%;
+    --foreground: 240 10% 10%;
 
+    /* ─── Card ─── */
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 240 10% 10%;
 
+    /* ─── Popover ─── */
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 240 10% 10%;
 
-    --primary: 217 91% 60%;
+    /* ─── Primary (Apple Blue) ─── */
+    --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
+    --primary-dark: 211 100% 50%;
 
-    --primary-dark: 221 83% 53%;
+    /* ─── Secondary ─── */
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
 
-    --secondary: 215 16% 47%;
-    --secondary-foreground: 0 0% 100%;
+    /* ─── Muted ─── */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
 
-    --muted: 214 32% 91%;
-    --muted-foreground: 215 16% 40%;
+    /* ─── Accent ─── */
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 215 25% 15%;
-
-    --destructive: 0 84% 60%;
+    /* ─── Destructive (Apple Red) ─── */
+    --destructive: 0 100% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 160 84% 39%;
+    /* ─── Success (Apple Green) ─── */
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    /* ─── Warning (Apple Orange) ─── */
+    --warning: 38 100% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --info: 217 91% 45%;
-    --info-foreground: 217 91% 10%;
+    /* ─── Info (Apple Teal) ─── */
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    /* ─── Border & Input ─── */
+    --border: 240 5% 88%;
+    --input: 240 5% 88%;
+    --ring: 211 100% 50%;
 
-    --radius: 0.3rem;
+    /* ─── Radius ─── */
+    --radius: 0.625rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 25% 27%;
-    --sidebar-primary: 221 83% 53%;
+    /* ─── Sidebar ─── */
+    --sidebar-background: 240 5% 96%;
+    --sidebar-foreground: 240 6% 20%;
+    --sidebar-primary: 211 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 221 83% 53%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 221 83% 53%;
-    --sidebar-muted: 215 16% 40%;
+    --sidebar-accent: 211 100% 96%;
+    --sidebar-accent-foreground: 211 100% 50%;
+    --sidebar-border: 240 5% 90%;
+    --sidebar-ring: 211 100% 50%;
+    --sidebar-muted: 240 4% 46%;
 
-    --gradient-primary: hsl(var(--primary));
-    --gradient-bg: none;
+    /* ─── Apple Semantic Surface Tokens ─── */
+    --surface-primary: #FFFFFF;
+    --surface-secondary: #F2F2F7;
+    --surface-tertiary: #FFFFFF;
+    --surface-elevated: #FFFFFF;
+    --surface-grouped: #F2F2F7;
+
+    /* ─── Apple Text Tokens ─── */
+    --text-primary: rgba(0, 0, 0, 0.85);
+    --text-secondary: rgba(0, 0, 0, 0.55);
+    --text-tertiary: rgba(0, 0, 0, 0.35);
+    --text-quaternary: rgba(0, 0, 0, 0.18);
+    --text-link: #007AFF;
+
+    /* ─── Apple Separator Tokens ─── */
+    --separator-opaque: rgba(60, 60, 67, 0.29);
+    --separator-non-opaque: rgba(60, 60, 67, 0.12);
+
+    /* ─── Apple Fill Tokens ─── */
+    --fill-primary: rgba(120, 120, 128, 0.2);
+    --fill-secondary: rgba(120, 120, 128, 0.16);
+    --fill-tertiary: rgba(118, 118, 128, 0.12);
+    --fill-quaternary: rgba(116, 116, 128, 0.08);
+
+    /* ─── Gradient ─── */
+    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(250 100% 65%) 100%);
+    --gradient-bg: linear-gradient(180deg, rgba(240, 240, 247, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+
+    /* ─── Glassmorphism ─── */
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+    --glass-blur: 20px;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    /* ─── Background & Foreground ─── */
+    --background: 240 6% 7%;
+    --foreground: 0 0% 95%;
 
-    --card: 215 28% 17%;
-    --card-foreground: 210 40% 98%;
+    /* ─── Card ─── */
+    --card: 240 5% 12%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 215 28% 17%;
-    --popover-foreground: 210 40% 98%;
+    /* ─── Popover ─── */
+    --popover: 240 5% 12%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 217 91% 60%;
+    /* ─── Primary (Apple Blue Dark) ─── */
+    --primary: 211 100% 56%;
     --primary-foreground: 0 0% 100%;
+    --primary-dark: 211 100% 56%;
 
-    --primary-dark: 221 83% 53%;
+    /* ─── Secondary ─── */
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 95%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    /* ─── Muted ─── */
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 4% 56%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    /* ─── Accent ─── */
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 95%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    /* ─── Destructive (Apple Red Dark) ─── */
+    --destructive: 0 100% 56%;
+    --destructive-foreground: 0 0% 100%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --success: 160 84% 30%;
+    /* ─── Success (Apple Green Dark) ─── */
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 40%;
+    /* ─── Warning (Apple Orange Dark) ─── */
+    --warning: 38 100% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    /* ─── Info (Apple Teal Dark) ─── */
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
 
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 214 32% 91%;
-    --sidebar-primary: 217 91% 60%;
+    /* ─── Border & Input ─── */
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 211 100% 56%;
+
+    /* ─── Radius ─── */
+    --radius: 0.625rem;
+
+    /* ─── Sidebar ─── */
+    --sidebar-background: 240 6% 10%;
+    --sidebar-foreground: 0 0% 88%;
+    --sidebar-primary: 211 100% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 217 91% 70%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 217 91% 60%;
-    --sidebar-muted: 215 20% 65%;
+    --sidebar-accent: 240 4% 14%;
+    --sidebar-accent-foreground: 211 100% 70%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 211 100% 56%;
+    --sidebar-muted: 240 4% 56%;
 
-    --gradient-primary: hsl(var(--primary));
-    --gradient-bg: none;
+    /* ─── Apple Semantic Surface Tokens (Dark) ─── */
+    --surface-primary: #1C1C1E;
+    --surface-secondary: #2C2C2E;
+    --surface-tertiary: #3A3A3C;
+    --surface-elevated: #2C2C2E;
+    --surface-grouped: #000000;
+
+    /* ─── Apple Text Tokens (Dark) ─── */
+    --text-primary: rgba(255, 255, 255, 0.92);
+    --text-secondary: rgba(255, 255, 255, 0.55);
+    --text-tertiary: rgba(255, 255, 255, 0.35);
+    --text-quaternary: rgba(255, 255, 255, 0.18);
+    --text-link: #0A84FF;
+
+    /* ─── Apple Separator Tokens (Dark) ─── */
+    --separator-opaque: rgba(84, 84, 88, 0.65);
+    --separator-non-opaque: rgba(84, 84, 88, 0.36);
+
+    /* ─── Apple Fill Tokens (Dark) ─── */
+    --fill-primary: rgba(120, 120, 128, 0.36);
+    --fill-secondary: rgba(120, 120, 128, 0.32);
+    --fill-tertiary: rgba(118, 118, 128, 0.24);
+    --fill-quaternary: rgba(118, 118, 128, 0.18);
+
+    /* ─── Gradient (Dark) ─── */
+    --gradient-primary: linear-gradient(135deg, hsl(211 100% 56%) 0%, hsl(250 100% 65%) 100%);
+    --gradient-bg: linear-gradient(180deg, rgba(28, 28, 30, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+
+    /* ─── Glassmorphism (Dark) ─── */
+    --glass-bg: rgba(28, 28, 30, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    --glass-blur: 20px;
   }
 }
 
-@layer components {
-  .module-card {
-    @apply bg-card border border-border/50 rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20;
-  }
-  
-  .glass-card {
-    @apply bg-background/60 backdrop-blur-md border border-border/40 rounded-2xl shadow-sm;
-  }
-}
+/* ═══════════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════════ */
 
 @layer base {
   * {
@@ -128,42 +219,133 @@
   }
 
   body {
-    @apply bg-background text-foreground font-body font-normal;
+    @apply bg-background text-foreground font-body font-normal antialiased;
     font-size: 14px;
     line-height: 1.5;
     background-image: var(--gradient-bg);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-title tracking-tight;
   }
+
+  /* Apple-style focus ring for all interactive elements */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  }
+
+  /* Apple-style selection */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.15);
+    color: hsl(var(--foreground));
+  }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   GLASSMORPHISM COMPONENT CLASSES
+   ═══════════════════════════════════════════════════════════════ */
+
 @layer components {
+  /* ─── Glass Sidebar ─── */
+  .glass-sidebar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    border-right: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* ─── Glass Header ─── */
+  .glass-header {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* ─── Glass Modal ─── */
+  .glass-modal {
+    background: var(--glass-bg);
+    backdrop-filter: blur(calc(var(--glass-blur) * 2)) saturate(2);
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 2)) saturate(2);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* ─── Glass Card ─── */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* ─── Glassmorphism (legacy alias) ─── */
+  .glass-morphism {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    border: 1px solid var(--glass-border);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   APPLE DESIGN SYSTEM COMPONENT CLASSES
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ─── Navigation ─── */
   .nav-item {
-    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer;
-    @apply text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50;
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-apple-md text-sm font-medium cursor-pointer;
+    @apply text-sidebar-foreground;
+    @apply transition-all duration-apple-normal ease-apple;
+  }
+
+  .nav-item:hover {
+    @apply text-sidebar-accent-foreground bg-sidebar-accent/60;
   }
 
   .nav-item.active {
-    @apply bg-sidebar-accent/30 font-semibold text-primary;
+    @apply bg-sidebar-accent/40 font-semibold text-primary;
     border-left: 3px solid hsl(var(--primary));
   }
 
-
   .menu-header {
-    @apply px-4 pt-6 pb-2 text-[0.65rem] font-bold uppercase tracking-wider text-sidebar-muted;
+    @apply px-4 pt-6 pb-2 text-apple-caption1 font-bold uppercase tracking-wider text-sidebar-muted;
+  }
+
+  /* ─── Cards ─── */
+  .module-card {
+    @apply bg-card border border-border/50 rounded-apple-xl p-6;
+    @apply shadow-apple-sm;
+    @apply transition-all duration-apple-normal ease-apple;
+    @apply hover:shadow-apple-md hover:border-primary/20;
   }
 
   .stat-card {
-    @apply bg-card rounded-xl border border-border p-6;
+    @apply bg-card rounded-apple-lg border border-border/50 p-6;
+    @apply shadow-apple-sm;
+    @apply transition-all duration-apple-normal ease-apple;
   }
 
+  .card-premium {
+    @apply bg-card rounded-apple-2xl border border-border/50 p-8;
+    @apply shadow-apple-md;
+    @apply transition-all duration-apple-normal ease-apple;
+  }
+
+  /* ─── Badges ─── */
   .badge-status {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center px-3 py-1 rounded-apple-full text-xs font-semibold;
   }
 
   .badge-success {
@@ -186,12 +368,13 @@
     @apply bg-muted text-muted-foreground dark:bg-muted/50 dark:text-muted-foreground border dark:border-border;
   }
 
+  /* ─── Tables ─── */
   .data-table {
     @apply w-full text-sm;
   }
 
   .data-table th {
-    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50;
+    @apply px-4 py-3 text-left text-apple-caption1 font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50;
   }
 
   .data-table td {
@@ -199,47 +382,43 @@
   }
 
   .data-table tbody tr {
+    @apply transition-colors duration-apple-fast ease-apple;
     @apply hover:bg-muted/30;
   }
 
-  .module-card {
-    @apply bg-card rounded-2xl border border-border/50 p-8 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20;
-  }
-
-  .card-premium {
-    @apply bg-card rounded-3xl border border-border/50 p-8 shadow-sm;
-  }
-
-  .glass-morphism {
-    @apply bg-background/60 backdrop-blur-xl border border-border/40;
-  }
-
+  /* ─── Typography ─── */
   .header-title {
-    @apply text-3xl md:text-4xl font-black tracking-tight text-card-foreground;
+    @apply text-apple-large-title font-bold tracking-tight text-card-foreground;
   }
 
   .subtitle-premium {
-    @apply text-sm text-muted-foreground font-medium;
+    @apply text-apple-subhead text-muted-foreground font-medium;
   }
 
   .section-title {
-    @apply text-lg font-bold text-card-foreground tracking-tight;
+    @apply text-apple-title3 font-semibold text-card-foreground tracking-tight;
   }
 
+  /* ─── Buttons ─── */
   .button-action {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium;
-    @apply active:scale-[0.98] disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-apple-md text-sm font-medium;
+    @apply transition-all duration-apple-normal ease-apple;
+    @apply active:scale-[0.97];
+    @apply disabled:opacity-50 disabled:pointer-events-none;
+    @apply focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
   .button-premium {
-    @apply button-action bg-primary text-primary-foreground hover:bg-primary/90;
+    @apply button-action bg-primary text-primary-foreground;
+    @apply hover:bg-primary/90 hover:shadow-apple-sm;
   }
 
   .button-secondary-premium {
-    @apply button-action bg-muted text-foreground hover:bg-muted/80;
+    @apply button-action bg-secondary text-secondary-foreground;
+    @apply hover:bg-secondary/80;
   }
 
-  /* Custom scrollbar for premium touch */
+  /* ─── Apple-style scrollbar ─── */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -250,6 +429,79 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40 transition-colors;
+    @apply bg-muted-foreground/20 rounded-full;
+    @apply transition-colors duration-apple-normal ease-apple;
+    @apply hover:bg-muted-foreground/40;
   }
-}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   APPLE UTILITY CLASSES (not possible with pure Tailwind)
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  /* Text colors using Apple semantic tokens */
+  .text-apple-primary {
+    color: var(--text-primary);
+  }
+  .text-apple-secondary {
+    color: var(--text-secondary);
+  }
+  .text-apple-tertiary {
+    color: var(--text-tertiary);
+  }
+  .text-apple-quaternary {
+    color: var(--text-quaternary);
+  }
+  .text-apple-link {
+    color: var(--text-link);
+  }
+
+  /* Fill backgrounds using Apple semantic tokens */
+  .bg-apple-fill-primary {
+    background-color: var(--fill-primary);
+  }
+  .bg-apple-fill-secondary {
+    background-color: var(--fill-secondary);
+  }
+  .bg-apple-fill-tertiary {
+    background-color: var(--fill-tertiary);
+  }
+  .bg-apple-fill-quaternary {
+    background-color: var(--fill-quaternary);
+  }
+
+  /* Surface backgrounds using Apple semantic tokens */
+  .bg-apple-surface-primary {
+    background-color: var(--surface-primary);
+  }
+  .bg-apple-surface-secondary {
+    background-color: var(--surface-secondary);
+  }
+  .bg-apple-surface-tertiary {
+    background-color: var(--surface-tertiary);
+  }
+  .bg-apple-surface-elevated {
+    background-color: var(--surface-elevated);
+  }
+
+  /* Separator using Apple semantic tokens */
+  .border-apple-separator {
+    border-color: var(--separator-opaque);
+  }
+  .border-apple-separator-non-opaque {
+    border-color: var(--separator-non-opaque);
+  }
+
+  /* Gradient utility */
+  .bg-apple-gradient {
+    background-image: var(--gradient-primary);
+  }
+
+  /* Glassmorphism background utility */
+  .bg-apple-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+  }
+}
