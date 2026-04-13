@@ -3,11 +3,15 @@
 // Camada de comunicação com o FileBrowser (servidor local)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const FB_BASE_URL = import.meta.env.MODE === 'development' 
-  ? "/fb-api" 
-  : (import.meta.env.VITE_FILEBROWSER_URL ?? "http://192.168.100.3:8081");
-const FB_USER     = import.meta.env.VITE_FILEBROWSER_USER ?? "admin";
-const FB_PASS     = import.meta.env.VITE_FILEBROWSER_PASS ?? "";
+const FB_BASE_URL = import.meta.env.MODE === 'development'
+  ? "/fb-api"
+  : import.meta.env.VITE_FILEBROWSER_URL;
+const FB_USER     = import.meta.env.VITE_FILEBROWSER_USER;
+const FB_PASS     = import.meta.env.VITE_FILEBROWSER_PASS;
+
+if (import.meta.env.MODE !== 'development' && (!FB_BASE_URL || !FB_USER || !FB_PASS)) {
+  console.error("FileBrowser: VITE_FILEBROWSER_URL, VITE_FILEBROWSER_USER e VITE_FILEBROWSER_PASS são obrigatórios em produção.");
+}
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 

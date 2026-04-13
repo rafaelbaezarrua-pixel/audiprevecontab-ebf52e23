@@ -51,6 +51,7 @@ gcloud/
 
 # Supabase
 supabase/.env
+supabase/.temp/
 supabase/config.toml.local
 
 # Azure

@@ -9,8 +9,15 @@ import { Resend } from "https://esm.sh/resend@3.2.0"
 // @ts-expect-error: Deno env
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
+const ALLOWED_ORIGINS = [
+  "https://audiprevecontabilidade.com.br",
+  "https://www.audiprevecontabilidade.com.br",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGINS[0],
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
