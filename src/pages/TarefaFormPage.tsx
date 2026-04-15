@@ -143,25 +143,31 @@ const TarefaFormPage: React.FC = () => {
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => navigate("/tarefas")}
-                    className="p-2.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+                    className="p-2.5 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-all text-muted-foreground hover:text-foreground"
                     title="Voltar"
                 >
                     <ArrowLeft size={20} />
                 </button>
+                <h1 className="text-sm font-black uppercase tracking-widest text-foreground">
+                    {isEdit ? "Editar Tarefa Interna" : "Nova Tarefa Interna"}
+                </h1>
             </div>
 
-            <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden p-6 md:p-8 space-y-6">
-                <div className="flex items-center gap-2 mb-2 px-1">
+            <div className="glass-card p-6 md:p-8 space-y-8">
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
                     <input
                         type="checkbox"
                         id="semPrazo"
                         checked={semPrazo}
                         onChange={(e) => setSemPrazo(e.target.checked)}
-                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                        className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
                     />
-                    <label htmlFor="semPrazo" className="text-sm font-semibold text-card-foreground cursor-pointer select-none">
-                        Tarefa sem prazo de entrega
-                    </label>
+                    <div>
+                        <label htmlFor="semPrazo" className="text-xs font-black uppercase tracking-widest text-card-foreground cursor-pointer select-none">
+                            Tarefa sem prazo de entrega
+                        </label>
+                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">A tarefa nunca será marcada como pendente automaticamente</p>
+                    </div>
                 </div>
 
                 {!semPrazo && (
@@ -193,68 +199,70 @@ const TarefaFormPage: React.FC = () => {
                     </div>
                 )}
 
-                <div>
-                    <label className={labelCls}>Empresa Vinculada (Opcional)</label>
-                    <div className="relative">
-                        <Building2 size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                        <select
-                            value={form.empresa_id}
-                            onChange={e => setForm({ ...form, empresa_id: e.target.value })}
-                            className={inputCls + " pl-11 appearance-none"}
-                        >
-                            <option value="">Selecione uma empresa se houver vínculo...</option>
-                            {empresas.map(emp => (
-                                <option key={emp.id} value={emp.id}>{emp.nome_empresa}</option>
-                            ))}
-                        </select>
+                <div className="grid grid-cols-1 gap-6">
+                    <div>
+                        <label className={labelCls}>Assunto da Tarefa *</label>
+                        <div className="relative">
+                            <ClipboardList size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/30" />
+                            <input
+                                placeholder="EX: TAREFA INTERNA..."
+                                value={form.assunto}
+                                onChange={e => setForm({ ...form, assunto: e.target.value })}
+                                className={inputCls + " pl-12 uppercase font-bold text-xs tracking-wide"}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <label className={labelCls}>Responsável pela Tarefa *</label>
-                    <div className="relative">
-                        <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                        <select
-                            value={form.usuario_id}
-                            onChange={e => setForm({ ...form, usuario_id: e.target.value })}
-                            className={inputCls + " pl-11 appearance-none"}
-                        >
-                            <option value="">Selecione quem receberá a tarefa...</option>
-                            {usuarios.map(u => (
-                                <option key={u.id} value={u.id}>{u.nome} {u.id === user?.id ? "(Eu)" : ""}</option>
-                            ))}
-                        </select>
+                    <div>
+                        <label className={labelCls}>Responsável *</label>
+                        <div className="relative">
+                            <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/30" />
+                            <select
+                                value={form.usuario_id}
+                                onChange={e => setForm({ ...form, usuario_id: e.target.value })}
+                                className={inputCls + " pl-12 appearance-none text-xs font-bold uppercase tracking-wide cursor-pointer"}
+                            >
+                                <option value="">SELECIONE QUEM RECEBERÁ A TAREFA...</option>
+                                {usuarios.map(u => (
+                                    <option key={u.id} value={u.id}>{u.nome} {u.id === user?.id ? "(EU)" : ""}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <label className={labelCls}>Assunto *</label>
-                    <div className="relative">
-                        <ClipboardList size={18} className="absolute left-3.5 top-4 text-muted-foreground" />
-                        <input
-                            placeholder="Ex: Tarefa interna"
-                            value={form.assunto}
-                            onChange={e => setForm({ ...form, assunto: e.target.value })}
-                            className={inputCls + " pl-11"}
+                    <div>
+                        <label className={labelCls}>Empresa Vinculada (Opcional)</label>
+                        <div className="relative">
+                            <Building2 size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/30" />
+                            <select
+                                value={form.empresa_id}
+                                onChange={e => setForm({ ...form, empresa_id: e.target.value })}
+                                className={inputCls + " pl-12 appearance-none text-xs font-bold uppercase tracking-wide cursor-pointer"}
+                            >
+                                <option value="">SELECIONE UMA EMPRESA SE HOUVER VÍNCULO...</option>
+                                {empresas.map(emp => (
+                                    <option key={emp.id} value={emp.id}>{emp.nome_empresa}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className={labelCls}>Demais Informações e Observações</label>
+                        <textarea
+                            rows={4}
+                            placeholder="DESCREVA DETALHES ADICIONAIS PARA A EXECUÇÃO DA TAREFA..."
+                            value={form.informacoes_adicionais}
+                            onChange={e => setForm({ ...form, informacoes_adicionais: e.target.value })}
+                            className={inputCls + " resize-none text-xs font-medium h-32 py-4 uppercase"}
                         />
                     </div>
                 </div>
 
-                <div>
-                    <label className={labelCls}>Demais Informações</label>
-                    <textarea
-                        rows={5}
-                        placeholder="Detalhes adicionais..."
-                        value={form.informacoes_adicionais}
-                        onChange={e => setForm({ ...form, informacoes_adicionais: e.target.value })}
-                        className={inputCls + " resize-none"}
-                    />
-                </div>
-
-                <div className="flex gap-4 pt-4 border-t border-border">
+                <div className="flex gap-4 pt-6 border-t border-border/40">
                     <button
                         onClick={() => navigate("/tarefas")}
-                        className="flex-1 px-6 py-3.5 rounded-xl border border-border text-sm font-bold hover:bg-muted transition-colors disabled:opacity-50"
+                        className="flex-1 px-6 py-4 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all disabled:opacity-50"
                         disabled={loading}
                     >
                         Cancelar
@@ -262,12 +270,12 @@ const TarefaFormPage: React.FC = () => {
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="flex-1 button-premium flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+                        className="flex-[2] button-premium flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 h-14"
                     >
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
-                            <><Save size={20} /> {isEdit ? "Atualizar Tarefa" : "Salvar Tarefa"}</>
+                            <><Save size={18} /> {isEdit ? "ATUALIZAR TAREFA" : "SALVAR TAREFA"}</>
                         )}
                     </button>
                 </div>

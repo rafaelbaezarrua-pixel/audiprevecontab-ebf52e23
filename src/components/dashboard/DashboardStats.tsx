@@ -15,31 +15,27 @@ interface DashboardStatsProps {
 export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
   const cards = [
     {
-      label: "Total de Empresas",
+      label: "TOTAL DE EMPRESAS",
       value: stats.totalEmpresas,
-      icon: <Building2 className="w-6 h-6" />,
-      color: "from-primary/20 to-primary/10",
+      icon: <Building2 className="w-5 h-5" />,
       text: "text-primary",
     },
     {
-      label: "Empresas Ativas",
+      label: "EMPRESAS ATIVAS",
       value: stats.ativas,
-      icon: <Users className="w-6 h-6" />,
-      color: "from-primary/15 to-primary/5",
+      icon: <Users className="w-5 h-5" />,
       text: "text-primary",
     },
     {
-      label: "Processos em Andamento",
+      label: "PROCESSOS ATIVOS",
       value: stats.processosAtivos,
-      icon: <Activity className="w-6 h-6" />,
-      color: "from-primary/20 to-primary/10",
+      icon: <Activity className="w-5 h-5" />,
       text: "text-primary",
     },
     {
-      label: "Tarefas Pendentes Hoje",
+      label: "TAREFAS PENDENTES",
       value: stats.tarefasHoje,
-      icon: <ClipboardList className="w-6 h-6" />,
-      color: "from-primary/15 to-primary/5",
+      icon: <ClipboardList className="w-5 h-5" />,
       text: "text-primary",
     },
   ];
@@ -49,19 +45,18 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
       {cards.map((card, idx) => (
         <div
           key={idx}
-          className="relative group overflow-hidden rounded-3xl border border-border/50 bg-card p-6 transition-all hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1"
+          className="glass-card group p-6 transition-all border-border/10 hover:border-border/30"
         >
-          <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${card.color} blur-3xl opacity-50 group-hover:opacity-100 transition-opacity`} />
           <div className="relative flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 italic">
                 {card.label}
               </p>
-              <h3 className="text-2xl font-black text-foreground tracking-tight">
+              <h3 className="text-3xl font-black text-foreground tracking-tighter">
                 {card.value}
               </h3>
             </div>
-            <div className={`p-3 rounded-2xl bg-muted/50 ${card.text} shadow-inner`}>
+            <div className={`p-3 rounded-xl bg-black/5 dark:bg-white/5 ${card.text} shadow-none`}>
               {card.icon}
             </div>
           </div>

@@ -201,84 +201,96 @@ const PessoalPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 relative">
+    <div className="space-y-8 animate-fade-in relative pb-20 px-1">
+      {/* Syncing Indicator */}
       {(empresasFetching || pessoalFetching) && (
-        <div className="fixed top-20 right-8 z-50 flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 shadow-sm animate-pulse">
+        <div className="fixed top-24 right-8 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 backdrop-blur-md shadow-sm animate-fade-in">
           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
           <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="header-title">Departamento <span className="text-primary/90">Pessoal</span></h1>
+      {/* Main Page Header */}
+      <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-xl shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/10">
+            <Users size={28} />
+          </div>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase italic px-0">
+              Departamento <span className="text-primary/90">Pessoal</span>
+            </h1>
+            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase italic">
+              Folha de Pagamento • RH • Obrigações
+            </p>
+          </div>
+          <div className="ml-2">
             <FavoriteToggleButton moduleId="pessoal" />
           </div>
-          <p className="subtitle-premium">Gestão de funcionários, folha de pagamento e obrigações trabalhistas.</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setIsUploaderOpen(true)}
-            className="flex items-center gap-2 px-6 h-12 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest shrink-0 border border-primary/20 shadow-sm"
+            className="flex items-center gap-2.5 px-6 h-12 bg-black/5 dark:bg-white/5 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest border border-border/10"
           >
             <FileUp size={18} />
-            <span>Automação PDF</span>
+            <span>Processar Guias</span>
           </button>
           
-          <div className="flex items-center gap-2 px-4 h-12 bg-card border border-border/60 rounded-xl shadow-sm">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Competência:</span>
+          <div className="flex items-center gap-4 px-5 h-12 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl">
+            <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] leading-none mb-0.5">Competência</span>
             <input 
               type="month" 
               value={competencia} 
               onChange={(e) => setCompetencia(e.target.value)} 
-              className="bg-transparent border-none focus:ring-0 text-sm font-black outline-none text-center h-full pt-0.5 w-[120px]" 
+              className="bg-transparent border-none focus:ring-0 text-[11px] font-black outline-none text-right h-full text-foreground uppercase tracking-widest cursor-pointer" 
             />
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 pb-2">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4 w-full md:w-auto">
-             <div className="flex bg-card border border-border/60 rounded-xl shadow-sm overflow-hidden h-12 shrink-0">
-              <div className="px-5 py-2 flex flex-col justify-center border-r border-border/60">
-                <span className="text-[8px] text-muted-foreground font-black uppercase tracking-wider leading-none mb-1">Empresas</span>
-                <span className="text-lg font-black text-primary leading-none">{filtered.length}</span>
+      {/* Stats and Navigation */}
+      <div className="flex flex-col gap-8 pb-4">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-8 px-1">
+          <div className="flex items-center gap-4 w-full lg:w-auto">
+            <div className="flex bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl overflow-hidden h-14 shrink-0 p-1">
+              <div className="px-5 py-2 flex flex-col justify-center border-r border-border/5">
+                <span className="text-[8px] text-muted-foreground/40 font-black uppercase tracking-wider leading-none mb-1">Empresas</span>
+                <span className="text-xl font-black text-foreground leading-none">{filtered.length}</span>
               </div>
-              <div className="px-5 py-2 flex flex-col justify-center border-r border-border/60">
-                <span className="text-[8px] text-muted-foreground font-black uppercase tracking-wider leading-none mb-1">Concluídas</span>
-                <span className="text-lg font-black text-emerald-500 leading-none">{completedCount}</span>
+              <div className="px-5 py-2 flex flex-col justify-center border-r border-border/5">
+                <span className="text-[8px] text-muted-foreground/40 font-black uppercase tracking-wider leading-none mb-1">OK</span>
+                <span className="text-xl font-black text-primary leading-none">{completedCount}</span>
               </div>
-              <div className="px-5 py-2 flex flex-col justify-center bg-orange-500/5">
-                <span className="text-[8px] text-orange-600 font-black uppercase tracking-wider leading-none mb-1">Pendentes</span>
-                <span className="text-lg font-black text-orange-500">{filtered.length - completedCount}</span>
+              <div className="px-5 py-2 flex flex-col justify-center border-r border-border/5">
+                <span className="text-[8px] text-rose-500/60 font-black uppercase tracking-wider leading-none mb-1">Pendente</span>
+                <span className="text-xl font-black text-rose-500 leading-none">{filtered.length - completedCount}</span>
               </div>
-              <div className="px-5 py-2 flex flex-col justify-center bg-destructive/5">
-                <span className="text-[8px] text-destructive font-black uppercase tracking-wider leading-none mb-1">Alertas RH</span>
-                <span className="text-lg font-black text-destructive">{alertsSummary.aso + alertsSummary.ferias}</span>
+              <div className="px-5 py-2 flex flex-col justify-center bg-rose-500/5">
+                <span className="text-[8px] text-rose-500 font-black uppercase tracking-wider leading-none mb-1">Alertas RH</span>
+                <span className="text-xl font-black text-rose-500 leading-none">{alertsSummary.aso + alertsSummary.ferias}</span>
               </div>
             </div>
 
-            <div className="relative flex-1 md:w-80 md:flex-initial">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+            <div className="relative flex-1 lg:w-[320px] group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors" size={16} />
               <input 
                 type="text" 
-                placeholder="Buscar funcionário ou empresa..." 
+                placeholder="BUSCAR EMPRESA OU FUNCIONÁRIO..." 
                 value={search} 
                 onChange={(e) => setSearch(e.target.value)} 
-                className="w-full pl-11 pr-4 h-12 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-xs shadow-sm font-bold transition-all" 
+                className="w-full pl-11 pr-4 h-14 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl focus:ring-1 focus:ring-primary/20 outline-none text-[11px] font-black uppercase tracking-[0.15em] transition-all placeholder:text-muted-foreground/20" 
               />
             </div>
           </div>
 
-          <div className="flex bg-muted/30 p-1 rounded-xl border border-border/50 shrink-0 h-12 items-center">
-            {[{ id: "todos", label: "Geral" }, { id: "pendente", label: "Pendentes" }, { id: "concluido", label: "Concluídos" }].map(s => (
+          <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-border/10 shrink-0 h-14 items-center">
+            {[{ id: "todos", label: "Geral" }, { id: "pendente", label: "Pendentes" }, { id: "concluido", label: "Enviados" }].map(s => (
               <button
                 key={s.id}
                 onClick={() => setFilterStatus(s.id as any)}
-                className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${filterStatus === s.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-6 h-full rounded-lg text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${filterStatus === s.id ? "bg-card text-primary shadow-sm border border-border/10" : "text-muted-foreground/60 hover:text-foreground"}`}
               >
                 {s.label}
               </button>
@@ -286,20 +298,20 @@ const PessoalPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-2">
-          <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/50 overflow-x-auto no-scrollbar gap-1 w-full md:w-auto">
-            {[{ id: "ativas", label: "Ativas" }, { id: "mei", label: "MEI" }].map(t => (
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-1">
+          <div className="flex bg-black/5 dark:bg-white/5 p-1.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-1 w-full md:w-auto">
+            {[{ id: "ativas", label: "Empresas Ativas" }, { id: "mei", label: "Microempreendedor (MEI)" }].map(t => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id as any)}
-                className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+                className={`px-8 py-3 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm border border-border/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-card/20"}`}
               >
                 {t.label}
               </button>
             ))}
           </div>
 
-          <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/50 overflow-x-auto no-scrollbar gap-1 w-full md:w-auto">
+          <div className="flex bg-black/5 dark:bg-white/5 p-1.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-1 w-full md:w-auto">
             {[
               { id: "folha", label: "Folha / VT / VR" },
               { id: "prolabore", label: "Pró-Labore" },
@@ -308,7 +320,7 @@ const PessoalPage: React.FC = () => {
               <button
                 key={t.id}
                 onClick={() => setActiveSubTab(t.id as any)}
-                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === t.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+                className={`px-6 py-3 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeSubTab === t.id ? "bg-card text-primary shadow-sm border border-border/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-card/20"}`}
               >
                 {t.label}
               </button>
@@ -317,163 +329,206 @@ const PessoalPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="space-y-3">
+      {/* Main List Container */}
+      <div className="space-y-4 px-1">
         {filtered.map(emp => {
           const isOpen = expanded === emp.id;
-          const form = editForm[emp.id] || {};
           const record = pessoalData[emp.id];
           const done = record?.dctf_web_gerada;
 
           return (
-            <div key={emp.id} className="module-card !p-0 overflow-hidden shadow-sm hover:shadow-md transition-all border border-border/60">
+            <div key={emp.id} className={`glass-card !p-0 overflow-hidden border-border/10 transition-all ${isOpen ? 'ring-1 ring-primary/20 shadow-xl shadow-primary/5' : ''}`}>
               <div 
-                className="grid grid-cols-1 md:grid-cols-[1fr_auto] items-center gap-4 p-4 cursor-pointer hover:bg-muted/30 transition-colors" 
+                className={`flex flex-col md:flex-row items-center justify-between gap-6 p-6 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-all ${isOpen ? 'bg-primary/[0.03] border-b border-border/5' : ''}`} 
                 onClick={() => toggleExpand(emp.id)}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${done ? "bg-emerald-100 text-emerald-600" : "bg-warning/10 text-warning"}`}>
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all border ${done ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-black/5 dark:bg-white/5 text-muted-foreground/40 border-border/10"}`}>
                     <Users size={20} />
                   </div>
-                  <div>
-                    <p className="font-bold text-card-foreground">{emp.nome_empresa}</p>
-                    <p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-black text-foreground text-sm uppercase italic tracking-tight truncate max-w-[300px] md:max-w-[400px] group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
+                    <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.15em] mt-1 italic">CNPJ: {emp.cnpj || "NÃO INFORMADO"}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3">
-                  <span className={`badge-status ${done ? "badge-success" : "badge-warning"}`}>
-                    {done ? "Concluído" : "Pendente"}
-                  </span>
-                  {isOpen ? <ChevronUp size={18} className="text-muted-foreground" /> : <ChevronDown size={18} className="text-muted-foreground" />}
+                <div className="flex items-center justify-between md:justify-end gap-8 w-full md:w-auto">
+                  <div className="flex flex-col items-end gap-1">
+                     <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${done ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
+                       {done ? "CONCLUÍDO" : "PENDENTE"}
+                     </span>
+                     {record?.dctf_web_data_envio && (
+                        <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-widest italic">ENVIADO EM {formatDateBR(record.dctf_web_data_envio)}</span>
+                     )}
+                  </div>
+                  <button className={`p-2.5 rounded-xl border transition-all ${isOpen ? 'bg-primary text-white border-primary rotate-180 shadow-lg shadow-primary/20' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/40 border-border/10 hover:border-primary/50 hover:text-primary'}`}>
+                    <ChevronDown size={14} />
+                  </button>
                 </div>
               </div>
 
               {isOpen && (
-                <div className="border-t border-border p-6 space-y-6 bg-muted/10 animate-in slide-in-from-top-2 duration-200">
+                <div className="p-8 md:p-12 space-y-12 animate-in fade-in zoom-in-95 duration-300">
                   {activeSubTab === "ponto" ? (
                     <PontoCalculoForm 
                       empresa={emp as any} 
                       funcionarios={funcionarios[emp.id] || []} 
                     />
                   ) : (
-                    <div className="max-w-6xl mx-auto">
+                    <div className="max-w-6xl mx-auto space-y-12">
                       <Tabs 
                         value={rowTabs[emp.id] || 'dados'} 
                         onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))}
-                        className="space-y-6"
+                        className="space-y-10"
                       >
-                        <TabsList className="bg-muted/50 p-1 rounded-xl h-12">
-                          <TabsTrigger value="dados" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Processamento RH</TabsTrigger>
-                          <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Arquivos / Pastas</TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="dados" className="space-y-6 animate-in fade-in duration-300">
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Section: Configurações & Informações */}
-                        <div className="space-y-4">
-                          <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1 mb-2">Configurações & Informações</h3>
-                          <div className="bg-card p-4 rounded-2xl border border-border/60 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-4">
-                            <div>
-                                <label className="text-[9px] font-black text-muted-foreground uppercase block mb-1">Qtd Funcionários</label>
-                                <input type="number" value={form.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className="w-full h-10 bg-transparent border-b-2 border-border focus:border-primary outline-none transition-all text-sm font-bold" />
-                            </div>
-                            <div>
-                                <label className="text-[9px] font-black text-muted-foreground uppercase block mb-1">Qtd Pró-labore</label>
-                                <input type="number" value={form.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className="w-full h-10 bg-transparent border-b-2 border-border focus:border-primary outline-none transition-all text-sm font-bold" />
-                            </div>
-                            <div>
-                                <label className="text-[9px] font-black text-muted-foreground uppercase block mb-1">Forma de Envio</label>
-                                <input value={form.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className="w-full h-10 bg-transparent border-b-2 border-border focus:border-primary outline-none transition-all text-sm font-bold" />
-                            </div>
-                            <div className="flex flex-col justify-center">
-                                <label className="text-[9px] font-black text-muted-foreground uppercase block mb-1">Ponto Manual?</label>
-                                <label className="flex items-center gap-2 cursor-pointer pt-1">
-                                    <input type="checkbox" checked={!!form.possui_ponto_manual} onChange={e => updateForm(emp.id, "possui_ponto_manual", e.target.checked)} className="w-4 h-4 rounded border-border text-primary cursor-pointer" />
-                                    <span className="text-[10px] font-black text-primary uppercase">SIM</span>
-                                </label>
-                            </div>
-                          </div>
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-border/10 pb-6">
+                           <TabsList className="bg-black/5 dark:bg-white/5 p-1 rounded-xl h-14 border border-border/10">
+                              <TabsTrigger value="dados" className="px-10 h-full text-[10px] font-black uppercase tracking-[0.2em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel de Processamento</TabsTrigger>
+                              <TabsTrigger value="pastas" className="px-10 h-full text-[10px] font-black uppercase tracking-[0.2em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Cloud Drive</TabsTrigger>
+                           </TabsList>
+                           <h3 className="text-xl font-black text-foreground uppercase tracking-tight italic flex items-center gap-3">
+                              <span className="w-2 h-8 bg-primary rounded-full" />
+                              Controle de {activeSubTab === 'folha' ? 'Folha' : 'Pró-Labore'}
+                           </h3>
                         </div>
 
-                        {/* Section: Obrigações Mensais */}
-                        <div className="space-y-4">
-                          <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1 mb-2">Obrigações Mensais - {competencia}</h3>
-                          <div className="bg-card p-4 rounded-2xl border border-border/60 shadow-sm space-y-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-4">
-                                <span className="text-[11px] font-black text-card-foreground uppercase">DCTF Web</span>
-                                <select value={form.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className="h-10 bg-muted/30 border border-border/60 rounded-xl px-3 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20">
-                                    <option value="nao">NÃO GERADA</option>
-                                    <option value="sim">GERADA</option>
-                                </select>
-                                {form.dctf_web_gerada && <input type="date" value={form.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className="h-10 bg-muted/30 border border-border/60 rounded-xl px-3 text-xs font-bold outline-none" />}
-                            </div>
-
-                            {activeSubTab === "folha" && (
-                              <div className="pt-3 border-t border-border/40 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {[{ label: "INSS", s: "inss_status", d: "inss_data_envio" }, { label: "FGTS", s: "fgts_status", d: "fgts_data_envio" }].map(enc => (
-                                  <div key={enc.label} className="space-y-1">
-                                    <label className="text-[9px] font-black text-muted-foreground uppercase pl-1">{enc.label}</label>
-                                    <div className="flex gap-2">
-                                        <select value={form[enc.s] || "pendente"} onChange={e => updateForm(emp.id, enc.s, e.target.value)} className="flex-1 h-10 bg-muted/30 border border-border/60 rounded-xl px-3 text-[10px] font-black outline-none">
-                                            <option value="pendente">PENDENTE</option>
-                                            <option value="gerada">GERADA</option>
-                                            <option value="enviada">ENVIADA</option>
-                                        </select>
-                                        <input type="date" value={form[enc.d] || ""} onChange={e => updateForm(emp.id, enc.d, e.target.value)} className="flex-1 h-10 bg-muted/30 border border-border/60 rounded-xl px-2 text-[10px] font-medium outline-none" />
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Section: Funcionários & Alertas */}
-                      <div className="space-y-4">
-                         <div className="flex items-center justify-between pl-1">
-                            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Funcionários & Alertas</h3>
-                            <button onClick={(e) => { e.stopPropagation(); navigate(`/pessoal/funcionarios/${emp.id}`); }} className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors">
-                                <Settings size={14} /> GERENCIAR EQUIPE
-                            </button>
-                         </div>
-                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {(funcionarios[emp.id] || []).length === 0 ? (
-                                <div className="col-span-full p-6 text-center bg-card border border-dashed border-border/60 rounded-2xl">
-                                    <p className="text-xs text-muted-foreground font-medium italic">Nenhum funcionário cadastrado nesta empresa.</p>
+                        <TabsContent value="dados" className="space-y-12 animate-in fade-in duration-300 outline-none">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* Section: Configurações */}
+                            <div className="space-y-6">
+                              <h3 className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1 h-3 block italic">Configurações Base</h3>
+                              <div className="bg-black/5 dark:bg-white/5 p-8 rounded-3xl border border-border/10 grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Qtd Funcionários</label>
+                                    <input type="number" value={editForm[emp.id]?.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", e.target.value)} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none transition-all" />
                                 </div>
-                            ) : (
-                                funcionarios[emp.id].map(func => (
-                                    <div key={func.id} className="p-4 bg-card border border-border/60 rounded-2xl shadow-sm space-y-3">
-                                        <p className="text-sm font-black text-card-foreground truncate">{func.nome}</p>
-                                        <div className="flex flex-col gap-2">
-                                            <div className={`flex items-center justify-between p-2 rounded-xl border ${func.vencimento_aso && isBefore(parseISO(func.vencimento_aso), addDays(new Date(), 30)) ? "bg-destructive/5 border-destructive/20 text-destructive" : "bg-muted/30 border-border/40 text-muted-foreground"}`}>
-                                                <span className="text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"><AlertTriangle size={12} /> ASO</span>
-                                                <span className="text-xs font-black">{func.vencimento_aso ? formatDateBR(func.vencimento_aso) : "N/D"}</span>
-                                            </div>
-                                            <div className={`flex items-center justify-between p-2 rounded-xl border ${func.vencimento_ferias && isBefore(parseISO(func.vencimento_ferias), addDays(new Date(), 30)) ? "bg-destructive/5 border-destructive/20 text-destructive" : "bg-muted/30 border-border/40 text-muted-foreground"}`}>
-                                                <span className="text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5"><Calendar size={12} /> FÉRIAS</span>
-                                                <span className="text-xs font-black">{func.vencimento_ferias ? formatDateBR(func.vencimento_ferias) : "N/D"}</span>
-                                            </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Qtd Pró-labore</label>
+                                    <input type="number" value={editForm[emp.id]?.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", e.target.value)} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none transition-all" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Forma de Envio</label>
+                                    <input value={editForm[emp.id]?.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none transition-all uppercase italic" placeholder="EX: EMAIL" />
+                                </div>
+                                <div className="flex flex-col justify-end pb-1.5">
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className="relative">
+                                           <input type="checkbox" checked={!!editForm[emp.id]?.possui_ponto_manual} onChange={e => updateForm(emp.id, "possui_ponto_manual", e.target.checked)} className="peer w-5 h-5 opacity-0 absolute cursor-pointer" />
+                                           <div className={`w-5 h-5 rounded-md border-2 border-border/20 transition-all ${editForm[emp.id]?.possui_ponto_manual ? 'bg-primary border-primary scale-110' : 'bg-transparent'}`}>
+                                              {editForm[emp.id]?.possui_ponto_manual && <CheckCircle size={14} className="text-white m-auto" />}
+                                           </div>
                                         </div>
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest group-hover:text-primary transition-colors">Ponto Manual</span>
+                                    </label>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Section: Obrigações */}
+                            <div className="space-y-6">
+                              <h3 className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1 h-3 block italic">Obrigações Mensais</h3>
+                              <div className="bg-black/5 dark:bg-white/5 p-8 rounded-3xl border border-border/10 space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 items-end gap-6 pb-6 border-b border-border/10">
+                                    <div className="space-y-2">
+                                       <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">DCTF Web (Geral)</label>
+                                       <select value={editForm[emp.id]?.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all cursor-pointer">
+                                           <option value="nao">STATUS: PENDENTE</option>
+                                           <option value="sim">STATUS: CONCLUÍDO</option>
+                                       </select>
                                     </div>
-                                ))
-                            )}
-                         </div>
-                      </div>
+                                    <div className="space-y-2">
+                                       <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Data Efetuada</label>
+                                       <input type="date" value={editForm[emp.id]?.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[10px] font-black outline-none uppercase" />
+                                    </div>
+                                </div>
 
-                      <div className="flex justify-end pt-4 border-t border-border/50">
-                        <button onClick={() => handleSaveAction(emp.id)} className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
-                          <Save size={16} /> Salvar Alterações
-                        </button>
-                      </div>
-                    </TabsContent>
+                                {activeSubTab === "folha" && (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                    {[{ label: "GUIA INSS", s: "inss_status", d: "inss_data_envio" }, { label: "GUIA FGTS", s: "fgts_status", d: "fgts_data_envio" }].map(enc => (
+                                      <div key={enc.label} className="space-y-4">
+                                        <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest block pl-1 italic">{enc.label}</label>
+                                        <div className="space-y-3">
+                                            <select value={editForm[emp.id]?.[enc.s] || "pendente"} onChange={e => updateForm(emp.id, enc.s, e.target.value)} className="w-full h-10 px-4 rounded-xl border border-border/10 bg-card text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all">
+                                                <option value="pendente">PENDENTE</option>
+                                                <option value="gerada">GUIA GERADA</option>
+                                                <option value="enviada">NOTIFICADO</option>
+                                            </select>
+                                            <input type="date" value={editForm[emp.id]?.[enc.d] || ""} onChange={e => updateForm(emp.id, enc.d, e.target.value)} className="w-full h-10 px-4 rounded-xl border border-border/10 bg-card text-[9px] font-black outline-none uppercase" />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
 
-                    <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
-                       <ModuleFolderView empresa={emp} departamentoId="pessoal" />
-                    </TabsContent>
-                  </Tabs>
-                </div>
+                          {/* Section: Funcionários & Alertas */}
+                          <div className="space-y-8">
+                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/10 pb-4">
+                                <h3 className="text-xl font-black text-foreground uppercase tracking-tight italic flex items-center gap-3">
+                                   <span className="w-2 h-7 bg-primary rounded-full shadow-lg shadow-primary/20" />
+                                   Equipe & Ciclos de Saúde
+                                </h3>
+                                <button onClick={(e) => { e.stopPropagation(); navigate(`/pessoal/funcionarios/${emp.id}`); }} className="h-12 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-xl transition-all flex items-center gap-3">
+                                    <Settings size={18} /> GESTÃO DE COLABORADORES
+                                </button>
+                             </div>
+                             
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {(funcionarios[emp.id] || []).length === 0 ? (
+                                    <div className="col-span-full py-16 text-center border-2 border-dashed border-border/5 rounded-3xl">
+                                        <AlertTriangle size={48} className="text-muted-foreground/10 mx-auto mb-4" />
+                                        <p className="text-[11px] font-black text-muted-foreground/40 uppercase tracking-widest italic">Nenhum registro de funcionário ativo encontrado</p>
+                                    </div>
+                                ) : (
+                                    funcionarios[emp.id].map(func => {
+                                        const asoCritical = func.vencimento_aso && isBefore(parseISO(func.vencimento_aso), addDays(new Date(), 30));
+                                        const feriasCritical = func.vencimento_ferias && isBefore(parseISO(func.vencimento_ferias), addDays(new Date(), 30));
+                                        
+                                        return (
+                                          <div key={func.id} className="glass-card p-8 border-border/10 space-y-6 relative overflow-hidden group/func">
+                                              <div className="flex items-center gap-4 border-b border-border/5 pb-4">
+                                                 <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center border border-border/10 italic text-[14px] font-black group-hover/func:text-primary transition-colors">
+                                                    {func.nome.charAt(0)}
+                                                 </div>
+                                                 <span className="text-[12px] font-black text-foreground italic uppercase tracking-tighter truncate leading-none">{func.nome}</span>
+                                              </div>
+                                              <div className="grid grid-cols-1 gap-4">
+                                                  <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${asoCritical ? "bg-rose-500/10 border-rose-500/20 text-rose-500 shadow-lg shadow-rose-500/5" : "bg-black/5 dark:bg-white/5 border-border/5 text-muted-foreground/40"}`}>
+                                                      <div className="flex items-center gap-3">
+                                                         <AlertTriangle size={14} className={asoCritical ? "animate-pulse" : "opacity-30"} />
+                                                         <span className="text-[9px] font-black uppercase tracking-[0.15em] italic">Vencimento ASO</span>
+                                                      </div>
+                                                      <span className="text-[11px] font-black font-mono tracking-wider">{func.vencimento_aso ? formatDateBR(func.vencimento_aso) : "N/D"}</span>
+                                                  </div>
+                                                  <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${feriasCritical ? "bg-rose-500/10 border-rose-500/20 text-rose-500 shadow-lg shadow-rose-500/5" : "bg-black/5 dark:bg-white/5 border-border/5 text-muted-foreground/40"}`}>
+                                                      <div className="flex items-center gap-3">
+                                                         <Calendar size={14} className={feriasCritical ? "animate-pulse" : "opacity-30"} />
+                                                         <span className="text-[9px] font-black uppercase tracking-[0.15em] italic">Vencimento FÉRIAS</span>
+                                                      </div>
+                                                      <span className="text-[11px] font-black font-mono tracking-wider">{func.vencimento_ferias ? formatDateBR(func.vencimento_ferias) : "N/D"}</span>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                        );
+                                    })
+                                )}
+                             </div>
+                          </div>
+
+                          <div className="flex justify-end pt-8 border-t border-border/10">
+                            <button onClick={() => handleSaveAction(emp.id)} className="button-premium px-12 h-18 text-[11px] tracking-[0.2em] shadow-2xl shadow-primary/20 group">
+                              <Save size={22} className="group-hover:scale-110 transition-transform" /> <span>SALVAR FECHAMENTO RH</span>
+                            </button>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-500 outline-none">
+                           <ModuleFolderView empresa={emp} departamentoId="pessoal" />
+                        </TabsContent>
+                      </Tabs>
+                    </div>
                   )}
                 </div>
               )}

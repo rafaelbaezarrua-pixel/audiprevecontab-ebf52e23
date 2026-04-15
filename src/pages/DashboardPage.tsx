@@ -28,26 +28,26 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 pb-10 animate-fade-in">
+    <div className="space-y-8 pb-10 animate-fade-in relative">
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shrink-0">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="header-title">
-              Dashboard <span className="text-primary/90">Audipreve</span>
-            </h1>
-            <div className="p-1.5 rounded-xl bg-primary/10 text-primary animate-pulse">
-              <Sparkles size={20} />
-            </div>
+      <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shrink-0 backdrop-blur-xl">
+        <div className="flex items-center gap-4">
+          <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/10">
+            <LayoutDashboard size={28} />
           </div>
-          <p className="subtitle-premium flex items-center gap-2">
-            Bem-vindo de volta, <span className="text-card-foreground font-bold">{userData?.nome?.split(' ')[0]}</span>! Aqui está o resumo de hoje.
-          </p>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase italic px-0">
+              Gestão <span className="text-primary/90">Estratégica</span>
+            </h1>
+            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase italic">
+              Bem-vindo, <span className="text-foreground">{userData?.nome?.split(' ')[0]}</span> • Painel de Controle
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-muted/30 border border-border/50 shadow-sm">
-          <button className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl bg-card text-primary shadow-sm ring-1 ring-border transition-all">Vista Geral</button>
-          <button className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all">Relatórios</button>
+        <div className="flex items-center gap-2 p-1.5 rounded-xl bg-black/5 dark:bg-white/5 border border-border/10">
+          <button className="px-6 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg bg-card text-primary shadow-sm border border-border/10 transition-all">Vista Geral</button>
+          <button className="px-6 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-card/50 transition-all">Relatórios</button>
         </div>
       </div>
 
@@ -58,7 +58,7 @@ const DashboardPage: React.FC = () => {
       {analytics && <DashboardCharts data={analytics} />}
 
       <div className="grid grid-cols-1 gap-8 mt-4">
-        <div className="lg:col-span-1 border border-border/50 rounded-3xl p-6 bg-card">
+        <div className="glass-card p-8 border-border/10">
           <AlertsSidebar alerts={alerts} />
         </div>
       </div>
