@@ -11,15 +11,31 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    // CORS configurado para permitir apenas origens confiáveis em produção
+    cors: mode === 'production' ? {
+      origin: process.env.VITE_ALLOWED_ORIGINS?.split(',') || ['https://seu-dominio.com'],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth'],
+    } : {
+      origin: true,
+      credentials: true,
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        secure: false,
+        // Headers de segurança no proxy
+        headers: {
+          'X-Forwarded-Proto': 'https',
+        },
       },
       '/fb-api': {
         target: 'http://192.168.100.3:8081',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/fb-api/, ''),
+        secure: false,
       },
     },
   },
