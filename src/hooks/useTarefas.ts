@@ -169,7 +169,14 @@ export const useTarefas = (competencia: string) => {
 
             // Atualiza o status no banco para os que ficaram pendentes (fire and forget)
             if (overdueIds.length > 0) {
-                supabase.from("tarefas" as any).update({ status: "pendente" } as any).in("id", overdueIds).then();
+                // Usamos 'as any' porque a tabela tarefas pode não estar nos tipos gerados
+                supabase.from("tarefas" as any)
+                    .update({ status: "pendente" } as any)
+                    .in("id", overdueIds)
+                    .then(({ error }) => { 
+                        if (error) console.error("[TAREFAS] Erro ao atualizar automáticos para pendente:", error); 
+                    })
+                    .catch(err => console.error("[TAREFAS] Falha crítica na atualização de background:", err));
             }
 
             return enrichedData;
