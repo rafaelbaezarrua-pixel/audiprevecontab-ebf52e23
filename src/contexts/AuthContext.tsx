@@ -107,19 +107,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Logout function wrapped in useCallback for stability
   const logout = useCallback(async () => {
     try {
+      setLoading(true);
       await supabase.auth.signOut();
       setUserData(null);
+      setSession(null);
+      setUser(null);
       // Limpa referências de atividade
       lastActivityRef.current = 0;
     } catch (err) {
       console.error("[AUTH] Error during logout:", err);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   // Logout forçado por inatividade
   const forceLogoutDueToInactivity = useCallback(async () => {
     console.warn('[AUTH] Sessão expirada por inatividade. Realizando logout...');
-    await logout();
+    try {
+      await logout();
+    } catch (err) {
+      console.error("[AUTH] Erro no logout por inatividade:", err);
+    }
   }, [logout]);
 
   // Verifica timeout de inatividade
@@ -136,7 +145,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const timeUntilWarning = SESSION_CONFIG.INACTIVITY_TIMEOUT_MS - inactiveTime;
     if (timeUntilWarning <= SESSION_CONFIG.WARNING_BEFORE_TIMEOUT_MS && timeUntilWarning > 0) {
       // Opcional: disparar aviso visual para o usuário
-      // dispatch({ type: 'SESSION_WARNING', payload: timeUntilWarning });
     }
   }, [forceLogoutDueToInactivity]);
 
@@ -382,13 +390,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session: existing } }) => {
+    supabase.auth.getSession().then(({ data: { session: existing }, error }) => {
       if (!mounted) return;
+      if (error) {
+        console.error("[AUTH] Error getting session:", error);
+        setLoading(false);
+        return;
+      }
       setSession(prev => (prev?.access_token === existing?.access_token ? prev : existing));
       setUser(prev => (prev?.id === existing?.user?.id ? prev : (existing?.user ?? null)));
       if (!existing?.user) {
         setLoading(false);
       }
+    }).catch(err => {
+      console.error("[AUTH] Critical session fetch failure:", err);
+      if (mounted) setLoading(false);
     });
 
     return () => {
