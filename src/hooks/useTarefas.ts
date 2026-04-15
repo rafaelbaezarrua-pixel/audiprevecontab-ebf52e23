@@ -51,16 +51,6 @@ export const useTarefas = (competencia: string) => {
 
             const enrichedData = (agendaData || []).map((a: any) => {
                 let currentStatus = a.status || "em_aberto";
-                
-                const isAssignedToOther = a.criado_por && a.usuario_id && a.criado_por !== a.usuario_id;
-
-                // Migração automática: converter status antigos para o novo fluxo
-                if (isAssignedToOther) {
-                    // Tarefas atribuídas a outro usuário
-                    if (currentStatus === "em_aberto" || currentStatus === "pendente") {
-                        currentStatus = "recebida";
-                    }
-                }
 
                 // Parse historico from JSON
                 let historico: TarefaHistorico[] = [];
