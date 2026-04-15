@@ -14,6 +14,65 @@ export interface Notification {
     metadata?: any;
 }
 
+// Validação e sanitização de dados recebidos do Supabase
+const sanitizeNotification = (item: any): Notification | null => {
+    try {
+        // Validação de campos obrigatórios
+        if (!item.notifications || typeof item.notifications !== 'object') {
+            return null;
+        }
+
+        const notif = item.notifications;
+
+        // Validação de tipos
+        if (typeof notif.id !== 'string' || typeof notif.title !== 'string' || typeof notif.message !== 'string') {
+            console.warn('[WARN] Notificação com campos inválidos:', notif);
+            return null;
+        }
+
+        // Sanitização de strings (prevenir XSS básico)
+        const sanitizeString = (str: string): string => {
+            if (typeof str !== 'string') return '';
+            return str
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;')
+                .replace(/\//g, '&#x2F;')
+                .slice(0, 10000); // Limite de tamanho
+        };
+
+        // Validação de URL (se existir)
+        let link: string | undefined = undefined;
+        if (notif.link) {
+            try {
+                const url = new URL(notif.link);
+                // Permitir apenas URLs relativas ou domínios confiáveis
+                if (url.protocol === 'https:' || url.protocol === 'http:' || notif.link.startsWith('/')) {
+                    link = notif.link.slice(0, 2048); // Limite de tamanho
+                }
+            } catch {
+                console.warn('[WARN] Link inválido na notificação:', notif.link);
+            }
+        }
+
+        return {
+            id: notif.id,
+            recipient_id: item.id,
+            title: sanitizeString(notif.title),
+            message: sanitizeString(notif.message),
+            type: sanitizeString(notif.type || 'info'),
+            link,
+            is_read: Boolean(item.is_read),
+            created_at: item.created_at,
+            metadata: typeof notif.metadata === 'object' ? notif.metadata : undefined,
+        };
+    } catch (err) {
+        console.error('[ERROR] Falha ao sanitizar notificação:', err);
+        return null;
+    }
+};
+
 export const useNotifications = () => {
     const { user } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -51,19 +110,10 @@ export const useNotifications = () => {
                 return;
             }
 
+            // Validação e sanitização dos dados
             const formatted: Notification[] = (data || [])
-                .filter((item: any) => item.notifications !== null)
-                .map((item: any) => ({
-                    id: item.notifications.id,
-                    recipient_id: item.id,
-                    title: item.notifications.title,
-                    message: item.notifications.message,
-                    type: item.notifications.type,
-                    link: item.notifications.link,
-                    is_read: item.is_read,
-                    created_at: item.created_at,
-                    metadata: item.notifications.metadata,
-                }));
+                .map(sanitizeNotification)
+                .filter((n): n is Notification => n !== null);
 
             setNotifications(formatted);
             setUnreadCount(formatted.filter((n) => !n.is_read).length);
