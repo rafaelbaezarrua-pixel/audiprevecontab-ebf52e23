@@ -49,8 +49,21 @@ export const useTarefas = (competencia: string) => {
 
             if (error) throw error;
 
+            const now = new Date();
+            const overdueIds: string[] = [];
+
             const enrichedData = (agendaData || []).map((a: any) => {
                 let currentStatus = a.status || "em_aberto";
+
+                // Se a tarefa está 'em_aberto' ou 'recebida' e tem prazo (data definida), 
+                // verifica se já passou do horário para marcar como 'pendente'
+                if ((currentStatus === "em_aberto" || currentStatus === "recebida") && a.data) {
+                    const scheduledDateTime = new Date(`${a.data}T${a.horario || '00:00'}`);
+                    if (scheduledDateTime < now) {
+                        currentStatus = "pendente";
+                        overdueIds.push(a.id);
+                    }
+                }
 
                 // Parse historico from JSON
                 let historico: TarefaHistorico[] = [];
@@ -79,6 +92,11 @@ export const useTarefas = (competencia: string) => {
                     historico,
                 };
             }) as Tarefa[];
+
+            // Atualiza o status no banco para os que ficaram pendentes (fire and forget)
+            if (overdueIds.length > 0) {
+                supabase.from("tarefas" as any).update({ status: "pendente" } as any).in("id", overdueIds).then();
+            }
 
             return enrichedData;
         },
