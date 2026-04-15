@@ -194,27 +194,28 @@ const SocietarioPage: React.FC = () => {
       </div>
     );
   }
-
   return (
-    <div className="space-y-8 animate-fade-in pb-20 relative">
-      {/* Background decoration elements */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
-      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
+    <div className="space-y-8 animate-fade-in pb-20 relative px-1">
+      {/* Background decoration elements (Reduced as per user request to have less effects) */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
       {/* Main Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-             <h1 className="header-title">Departamento <span className="text-primary/90">Societário</span></h1>
-             <FavoriteToggleButton moduleId="societario" />
-             {isFetchingPage && !loadingPaginated && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 shadow-sm animate-pulse ml-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                  <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
-                </div>
-             )}
+      <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-xl shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/10">
+            <Building2 size={28} />
           </div>
-          <p className="subtitle-premium">Gestão completa da carteira de clientes, aberturas, alterações e baixas.</p>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase italic px-0">
+              Gestão <span className="text-primary/90">Societária</span>
+            </h1>
+            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase italic">
+              Carteira de Clientes • Aberturas e Baixas
+            </p>
+          </div>
+          <div className="ml-2">
+            <FavoriteToggleButton moduleId="societario" />
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -228,15 +229,15 @@ const SocietarioPage: React.FC = () => {
                  toast.success("Sincronizado!", { id });
                } catch (e: any) { toast.error(e.message, { id }); }
              }}
-             className="flex items-center gap-2 px-6 h-12 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest border border-primary/20 shadow-sm"
+             className="flex items-center gap-2.5 px-6 h-12 bg-black/5 dark:bg-white/5 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest border border-border/10"
            >
-             <RefreshCw size={18} />
-             <span>Sincronizar Portal</span>
+             <RefreshCw size={18} className={isFetchingPage ? "animate-spin" : ""} />
+             <span>Sincronizar</span>
            </button>
            
            <button 
              onClick={() => navigate("/societario/nova")} 
-             className="flex items-center gap-2 px-8 h-12 bg-primary text-primary-foreground hover:opacity-90 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
+             className="button-premium px-8 h-12 text-[10px] tracking-widest"
            >
              <Plus size={18} />
              <span>Nova Empresa</span>
@@ -245,22 +246,22 @@ const SocietarioPage: React.FC = () => {
       </div>
 
       {/* Main Feature Tabs (Empresas vs Processos) */}
-      <div className="flex bg-muted/30 p-1.5 rounded-xl border border-border/50 w-full max-w-sm">
+      <div className="flex bg-black/5 dark:bg-white/5 p-1.5 rounded-xl border border-border/10 w-full max-w-sm ml-1">
         <button 
           onClick={() => setActiveMainTab("empresas")} 
-          className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === "empresas" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+          className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === "empresas" ? "bg-card text-primary shadow-sm border border-border/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-card/30"}`}
         >
           <Building2 size={16} /> 
           <span>Portfolio</span>
         </button>
         <button 
           onClick={() => setActiveMainTab("processos")} 
-          className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all relative ${activeMainTab === "processos" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+          className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all relative ${activeMainTab === "processos" ? "bg-card text-primary shadow-sm border border-border/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-card/30"}`}
         >
           <Activity size={16} /> 
           <span>Processos</span>
           {stats.processosAtivos > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-black text-primary-foreground shadow-sm animate-in zoom-in">{stats.processosAtivos}</span>
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-black text-white shadow-sm">{stats.processosAtivos}</span>
           )}
         </button>
       </div>
@@ -273,38 +274,38 @@ const SocietarioPage: React.FC = () => {
           {/* Filters Area */}
           <div className="flex flex-col gap-4 pb-2">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="relative flex-1 w-full md:max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+              <div className="relative flex-1 w-full md:max-w-md group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors" size={18} />
                 <input 
                   type="text" 
-                  placeholder="Buscar por nome, CNPJ ou cliente..." 
+                  placeholder="BUSCAR POR NOME, CNPJ OU CLIENTE..." 
                   value={search} 
                   onChange={(e) => setSearch(e.target.value)} 
-                  className="w-full pl-12 pr-4 h-14 bg-card border border-border/60 rounded-xl focus:ring-2 focus:ring-primary outline-none text-xs shadow-sm font-bold transition-all placeholder:text-muted-foreground/60" 
+                  className="w-full pl-12 pr-4 h-14 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[11px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/20" 
                 />
               </div>
 
               <div className="flex items-center gap-3">
                  <button 
                   onClick={() => setShowFilters(!showFilters)} 
-                  className={`flex items-center gap-2.5 px-6 h-14 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${showFilters ? "border-primary bg-primary/10 text-primary shadow-sm" : "bg-card border-border/60 text-muted-foreground hover:text-foreground hover:shadow-md"}`}
+                  className={`flex items-center gap-2.5 px-6 h-14 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${showFilters ? "border-primary/50 bg-primary/10 text-primary" : "bg-black/5 dark:bg-white/5 border-border/10 text-muted-foreground/60 hover:text-foreground"}`}
                 >
                   <Filter size={18} /> 
-                  <span>Filtros Avançados</span>
+                  <span>Filtros Especiais</span>
                   <ChevronDown size={14} className={`transition-transform duration-300 ${showFilters ? "rotate-180" : ""}`} />
                 </button>
               </div>
             </div>
 
             {showFilters && (
-              <div className="bg-muted/30 p-6 rounded-xl border border-border/50 animate-in slide-in-from-top-4 duration-300">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="glass-card p-8 border-border/10 animate-in slide-in-from-top-4 duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Regime Tributário</label>
+                    <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1">Regime Tributário</label>
                     <select 
                       value={filterRegime} 
                       onChange={(e) => setFilterRegime(e.target.value)} 
-                      className="w-full h-12 px-4 rounded-xl border border-border/60 bg-card text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
+                      className="w-full h-12 px-4 rounded-xl border border-border/10 bg-black/5 dark:bg-white/5 text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/10 outline-none transition-all cursor-pointer"
                     >
                       <option value="todos">TODOS OS REGIMES</option>
                       <option value="simples">SIMPLES NACIONAL</option>
@@ -315,11 +316,11 @@ const SocietarioPage: React.FC = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Situação Cadastral</label>
+                    <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1">Situação Cadastral</label>
                     <select 
                       value={filterSituacao} 
                       onChange={(e) => setFilterSituacao(e.target.value)} 
-                      className="w-full h-12 px-4 rounded-xl border border-border/60 bg-card text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
+                      className="w-full h-12 px-4 rounded-xl border border-border/10 bg-black/5 dark:bg-white/5 text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/10 outline-none transition-all cursor-pointer"
                     >
                       <option value="todas">TODAS AS SITUAÇÕES</option>
                       <option value="ativa">ATIVA / OPERANTE</option>
@@ -332,7 +333,7 @@ const SocietarioPage: React.FC = () => {
                   <div className="flex items-end lg:col-span-2">
                     <button 
                       onClick={() => { setSearch(""); setFilterSituacao("todas"); setFilterRegime("todos"); }} 
-                      className="h-12 px-6 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 rounded-xl transition-all"
+                      className="h-12 px-6 text-[10px] font-black uppercase tracking-[0.15em] text-primary hover:bg-primary/5 rounded-xl transition-all"
                     >
                       Limpar Filtros
                     </button>
@@ -342,7 +343,7 @@ const SocietarioPage: React.FC = () => {
             )}
 
             {/* Sub-tabs for Portfolio Filtering */}
-            <div className="flex bg-muted/30 p-1.5 rounded-xl border border-border/50 overflow-x-auto no-scrollbar gap-1 w-full mt-2">
+            <div className="flex bg-black/5 dark:bg-white/5 p-1.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-1 w-full mt-2">
               {[
                 { id: "ativas", label: "Empresas Ativas" }, 
                 { id: "mei", label: "MEI / SIMEI" }, 
@@ -353,7 +354,7 @@ const SocietarioPage: React.FC = () => {
                 <button 
                   key={t.id} 
                   onClick={() => setActiveTab(t.id as any)} 
-                  className={`px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+                  className={`px-8 py-3 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm border border-border/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-card/30"}`}
                 >
                   {t.label}
                 </button>
@@ -361,7 +362,7 @@ const SocietarioPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="animate-in fade-in zoom-in-95 duration-500">
+          <div className="animate-fade-in">
             <EmpresaTable 
               empresas={paginatedData.data} 
               totalCount={paginatedData.count} 
@@ -383,17 +384,16 @@ const SocietarioPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 px-2">
             <div className="space-y-1">
-              <h3 className="text-xl font-black text-card-foreground flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-primary/10 text-primary shadow-inner"><History size={24} /></div>
-                Fluxo de Processos
+              <h3 className="text-xl font-black text-foreground flex items-center gap-3 uppercase italic tracking-tight">
+                <History className="text-primary" size={22} /> Fluxo de Processos
               </h3>
-              <p className="text-sm text-muted-foreground">Monitore o status de constituição, alteração e encerramento.</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-9">Acompanhamento em tempo real das etapas societárias.</p>
             </div>
             <button 
               onClick={() => setShowNovoProcesso(true)} 
-              className="flex items-center gap-2.5 px-8 py-4 bg-primary text-primary-foreground hover:opacity-90 rounded-xl transition-all font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
+              className="button-premium px-8 py-4 text-[11px] tracking-widest"
             >
               <Plus size={20} /> INICIAR NOVO PROCESSO
             </button>
@@ -412,9 +412,9 @@ const SocietarioPage: React.FC = () => {
           )}
 
           {processos.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 bg-card border border-dashed border-border/60 rounded-3xl opacity-60">
-              <Activity size={48} className="text-muted-foreground/30 mb-4" />
-              <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Nenhum processo em andamento no momento</p>
+            <div className="glass-card flex flex-col items-center justify-center py-32 border-dashed border-border/20 opacity-60">
+              <Activity size={48} className="text-muted-foreground/20 mb-4" />
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] italic">Nenhum processo em andamento no momento</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
@@ -471,22 +471,25 @@ const SocietarioPage: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {processoToDelete && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-card w-full max-w-sm rounded-2xl shadow-2xl border border-border p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto shadow-inner">
-               <Activity size={32} />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-modal w-full max-w-sm p-10 text-center space-y-8 animate-zoom-in">
+            <div className="w-20 h-20 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto">
+               <Activity size={36} />
             </div>
             <div className="space-y-2">
-              <h2 className="text-xl font-black text-foreground">Excluir Processo?</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">Você está prestes a excluir o processo de <strong>{processoToDelete.nome}</strong>. Esta ação não poderá ser desfeita.</p>
+              <h2 className="text-xl font-black text-foreground uppercase italic tracking-tight">Excluir Processo?</h2>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed">Você está prestes a excluir o processo de <br/><span className="text-foreground">{processoToDelete.nome}</span>.</p>
             </div>
-            <div className="flex flex-col gap-2 pt-2">
-              <button onClick={() => { deleteProcesso.mutate(processoToDelete.id); setProcessoToDelete(null); }} className="h-12 bg-destructive text-destructive-foreground rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-destructive/20 transition-all hover:opacity-90">Sim, Confirmar Exclusão</button>
-              <button onClick={() => setProcessoToDelete(null)} className="h-12 text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted/30 rounded-xl transition-all">Cancelar</button>
+            <div className="flex flex-col gap-3 pt-2">
+              <button onClick={() => { deleteProcesso.mutate(processoToDelete.id); setProcessoToDelete(null); }} className="h-14 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-rose-600">Confirmar Exclusão</button>
+              <button onClick={() => setProcessoToDelete(null)} className="h-12 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-foreground transition-all">Cancelar</button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+};  )}
     </div>
   );
 };

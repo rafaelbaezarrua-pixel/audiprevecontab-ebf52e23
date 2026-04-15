@@ -92,8 +92,10 @@ const sanitizeTarefa = (a: any, mappedUsers: any[]): Tarefa => {
     }
 
     // Verificar se está pendente (atrasado)
+    // SOMENTE se a tarefa estiver em aberto. Se já foi recebida ou iniciada, ela deve seguir o fluxo normal.
+    // Isso evita que a tarefa "volte" para pendente quando o usuário tenta mudar o status.
     const now = new Date();
-    if ((currentStatus === "em_aberto" || currentStatus === "recebida") && a.data) {
+    if (currentStatus === "em_aberto" && a.data) {
         const scheduledDateTime = new Date(`${a.data}T${a.horario || '00:00'}`);
         if (scheduledDateTime < now) {
             currentStatus = "pendente";

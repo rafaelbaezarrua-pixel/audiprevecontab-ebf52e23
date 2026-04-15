@@ -6,7 +6,8 @@
       "Bash(ls -la supabase/functions/*/index.ts)",
       "Bash(ls api/*.ts)",
       "Bash(ls api/)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(grep -E \"\\\\.\\(mjs|cjs|log|sql\\)$\")"
     ]
   }
 }

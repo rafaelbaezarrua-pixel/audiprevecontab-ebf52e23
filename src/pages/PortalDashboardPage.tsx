@@ -105,69 +105,74 @@ const PortalDashboardPage: React.FC = () => {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-8 animate-fade-in pb-20 relative px-1">
             {/* Header / Welcome */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-1">
-                    <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent italic">
-                        Olá, {userData?.nome?.split(' ')[0]}!
-                    </h1>
-                    <p className="text-muted-foreground font-medium">
-                        Veja o que aconteceu com a <span className="text-foreground font-bold">{empresa?.nome_empresa}</span> recentemente.
-                    </p>
-                </div>
-                
-                <div className="hidden lg:flex items-center gap-4 bg-card/40 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-sm transition-all hover:border-primary/30 group">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                        <Building2 size={24} />
+            <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-xl">
+                <div className="flex items-center gap-4">
+                    <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/10">
+                        <LayoutDashboard size={28} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">CNPJ</p>
-                        <p className="font-bold text-card-foreground tabular-nums">
+                        <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase italic px-0">
+                            Olá, {userData?.nome?.split(' ')[0]}!
+                        </h1>
+                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mt-0.5">
+                            Status da <span className="text-foreground">{empresa?.nome_empresa}</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div className="hidden lg:flex items-center gap-4 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/20">
+                    <div>
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none mb-1 text-right">CNPJ do Cliente</p>
+                        <p className="font-bold text-foreground tabular-nums tracking-wider">
                             {empresa?.cnpj || "---"}
                         </p>
+                    </div>
+                    <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
+                        <Building2 size={20} />
                     </div>
                 </div>
             </div>
 
-            {/* Quick Stats */}
+            {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {stats.map((stat) => (
-                    <div key={stat.label} className="module-card group cursor-default">
-                        <div className="flex flex-row items-center justify-between mb-4">
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <div key={stat.label} className="glass-card group p-6 border-border/40">
+                        <div className="flex flex-row items-center justify-between mb-5">
+                            <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em]">
                                 {stat.label}
                             </span>
-                            <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.color} group-hover:rotate-12 transition-all shadow-sm`}>
+                            <div className={`p-2 rounded-xl bg-black/5 dark:bg-white/5 ${stat.color} transition-all`}>
                                 <stat.icon size={18} />
                             </div>
                         </div>
                         <div className="flex items-end gap-2">
-                            <span className="text-4xl font-black tabular-nums">{stat.value}</span>
-                            <span className="text-xs text-muted-foreground font-bold mb-1.5 italic">items</span>
+                            <span className="text-4xl font-black tabular-nums tracking-tighter text-foreground">{stat.value}</span>
+                            <span className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-widest mb-2">Resumos</span>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Main Chart Area */}
+            {/* Main Area */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                <div className="xl:col-span-2 module-card !p-8">
+                <div className="xl:col-span-2 glass-card !p-8 border-border/40">
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
                         <div>
-                            <h3 className="text-xl font-black flex items-center gap-2 italic">
-                                <TrendingUp className="text-primary" size={22} /> Desempenho Mensal
+                            <h3 className="text-lg font-black flex items-center gap-2 italic text-foreground px-0 uppercase tracking-tight">
+                                <TrendingUp className="text-primary" size={20} /> Desempenho Financeiro
                             </h3>
-                            <p className="text-xs text-muted-foreground mt-1 font-bold uppercase tracking-wider">Histórico de Honorários & Faturamento</p>
+                            <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-[0.25em] opacity-40">Histórico de Honorários e Faturamento</p>
                         </div>
-                        <div className="flex items-center gap-6 px-4 py-2 bg-muted/30 rounded-xl border border-border/40">
+                        <div className="flex items-center gap-6 px-4 py-2 bg-black/5 dark:bg-white/5 rounded-xl border border-border/10">
                             <div className="flex items-center gap-2">
-                                <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
-                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-tight">Valor Total</span>
+                                <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest text-primary">Total</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-tight">Impostos (Est.)</span>
+                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
+                                <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">Aprox.</span>
                             </div>
                         </div>
                     </div>
@@ -175,93 +180,86 @@ const PortalDashboardPage: React.FC = () => {
                     <div className="h-[320px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorFat" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(120,120,120,0.05)" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(120,120,120,0.1)" />
                                 <XAxis 
                                     dataKey="name" 
                                     axisLine={false} 
                                     tickLine={false} 
-                                    tick={{ fontSize: 10, fontWeight: 900, fill: "hsl(var(--muted-foreground))" }} 
+                                    tick={{ fontSize: 9, fontWeight: 900, fill: "hsl(var(--muted-foreground))" }} 
                                     dy={15}
                                 />
                                 <YAxis 
                                     axisLine={false} 
                                     tickLine={false} 
-                                    tick={{ fontSize: 10, fontWeight: 800, fill: "hsl(var(--muted-foreground))" }}
+                                    tick={{ fontSize: 9, fontWeight: 800, fill: "hsl(var(--muted-foreground))" }}
                                     tickFormatter={(value) => `R$${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`}
                                 />
                                 <Tooltip 
                                     cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
                                     contentStyle={{ 
-                                        backgroundColor: "hsl(var(--card))", 
+                                        backgroundColor: "var(--glass-bg)", 
+                                        backdropFilter: "blur(12px)",
                                         borderRadius: "16px", 
-                                        border: "1px solid hsl(var(--border))",
-                                        boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)",
+                                        border: "1px solid var(--glass-border)",
+                                        boxShadow: "none",
                                         padding: '12px'
                                     }}
-                                    itemStyle={{ fontSize: '12px', fontWeight: 900 }}
-                                    labelStyle={{ fontSize: '10px', fontWeight: 900, marginBottom: '8px', color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase' }}
+                                    itemStyle={{ fontSize: '11px', fontWeight: 900 }}
+                                    labelStyle={{ fontSize: '9px', fontWeight: 900, marginBottom: '8px', color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.1em' }}
                                     formatter={(value: number) => [
                                         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value),
                                         ""
                                     ]}
                                 />
-                                <Area type="monotone" dataKey="faturamento" stroke="none" fillOpacity={1} fill="url(#colorFat)" />
                                 <Bar 
                                     dataKey="faturamento" 
                                     fill="hsl(var(--primary))" 
-                                    radius={[4, 4, 0, 0]} 
-                                    barSize={24}
-                                    opacity={0.8}
+                                    radius={[6, 6, 0, 0]} 
+                                    barSize={28}
                                 />
                                 <Line 
                                     type="monotone" 
                                     dataKey="impostos" 
-                                    stroke="#f59e0b" 
-                                    strokeWidth={3} 
-                                    dot={{ fill: "#f59e0b", r: 3, strokeWidth: 0 }} 
-                                    activeDot={{ r: 5, strokeWidth: 0 }}
+                                    stroke="hsl(var(--muted-foreground))" 
+                                    strokeWidth={2} 
+                                    strokeDasharray="4 4"
+                                    dot={false}
                                 />
                             </ComposedChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                <div className="module-card">
+                <div className="glass-card p-8 border-border/40 h-full flex flex-col">
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-lg font-black flex items-center gap-2 italic">
-                            <PenTool className="text-rose-500" size={20} /> Assinaturas
+                        <h3 className="text-lg font-black flex items-center gap-2 italic uppercase tracking-tight text-foreground">
+                            <PenTool className="text-primary/70" size={20} /> Validações
                         </h3>
                         {counts.pendingSigs > 0 && (
-                            <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-ping" />
+                            <span className="px-2 py-0.5 rounded-md bg-rose-500 text-white text-[9px] font-black uppercase tracking-tighter">Pendente</span>
                         )}
                     </div>
                     
-                    <div className="space-y-4">
-                        <div className="p-6 rounded-2xl bg-muted/30 border border-dashed border-border/60 flex flex-col items-center text-center gap-4">
-                            <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
-                                <PenTool size={28} />
+                    <div className="space-y-6 flex-1 flex flex-col justify-center">
+                        <div className="p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-dashed border-border/20 flex flex-col items-center text-center gap-6">
+                            <div className="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                                <PenTool size={32} />
                             </div>
                             <div>
-                                <p className="font-black text-foreground italic">
+                                <p className="font-black text-foreground uppercase tracking-tight text-lg leading-tight">
                                     {counts.pendingSigs === 0 
-                                      ? "Tudo assinado!" 
-                                      : `${counts.pendingSigs} assinaturas pendentes`}
+                                      ? "Fluxo em dia!" 
+                                      : `${counts.pendingSigs} Assinaturas`}
                                 </p>
-                                <p className="text-muted-foreground text-xs font-medium mt-1">
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-2 opacity-50">
                                     {counts.pendingSigs === 0 
-                                      ? "Não encontramos documentos aguardando sua assinatura." 
-                                      : "Existem documentos que precisam da sua validação digital."}
+                                      ? "Nenhum documento aguardando." 
+                                      : "Necessário sua validação digital."}
                                 </p>
                             </div>
-                            <Button className="w-full rounded-xl font-bold gap-2 shadow-lg shadow-rose-500/20" variant={counts.pendingSigs > 0 ? "default" : "outline"}>
-                                Ir para Assinaturas <ArrowRight size={16} />
-                            </Button>
+                            <button className="button-premium w-full text-[10px] py-4">
+                                Acessar documentos <ArrowRight size={16} />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -271,31 +269,31 @@ const PortalDashboardPage: React.FC = () => {
                 {/* Documentos Recentes */}
                 <section className="space-y-4">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className="text-xl font-black flex items-center gap-2 italic">
-                            <FileText className="text-primary" size={22} /> Documentos Recentes
+                        <h3 className="text-lg font-black flex items-center gap-2 italic uppercase tracking-tight text-foreground">
+                            <FileText className="text-primary" size={20} /> Documentos Recentes
                         </h3>
-                        <Button variant="ghost" size="sm" className="text-primary font-black text-xs uppercase tracking-widest hover:bg-transparent">Ver Todos</Button>
+                        <button className="text-[9px] font-black text-primary uppercase tracking-[0.25em] hover:opacity-70 transition-opacity">Ver Acervo</button>
                     </div>
-                    <div className="module-card !p-0 overflow-hidden divide-y divide-border/50">
-                        {recentDocs.length === 0 && <div className="p-12 text-center text-muted-foreground font-medium italic">Nenhum documento disponível no momento.</div>}
+                    <div className="glass-card !p-0 overflow-hidden divide-y divide-border/10 border-border/40 shadow-none">
+                        {recentDocs.length === 0 && <div className="p-12 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">Nenhum documento disponível no momento.</div>}
                         {recentDocs.map((doc) => (
-                            <div key={doc.id} className="flex items-center justify-between p-5 hover:bg-muted/30 transition-all group">
+                            <div key={doc.id} className="flex items-center justify-between p-5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group cursor-pointer">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all">
+                                    <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all">
                                         <FileText size={18} />
                                     </div>
                                     <div>
-                                        <p className="font-bold text-card-foreground max-w-[220px] truncate leading-tight group-hover:text-primary transition-colors italic">{doc.titulo || doc.nome_arquivo}</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-[10px] font-black text-muted-foreground uppercase opacity-60">{doc.categoria}</span>
-                                            <span className="text-[10px] text-muted-foreground/40">•</span>
-                                            <span className="text-[10px] font-bold text-muted-foreground/60">{format(new Date(doc.created_at), 'dd MMM yyyy', { locale: ptBR })}</span>
+                                        <p className="font-bold text-foreground max-w-[220px] truncate leading-tight group-hover:text-primary transition-colors italic">{doc.titulo || doc.nome_arquivo}</p>
+                                        <div className="flex items-center gap-2 mt-1 px-0">
+                                            <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">{doc.categoria}</span>
+                                            <span className="text-[9px] text-muted-foreground/20">•</span>
+                                            <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">{format(new Date(doc.created_at), 'dd MMM yyyy', { locale: ptBR })}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <Button onClick={() => window.open(doc.arquivo_url || doc.url, '_blank')} variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                                <button onClick={() => window.open(doc.arquivo_url || doc.url, '_blank')} className="h-9 w-9 rounded-xl hover:bg-primary/20 hover:text-primary transition-all flex items-center justify-center text-muted-foreground/30">
                                     <Download size={16} />
-                                </Button>
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -304,32 +302,32 @@ const PortalDashboardPage: React.FC = () => {
                 {/* Status de Processos Automados */}
                 <section className="space-y-4">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className="text-xl font-black flex items-center gap-2 italic">
-                            <Clock className="text-primary" size={22} /> Processos em Andamento
+                        <h3 className="text-lg font-black flex items-center gap-2 italic uppercase tracking-tight text-foreground">
+                            <Clock className="text-primary" size={20} /> Processos Ativos
                         </h3>
-                        <Button variant="ghost" size="sm" className="text-primary font-black text-xs uppercase tracking-widest hover:bg-transparent">Ver Detalhes</Button>
+                        <button className="text-[9px] font-black text-primary uppercase tracking-[0.25em] hover:opacity-70 transition-opacity">Detalhes</button>
                     </div>
-                    <div className="module-card">
+                    <div className="glass-card p-8 border-border/40 h-full">
                         {activeProcs.length === 0 ? (
-                           <div className="p-8 text-center text-muted-foreground font-medium italic">Sua empresa está em dia! Nenhum processo societário ativo.</div>
+                           <div className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">Nenhum processo societário ativo no momento.</div>
                         ) : (
                         <div className="relative pl-8 space-y-8">
-                            <div className="absolute left-[15px] top-2 bottom-2 w-[1.5px] bg-border/60" />
+                            <div className="absolute left-[15px] top-2 bottom-2 w-[1.5px] bg-border/10" />
                             {activeProcs.map(proc => (
                             <div key={proc.id} className="relative group">
-                                <div className="absolute -left-[23px] top-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-background z-10 shadow-[0_0_8px_hsl(var(--primary))]" />
-                                <div className="bg-muted/20 p-4 rounded-xl border border-transparent group-hover:border-primary/20 transition-all hover:bg-muted/40">
+                                <div className="absolute -left-[23px] top-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-background z-10" />
+                                <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-transparent group-hover:border-primary/20 transition-all hover:bg-black/10 dark:hover:bg-white/10">
                                     <div className="flex items-center justify-between">
-                                        <p className="font-black text-foreground capitalize italic leading-none">{proc.tipo?.replace(/_/g, ' ')}</p>
-                                        <span className="text-[9px] font-black px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded-md uppercase tracking-wider animate-pulse ml-2 shrink-0">
+                                        <p className="font-black text-foreground uppercase tracking-tight italic leading-none text-xs">{proc.tipo?.replace(/_/g, ' ')}</p>
+                                        <span className="text-[9px] font-black px-2 py-0.5 bg-primary/20 text-primary rounded-md uppercase tracking-wider ml-2 shrink-0">
                                             {proc.status?.replace(/_/g, ' ')}
                                         </span>
                                     </div>
-                                    <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
-                                        <span className="font-bold uppercase tracking-widest opacity-60">Fase Atual</span>
-                                        <span className="font-bold opacity-80 italic">{format(new Date(proc.created_at), 'dd/MM/yyyy')}</span>
+                                    <div className="mt-3 flex items-center justify-between text-[9px] text-muted-foreground">
+                                        <span className="font-black uppercase tracking-[0.15em] opacity-40 italic">Fase em andamento</span>
+                                        <span className="font-black opacity-40 italic uppercase">{format(new Date(proc.created_at), 'dd/MM/yyyy')}</span>
                                     </div>
-                                    <div className="mt-2 h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                    <div className="mt-3 h-1 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
                                         <div className="h-full bg-primary w-[65%] rounded-full opacity-60" />
                                     </div>
                                 </div>
@@ -341,27 +339,26 @@ const PortalDashboardPage: React.FC = () => {
                 </section>
             </div>
 
-            {/* Premium Help Banner */}
-            <section className="relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                <div className="module-card border-primary/20 relative z-10 !p-10 flex flex-col md:flex-row items-center justify-between gap-10">
-                    <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-1000">
+            {/* Support Help Banner */}
+            <section className="relative overflow-hidden group mt-4">
+                <div className="glass-card border-primary/20 relative z-10 !p-12 flex flex-col md:flex-row items-center justify-between gap-12 overflow-hidden">
+                    <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform duration-1000">
                         <MessageSquare size={240} className="text-primary" />
                     </div>
-                    <div className="flex-1 space-y-4 text-center md:text-left">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
-                            <MessageSquare size={12} /> Suporte Exclusivo
+                    <div className="flex-1 space-y-6 text-center md:text-left">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[9px] font-black uppercase tracking-[0.25em]">
+                            <MessageSquare size={13} /> Suporte Especializado
                         </div>
-                        <h3 className="text-3xl font-black italic tracking-tight text-foreground leading-[1.1]">
-                            Precisa de algo mais para a <br className="hidden md:block"/> sua empresa hoje?
+                        <h3 className="text-4xl font-black italic tracking-tighter text-foreground uppercase leading-[1.0]">
+                            Soluções Ágeis para <br className="hidden md:block"/> seu negócio.
                         </h3>
-                        <p className="text-muted-foreground text-lg font-medium leading-relaxed max-w-lg">
-                            Nossa equipe técnica está pronta para resolver qualquer dúvida sobre fiscal, departamento pessoal ou processos. Estamos a um clique de distância.
+                        <p className="text-muted-foreground text-base font-medium leading-relaxed max-w-lg">
+                            Dúvidas fiscais, contábeis ou de folha de pagamento? Nossa equipe está disponível em tempo real para auxiliar no crescimento da sua empresa.
                         </p>
                     </div>
-                    <Button className="h-16 px-10 rounded-2xl text-lg font-black italic gap-3 shadow-2xl shadow-primary/30 hover:scale-[1.03] active:scale-[0.98] transition-all bg-primary">
-                        Abrir Chamado <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                    <button className="h-18 px-12 rounded-2xl text-base font-black italic gap-4 transition-all bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+                        Abrir chamado técnico <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
                 </div>
             </section>
         </div>

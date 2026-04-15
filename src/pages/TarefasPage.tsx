@@ -15,12 +15,12 @@ import { Label } from "@/components/ui/label";
 
 // ── Status helpers ──────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode; border: string }> = {
-    recebida:     { label: "Recebida",     color: "text-blue-500",    bg: "bg-blue-500",    icon: <Inbox size={14} />,       border: "border-blue-500/40" },
-    em_andamento: { label: "Em Andamento", color: "text-amber-500",   bg: "bg-amber-500",   icon: <Play size={14} />,        border: "border-amber-500/40" },
-    resposta:     { label: "Resposta",     color: "text-purple-500",  bg: "bg-purple-500",  icon: <MessageSquare size={14} />, border: "border-purple-500/40" },
-    concluido:    { label: "Concluída",    color: "text-emerald-500", bg: "bg-emerald-500", icon: <CheckCircle size={14} />,  border: "border-emerald-500/40" },
-    em_aberto:    { label: "Em Aberto",    color: "text-sky-500",     bg: "bg-sky-500",     icon: <Circle size={14} />,      border: "border-sky-500/40" },
-    pendente:     { label: "Pendente",     color: "text-orange-500",  bg: "bg-orange-500",  icon: <Clock size={14} />,       border: "border-orange-500/40" },
+    recebida:     { label: "Recebida",     color: "text-blue-500",    bg: "bg-blue-500",    icon: <Inbox size={14} />,       border: "border-blue-500/20" },
+    em_andamento: { label: "Em Andamento", color: "text-amber-500",   bg: "bg-amber-500",   icon: <Play size={14} />,        border: "border-amber-500/20" },
+    resposta:     { label: "Resposta",     color: "text-purple-500",  bg: "bg-purple-500",  icon: <MessageSquare size={14} />, border: "border-purple-500/20" },
+    concluido:    { label: "Concluída",    color: "text-emerald-500", bg: "bg-emerald-500", icon: <CheckCircle size={14} />,  border: "border-emerald-500/20" },
+    em_aberto:    { label: "Em Aberto",    color: "text-sky-500",     bg: "bg-sky-500",     icon: <Circle size={14} />,      border: "border-sky-500/20" },
+    pendente:     { label: "Pendente",     color: "text-orange-500",  bg: "bg-orange-500",  icon: <Clock size={14} />,       border: "border-orange-500/20" },
 };
 
 const STATUS_FLOW_LABELS: Record<string, string> = {
@@ -269,8 +269,8 @@ const TarefasPage: React.FC = () => {
     const renderStatusBadge = (status: string) => {
         const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.em_aberto;
         return (
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest ${cfg.color} bg-black/5 dark:bg-white/5 border border-current/10`}>
-                {cfg.icon} {cfg.label}
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${cfg.color} bg-black/5 dark:bg-white/5 border border-current/20`}>
+                {React.cloneElement(cfg.icon as React.ReactElement, { size: 12 })} {cfg.label}
             </span>
         );
     };
@@ -444,27 +444,27 @@ const TarefasPage: React.FC = () => {
         const showFlow = a.criado_por !== a.usuario_id; 
 
         return (
-            <div className="p-5 space-y-4 h-full flex flex-col relative">
+            <div className="p-5 space-y-4 h-full flex flex-col relative group/card">
                 {/* Status Indicator Bar */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 ${cfg.bg} opacity-70`} />
+                <div className={`absolute left-0 top-0 bottom-0 w-1 ${cfg.bg} opacity-50`} />
 
                 {/* Header */}
                 <div className="space-y-2">
                     <div className="flex items-start justify-between gap-4">
-                        <h3 className="font-bold text-foreground leading-snug text-sm flex-1 tracking-tight">
+                        <h3 className="font-bold text-foreground leading-snug text-sm flex-1 tracking-tight group-hover/card:text-primary transition-colors">
                             {a.assunto}
                         </h3>
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
                             <button
                                 onClick={() => { setHistoricoTarefa(a); setHistoricoDialogOpen(true); }}
-                                className="p-2 rounded-lg text-muted-foreground/50 hover:bg-white/10 dark:hover:bg-black/20 hover:text-primary transition-all"
+                                className="p-2 rounded-lg text-muted-foreground/50 hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary transition-all"
                             >
                                 <History size={14} />
                             </button>
                             {(a.criado_por === user?.id || userData?.isAdmin) && (
                                 <button
                                     onClick={() => navigate(`/tarefas/editar/${a.id}`)}
-                                    className="p-2 rounded-lg text-primary/40 hover:bg-white/10 dark:hover:bg-black/20 hover:text-primary transition-all"
+                                    className="p-2 rounded-lg text-muted-foreground/50 hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary transition-all"
                                 >
                                     <Pencil size={14} />
                                 </button>
@@ -475,18 +475,18 @@ const TarefasPage: React.FC = () => {
                     {/* Meta Info */}
                     <div className="flex flex-col gap-1.5">
                         {isAssignee ? (
-                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest">
                                 <Send size={12} className="opacity-40" />
                                 <span>De: <span className="text-foreground/80">{a.criado_por_nome}</span></span>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest">
                                 <User size={12} className="opacity-40" />
                                 <span>Para: <span className="text-foreground/80">{a.usuario_nome}</span></span>
                             </div>
                         )}
                         {a.empresas?.nome_empresa && (
-                            <div className="inline-flex px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 border border-border/20 text-[9px] font-black uppercase tracking-widest text-primary w-fit">
+                            <div className="inline-flex px-2 py-0.5 rounded-lg bg-primary/5 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary w-fit">
                                 {a.empresas.nome_empresa}
                             </div>
                         )}
@@ -494,22 +494,22 @@ const TarefasPage: React.FC = () => {
                 </div>
 
                 {/* Deadlines */}
-                <div className="flex items-center gap-4 py-1 border-y border-border/10">
+                <div className="flex items-center gap-4 py-2 border-y border-border/10">
                     {a.data ? (
                         <>
-                            <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/70">
+                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                                 <Calendar size={13} className="text-primary/50" />
                                 {format(new Date(a.data + 'T00:00:00'), "dd MMM", { locale: ptBR })}
                             </div>
                             {a.horario && (
-                                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/70">
+                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                                     <Clock size={13} className="text-primary/50" />
                                     {a.horario.slice(0, 5)}
                                 </div>
                             )}
                         </>
                     ) : (
-                        <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Tarefa sem prazo</div>
+                        <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/30">Sem prazo de entrega</div>
                     )}
                 </div>
 
@@ -527,14 +527,14 @@ const TarefasPage: React.FC = () => {
 
                 {/* Additional Info / Comments */}
                 {a.informacoes_adicionais && (
-                    <div className="bg-black/[0.03] dark:bg-white/[0.03] p-3 rounded-xl text-xs text-muted-foreground/80 border border-border/20 italic line-clamp-2">
+                    <div className="bg-black/[0.02] dark:bg-white/[0.02] p-3 rounded-xl text-[11px] text-muted-foreground/80 border border-border/20 italic line-clamp-2">
                         {a.informacoes_adicionais}
                     </div>
                 )}
 
                 {a.resposta && (
                     <div className="bg-primary/5 border border-primary/10 p-3 rounded-xl text-xs space-y-1">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-primary opacity-60">Resposta</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary opacity-60">Resposta Final</span>
                         <p className="text-foreground/80 line-clamp-2 italic">{a.resposta}</p>
                     </div>
                 )}
@@ -545,9 +545,9 @@ const TarefasPage: React.FC = () => {
                     {!isAssignee && a.status === "resposta" && (
                         <button
                             onClick={() => handleUpdateStatus(a.id, "concluido")}
-                            className="button-premium w-full text-[10px] py-3"
+                            className="button-premium w-full text-[10px] py-3.5"
                         >
-                            <CheckCircle size={14} /> Concluir Verificação
+                            <CheckCircle size={14} /> CONCLUIR VERIFICAÇÃO
                         </button>
                     )}
                 </div>
@@ -572,19 +572,19 @@ const TarefasPage: React.FC = () => {
     return (
     <div className="space-y-8 animate-fade-in pb-20 relative px-1">
       {/* Page Header */}
-      <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-xl">
+      <div className="glass-header sticky top-0 z-10 px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg">
-            <ClipboardList size={28} />
+          <div className="p-3 bg-primary text-white rounded-xl shadow-lg shadow-primary/20">
+            <ClipboardList size={24} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase">Tarefas Internas</h1>
+              <h1 className="text-xl font-black tracking-tighter text-foreground uppercase">Tarefas Internas</h1>
               <FavoriteToggleButton moduleId="tarefas" />
               {isFetching && !isLoading && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/20 animate-pulse">
+                <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/20 animate-pulse">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                  <span className="text-[9px] font-black text-primary uppercase tracking-widest">Sincronização Ativa</span>
+                  <span className="text-[9px] font-black text-primary uppercase tracking-widest">Sincronizando</span>
                 </div>
               )}
             </div>
@@ -592,16 +592,16 @@ const TarefasPage: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex items-center gap-2 bg-card border border-primary/10 p-2 rounded-2xl shadow-xl shadow-primary/5">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex items-center gap-2 bg-card/40 border border-border/40 p-1.5 rounded-xl">
             <input
               type="month"
               value={competencia}
               onChange={e => setCompetencia(e.target.value)}
-              className="bg-transparent border-none text-[11px] font-black uppercase tracking-widest text-primary outline-none px-4 py-2 font-ubuntu"
+              className="bg-transparent border-none text-[11px] font-black uppercase tracking-widest text-primary outline-none px-4 py-1.5 font-ubuntu"
             />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Batch dialog */}
             <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
               <DialogTrigger asChild>
@@ -706,9 +706,9 @@ const TarefasPage: React.FC = () => {
 
             <button
               onClick={() => navigate("/tarefas/novo")}
-              className="h-14 px-8 rounded-2xl bg-primary text-primary-foreground text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3"
+              className="button-premium h-11 px-6 flex items-center gap-2"
             >
-              <Plus size={20} /> NOVA TAREFA
+              <Plus size={18} /> NOVA TAREFA
             </button>
           </div>
         </div>
@@ -846,7 +846,7 @@ const TarefasPage: React.FC = () => {
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                         {colTasks.map(a => (
-                                            <div key={a.id} className="group bg-card border border-border/60 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 rounded-[2rem] transition-all duration-500 overflow-hidden shadow-sm">
+                                            <div key={a.id} className="glass-interactive overflow-hidden rounded-2xl">
                                                 {renderItemContent(a)}
                                             </div>
                                         ))}

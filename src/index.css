@@ -202,9 +202,9 @@
     --surface-bg: hsl(240 6% 7%);
 
     /* ─── Minimalist Glassmorphism (Dark) ─── */
-    --glass-bg: rgba(28, 28, 30, 0.55);
-    --glass-border: rgba(255, 255, 255, 0.04);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    --glass-bg: rgba(20, 20, 22, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
     --glass-blur: 20px;
   }
 }
@@ -215,7 +215,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border/40;
   }
 
   body {
@@ -257,7 +257,6 @@
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     border-right: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
   }
 
   /* ─── Glass Header ─── */
