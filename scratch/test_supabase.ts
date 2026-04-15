@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 
 console.log('Testing Supabase Connection...');
 console.log('URL:', SUPABASE_URL);

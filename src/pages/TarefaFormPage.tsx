@@ -91,11 +91,24 @@ const TarefaFormPage: React.FC = () => {
 
         setLoading(true);
         try {
-            const payload = {
+            // Determinar status inicial baseado em quem recebe a tarefa
+            const isAssignedToOther = form.usuario_id !== user?.id;
+            const initialStatus = isAssignedToOther ? "recebida" : "em_aberto";
+
+            // Criar historico da criação
+            const historico = JSON.stringify([{
+                status: initialStatus,
+                data: new Date().toISOString(),
+                usuario_id: user?.id || "",
+                observacao: isAssignedToOther ? "Tarefa atribuída" : "Tarefa criada"
+            }]);
+
+            const payload: any = {
                 ...form,
                 empresa_id: form.empresa_id || null,
                 criado_por: user?.id,
-                competencia: form.data.slice(0, 7)
+                competencia: form.data.slice(0, 7),
+                ...(!isEdit && { status: initialStatus, historico })
             };
 
             const { error } = isEdit 
