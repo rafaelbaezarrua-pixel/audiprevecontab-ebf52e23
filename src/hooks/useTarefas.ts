@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useRef } from "react";
 
 export interface Tarefa {
     id: string;
@@ -27,18 +28,124 @@ export interface TarefaHistorico {
     observacao?: string;
 }
 
+// Rate limiting configuration
+const RATE_LIMIT_CONFIG = {
+    minIntervalMs: 2000, // Mínimo 2 segundos entre requisições
+    maxRetries: 3,
+    retryDelayMs: 1000,
+};
+
+// Validação e sanitização de dados de tarefa
+const sanitizeTarefa = (a: any, mappedUsers: any[]): Tarefa => {
+    // Sanitização de strings
+    const sanitizeString = (str: string, maxLen = 5000): string => {
+        if (typeof str !== 'string') return '';
+        return str
+            .replace(/<script/gi, '&lt;script')
+            .replace(/<\/script>/gi, '&lt;/script&gt;')
+            .replace(/on\w+=/gi, '')
+            .slice(0, maxLen);
+    };
+
+    // Parse seguro do histórico
+    let historico: TarefaHistorico[] = [];
+    try {
+        if (a.historico && typeof a.historico === 'string') {
+            const parsed = JSON.parse(a.historico);
+            if (Array.isArray(parsed)) {
+                historico = parsed
+                    .filter((h: any) => h && typeof h === 'object')
+                    .map((h: any) => ({
+                        status: sanitizeString(String(h.status || ''), 100),
+                        data: String(h.data || ''),
+                        usuario_id: String(h.usuario_id || ''),
+                        usuario_nome: sanitizeString(String(h.usuario_nome || ''), 200),
+                        observacao: h.observacao ? sanitizeString(String(h.observacao), 2000) : undefined,
+                    }));
+            }
+        } else if (Array.isArray(a.historico)) {
+            historico = a.historico
+                .filter((h: any) => h && typeof h === 'object')
+                .map((h: any) => ({
+                    status: sanitizeString(String(h.status || ''), 100),
+                    data: String(h.data || ''),
+                    usuario_id: String(h.usuario_id || ''),
+                    usuario_nome: sanitizeString(String(h.usuario_nome || ''), 200),
+                    observacao: h.observacao ? sanitizeString(String(h.observacao), 2000) : undefined,
+                }));
+        }
+    } catch {
+        historico = [];
+    }
+
+    // Enriquecer histórico com nomes
+    historico = historico.map((h: TarefaHistorico) => ({
+        ...h,
+        usuario_nome: h.usuario_nome || mappedUsers.find(u => u.id === h.usuario_id)?.nome || "Sistema",
+    }));
+
+    // Determinar status atual
+    let currentStatus = a.status || "em_aberto";
+    const validStatuses = ["recebida", "em_andamento", "resposta", "concluido", "em_aberto", "pendente"];
+    if (!validStatuses.includes(currentStatus)) {
+        currentStatus = "em_aberto";
+    }
+
+    // Verificar se está pendente (atrasado)
+    const now = new Date();
+    if ((currentStatus === "em_aberto" || currentStatus === "recebida") && a.data) {
+        const scheduledDateTime = new Date(`${a.data}T${a.horario || '00:00'}`);
+        if (scheduledDateTime < now) {
+            currentStatus = "pendente";
+        }
+    }
+
+    return {
+        ...a,
+        id: String(a.id || ''),
+        assunto: sanitizeString(a.assunto || '', 500),
+        informacoes_adicionais: sanitizeString(a.informacoes_adicionais || '', 10000),
+        competencia: String(a.competencia || ''),
+        status: currentStatus,
+        arquivado: Boolean(a.arquivado),
+        usuario_nome: mappedUsers.find(u => u.id === a.usuario_id)?.nome || "Não encontrado",
+        criado_por_nome: mappedUsers.find(u => u.id === a.criado_por)?.nome || "Sistema",
+        historico,
+    };
+};
+
 export const useTarefas = (competencia: string) => {
     const queryClient = useQueryClient();
+    const lastRequestTimeRef = useRef<number>(0);
+    const requestQueueRef = useRef<Promise<any> | null>(null);
+
+    // Rate limiting: aguarda intervalo mínimo entre requisições
+    const enforceRateLimit = async (): Promise<void> => {
+        const now = Date.now();
+        const timeSinceLastRequest = now - lastRequestTimeRef.current;
+
+        if (timeSinceLastRequest < RATE_LIMIT_CONFIG.minIntervalMs) {
+            const delay = RATE_LIMIT_CONFIG.minIntervalMs - timeSinceLastRequest;
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+
+        lastRequestTimeRef.current = Date.now();
+    };
 
     const { data: tarefashData, isLoading, isFetching } = useQuery({
         queryKey: ["tarefas", competencia],
         queryFn: async () => {
+            // Rate limiting
+            await enforceRateLimit();
+
             // 1. Carregar usuários para mapear nomes
             const { data: usersData } = await supabase.from("profiles").select("id, full_name, user_id").eq("ativo", true);
-            const mappedUsers = (usersData || []).filter((u: any) => u.user_id).map((u: any) => ({
-                id: u.user_id,
-                nome: u.full_name || "Sem Nome"
-            }));
+            const mappedUsers = (usersData || [])
+                .filter((u: any) => u.user_id)
+                .map((u: any) => ({
+                    id: u.user_id,
+                    nome: u.full_name || "Sem Nome"
+                }));
 
             // 2. Carregar tarefas
             const { data: agendaData, error } = await (supabase
@@ -49,48 +156,13 @@ export const useTarefas = (competencia: string) => {
 
             if (error) throw error;
 
-            const now = new Date();
             const overdueIds: string[] = [];
-
             const enrichedData = (agendaData || []).map((a: any) => {
-                let currentStatus = a.status || "em_aberto";
-
-                // Se a tarefa está 'em_aberto' ou 'recebida' e tem prazo (data definida), 
-                // verifica se já passou do horário para marcar como 'pendente'
-                if ((currentStatus === "em_aberto" || currentStatus === "recebida") && a.data) {
-                    const scheduledDateTime = new Date(`${a.data}T${a.horario || '00:00'}`);
-                    if (scheduledDateTime < now) {
-                        currentStatus = "pendente";
-                        overdueIds.push(a.id);
-                    }
+                const sanitized = sanitizeTarefa(a, mappedUsers);
+                if (sanitized.status === "pendente" && a.status !== "pendente") {
+                    overdueIds.push(a.id);
                 }
-
-                // Parse historico from JSON
-                let historico: TarefaHistorico[] = [];
-                try {
-                    if (a.historico && typeof a.historico === 'string') {
-                        historico = JSON.parse(a.historico);
-                    } else if (Array.isArray(a.historico)) {
-                        historico = a.historico;
-                    }
-                } catch {
-                    historico = [];
-                }
-
-                // Enriquecer historico com nomes
-                historico = historico.map((h: TarefaHistorico) => ({
-                    ...h,
-                    usuario_nome: mappedUsers.find(u => u.id === h.usuario_id)?.nome || "Sistema"
-                }));
-
-                return {
-                    ...a,
-                    status: currentStatus,
-                    arquivado: !!a.arquivado,
-                    usuario_nome: mappedUsers.find(u => u.id === a.usuario_id)?.nome || "Não encontrado",
-                    criado_por_nome: mappedUsers.find(u => u.id === a.criado_por)?.nome || "Sistema",
-                    historico,
-                };
+                return sanitized;
             }) as Tarefa[];
 
             // Atualiza o status no banco para os que ficaram pendentes (fire and forget)
@@ -101,6 +173,14 @@ export const useTarefas = (competencia: string) => {
             return enrichedData;
         },
         staleTime: 5 * 60 * 1000, // 5 minutos
+        retry: (failureCount, error) => {
+            // Não retry para erros de permissão/RLS
+            if (error.message?.includes('permission') || error.message?.includes('RLS')) {
+                return false;
+            }
+            return failureCount < RATE_LIMIT_CONFIG.maxRetries;
+        },
+        retryDelay: (attemptIndex) => Math.min(RATE_LIMIT_CONFIG.retryDelayMs * Math.pow(2, attemptIndex), 10000),
     });
 
     const updateStatus = useMutation({

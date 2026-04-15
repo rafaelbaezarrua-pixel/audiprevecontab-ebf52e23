@@ -1,6 +1,16 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+
+// Configurações de segurança de sessão
+const SESSION_CONFIG = {
+    // Timeout de inatividade: 30 minutos (em milissegundos)
+    INACTIVITY_TIMEOUT_MS: 30 * 60 * 1000,
+    // Aviso de timeout: 5 minutos antes
+    WARNING_BEFORE_TIMEOUT_MS: 5 * 60 * 1000,
+    // Check interval: verificar a cada 30 segundos
+    CHECK_INTERVAL_MS: 30 * 1000,
+};
 
 export interface UserPermissions {
   isAdmin: boolean;
@@ -53,10 +63,11 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUserData: () => Promise<void>;
-  loginAsClient: (cnpj: string, password: string) => Promise<void>;
+  loginAsClient: (email: string, password: string) => Promise<void>;
   toggleFavorito: (moduleId: string) => Promise<void>;
   updateSidebarConfig: (config: any[]) => Promise<void>;
   updateThemeConfig: (config: any) => Promise<void>;
+  updateActivity: () => void; // Para componentes registrarem atividade
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -83,7 +94,85 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const loadingUserRef = useRef<string | null>(null);
 
-  const loadUserData = async (currentUser: User) => {
+  // Timeout de sessão por inatividade
+  const lastActivityRef = useRef<number>(Date.now());
+  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Atualiza timestamp de atividade
+  const updateActivity = useCallback(() => {
+    lastActivityRef.current = Date.now();
+  }, []);
+
+  // Logout function wrapped in useCallback for stability
+  const logout = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+      setUserData(null);
+      // Limpa referências de atividade
+      lastActivityRef.current = 0;
+    } catch (err) {
+      console.error("[AUTH] Error during logout:", err);
+    }
+  }, []);
+
+  // Logout forçado por inatividade
+  const forceLogoutDueToInactivity = useCallback(async () => {
+    console.warn('[AUTH] Sessão expirada por inatividade. Realizando logout...');
+    await logout();
+  }, [logout]);
+
+  // Verifica timeout de inatividade
+  const checkInactivity = useCallback(() => {
+    const now = Date.now();
+    const inactiveTime = now - lastActivityRef.current;
+
+    if (inactiveTime >= SESSION_CONFIG.INACTIVITY_TIMEOUT_MS) {
+      forceLogoutDueToInactivity();
+      return;
+    }
+
+    // Aviso de timeout iminente
+    const timeUntilWarning = SESSION_CONFIG.INACTIVITY_TIMEOUT_MS - inactiveTime;
+    if (timeUntilWarning <= SESSION_CONFIG.WARNING_BEFORE_TIMEOUT_MS && timeUntilWarning > 0) {
+      // Opcional: disparar aviso visual para o usuário
+      // dispatch({ type: 'SESSION_WARNING', payload: timeUntilWarning });
+    }
+  }, [forceLogoutDueToInactivity]);
+
+  // Setup do monitor de inatividade
+  useEffect(() => {
+    if (!user) {
+      // Limpa timeouts se não há usuário logado
+      if (checkTimeoutRef.current) clearInterval(checkTimeoutRef.current);
+      if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+      return;
+    }
+
+    // Reset da atividade no login
+    updateActivity();
+
+    // Check periódico de inatividade
+    checkTimeoutRef.current = setInterval(checkInactivity, SESSION_CONFIG.CHECK_INTERVAL_MS);
+
+    // Event listeners para atividade do usuário
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    const handleActivity = () => updateActivity();
+
+    events.forEach(event => {
+      window.addEventListener(event, handleActivity);
+    });
+
+    return () => {
+      if (checkTimeoutRef.current) clearInterval(checkTimeoutRef.current);
+      if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+      events.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+    };
+  }, [user, updateActivity, checkInactivity]);
+
+  const loadUserData = useCallback(async (currentUser: User) => {
     if (loadingUserRef.current === currentUser.id) return;
     loadingUserRef.current = currentUser.id;
 
@@ -188,13 +277,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setTimeout(() => { loadingUserRef.current = null; }, 1000); // Allow refreshing after a second
     }
-  };
+  }, []);
 
-  const refreshUserData = async () => {
+  const refreshUserData = useCallback(async () => {
     if (user) await loadUserData(user);
-  };
+  }, [user, loadUserData]);
 
-  const toggleFavorito = async (moduleId: string) => {
+  const toggleFavorito = useCallback(async (moduleId: string) => {
     if (!user || !userData) return;
 
     const currentFavoritos = userData.favoritos || [];
@@ -220,9 +309,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Reverter em caso de erro
       setUserData({ ...userData, favoritos: currentFavoritos });
     }
-  };
+  }, [user, userData]);
   
-  const updateSidebarConfig = async (config: any[]) => {
+  const updateSidebarConfig = useCallback(async (config: any[]) => {
     if (!user || !userData) return;
     
     // Otimista local
@@ -237,9 +326,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) {
       console.error("Erro ao salvar configuração da barra lateral:", error);
     }
-  };
+  }, [user, userData]);
 
-  const updateThemeConfig = async (config: any) => {
+  const updateThemeConfig = useCallback(async (config: any) => {
     if (!user || !userData) return;
     
     // Otimista local
@@ -254,7 +343,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) {
       console.error("Erro ao salvar configuração de tema:", error);
     }
-  };
+  }, [user, userData]);
 
   // Decoupled effect to fetch user data whenever `user` state changes.
   // This breaks the deadlock caused by fetching inside `onAuthStateChange` callback.
@@ -273,7 +362,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     return () => { mounted = false; };
-  }, [user]);
+  }, [user, userData, loadUserData]);
 
   useEffect(() => {
     let mounted = true;
@@ -308,23 +397,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
+    // Validação básica de input (prevenir injection)
+    if (!email || typeof email !== 'string' || email.length > 255) {
+      throw new Error('E-mail inválido');
+    }
+    if (!password || typeof password !== 'string' || password.length > 128) {
+      throw new Error('Senha inválida');
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     if (data.user) {
       const { logAction } = await import("@/lib/audit");
       logAction(data.user.id, 'LOGIN', 'auth', data.user.id);
+      updateActivity(); // Registra atividade no login
     }
-  };
+  }, [updateActivity]);
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    setUserData(null);
-  };
+  // Removed individual logout definition from here as it was moved up
 
-  const loginAsClient = async (email: string, password: string) => {
-    if (!email || !email.includes("@")) {
+  const loginAsClient = useCallback(async (email: string, password: string) => {
+    // Validação de input
+    if (!email || typeof email !== 'string' || email.length > 255 || !email.includes("@")) {
       throw new Error("E-mail inválido.");
+    }
+    if (!password || typeof password !== 'string' || password.length > 128) {
+      throw new Error("Senha inválida.");
     }
 
     const cleanPassword = password.replace(/\D/g, "");
@@ -354,12 +453,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (result.data.user) {
       const { logAction } = await import("@/lib/audit");
       logAction(result.data.user.id, 'LOGIN', 'auth', result.data.user.id);
+      updateActivity(); // Registra atividade no login
     }
-  };
+  }, [updateActivity]);
 
   const contextValue = React.useMemo(() => ({
-    user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito, updateSidebarConfig, updateThemeConfig
-  }), [user, session, userData, loading]);
+    user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito, updateSidebarConfig, updateThemeConfig, updateActivity
+  }), [user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito, updateSidebarConfig, updateThemeConfig, updateActivity]);
 
   return (
     <AuthContext.Provider value={contextValue}>

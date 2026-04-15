@@ -269,8 +269,7 @@ const TarefasPage: React.FC = () => {
     const renderStatusBadge = (status: string) => {
         const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.em_aberto;
         return (
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${cfg.color} bg-current/5`}
-                  style={{ backgroundColor: `color-mix(in srgb, currentColor 8%, transparent)` }}>
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest ${cfg.color} bg-black/5 dark:bg-white/5 border border-current/10`}>
                 {cfg.icon} {cfg.label}
             </span>
         );
@@ -281,7 +280,6 @@ const TarefasPage: React.FC = () => {
         const steps = ["recebida", "em_andamento", "resposta", "concluido"];
         let currentIdx = steps.indexOf(a.status);
         
-        // Se a tarefa está pendente ou aberta, mas já foi recebida, marcamos o primeiro passo
         if (currentIdx === -1) {
             const hasBeenReceived = a.historico?.some(h => h.status === "recebida" || h.status === "em_andamento" || h.status === "resposta" || h.status === "concluido");
             const hasBeenStarted = a.historico?.some(h => h.status === "em_andamento" || h.status === "resposta" || h.status === "concluido");
@@ -293,21 +291,20 @@ const TarefasPage: React.FC = () => {
         }
 
         return (
-            <div className="flex items-center gap-1 w-full py-2">
+            <div className="flex items-center gap-1 w-full py-1">
                 {steps.map((step, idx) => {
                     const cfg = STATUS_CONFIG[step];
                     const isActive = idx <= currentIdx;
                     const isCurrent = step === a.status;
                     return (
                         <React.Fragment key={step}>
-                            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${
-                                isCurrent ? `${cfg.bg} text-white shadow-lg` : isActive ? `${cfg.color} bg-current/8` : 'text-muted-foreground/30 bg-muted/20'
-                            }`} style={!isCurrent && isActive ? { backgroundColor: `color-mix(in srgb, currentColor 8%, transparent)` } : undefined}>
-                                {cfg.icon}
-                                <span className="hidden sm:inline">{STATUS_FLOW_LABELS[step]}</span>
+                            <div className={`flex items-center justify-center p-1.5 rounded-lg transition-all ${
+                                isCurrent ? `${cfg.bg} text-white` : isActive ? `${cfg.color} bg-black/5 dark:bg-white/5` : 'text-muted-foreground/20 bg-muted/5'
+                            }`} title={STATUS_FLOW_LABELS[step]}>
+                                {React.cloneElement(cfg.icon as React.ReactElement, { size: 12 })}
                             </div>
                             {idx < steps.length - 1 && (
-                                <ArrowRight size={10} className={`shrink-0 ${idx < currentIdx ? 'text-primary' : 'text-muted-foreground/20'}`} />
+                                <div className={`h-[1px] flex-1 ${idx < currentIdx ? 'bg-primary/30' : 'bg-border/20'}`} />
                             )}
                         </React.Fragment>
                     );
@@ -332,12 +329,10 @@ const TarefasPage: React.FC = () => {
         const isSelfAssigned = a.criado_por === a.usuario_id;
 
         return (
-            <div className="flex flex-wrap items-center gap-1.5 w-full">
-                
+            <div className="flex flex-wrap items-center gap-2 w-full">
                 {/* AÇÕES QUANDO A TAREFA É MINHA ("Atribuídas a mim") */}
                 {isParaMim && (
                     <>
-                        {/* Verificamos se a tarefa já foi recebida em algum momento no histórico */}
                         {(() => {
                             const wasReceived = a.historico?.some(h => h.status === "recebida" || h.status === "em_andamento");
                             
@@ -347,16 +342,16 @@ const TarefasPage: React.FC = () => {
                                     return (
                                         <button
                                             onClick={() => handleUpdateStatus(a.id, "recebida")}
-                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all transition-all"
+                                            className="flex-1 button-action bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white text-[10px] tracking-widest"
                                         >
-                                            <Inbox size={14} /> Receber Tarefa
+                                            <Inbox size={14} /> Receber
                                         </button>
                                     );
                                 } else {
                                     return (
                                         <button
                                             onClick={() => handleUpdateStatus(a.id, "em_andamento")}
-                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all"
+                                            className="flex-1 button-action bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white text-[10px] tracking-widest"
                                         >
                                             <Play size={14} /> Iniciar
                                         </button>
@@ -369,7 +364,7 @@ const TarefasPage: React.FC = () => {
                                 return (
                                     <button
                                         onClick={() => handleUpdateStatus(a.id, "concluido")}
-                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
+                                        className="flex-1 button-action bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-[10px] tracking-widest"
                                     >
                                         <CheckCircle size={14} /> Concluir
                                     </button>
@@ -380,7 +375,7 @@ const TarefasPage: React.FC = () => {
                                 return (
                                     <button
                                         onClick={() => handleUpdateStatus(a.id, "em_andamento")}
-                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all"
+                                        className="flex-1 button-action bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white text-[10px] tracking-widest"
                                     >
                                         <Play size={14} /> Iniciar
                                     </button>
@@ -395,7 +390,7 @@ const TarefasPage: React.FC = () => {
                                             setRespostaText("");
                                             setRespostaDialogOpen(true);
                                         }}
-                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/10 text-purple-600 text-[10px] font-black uppercase tracking-widest hover:bg-purple-500 hover:text-white transition-all"
+                                        className="flex-1 button-action bg-purple-500/10 text-purple-600 hover:bg-purple-500 hover:text-white text-[10px] tracking-widest"
                                     >
                                         <MessageSquare size={14} /> Responder
                                     </button>
@@ -406,7 +401,7 @@ const TarefasPage: React.FC = () => {
                                 return (
                                     <button
                                         onClick={() => handleUpdateStatus(a.id, "concluido")}
-                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
+                                        className="flex-1 button-action bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-[10px] tracking-widest"
                                     >
                                         <CheckCircle size={14} /> Concluir
                                     </button>
@@ -421,19 +416,18 @@ const TarefasPage: React.FC = () => {
                 {/* AÇÕES QUANDO A TAREFA É PARA OUTROS ("Atribuídas por mim") */}
                 {!isParaMim && (
                     <>
-                        {/* Quem criou a tarefa só pode agir (concluir) depois que a outra pessoa responder */}
                         {a.status === "resposta" && (
                             <button
                                 onClick={() => handleUpdateStatus(a.id, "concluido")}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
+                                className="flex-1 button-action bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-[10px] tracking-widest"
                             >
-                                <CheckCircle size={14} /> Concluir (Verificada)
+                                <CheckCircle size={14} /> Concluir
                             </button>
                         )}
                         
                         {a.status !== "resposta" && (
-                            <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-muted/40 text-muted-foreground text-[10px] font-black uppercase tracking-widest">
-                                Aguardando Ação do Responsável
+                            <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-black/5 dark:bg-white/5 text-muted-foreground/40 text-[9px] font-black uppercase tracking-widest">
+                                Em Processamento
                             </div>
                         )}
                     </>
@@ -447,130 +441,114 @@ const TarefasPage: React.FC = () => {
     const renderItemContent = (a: Tarefa) => {
         const cfg = STATUS_CONFIG[a.status] || STATUS_CONFIG.em_aberto;
         const isAssignee = activeTab === "para_mim";
-        const showFlow = a.criado_por !== a.usuario_id; // Mostrar fluxo apenas para tarefas atribuídas
+        const showFlow = a.criado_por !== a.usuario_id; 
 
         return (
-            <div className={`p-4 space-y-3 h-full bg-card group relative border-l-4 ${cfg.border.replace('/40', '')}`}>
-                {/* Header */}
-                <div className="flex items-start justify-between">
-                    <div className="space-y-1 w-full">
-                        <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-bold text-card-foreground leading-tight text-sm flex-1">{a.assunto}</h3>
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                                {/* Historico */}
-                                <button
-                                    onClick={() => { setHistoricoTarefa(a); setHistoricoDialogOpen(true); }}
-                                    className="p-1.5 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
-                                    title="Histórico"
-                                >
-                                    <History size={14} />
-                                </button>
-                                {(a.criado_por === user?.id || userData?.isAdmin) && (
-                                    <>
-                                        <button
-                                            onClick={() => navigate(`/tarefas/editar/${a.id}`)}
-                                            className="p-1.5 rounded-md text-primary/70 hover:bg-primary/10 hover:text-primary transition-all"
-                                            title="Editar"
-                                        >
-                                            <Pencil size={14} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteTarefa(a.id)}
-                                            className="p-1.5 rounded-md text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all"
-                                            title="Excluir"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
+            <div className="p-5 space-y-4 h-full flex flex-col relative">
+                {/* Status Indicator Bar */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1 ${cfg.bg} opacity-70`} />
 
-                        {/* User info */}
-                        <div className="flex flex-col gap-1 pt-1">
-                            {isAssignee ? (
-                                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium">
-                                    <Send size={12} className="text-primary/70" /> De: <span className="text-foreground">{a.criado_por_nome}</span>
-                                </p>
-                            ) : (
-                                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium">
-                                    <User size={12} className="text-primary/70" /> Para: <span className="text-foreground">{a.usuario_nome}</span>
-                                </p>
+                {/* Header */}
+                <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-4">
+                        <h3 className="font-bold text-foreground leading-snug text-sm flex-1 tracking-tight">
+                            {a.assunto}
+                        </h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                            <button
+                                onClick={() => { setHistoricoTarefa(a); setHistoricoDialogOpen(true); }}
+                                className="p-2 rounded-lg text-muted-foreground/50 hover:bg-white/10 dark:hover:bg-black/20 hover:text-primary transition-all"
+                            >
+                                <History size={14} />
+                            </button>
+                            {(a.criado_por === user?.id || userData?.isAdmin) && (
+                                <button
+                                    onClick={() => navigate(`/tarefas/editar/${a.id}`)}
+                                    className="p-2 rounded-lg text-primary/40 hover:bg-white/10 dark:hover:bg-black/20 hover:text-primary transition-all"
+                                >
+                                    <Pencil size={14} />
+                                </button>
                             )}
                         </div>
+                    </div>
 
+                    {/* Meta Info */}
+                    <div className="flex flex-col gap-1.5">
+                        {isAssignee ? (
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">
+                                <Send size={12} className="opacity-40" />
+                                <span>De: <span className="text-foreground/80">{a.criado_por_nome}</span></span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">
+                                <User size={12} className="opacity-40" />
+                                <span>Para: <span className="text-foreground/80">{a.usuario_nome}</span></span>
+                            </div>
+                        )}
                         {a.empresas?.nome_empresa && (
-                            <p className="text-[10px] font-black uppercase tracking-widest text-primary/70 bg-primary/5 px-2 py-0.5 rounded-md w-fit mt-1">
+                            <div className="inline-flex px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 border border-border/20 text-[9px] font-black uppercase tracking-widest text-primary w-fit">
                                 {a.empresas.nome_empresa}
-                            </p>
+                            </div>
                         )}
                     </div>
                 </div>
 
-                {/* Date / Time */}
-                {a.data ? (
-                    <div className="grid grid-cols-2 gap-3 pt-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar size={14} className="text-primary" />
-                            {format(new Date(a.data + 'T00:00:00'), "dd 'de' MMM", { locale: ptBR })}
-                        </div>
-                        {a.horario && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Clock size={14} className="text-primary" />
-                                {a.horario.slice(0, 5)}
+                {/* Deadlines */}
+                <div className="flex items-center gap-4 py-1 border-y border-border/10">
+                    {a.data ? (
+                        <>
+                            <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/70">
+                                <Calendar size={13} className="text-primary/50" />
+                                {format(new Date(a.data + 'T00:00:00'), "dd MMM", { locale: ptBR })}
                             </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="pt-1">
-                        <span className="text-[10px] bg-muted/50 text-muted-foreground px-2 py-1 rounded-md font-bold uppercase tracking-widest border border-border/50">Sem Prazo</span>
+                            {a.horario && (
+                                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/70">
+                                    <Clock size={13} className="text-primary/50" />
+                                    {a.horario.slice(0, 5)}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Tarefa sem prazo</div>
+                    )}
+                </div>
+
+                {/* Status indicator flow */}
+                {showFlow && (
+                    <div className="py-1">
+                        {renderStatusFlow(a)}
                     </div>
                 )}
-
-                {/* Status flow */}
-                {showFlow && renderStatusFlow(a)}
                 {!showFlow && (
-                    <div className="pt-1">{renderStatusBadge(a.status)}</div>
+                    <div className="pt-1">
+                        {renderStatusBadge(a.status)}
+                    </div>
                 )}
 
-                {/* Info adicional */}
+                {/* Additional Info / Comments */}
                 {a.informacoes_adicionais && (
-                    <div className="bg-muted/40 p-2.5 rounded-lg text-xs tracking-tight text-foreground/80 border border-border italic line-clamp-3">
+                    <div className="bg-black/[0.03] dark:bg-white/[0.03] p-3 rounded-xl text-xs text-muted-foreground/80 border border-border/20 italic line-clamp-2">
                         {a.informacoes_adicionais}
                     </div>
                 )}
 
-                {/* Resposta do responsável */}
                 {a.resposta && (
-                    <div className="bg-purple-500/5 border border-purple-500/20 p-2.5 rounded-lg text-xs text-foreground/80">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-purple-500 mb-1">Resposta</p>
-                        <p className="line-clamp-3">{a.resposta}</p>
+                    <div className="bg-primary/5 border border-primary/10 p-3 rounded-xl text-xs space-y-1">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary opacity-60">Resposta</span>
+                        <p className="text-foreground/80 line-clamp-2 italic">{a.resposta}</p>
                     </div>
                 )}
 
-                {/* Actions */}
-                <div className="pt-2 border-t border-border mt-auto space-y-2">
+                {/* Action Buttons */}
+                <div className="pt-4 mt-auto">
                     {isAssignee && renderAssigneeActions(a)}
-
                     {!isAssignee && a.status === "resposta" && (
                         <button
                             onClick={() => handleUpdateStatus(a.id, "concluido")}
-                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
+                            className="button-premium w-full text-[10px] py-3"
                         >
-                            <CheckCircle size={14} /> Concluir Tarefa
+                            <CheckCircle size={14} /> Concluir Verificação
                         </button>
-                    )}
-
-                    {(a.criado_por === user?.id || userData?.isAdmin) && (
-                        <div className="flex gap-1.5">
-                            <button
-                                onClick={() => handleUpdateArquivado(a.id, true)}
-                                className="flex-1 px-3 py-1.5 rounded-xl bg-muted/50 text-muted-foreground text-[10px] font-bold hover:bg-destructive hover:text-white transition-all flex items-center justify-center gap-1.5"
-                                title="Arquivar"
-                            >
-                                <X size={13} /> Arquivar
-                            </button>
-                        </div>
                     )}
                 </div>
             </div>
@@ -592,25 +570,26 @@ const TarefasPage: React.FC = () => {
     const countParaMim = tarefas.filter(a => !a.arquivado && a.usuario_id === user?.id).length;
 
     return (
-    <div className="space-y-8 animate-fade-in pb-20 relative">
-      {/* Background decoration */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
-      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
-
+    <div className="space-y-8 animate-fade-in pb-20 relative px-1">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-             <h1 className="header-title">Gestão de <span className="text-primary/90">Tarefas</span></h1>
-             <FavoriteToggleButton moduleId="tarefas" />
-             {isFetching && !isLoading && (
+      <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-xl">
+        <div className="flex items-center gap-4">
+          <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg">
+            <ClipboardList size={28} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase">Tarefas Internas</h1>
+              <FavoriteToggleButton moduleId="tarefas" />
+              {isFetching && !isLoading && (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/20 animate-pulse">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
                   <span className="text-[9px] font-black text-primary uppercase tracking-widest">Sincronização Ativa</span>
                 </div>
               )}
+            </div>
+            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mt-0.5">Gestão de Fluxo e Prazos Operacionais</p>
           </div>
-          <p className="subtitle-premium">Organização de rotinas operacionais, prazos internos e acompanhamento de produtividade da equipe.</p>
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -736,63 +715,60 @@ const TarefasPage: React.FC = () => {
       </div>
 
       {/* ── Main Tabs ────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="flex items-center gap-6">
-            <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 max-w-fit shadow-sm">
-                <button
-                    onClick={() => setActiveTab("para_mim")}
-                    className={`px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2.5 ${activeTab === "para_mim" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
-                >
-                    <Inbox size={16} />
-                    Atribuídas a mim
-                    {countParaMim > 0 && (
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black ${activeTab === "para_mim" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                            {countParaMim}
-                        </span>
-                    )}
-                </button>
-                <button
-                    onClick={() => setActiveTab("por_mim")}
-                    className={`px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2.5 ${activeTab === "por_mim" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
-                >
-                    <Send size={16} />
-                    Atribuídas por mim
-                    {countPorMim > 0 && (
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black ${activeTab === "por_mim" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                            {countPorMim}
-                        </span>
-                    )}
-                </button>
-            </div>
+      {/* Tabs and Search Bar */}
+      <div className="glass-card p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-2xl">
+        <div className="flex flex-col sm:flex-row items-center gap-2 bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-border/10">
+            <button
+                onClick={() => setActiveTab("para_mim")}
+                className={`flex-1 sm:flex-none px-8 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === "para_mim" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"}`}
+            >
+                Atribuídas a mim
+                {countParaMim > 0 && <span className="ml-2 opacity-50">{countParaMim}</span>}
+            </button>
+            <button
+                onClick={() => setActiveTab("por_mim")}
+                className={`flex-1 sm:flex-none px-8 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === "por_mim" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"}`}
+            >
+                Atribuídas por mim
+                {countPorMim > 0 && <span className="ml-2 opacity-50">{countPorMim}</span>}
+            </button>
         </div>
 
-        <div className="flex items-center gap-4">
-            <div className="relative group">
-                <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+        <div className="flex flex-col sm:flex-row items-center gap-4 flex-1 lg:max-w-4xl justify-end">
+            <div className="relative group w-full lg:w-96">
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/30 group-focus-within:text-primary transition-colors" />
                 <input
                     type="text"
                     placeholder="BUSCAR TAREFA, ANALISTA OU CLIENTE..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="w-full lg:w-80 h-14 pl-14 pr-6 bg-card border border-border/60 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-hover:border-primary/20"
+                    className="w-full h-10 pl-11 pr-4 bg-black/5 dark:bg-white/5 border border-border/20 rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-primary/40 outline-none transition-all placeholder:text-muted-foreground/20"
                 />
             </div>
 
-            <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 shadow-sm shrink-0">
-                <button
-                    onClick={() => setViewMode("kanban")}
-                    className={`p-3.5 rounded-xl transition-all ${viewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground/50 hover:text-foreground hover:bg-card/50"}`}
-                    title="Visão Kanban"
-                >
-                    <LayoutDashboard size={20} />
-                </button>
-                <button
-                    onClick={() => setViewMode("list")}
-                    className={`p-3.5 rounded-xl transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground/50 hover:text-foreground hover:bg-card/50"}`}
-                    title="Visão em Lista"
-                >
-                    <List size={20} />
-                </button>
+            <div className="flex items-center gap-3">
+                <input
+                    type="month"
+                    value={competencia}
+                    onChange={e => setCompetencia(e.target.value)}
+                    className="h-10 px-4 bg-black/5 dark:bg-white/5 border border-border/20 rounded-xl text-[10px] font-bold text-primary uppercase tracking-widest outline-none"
+                />
+                <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-border/20">
+                    <button
+                        onClick={() => setViewMode("kanban")}
+                        className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-muted-foreground/30 hover:text-foreground"}`}
+                        title="Visão Kanban"
+                    >
+                        <LayoutDashboard size={16} />
+                    </button>
+                    <button
+                        onClick={() => setViewMode("list")}
+                        className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-muted-foreground/30 hover:text-foreground"}`}
+                        title="Visão em Lista"
+                    >
+                        <List size={16} />
+                    </button>
+                </div>
             </div>
         </div>
       </div>
@@ -801,15 +777,15 @@ const TarefasPage: React.FC = () => {
       {viewMode === "list" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
             {filtered.length === 0 ? (
-                <div className="col-span-full py-32 text-center bg-card border-2 border-dashed border-border/40 rounded-[2.5rem] opacity-40">
+                <div className="col-span-full py-32 text-center glass-card border-2 border-dashed border-border/40 opacity-40">
                      <ClipboardList size={48} className="mx-auto mb-4 text-muted-foreground" />
-                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                        {activeTab === "por_mim" ? "Nenhuma tarefa atribuída por você a outros membros" : "Nenhuma tarefa atribuída a você neste período"}
+                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Nenhuma tarefa encontrada
                      </p>
                 </div>
             ) : (
                 filtered.map(a => (
-                    <div key={a.id} className="group bg-card border border-border/60 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 rounded-[2rem] transition-all duration-500 overflow-hidden shadow-sm">
+                    <div key={a.id} className="glass-interactive overflow-hidden rounded-2xl">
                          {renderItemContent(a)}
                     </div>
                 ))
@@ -823,11 +799,11 @@ const TarefasPage: React.FC = () => {
                 const toggleSection = () => setExpandedSections(prev => ({ ...prev, [col.id]: !isExpanded }));
 
                 return (
-                    <div key={col.id} className="rounded-[1.8rem] overflow-hidden border border-border/60 bg-card/30 shadow-sm transition-all duration-300">
+                    <div key={col.id} className="glass-card overflow-hidden">
                         {/* Accordion Header */}
                         <button
                             onClick={toggleSection}
-                            className={`w-full flex items-center justify-between p-5 md:p-6 transition-all duration-300 hover:bg-card/60 ${isExpanded ? 'bg-card/50' : 'bg-card/20'}`}
+                            className={`w-full flex items-center justify-between p-5 md:p-6 transition-all duration-300 hover:bg-white/5 dark:hover:bg-black/10 ${isExpanded ? 'bg-white/5 dark:bg-black/10' : 'bg-transparent'}`}
                         >
                             <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${col.bg} text-white shadow-lg shrink-0 transition-transform duration-300 ${isExpanded ? 'scale-100' : 'scale-90'}`}>

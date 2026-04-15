@@ -5,7 +5,8 @@
       "Bash(npx vite:*)",
       "Bash(ls -la supabase/functions/*/index.ts)",
       "Bash(ls api/*.ts)",
-      "Bash(ls api/)"
+      "Bash(ls api/)",
+      "Bash(git *)"
     ]
   }
 }
