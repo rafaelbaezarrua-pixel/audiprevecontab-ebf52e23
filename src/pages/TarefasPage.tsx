@@ -325,57 +325,84 @@ const TarefasPage: React.FC = () => {
                 {/* AÇÕES QUANDO A TAREFA É MINHA ("Atribuídas a mim") */}
                 {isParaMim && (
                     <>
-                        {/* Se for Em Aberto/Pendente e foi outra pessoa quem criou, preciso Receber */}
-                        {(a.status === "em_aberto" || a.status === "pendente") && !isSelfAssigned && (
-                            <button
-                                onClick={() => handleUpdateStatus(a.id, "recebida")}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all"
-                            >
-                                <Inbox size={14} /> Receber Tarefa
-                            </button>
-                        )}
+                        {/* Verificamos se a tarefa já foi recebida em algum momento no histórico */}
+                        {(() => {
+                            const wasReceived = a.historico?.some(h => h.status === "recebida" || h.status === "em_andamento");
+                            
+                            // Se for Em Aberto/Pendente e foi outra pessoa quem criou
+                            if ((a.status === "em_aberto" || a.status === "pendente") && !isSelfAssigned) {
+                                if (!wasReceived) {
+                                    return (
+                                        <button
+                                            onClick={() => handleUpdateStatus(a.id, "recebida")}
+                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all transition-all"
+                                        >
+                                            <Inbox size={14} /> Receber Tarefa
+                                        </button>
+                                    );
+                                } else {
+                                    return (
+                                        <button
+                                            onClick={() => handleUpdateStatus(a.id, "em_andamento")}
+                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all"
+                                        >
+                                            <Play size={14} /> Iniciar
+                                        </button>
+                                    );
+                                }
+                            }
 
-                        {/* Se for Em Aberto/Pendente e foi eu mesmo que criei, fluxo normal antigo (concluir direto) */}
-                        {(a.status === "em_aberto" || a.status === "pendente") && isSelfAssigned && (
-                            <button
-                                onClick={() => handleUpdateStatus(a.id, "concluido")}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
-                            >
-                                <CheckCircle size={14} /> Concluir
-                            </button>
-                        )}
-                        
-                        {a.status === "recebida" && (
-                            <button
-                                onClick={() => handleUpdateStatus(a.id, "em_andamento")}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all"
-                            >
-                                <Play size={14} /> Iniciar
-                            </button>
-                        )}
-                        
-                        {a.status === "em_andamento" && (
-                            <button
-                                onClick={() => {
-                                    setRespostaTarefaId(a.id);
-                                    setRespostaText("");
-                                    setRespostaDialogOpen(true);
-                                }}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/10 text-purple-600 text-[10px] font-black uppercase tracking-widest hover:bg-purple-500 hover:text-white transition-all"
-                            >
-                                <MessageSquare size={14} /> Responder
-                            </button>
-                        )}
+                            // Se for Em Aberto/Pendente e foi eu mesmo que criei
+                            if ((a.status === "em_aberto" || a.status === "pendente") && isSelfAssigned) {
+                                return (
+                                    <button
+                                        onClick={() => handleUpdateStatus(a.id, "concluido")}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
+                                    >
+                                        <CheckCircle size={14} /> Concluir
+                                    </button>
+                                );
+                            }
 
-                        {/* O responsável pode concluir se a tarefa estiver em 'resposta' */}
-                        {a.status === "resposta" && (
-                            <button
-                                onClick={() => handleUpdateStatus(a.id, "concluido")}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
-                            >
-                                <CheckCircle size={14} /> Concluir
-                            </button>
-                        )}
+                            if (a.status === "recebida") {
+                                return (
+                                    <button
+                                        onClick={() => handleUpdateStatus(a.id, "em_andamento")}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all"
+                                    >
+                                        <Play size={14} /> Iniciar
+                                    </button>
+                                );
+                            }
+
+                            if (a.status === "em_andamento") {
+                                return (
+                                    <button
+                                        onClick={() => {
+                                            setRespostaTarefaId(a.id);
+                                            setRespostaText("");
+                                            setRespostaDialogOpen(true);
+                                        }}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/10 text-purple-600 text-[10px] font-black uppercase tracking-widest hover:bg-purple-500 hover:text-white transition-all"
+                                    >
+                                        <MessageSquare size={14} /> Responder
+                                    </button>
+                                );
+                            }
+
+                            if (a.status === "resposta") {
+                                return (
+                                    <button
+                                        onClick={() => handleUpdateStatus(a.id, "concluido")}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
+                                    >
+                                        <CheckCircle size={14} /> Concluir
+                                    </button>
+                                );
+                            }
+
+                            return null;
+                        })()}
                     </>
                 )}
 
