@@ -277,15 +277,27 @@ const TarefasPage: React.FC = () => {
     };
 
     // ── Status flow indicator ───────────────────────────────────────────
-    const renderStatusFlow = (currentStatus: string) => {
+    const renderStatusFlow = (a: Tarefa) => {
         const steps = ["recebida", "em_andamento", "resposta", "concluido"];
-        const currentIdx = steps.indexOf(currentStatus);
+        let currentIdx = steps.indexOf(a.status);
+        
+        // Se a tarefa está pendente ou aberta, mas já foi recebida, marcamos o primeiro passo
+        if (currentIdx === -1) {
+            const hasBeenReceived = a.historico?.some(h => h.status === "recebida" || h.status === "em_andamento" || h.status === "resposta" || h.status === "concluido");
+            const hasBeenStarted = a.historico?.some(h => h.status === "em_andamento" || h.status === "resposta" || h.status === "concluido");
+            const hasBeenAnswered = a.historico?.some(h => h.status === "resposta" || h.status === "concluido");
+            
+            if (hasBeenAnswered) currentIdx = 2;
+            else if (hasBeenStarted) currentIdx = 1;
+            else if (hasBeenReceived) currentIdx = 0;
+        }
+
         return (
             <div className="flex items-center gap-1 w-full py-2">
                 {steps.map((step, idx) => {
                     const cfg = STATUS_CONFIG[step];
                     const isActive = idx <= currentIdx;
-                    const isCurrent = step === currentStatus;
+                    const isCurrent = step === a.status;
                     return (
                         <React.Fragment key={step}>
                             <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${
@@ -516,7 +528,7 @@ const TarefasPage: React.FC = () => {
                 )}
 
                 {/* Status flow */}
-                {showFlow && renderStatusFlow(a.status)}
+                {showFlow && renderStatusFlow(a)}
                 {!showFlow && (
                     <div className="pt-1">{renderStatusBadge(a.status)}</div>
                 )}
