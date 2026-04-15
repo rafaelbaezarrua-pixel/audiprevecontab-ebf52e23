@@ -83,7 +83,8 @@ const TarefasPage: React.FC = () => {
         informacoes: "",
         data: new Date().toISOString().split('T')[0],
         horario: "09:00",
-        responsavel_id: user?.id || ""
+        responsavel_id: user?.id || "",
+        semPrazo: false
     });
     const [selectedEmpresas, setSelectedEmpresas] = useState<string[]>([]);
 
@@ -158,12 +159,12 @@ const TarefasPage: React.FC = () => {
             const inserts = selectedEmpresas.map(empId => ({
                 assunto: batchForm.assunto,
                 informacoes_adicionais: batchForm.informacoes,
-                data: batchForm.data,
-                horario: batchForm.horario,
+                data: batchForm.semPrazo ? null : batchForm.data,
+                horario: batchForm.semPrazo ? null : batchForm.horario,
                 usuario_id: batchForm.responsavel_id,
                 empresa_id: empId,
                 criado_por: user?.id,
-                competencia: batchForm.data.slice(0, 7),
+                competencia: batchForm.semPrazo ? new Date().toISOString().slice(0, 7) : batchForm.data.slice(0, 7),
                 status: initialStatus,
                 historico
             }));
@@ -173,7 +174,7 @@ const TarefasPage: React.FC = () => {
 
             toast.success(`${inserts.length} tarefas criadas com sucesso!`);
             setIsBatchOpen(false);
-            setBatchForm({ ...batchForm, assunto: "", informacoes: "" });
+            setBatchForm({ ...batchForm, assunto: "", informacoes: "", semPrazo: false });
             setSelectedEmpresas([]);
         } catch (err: any) {
             toast.error("Erro nos lançamentos: " + err.message);
@@ -256,12 +257,12 @@ const TarefasPage: React.FC = () => {
 
     // ── Status columns for kanban ───────────────────────────────────────
     const kanbanColumns = [
+        { id: "pendente",     ...STATUS_CONFIG.pendente },
         { id: "em_aberto",    ...STATUS_CONFIG.em_aberto },
         { id: "recebida",     ...STATUS_CONFIG.recebida },
         { id: "em_andamento", ...STATUS_CONFIG.em_andamento },
         { id: "resposta",     ...STATUS_CONFIG.resposta },
         { id: "concluido",    ...STATUS_CONFIG.concluido },
-        { id: "pendente",     ...STATUS_CONFIG.pendente },
     ];
 
     // ── Status badge ────────────────────────────────────────────────────
@@ -468,16 +469,24 @@ const TarefasPage: React.FC = () => {
                 </div>
 
                 {/* Date / Time */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar size={14} className="text-primary" />
-                        {format(new Date(a.data + 'T00:00:00'), "dd 'de' MMM", { locale: ptBR })}
+                {a.data ? (
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar size={14} className="text-primary" />
+                            {format(new Date(a.data + 'T00:00:00'), "dd 'de' MMM", { locale: ptBR })}
+                        </div>
+                        {a.horario && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Clock size={14} className="text-primary" />
+                                {a.horario.slice(0, 5)}
+                            </div>
+                        )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock size={14} className="text-primary" />
-                        {a.horario.slice(0, 5)}
+                ) : (
+                    <div className="pt-1">
+                        <span className="text-[10px] bg-muted/50 text-muted-foreground px-2 py-1 rounded-md font-bold uppercase tracking-widest border border-border/50">Sem Prazo</span>
                     </div>
-                </div>
+                )}
 
                 {/* Status flow */}
                 {showFlow && renderStatusFlow(a.status)}
@@ -606,16 +615,31 @@ const TarefasPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data Efetiva</Label>
-                        <input type="date" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" value={batchForm.data} onChange={e => setBatchForm({ ...batchForm, data: e.target.value })} />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Horário Previsto</Label>
-                        <input type="time" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" value={batchForm.horario} onChange={e => setBatchForm({ ...batchForm, horario: e.target.value })} />
-                    </div>
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                      <input
+                          type="checkbox"
+                          id="batchSemPrazo"
+                          checked={batchForm.semPrazo}
+                          onChange={(e) => setBatchForm(prev => ({ ...prev, semPrazo: e.target.checked }))}
+                          className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                      />
+                      <label htmlFor="batchSemPrazo" className="text-[10px] font-black tracking-widest text-card-foreground cursor-pointer select-none uppercase">
+                          Tarefa sem prazo de entrega
+                      </label>
                   </div>
+
+                  {!batchForm.semPrazo && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data Efetiva</Label>
+                            <input type="date" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" value={batchForm.data} onChange={e => setBatchForm({ ...batchForm, data: e.target.value })} />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Horário Previsto</Label>
+                            <input type="time" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" value={batchForm.horario} onChange={e => setBatchForm({ ...batchForm, horario: e.target.value })} />
+                        </div>
+                      </div>
+                  )}
 
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Informações Adicionais / Observações</Label>

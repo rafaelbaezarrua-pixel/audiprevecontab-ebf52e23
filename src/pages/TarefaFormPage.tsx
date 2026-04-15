@@ -13,6 +13,7 @@ const TarefaFormPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [usuarios, setUsuarios] = useState<{ id: string; nome: string }[]>([]);
     const [empresas, setEmpresas] = useState<{ id: string; nome_empresa: string }[]>([]);
+    const [semPrazo, setSemPrazo] = useState(false);
     const [form, setForm] = useState({
         data: new Date().toISOString().split('T')[0],
         horario: "09:00",
@@ -66,9 +67,11 @@ const TarefaFormPage: React.FC = () => {
 
                     const task = data as any;
                     if (task) {
+                        const isSemPrazo = !task.data;
+                        setSemPrazo(isSemPrazo);
                         setForm({
-                            data: task.data,
-                            horario: task.horario.slice(0, 5),
+                            data: task.data || new Date().toISOString().split('T')[0],
+                            horario: task.horario ? task.horario.slice(0, 5) : "09:00",
                             usuario_id: task.usuario_id,
                             empresa_id: task.empresa_id || "",
                             assunto: task.assunto,
@@ -84,8 +87,12 @@ const TarefaFormPage: React.FC = () => {
     }, [id, isEdit]);
 
     const handleSave = async () => {
-        if (!form.data || !form.usuario_id || !form.assunto) {
-            toast.error("Preencha os campos obrigatórios!");
+        if (!semPrazo && (!form.data || !form.horario)) {
+            toast.error("Preencha a data e o horário, ou marque a opção 'Sem Prazo'.");
+            return;
+        }
+        if (!form.usuario_id || !form.assunto) {
+            toast.error("Preencha todos os campos obrigatórios (Responsável e Assunto)!");
             return;
         }
 
@@ -105,9 +112,11 @@ const TarefaFormPage: React.FC = () => {
 
             const payload: any = {
                 ...form,
+                data: semPrazo ? null : form.data,
+                horario: semPrazo ? null : form.horario,
                 empresa_id: form.empresa_id || null,
                 criado_por: user?.id,
-                competencia: form.data.slice(0, 7),
+                competencia: semPrazo ? new Date().toISOString().slice(0, 7) : form.data.slice(0, 7),
                 ...(!isEdit && { status: initialStatus, historico })
             };
 
@@ -142,32 +151,47 @@ const TarefaFormPage: React.FC = () => {
             </div>
 
             <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden p-6 md:p-8 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className={labelCls}>Prazo de Entrega *</label>
-                        <div className="relative">
-                            <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                            <input
-                                type="date"
-                                value={form.data}
-                                onChange={e => setForm({ ...form, data: e.target.value })}
-                                className={inputCls + " pl-11"}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className={labelCls}>Horário *</label>
-                        <div className="relative">
-                            <Clock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                            <input
-                                type="time"
-                                value={form.horario}
-                                onChange={e => setForm({ ...form, horario: e.target.value })}
-                                className={inputCls + " pl-11"}
-                            />
-                        </div>
-                    </div>
+                <div className="flex items-center gap-2 mb-2 px-1">
+                    <input
+                        type="checkbox"
+                        id="semPrazo"
+                        checked={semPrazo}
+                        onChange={(e) => setSemPrazo(e.target.checked)}
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                    />
+                    <label htmlFor="semPrazo" className="text-sm font-semibold text-card-foreground cursor-pointer select-none">
+                        Tarefa sem prazo de entrega
+                    </label>
                 </div>
+
+                {!semPrazo && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">
+                        <div>
+                            <label className={labelCls}>Prazo de Entrega *</label>
+                            <div className="relative">
+                                <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                <input
+                                    type="date"
+                                    value={form.data}
+                                    onChange={e => setForm({ ...form, data: e.target.value })}
+                                    className={inputCls + " pl-11"}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className={labelCls}>Horário *</label>
+                            <div className="relative">
+                                <Clock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                <input
+                                    type="time"
+                                    value={form.horario}
+                                    onChange={e => setForm({ ...form, horario: e.target.value })}
+                                    className={inputCls + " pl-11"}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div>
                     <label className={labelCls}>Empresa Vinculada (Opcional)</label>
