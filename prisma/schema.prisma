@@ -1,0 +1,123 @@
+// Schema Prisma para Conformidade LGPD e Gestão de Usuários
+// Localização sugerida: prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------------------------------------------------------
+// Pessoal e Perfis (RBAC - Parte 2.1)
+// ---------------------------------------------------------
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  SUPERVISOR
+  OPERADOR
+  VISUALIZADOR
+}
+
+enum AccountStatus {
+  ATIVO
+  INATIVO
+  BLOQUEADO
+  PENDENTE_PRIMEIRO_ACESSO
+}
+
+model UserProfile {
+  id                String         @id @default(uuid())
+  email             String         @unique
+  full_name         String
+  role              UserRole       @default(OPERADOR)
+  status            AccountStatus  @default(PENDENTE_PRIMEIRO_ACESSO)
+  department        String?
+  position          String?
+  mfa_enabled       Boolean        @default(false)
+  last_login_at     DateTime?
+  failed_attempts   Int            @default(0)
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+
+  // Relacionamentos
+  consents          UserConsent[]
+  audit_logs        AuditLog[]     @relation("UserActions")
+  affected_logs     AuditLog[]     @relation("AffectedUser")
+
+  @@map("user_profiles")
+}
+
+// ---------------------------------------------------------
+// Documentos Legais e Consentimento (Parte 1.1, 1.2, 1.3)
+// ---------------------------------------------------------
+
+enum DocumentType {
+  TERMOS_DE_USO
+  POLITICA_PRIVACIDADE
+  TERMO_RESPONSABILIDADE
+  POLITICA_SEGURANCA
+}
+
+model LegalDocument {
+  id              String       @id @default(uuid())
+  type            DocumentType
+  version         String       // Ex: v1.0
+  content         String       @db.Text
+  hash_sha256     String       // Integridade do documento
+  is_active       Boolean      @default(true)
+  valid_from      DateTime     @default(now())
+  created_by      String
+  
+  consents        UserConsent[]
+
+  @@unique([type, version])
+  @@map("legal_documents")
+}
+
+model UserConsent {
+  id              String       @id @default(uuid())
+  user_id         String
+  document_id     String
+  accepted        Boolean      @default(true)
+  ip_address      String
+  user_agent      String
+  metodo_aceite   String       @default("CLICK_MODAL")
+  timestamp       DateTime     @default(now())
+  signature       String?      // Assinatura digital do log de aceite
+
+  user            UserProfile    @relation(fields: [user_id], references: [id])
+  document        LegalDocument  @relation(fields: [document_id], references: [id])
+
+  @@index([user_id, document_id])
+  @@map("user_consents")
+}
+
+// ---------------------------------------------------------
+// Auditoria e Trilha de Segurança (Parte 2.3, 2.4)
+// ---------------------------------------------------------
+
+model AuditLog {
+  id                String   @id @default(uuid())
+  timestamp         DateTime @default(now())
+  user_id           String?  // Quem realizou a ação
+  affected_user_id  String?  // Quem foi afetado (opcional)
+  action            String   // Ex: USER_CREATE, PERMISSION_CHANGE
+  resource          String   // Ex: /api/users
+  old_values        Json?
+  new_values        Json?
+  ip_address        String
+  user_agent        String
+  status            String   @default("SUCCESS")
+  // Campo crítico para integridade
+  integrity_hash    String   // Hash SHA-256(timestamp + action + values + prev_hash)
+  signature         String?  // Assinado com RSA-2048 do servidor
+
+  user              UserProfile? @relation("UserActions", fields: [user_id], references: [id])
+  affected_user     UserProfile? @relation("AffectedUser", fields: [affected_user_id], references: [id])
+
+  @@map("audit_logs")
+}

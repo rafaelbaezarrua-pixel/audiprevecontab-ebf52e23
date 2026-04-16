@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, X, Shield, ShieldOff, Users, Building } from "lucide-react";
+import { Plus, Trash2, Shield, ShieldOff, Users, Building } from "lucide-react";
 import { toast } from "sonner";
 import { Navigate, useNavigate } from "react-router-dom";
 import AuditoriaPage from "./AuditoriaPage";
@@ -13,8 +13,8 @@ interface Usuario {
   email_alertas?: string;
   isAdmin: boolean;
   isClient: boolean;
-  departamento?: string;
   modules: Record<string, boolean>;
+  cnpj?: string;
 }
 
 const moduleLabels: Record<string, string> = {
@@ -46,31 +46,26 @@ const ConfiguracoesPage: React.FC = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [empresas, setEmpresas] = useState<Usuario[]>([]);
+  const [consents, setConsents] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [activeTab, setActiveTab] = useState<'interna' | 'cliente' | 'auditoria'>('interna');
-  const [editingEmailId, setEditingEmailId] = useState<string | null>(null);
-  const [emailAlertasInput, setEmailAlertasInput] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<'interna' | 'cliente' | 'auditoria' | 'lgpd'>('interna');
 
   const loadUsers = async () => {
     try {
       setLoadingUsers(true);
+      const { data: profiles } = await supabase.from("profiles").select("*");
+      const { data: empresasData } = await supabase.from("empresas").select("*").order('nome_empresa');
+      
+      // Carregar aceites LGPD (Busca simples para evitar erro 400 de join)
+      const { data: consentsData } = await supabase
+        .from("user_consents")
+        .select('*')
+        .order('accepted_at', { ascending: false });
 
-      const { data: profiles, error: profilesError } = await supabase.from("profiles").select("*");
-
-      if (profilesError) {
-        console.error("Erro ao carregar perfis:", profilesError);
-        return;
-      }
-      if (!profiles || profiles.length === 0) {
-        console.warn("[ConfiguracoesPage] Nenhum perfil encontrado na tabela profiles");
-        return;
-      }
-
-      const userIds = profiles.map(p => p.user_id);
-
+      const userIds = profiles?.map(p => p.user_id) || [];
       const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("user_id", userIds);
       const { data: perms } = await supabase.from("user_module_permissions").select("user_id, module_name").in("user_id", userIds);
-      const { data: access } = await supabase.from("empresa_acessos").select("user_id, empresa_id").in("user_id", userIds);
 
       const rolesByUserId = roles?.reduce((acc: any, curr: any) => {
         if (!acc[curr.user_id]) acc[curr.user_id] = [];
@@ -84,39 +79,63 @@ const ConfiguracoesPage: React.FC = () => {
         return acc;
       }, {}) || {};
 
-      const accessByUserId = access?.reduce((acc: any, curr: any) => {
-        acc[curr.user_id] = true;
+      const profilesMap = (profiles || []).reduce((acc: any, curr: any) => {
+        acc[curr.user_id] = curr;
         return acc;
-      }, {}) || {};
+      }, {});
 
-      const users: Usuario[] = [];
-      for (const p of profiles) {
+      // Mapear Equipe Interna
+      const team: Usuario[] = (profiles || []).map((p: any) => {
         const userRoles = rolesByUserId[p.user_id] || [];
         const userPerms = permsByUserId[p.user_id] || [];
-
         const modules: Record<string, boolean> = {};
         userPerms.forEach((m: string) => { modules[m] = true; });
 
-        // A user is a client if they have the 'client' role. 
-        // Presence in enterprise access for a 'user' role means restriction, not client status.
-        const isClient = userRoles.includes('client');
-        const isAdmin = userRoles.includes('admin');
-
-        users.push({
+        return {
           id: p.user_id,
-          nome: p.nome_completo || "Sem nome",
+          nome: p.full_name || p.nome_completo || "Sem nome",
           email: "",
-          email_alertas: p.email_alertas || "",
-          isAdmin,
-          isClient,
-          departamento: "",
+          isAdmin: userRoles.includes('admin'),
+          isClient: userRoles.includes('client'),
           modules,
-        });
-      }
+          email_alertas: p.email_alertas || "",
+        };
+      });
 
-      setUsuarios(users);
+      // No momento de exibir na aba 'interna', mostramos quem NÃO for cliente
+      const filteredTeam = team.filter(u => !u.isClient);
+      
+      setUsuarios(filteredTeam);
+
+      // Mapear Consents para a aba LGPD com os nomes dos perfis
+      const mappedConsents = (consentsData || []).map((c: any) => ({
+        ...c,
+        profile: profilesMap[c.user_id] ? {
+          nome_completo: profilesMap[c.user_id].full_name || profilesMap[c.user_id].nome_completo
+        } : null
+      }));
+
+      setConsents(mappedConsents);
+
+      const clients: Usuario[] = (empresasData || []).map(e => {
+        const modules: Record<string, boolean> = {};
+        (e.modulos_ativos || []).forEach((m: string) => { modules[m] = true; });
+        return {
+          id: e.id,
+          nome: e.nome_fantasia || e.nome_empresa,
+          cnpj: e.cnpj || "",
+          email: "",
+          isClient: true,
+          isAdmin: false,
+          modules,
+        };
+      });
+
+      setUsuarios(team);
+      setEmpresas(clients);
+      setConsents(consentsData || []);
     } catch (err) {
-      console.error("Erro ao carregar usuários:", err);
+      console.error("Erro ao carregar dados:", err);
     } finally {
       setLoadingUsers(false);
     }
@@ -124,21 +143,28 @@ const ConfiguracoesPage: React.FC = () => {
 
   useEffect(() => { loadUsers(); }, []);
 
-  // Aguardar userData carregar antes de decidir redirect
   if (!userData) return null;
   if (!userData.isAdmin) return <Navigate to="/dashboard" replace />;
 
-  const toggleModule = async (userId: string, module: string, current: boolean) => {
+  const toggleModule = async (targetId: string, module: string, current: boolean, isClient: boolean) => {
     try {
-      const res = await supabase.functions.invoke("manage-user", {
-        body: { action: "toggleModule", target_user_id: userId, module, enable: !current }
-      });
-      if (res.error) throw res.error;
-      toast.success(`${moduleLabels[module]} ${!current ? "habilitado" : "desabilitado"}`);
+      if (isClient) {
+        const empresa = empresas.find(e => e.id === targetId);
+        if (!empresa) return;
+        const currentModules = Object.keys(empresa.modules).filter(k => empresa.modules[k]);
+        const newModules = !current ? [...currentModules, module] : currentModules.filter(m => m !== module);
+        const { error } = await supabase.from("empresas").update({ modulos_ativos: newModules }).eq("id", targetId);
+        if (error) throw error;
+      } else {
+        const res = await supabase.functions.invoke("manage-user", {
+          body: { action: "toggleModule", target_user_id: targetId, module, enable: !current }
+        });
+        if (res.error) throw res.error;
+      }
+      toast.success(`${moduleLabels[module]} atualizado`);
       loadUsers();
     } catch (err: any) {
-      console.error("Erro no toggleModule:", err);
-      toast.error("Erro ao alterar módulo: " + (err.message || "Falha na requisição"));
+      toast.error("Erro ao alterar módulo");
     }
   };
 
@@ -151,42 +177,21 @@ const ConfiguracoesPage: React.FC = () => {
       toast.success(!current ? "Promovido a admin" : "Removido de admin");
       loadUsers();
     } catch (err: any) {
-      console.error("Erro no toggleAdmin:", err);
-      toast.error("Erro ao alterar permissão de admin: " + (err.message || "Falha na requisição"));
+      toast.error("Erro ao alterar admin");
     }
   };
 
   const handleDelete = async (userId: string) => {
-    if (!window.confirm("Excluir este usuário do sistema?")) return;
+    if (!window.confirm("Excluir este usuário?")) return;
     try {
       const res = await supabase.functions.invoke("manage-user", {
         body: { action: "deleteUser", target_user_id: userId }
       });
       if (res.error) throw res.error;
-      if (res.data?.error) throw new Error(res.data.error);
       toast.success("Usuário removido!");
       loadUsers();
     } catch (err: any) {
-      console.error("Erro no handleDelete:", err);
-      toast.error("Erro ao excluir usuário: " + (err.message || "Falha na requisição"));
-    }
-  };
-
-  const handleUpdateEmailAlertas = async (userId: string) => {
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ email_alertas: emailAlertasInput })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-      
-      toast.success("E-mail de alertas atualizado com sucesso!");
-      setEditingEmailId(null);
-      loadUsers();
-    } catch (err: any) {
-      console.error("Erro:", err);
-      toast.error("Erro ao atualizar e-mail: " + err.message);
+      toast.error("Erro ao excluir");
     }
   };
 
@@ -205,193 +210,154 @@ const ConfiguracoesPage: React.FC = () => {
       </div>
 
       <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full sm:w-auto">
-        <button
-          onClick={() => setActiveTab('interna')}
-          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'interna' ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
+        <button 
+          onClick={() => setActiveTab('interna')} 
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'interna' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <Users size={16} /> Equipe Interna
         </button>
-        <button
-          onClick={() => setActiveTab('cliente')}
-          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'cliente' ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
+        <button 
+          onClick={() => setActiveTab('cliente')} 
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'cliente' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <Building size={16} /> Portal Cliente
         </button>
-        <button
-          onClick={() => setActiveTab('auditoria')}
-          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'auditoria' ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
+        <button 
+          onClick={() => setActiveTab('auditoria')} 
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'auditoria' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <Shield size={16} /> Auditoria do Sistema
+        </button>
+        <button 
+          onClick={() => setActiveTab('lgpd')} 
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'lgpd' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          <Shield size={16} className="text-emerald-500" /> Gestão LGPD
         </button>
       </div>
 
       {activeTab === 'auditoria' ? (
         <AuditoriaPage />
+      ) : activeTab === 'lgpd' ? (
+        <div className="space-y-6">
+          <div className="card-premium">
+            <h3 className="text-lg font-black text-card-foreground mb-4 flex items-center gap-2">
+              <Shield className="text-emerald-500" size={20} />
+              Registro de Consentimentos (LGPD)
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/50 text-muted-foreground text-[10px] uppercase font-black tracking-widest">
+                    <th className="text-left pb-4">Usuário</th>
+                    <th className="text-left pb-4">Documento</th>
+                    <th className="text-left pb-4">Versão</th>
+                    <th className="text-left pb-4">Data do Aceite</th>
+                    <th className="text-left pb-4">IP de Origem</th>
+                    <th className="text-right pb-4">Assinatura Digital</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {consents.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-10 text-center text-muted-foreground font-bold">Nenhum aceite registrado até o momento.</td>
+                    </tr>
+                  ) : (
+                    consents.map((c) => (
+                      <tr key={c.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="py-4 font-bold text-card-foreground">{c.profile?.nome_completo || "Usuário Removido"}</td>
+                        <td className="py-4 text-muted-foreground">{c.document_id.replace(/_/g, ' ')}</td>
+                        <td className="py-4 font-mono text-xs">{c.version}</td>
+                        <td className="py-4 text-muted-foreground">
+                          {new Date(c.accepted_at).toLocaleString('pt-BR')}
+                        </td>
+                        <td className="py-4 font-mono text-xs text-primary">{c.ip_address}</td>
+                        <td className="py-4 text-right">
+                          <span className="inline-block max-w-[100px] truncate text-[10px] bg-muted px-2 py-1 rounded font-mono text-muted-foreground" title={c.integrity_hash}>
+                            {c.integrity_hash}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-8 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+              <p className="text-xs text-emerald-700 font-medium leading-relaxed">
+                <strong>Nota Jurídica:</strong> Este registro constitui prova de consentimento livre, informado e inequívoco conforme exigido pela LGPD (Lei 13.709/2018). O Hash de Integridade garante que o registro não foi alterado após a submissão.
+              </p>
+            </div>
+          </div>
+        </div>
       ) : (
-        <>
-          <div className="space-y-4">
-            {usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).map(u => (
-              <div key={u.id} className="card-premium">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
-                      <span className="text-primary text-lg font-black">{(u.nome || "U").slice(0, 2).toUpperCase()}</span>
-                    </div>
-                    <div>
-                      <p className="font-black text-card-foreground text-lg">{u.nome || "Sem nome"} {u.isAdmin && <span className="ml-2 badge-status badge-success text-[10px] uppercase align-middle">Admin</span>}</p>
-                      <p className="text-sm font-medium text-muted-foreground mt-0.5">{u.email} {u.departamento ? <span className="text-primary ml-2">• {u.departamento}</span> : ""}</p>
-                      
-                      {/* Interface de E-mail de Alertas para Clientes */}
-                      {u.isClient && (
-                         <div className="mt-2">
-                           {editingEmailId === u.id ? (
-                             <div className="flex items-center gap-2">
-                               <input 
-                                 type="email"
-                                 autoFocus
-                                 className="px-3 py-1 text-sm border border-border rounded-lg bg-background w-64 focus:ring-1 focus:ring-primary outline-none"
-                                 placeholder="alerta@empresa.com"
-                                 value={emailAlertasInput}
-                                 onChange={(e) => setEmailAlertasInput(e.target.value)}
-                                 onKeyDown={(e) => e.key === 'Enter' && handleUpdateEmailAlertas(u.id)}
-                               />
-                               <button onClick={() => handleUpdateEmailAlertas(u.id)} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-lg font-bold hover:opacity-90 transition-opacity">
-                                 Salvar
-                               </button>
-                               <button onClick={() => setEditingEmailId(null)} className="text-muted-foreground hover:text-foreground p-1 transition-colors">
-                                 <X size={16} />
-                               </button>
-                             </div>
-                           ) : (
-                             <div className="flex items-center gap-2">
-                               <span className="text-xs font-semibold text-muted-foreground">E-mail para Alertas Automáticos:</span>
-                               <span className={u.email_alertas ? "text-xs font-bold text-foreground" : "text-xs text-muted-foreground opacity-70"}>
-                                 {u.email_alertas || "Não configurado"}
-                               </span>
-                               <button onClick={() => { setEditingEmailId(u.id); setEmailAlertasInput(u.email_alertas || ""); }} className="text-[10px] uppercase tracking-wider font-bold text-primary hover:underline ml-1">
-                                 Alterar
-                               </button>
-                             </div>
-                           )}
-                         </div>
-                      )}
-                    </div>
+        <div className="space-y-4">
+          {(activeTab === 'interna' ? usuarios : empresas).map(u => (
+            <div key={u.id} className="card-premium">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+                    <span className="text-primary text-lg font-black">{(u.nome || "U").slice(0, 2).toUpperCase()}</span>
                   </div>
-                  <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-4 md:pt-0 border-border/50">
+                  <div>
+                    <p className="font-black text-card-foreground text-lg">
+                      {u.nome || "Sem nome"} 
+                      {activeTab === 'interna' && u.isAdmin && <span className="ml-2 badge-status badge-success text-[10px] uppercase align-middle">Admin</span>}
+                    </p>
+                    <p className="text-sm font-medium text-muted-foreground mt-0.5">
+                      {activeTab === 'interna' ? "Equipe Interna" : `CNPJ: ${u.cnpj}`}
+                    </p>
+                  </div>
+                </div>
+                {activeTab === 'interna' && (
+                  <div className="flex items-center gap-2">
                     <button 
                       onClick={() => toggleAdmin(u.id, u.isAdmin)} 
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${u.isAdmin ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20" : "bg-muted border-transparent text-muted-foreground hover:bg-muted/80 hover:text-foreground"}`} 
-                      title={u.isAdmin ? "Remover admin" : "Tornar admin"}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all ${u.isAdmin ? "bg-primary/10 border-primary/30 text-primary shadow-sm" : "bg-muted border-transparent text-muted-foreground hover:bg-muted/80"}`}
                     >
                       {u.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
-                      {u.isAdmin ? 'Administrador' : 'Tornar Admin'}
+                      {u.isAdmin ? 'Admin' : 'Tornar Admin'}
                     </button>
                     <button 
                       onClick={() => handleDelete(u.id)} 
                       className="p-2.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors border border-transparent hover:border-destructive/20"
-                      title="Excluir Usuário"
                     >
                       <Trash2 size={18} />
                     </button>
                   </div>
-                </div>
-
-                {activeTab === 'interna' && (
-                  <div className="mt-6 pt-6 border-t border-border/50">
-                    <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.15em] mb-4">Permissões de Módulos</p>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                      {Object.entries(moduleLabels).map(([key, label]) => {
-                        const hasAccess = u.isAdmin || u.modules?.[key];
-                        return (
-                          <button
-                            key={key}
-                            disabled={u.isAdmin}
-                            onClick={() => toggleModule(u.id, key, u.modules?.[key] || false)}
-                            className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess
-                              ? "border-primary/40 bg-primary/10 text-primary shadow-sm"
-                              : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30"
-                              } ${u.isAdmin ? "opacity-70 cursor-not-allowed" : ""}`}
-                          >
-                            <span className="truncate pr-2">{label}</span>
-                            {hasAccess && <div className="w-2 h-2 rounded-full bg-primary shrink-0" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
                 )}
               </div>
-            ))}
-
-            {loadingUsers ? (
-              <div className="card-premium text-center py-12">
-                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto opacity-50 mb-3" />
-                <p className="text-muted-foreground font-bold">Carregando equipe...</p>
-              </div>
-            ) : usuarios.filter(u => activeTab === 'interna' ? !u.isClient : u.isClient).length === 0 ? (
-              <div className="card-premium text-center py-16">
-                <div className="p-4 rounded-full bg-muted/10 w-fit mx-auto mb-4">
-                  <Users size={32} className="text-muted-foreground opacity-50" />
+              <div className="mt-6 pt-6 border-t border-border/50">
+                <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.15em] mb-4">
+                  {activeTab === 'interna' ? 'Permissões de Módulos' : 'Módulos Habilitados para a Empresa'}
+                </p>
+                <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {Object.entries(moduleLabels).map(([key, label]) => {
+                    const hasAccess = u.isAdmin || u.modules?.[key];
+                    return (
+                      <button 
+                        key={key} 
+                        disabled={activeTab === 'interna' && u.isAdmin} 
+                        onClick={() => toggleModule(u.id, key, !!u.modules?.[key], activeTab === 'cliente')} 
+                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess ? "border-primary/40 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/20"} ${activeTab === 'interna' && u.isAdmin ? "opacity-70 cursor-not-allowed" : ""}`}
+                      >
+                        <span className="truncate pr-2">{label}</span>
+                        {hasAccess && <div className="w-2 h-2 rounded-full bg-primary shrink-0 shadow-sm shadow-primary/40" />}
+                      </button>
+                    );
+                  })}
                 </div>
-                <p className="text-lg font-black text-card-foreground">Nenhum usuário encontrado</p>
-                <p className="text-sm text-muted-foreground mt-1">Você pode adicionar novos usuários clicando no botão acima.</p>
               </div>
-            ) : null}
-          </div>
-
-          <div className="pt-8">
-            <h3 className="header-title text-2xl font-black mb-6 flex items-center gap-3">
-              <div className="w-1 h-6 bg-primary rounded-full" />
-              Configurações de Notificações
-            </h3>
-            <NotificationConfig />
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-const NotificationConfig: React.FC = () => {
-  const [types, setTypes] = useState<any[]>([]);
-
-  const loadData = async () => {
-    const { data: nTypes } = await (supabase as any).from("notification_types").select("*");
-    setTypes(nTypes || []);
-  };
-
-  useEffect(() => { loadData(); }, []);
-
-  const toggleType = async (id: string, current: boolean) => {
-    await (supabase as any).from("notification_types").update({ is_enabled: !current }).eq("id", id);
-    toast.success("Configuração atualizada");
-    loadData();
-  };
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {types.map((t) => (
-        <div key={t.id} className="card-premium flex items-center justify-between gap-4 p-5 hover:border-primary/30 transition-colors">
-          <div className="flex-1">
-            <p className="text-base font-black text-foreground">{t.label}</p>
-            <p className="text-xs font-medium text-muted-foreground mt-1 leading-relaxed">
-              {t.description}
-            </p>
-          </div>
-          <button
-            onClick={() => toggleType(t.id, t.is_enabled)}
-            className={`w-14 h-7 rounded-full transition-colors relative shrink-0 ${
-              t.is_enabled ? "bg-primary shadow-sm shadow-primary/20" : "bg-muted-foreground/30"
-            }`}
-          >
-            <div
-              className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all shadow-sm ${
-                t.is_enabled ? "left-8" : "left-1"
-              }`}
-            />
-          </button>
+            </div>
+          ))}
+          {loadingUsers && (
+            <div className="text-center py-20 bg-card/10 rounded-2xl border border-dashed border-border/50">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Sincronizando registros...</p>
+            </div>
+          )}
         </div>
-      ))}
+      )}
     </div>
   );
 };

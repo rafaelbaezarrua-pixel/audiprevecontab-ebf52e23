@@ -1,276 +1,269 @@
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { UserProfileDetails } from "@/components/admin/UserProfileDetails";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
-    Users, Plus, Search, Filter, 
-    MoreHorizontal, Edit, Shield,
-    UserCircle, Mail, AlertCircle,
-    ChevronLeft, ChevronRight, Download
-} from "lucide-react";
-import { 
-    DropdownMenu, DropdownMenuContent, 
-    DropdownMenuItem, DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+  Users, Shield, History, Fingerprint, Lock, 
+  Search, ShieldAlert, UserCheck, MoreVertical,
+  Activity, Key, Gavel, Mail, Phone, Briefcase
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { PageHeaderSkeleton, TableSkeleton } from '@/components/PageSkeleton';
 
-const AdminUsersPage: React.FC = () => {
-    const [users, setUsers] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState("");
-    const [selectedUser, setSelectedUser] = useState<any | null>(null);
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<"equipe" | "clientes">("equipe");
+export const AdminUsersPage: React.FC = () => {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-    const fetchUsers = async () => {
-        setLoading(true);
-        try {
-            // Unificando dados de auth.users (via profiles) e user_roles
-            const { data, error } = await supabase
-                .from('profiles')
-                .select(`
-                    *,
-                    user_roles(role)
-                `)
-                .order('created_at', { ascending: false });
+  // Parte 5.1 - Lista de Usuários
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['admin_users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_profiles' as any)
+        .select(`
+          *,
+          user_consents(document_id, timestamp),
+          audit_logs_count:audit_logs(count)
+        `);
+      if (error) throw error;
+      return data;
+    }
+  });
 
-            if (error) throw error;
-            setUsers(data || []);
-        } catch (err: any) {
-            toast.error("Erro ao carregar usuários.");
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const filteredUsers = users?.filter(u => 
+    u.full_name.toLowerCase().includes(search.toLowerCase()) || 
+    u.email.toLowerCase().includes(search.toLowerCase())
+  );
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
+  const selectedUser = users?.find(u => u.id === selectedUserId);
 
-    const filteredUsers = users.filter(u => {
-        const matchesSearch = u.nome_completo?.toLowerCase().includes(search.toLowerCase()) ||
-                             u.email?.toLowerCase().includes(search.toLowerCase());
-        
-        const role = u.user_roles?.[0]?.role || "user";
-        const isClient = role === 'client';
-        
-        const matchesTab = activeTab === "equipe" ? !isClient : isClient;
-        
-        return matchesSearch && matchesTab;
-    });
+  if (isLoading) return <div className="p-8 space-y-8"><PageHeaderSkeleton /><TableSkeleton rows={8} /></div>;
 
-    const handleOpenDetails = (user: any) => {
-        setSelectedUser(user);
-        setIsDetailsOpen(true);
-    };
-
-    return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-700 font-ubuntu max-w-[1600px] mx-auto">
-            
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-1">
-                    <h1 className="header-title flex items-center gap-4">
-                        <Users className="text-primary" size={36} /> 
-                        Gestão de Usuários
-                    </h1>
-                    <p className="subtitle-premium">Controle de acessos, auditoria e conformidade LGPD.</p>
-                </div>
-                <div className="flex items-center gap-4">
-                    <Button variant="outline" className="h-12 border-border/50 gap-2 text-[10px] font-black uppercase tracking-widest">
-                        <Download size={16} /> Exportar Lista
-                    </Button>
-                    <Button className="button-premium h-12 px-8 gap-2 text-[10px] font-black uppercase tracking-widest">
-                        <Plus size={18} /> Novo Usuário
-                    </Button>
-                </div>
-            </div>
-
-            {/* Statistics Row (LGPD Awareness) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                    { label: 'Total de Usuários', value: users.length, icon: UserCircle, color: 'text-blue-500' },
-                    { label: 'Termos Pendentes', value: users.filter(u => !u.terms_accepted_at).length, icon: AlertCircle, color: 'text-amber-500' },
-                    { label: 'Admins Ativos', value: users.filter(u => u.role === 'admin').length, icon: Shield, color: 'text-primary' },
-                    { label: 'Sessões Ativas', value: '12', icon: Mail, color: 'text-emerald-500' }
-                ].map((stat, i) => (stat && (
-                    <div key={i} className="card-premium !p-6 flex items-center gap-5 border-white/5 bg-card/40">
-                        <div className={`w-14 h-14 rounded-2xl bg-muted/20 flex items-center justify-center ${stat.color}`}>
-                            <stat.icon size={24} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{stat.label}</p>
-                            <p className="text-2xl font-black text-card-foreground tracking-tight">{stat.value}</p>
-                        </div>
-                    </div>
-                )))}
-            </div>
-
-            {/* Filters and Search */}
-            <div className="flex flex-col xl:flex-row items-center justify-between gap-6 card-premium !p-6 bg-card/20">
-                <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 w-full xl:w-auto">
-                    <button
-                        onClick={() => setActiveTab("equipe")}
-                        className={`flex-1 xl:flex-none px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "equipe" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                        Equipe Interna ({users.filter(u => (u.user_roles?.[0]?.role || 'user') !== 'client').length})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("clientes")}
-                        className={`flex-1 xl:flex-none px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "clientes" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                        Portal Cliente ({users.filter(u => u.user_roles?.[0]?.role === 'client').length})
-                    </button>
-                </div>
-
-                <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
-                    <div className="relative w-full md:w-[350px]">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={18} />
-                        <Input 
-                            placeholder="BUSCAR USUÁRIO..." 
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="h-12 pl-12 bg-background/50 border-border/50 rounded-2xl text-[11px] font-bold uppercase tracking-widest focus-visible:ring-primary/20"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Table */}
-            <div className="card-premium overflow-hidden border-white/5 bg-card/40">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-muted/10 border-b border-border/50">
-                                <th className="px-8 py-5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">Usuário</th>
-                                <th className="px-8 py-5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">Departamento</th>
-                                <th className="px-8 py-5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">Perfil (RBAC)</th>
-                                <th className="px-8 py-5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">Aceite LGPD</th>
-                                <th className="px-8 py-5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">Status</th>
-                                <th className="px-8 py-5 text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/20">
-                            {loading ? (
-                                Array(5).fill(0).map((_, i) => (
-                                    <tr key={i}>
-                                        <td colSpan={6} className="px-8 py-5 animate-pulse">
-                                            <div className="h-6 bg-muted/20 rounded-lg w-full" />
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : filteredUsers.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-8 py-20 text-center opacity-30">
-                                        <Users size={48} className="mx-auto mb-4" />
-                                        <p className="text-[10px] font-black uppercase tracking-widest">Nenhum Usuário Encontrado</p>
-                                    </td>
-                                </tr>
-                            ) : filteredUsers.map((u) => (
-                                <tr key={u.user_id} className="hover:bg-white/5 transition-colors group">
-                                    <td className="px-8 py-5">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black uppercase shadow-inner">
-                                                {u.nome_completo?.charAt(0) || u.email?.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <p className="text-[11px] font-black text-card-foreground uppercase tracking-tight">{u.nome_completo || "Sem Nome"}</p>
-                                                <p className="text-[10px] text-muted-foreground font-medium">{u.email}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-5">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{u.departamento || "Não Vinculado"}</span>
-                                    </td>
-                                    <td className="px-8 py-5">
-                                        <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10 text-[9px] font-black px-3 py-1 uppercase tracking-widest">
-                                            {u.role || u.user_roles?.[0]?.role || "USER"}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-8 py-5">
-                                        {u.terms_accepted_at ? (
-                                            <div className="flex items-center gap-2 text-emerald-500">
-                                                <Shield size={14} />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">v1.2 ACEITO</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-2 text-amber-500">
-                                                <AlertCircle size={14} />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">PENDENTE</span>
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="px-8 py-5">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Ativo</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-5 text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="hover:bg-primary/10 group">
-                                                    <MoreHorizontal className="group-hover:text-primary transition-colors" size={18} />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-border bg-card shadow-2xl">
-                                                <DropdownMenuItem onClick={() => handleOpenDetails(u)} className="rounded-xl h-10 gap-3 text-[10px] font-black uppercase tracking-widest cursor-pointer">
-                                                    <UserCircle size={16} /> Perfil Completo
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="rounded-xl h-10 gap-3 text-[10px] font-black uppercase tracking-widest cursor-pointer">
-                                                    <Edit size={16} /> Editar Acessos
-                                                </DropdownMenuItem>
-                                                <div className="h-px bg-border my-2" />
-                                                <DropdownMenuItem className="rounded-xl h-10 gap-3 text-[10px] font-black uppercase tracking-widest cursor-pointer text-destructive">
-                                                    <AlertCircle size={16} /> Bloquear Conta
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                <div className="px-8 py-6 bg-muted/5 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-widest">
-                        Exibindo 1 a {filteredUsers.length} de {users.length} registros
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="h-10 w-10 p-0 rounded-xl border-border/50">
-                            <ChevronLeft size={16} />
-                        </Button>
-                        <div className="flex bg-muted/20 p-1 rounded-xl">
-                            <Button size="sm" className="h-8 w-8 p-0 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold">1</Button>
-                        </div>
-                        <Button variant="outline" size="sm" className="h-10 w-10 p-0 rounded-xl border-border/50">
-                            <ChevronRight size={16} />
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Individual Profile Panel (Slide-over / Full-page Dialog) */}
-            <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-                <DialogContent className="max-w-[70vw] h-[85vh] p-0 border-none bg-transparent shadow-none overflow-hidden">
-                    {selectedUser && (
-                        <UserProfileDetails 
-                            user={selectedUser} 
-                            onClose={() => setIsDetailsOpen(false)} 
-                            onUpdate={fetchUsers}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
-
+  return (
+    <div className="p-8 space-y-8 animate-fade-in relative max-w-[1400px] mx-auto">
+      
+      {/* Header com Metas de Conformidade */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/10">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                <Users size={24} />
+             </div>
+             <h1 className="header-title">Gestão de <span className="text-primary/90">Estratégica de Usuários</span></h1>
+          </div>
+          <p className="subtitle-premium">Controle de acesso RBAC, auditoria assinada e conformidade LGPD.</p>
         </div>
-    );
+
+        <div className="flex items-center gap-4">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors" size={18} />
+            <input 
+              type="text" 
+              placeholder="BUSCAR USUÁRIO..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-12 pr-6 h-14 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[11px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all"
+            />
+          </div>
+          <Button className="h-14 px-8 text-[11px] font-black uppercase tracking-widest gap-2">
+            Novo Usuário +
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Tabela de Usuários (Painel L Esquerdo) */}
+        <div className="lg:col-span-12 xl:col-span-8 space-y-6">
+          <div className="glass-card !p-0 overflow-hidden border-border/10 shadow-none">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-black/[0.02] dark:bg-white/[0.02] border-b border-border/10">
+                  <th className="px-6 py-4 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Colaborador</th>
+                  <th className="px-6 py-4 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Perfil / RBAC</th>
+                  <th className="px-6 py-4 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Status LGPD</th>
+                  <th className="px-6 py-4 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Último Acesso</th>
+                  <th className="px-6 py-4 text-right text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 pr-8">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/5">
+                {filteredUsers?.map(u => (
+                  <tr 
+                    key={u.id} 
+                    onClick={() => setSelectedUserId(u.id)}
+                    className={`group cursor-pointer hover:bg-primary/[0.02] transition-all ${selectedUserId === u.id ? 'bg-primary/5' : ''}`}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-black text-sm border border-primary/10">
+                          {u.full_name[0]}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-black text-foreground text-[13px] uppercase tracking-tight group-hover:text-primary transition-colors">{u.full_name}</span>
+                          <span className="text-[10px] text-muted-foreground/60 font-medium lowercase tracking-wide truncate">{u.email}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                       <span className="px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5 border border-border/10 text-[10px] font-black text-muted-foreground group-hover:text-primary transition-colors">
+                         {u.role}
+                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                       <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter ${u.status === 'ATIVO' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                         {u.status}
+                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                       <span className="text-[10px] font-bold text-muted-foreground/40 uppercase">
+                         {u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : 'Nunca'}
+                       </span>
+                    </td>
+                    <td className="px-6 py-4 pr-8 text-right">
+                       <MoreVertical size={16} className="ml-auto text-muted-foreground/20 group-hover:text-primary transition-colors" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Painel de Detalhes Individual (Painel Direito) */}
+        {selectedUser && (
+          <div className="lg:col-span-12 xl:col-span-4 space-y-6 animate-in slide-in-from-right-4 duration-500">
+             <div className="glass-card p-0 border border-border/50 shadow-2xl overflow-hidden min-h-[700px] flex flex-col">
+                <div className="p-8 border-b border-border/10 bg-primary/5">
+                   <div className="flex items-start justify-between">
+                     <div className="space-y-1">
+                        <h2 className="text-xl font-black uppercase text-foreground">{selectedUser.full_name}</h2>
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{selectedUser.role} • ID {selectedUser.id.split('-')[0]}</p>
+                     </div>
+                     <span className="w-14 h-14 rounded-2xl bg-white dark:bg-black/20 flex items-center justify-center text-primary shadow-sm border border-border/10"><Shield size={28} /></span>
+                   </div>
+                </div>
+
+                <Tabs defaultValue="perfil" className="flex-1 flex flex-col">
+                   <TabsList className="flex w-full bg-black/5 dark:bg-white/5 h-12 rounded-none p-0 border-b border-border/10">
+                      <TabsTrigger value="perfil" className="flex-1 text-[9px] font-black uppercase tracking-widest">Dados</TabsTrigger>
+                      <TabsTrigger value="sessao" className="flex-1 text-[9px] font-black uppercase tracking-widest">Segurança</TabsTrigger>
+                      <TabsTrigger value="lgpd" className="flex-1 text-[9px] font-black uppercase tracking-widest">LGPD</TabsTrigger>
+                      <TabsTrigger value="auditoria" className="flex-1 text-[9px] font-black uppercase tracking-widest">Trilha</TabsTrigger>
+                   </TabsList>
+
+                   <div className="flex-1 overflow-y-auto p-8">
+                     
+                     <TabsContent value="perfil" className="space-y-6 animate-in fade-in duration-300">
+                        <div className="grid grid-cols-1 gap-4">
+                           <div className="bg-black/[0.02] p-4 rounded-xl border border-border/10 space-y-1.5 transition-hover hover:border-primary/20">
+                              <span className="text-[8px] font-black text-muted-foreground/40 uppercase flex items-center gap-2"><Mail size={10} /> Canal de Comunicação</span>
+                              <p className="text-sm font-bold truncate">{selectedUser.email}</p>
+                           </div>
+                           <div className="bg-black/[0.02] p-4 rounded-xl border border-border/10 space-y-1.5">
+                              <span className="text-[8px] font-black text-muted-foreground/40 uppercase flex items-center gap-2"><Briefcase size={10} /> Departamento / Cargo</span>
+                              <p className="text-sm font-bold">{selectedUser.department} • {selectedUser.position || 'N/A'}</p>
+                           </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-border/10 space-y-4">
+                           <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ações Rápidas</h4>
+                           <div className="grid grid-cols-2 gap-3">
+                              <Button variant="outline" className="h-12 text-[9px] font-black uppercase tracking-widest border-border/10 hover:border-primary/50">Bloquear Conta</Button>
+                              <Button variant="outline" className="h-12 text-[9px] font-black uppercase tracking-widest border-border/10 hover:border-primary/50">Editar Perfil</Button>
+                           </div>
+                        </div>
+                     </TabsContent>
+
+                     <TabsContent value="sessao" className="space-y-6 animate-in fade-in duration-300">
+                        <div className="space-y-4">
+                           <div className="flex items-center justify-between p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                              <div className="flex items-center gap-3">
+                                 <Fingerprint className="text-emerald-500" size={20} />
+                                 <div className="flex flex-col">
+                                    <span className="text-[10px] font-black text-emerald-500 uppercase">MFA ATIVO</span>
+                                    <span className="text-[8px] font-bold text-emerald-500/60 uppercase">Proteção de segundo fator validada</span>
+                                 </div>
+                              </div>
+                              <Key size={16} className="text-emerald-500/40" />
+                           </div>
+
+                           <div className="space-y-2">
+                              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Histórico de Login</h4>
+                              {[1, 2, 3].map(i => (
+                                <div key={i} className="flex items-center justify-between py-3 border-b border-border/5">
+                                   <div className="flex flex-col">
+                                      <span className="text-xs font-bold text-foreground">172.16.2.201</span>
+                                      <span className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-widest">Chrome/Windows • 16 de Abr, 2024</span>
+                                   </div>
+                                   <span className="text-[9px] font-black text-emerald-500">SUCESSO</span>
+                                </div>
+                              ))}
+                           </div>
+
+                           <Button className="w-full h-14 mt-4 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest gap-2">
+                              Forçar Logout Global
+                           </Button>
+                        </div>
+                     </TabsContent>
+
+                     <TabsContent value="lgpd" className="space-y-6 animate-in fade-in duration-300">
+                        <div className="space-y-4">
+                           <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Consentimentos Coletados</h4>
+                           {selectedUser.user_consents?.length > 0 ? (
+                             selectedUser.user_consents.map((c: any) => (
+                               <div key={c.document_id} className="p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-center justify-between">
+                                  <div className="flex flex-col">
+                                     <span className="text-[10px] font-black text-primary uppercase">Termos de Uso</span>
+                                     <span className="text-[8px] font-bold text-muted-foreground uppercase">{new Date(c.timestamp).toLocaleString()}</span>
+                                  </div>
+                                  <CheckCircle2 size={16} className="text-primary" />
+                               </div>
+                             ))
+                           ) : (
+                             <div className="p-8 text-center bg-rose-500/5 border border-dashed border-rose-500/20 rounded-2xl">
+                                <ShieldAlert size={32} className="mx-auto text-rose-500/40 mb-3" />
+                                <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest leading-relaxed">Este usuário ainda não aceitou <br/>os termos de conformidade.</p>
+                             </div>
+                           )}
+                           <Button variant="outline" className="w-full h-12 text-[9px] font-black uppercase tracking-widest mt-4">Manual de Aceite (PDF)</Button>
+                        </div>
+                     </TabsContent>
+
+                     <TabsContent value="auditoria" className="space-y-6 animate-in fade-in duration-300">
+                        <div className="space-y-4">
+                           <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+                             Últimas Ações <Activity size={14} className="text-primary" />
+                           </h4>
+                           <div className="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-px before:bg-border/10">
+                              {[
+                                { a: 'LOGIN_SUCESSO', d: 'Acesso ao sistema via Dashboard' },
+                                { a: 'FISCAL_EDIT', d: 'Alteração de imposto Simples Nacional' },
+                                { a: 'CONFIG_USER', d: 'Alteração de perfil de visualização' }
+                              ].map((l, i) => (
+                                <div key={i} className="relative pl-8 space-y-1">
+                                   <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-card border border-border/10 flex items-center justify-center">
+                                      <div className="w-2 h-2 rounded-full bg-primary" />
+                                   </div>
+                                   <p className="text-[10px] font-black uppercase tracking-tight text-foreground">{l.a}</p>
+                                   <p className="text-[9px] text-muted-foreground leading-relaxed">{l.d}</p>
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+                     </TabsContent>
+                   </div>
+                </Tabs>
+             </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
 };
 
-export default AdminUsersPage;
+const CheckCircle2 = (props: any) => (
+  <svg {...props} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+);
