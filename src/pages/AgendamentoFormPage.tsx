@@ -27,27 +27,24 @@ const AgendamentoFormPage: React.FC = () => {
     useEffect(() => {
         const loadUsers = async () => {
             try {
-                const { data: profiles } = await supabase.from("profiles").select("id, full_name, nome_completo, user_id").eq("ativo", true);
-                if (!profiles) return;
+                // Busca apenas usuários com papel de 'admin' ou 'user'
+                const { data: profiles, error: pErr } = await supabase
+                    .from("profiles")
+                    .select(`
+                        user_id, 
+                        nome_completo,
+                        full_name,
+                        user_roles!inner(role)
+                    `)
+                    .in("user_roles.role", ["admin", "user"])
+                    .eq("ativo", true);
 
-                const userIds = profiles.filter(p => p.user_id).map(p => p.user_id);
-
-                const [{ data: roles }, { data: access }] = await Promise.all([
-                    supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
-                    supabase.from("empresa_acessos").select("user_id").in("user_id", userIds)
-                ]);
-
-                const clientIds = new Set([
-                    ...(roles?.filter(r => (r.role as any) === 'client').map(r => r.user_id) || []),
-                    ...(access?.map(a => a.user_id) || [])
-                ]);
-
-                const mapped = profiles
-                    .filter(u => u.user_id && !clientIds.has(u.user_id))
-                    .map((u: any) => ({
-                        id: u.user_id,
-                        nome: u.nome_completo || u.full_name || "Sem Nome"
-                    }));
+                if (pErr) throw pErr;
+                
+                const mapped = (profiles || []).map((u: any) => ({
+                    id: u.user_id,
+                    nome: u.nome_completo || u.full_name || "Sem Nome"
+                }));
 
                 setUsuarios(mapped);
 

@@ -265,7 +265,7 @@ const ConfiguracoesPage: React.FC = () => {
                            ) : (
                              <div className="flex items-center gap-2">
                                <span className="text-xs font-semibold text-muted-foreground">E-mail para Alertas Automáticos:</span>
-                               <span className={u.email_alertas ? "text-xs font-bold text-foreground" : "text-xs italic text-muted-foreground opacity-70"}>
+                               <span className={u.email_alertas ? "text-xs font-bold text-foreground" : "text-xs text-muted-foreground opacity-70"}>
                                  {u.email_alertas || "Não configurado"}
                                </span>
                                <button onClick={() => { setEditingEmailId(u.id); setEmailAlertasInput(u.email_alertas || ""); }} className="text-[10px] uppercase tracking-wider font-bold text-primary hover:underline ml-1">

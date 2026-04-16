@@ -289,7 +289,7 @@ const AuditoriaPage: React.FC = () => {
         if (log.action === "UPDATE" && log.old_data && log.new_data) {
             const changes = getChangedFields(log.old_data, log.new_data);
             if (changes.length === 0) {
-                return <p className="text-sm text-muted-foreground italic py-4">Nenhuma alteração detectada nos campos visíveis.</p>;
+                return <p className="text-sm text-muted-foreground py-4">Nenhuma alteração detectada nos campos visíveis.</p>;
             }
             return (
                 <div className="space-y-1">
@@ -360,7 +360,7 @@ const AuditoriaPage: React.FC = () => {
             );
         }
 
-        return <p className="text-sm text-muted-foreground italic py-4">Sem dados para exibir.</p>;
+        return <p className="text-sm text-muted-foreground py-4">Sem dados para exibir.</p>;
     };
 
     if (loading) {

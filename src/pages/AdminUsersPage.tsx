@@ -23,6 +23,7 @@ const AdminUsersPage: React.FC = () => {
     const [search, setSearch] = useState("");
     const [selectedUser, setSelectedUser] = useState<any | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<"equipe" | "clientes">("equipe");
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -50,10 +51,17 @@ const AdminUsersPage: React.FC = () => {
         fetchUsers();
     }, []);
 
-    const filteredUsers = users.filter(u => 
-        u.nome_completo?.toLowerCase().includes(search.toLowerCase()) ||
-        u.email?.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredUsers = users.filter(u => {
+        const matchesSearch = u.nome_completo?.toLowerCase().includes(search.toLowerCase()) ||
+                             u.email?.toLowerCase().includes(search.toLowerCase());
+        
+        const role = u.user_roles?.[0]?.role || "user";
+        const isClient = role === 'client';
+        
+        const matchesTab = activeTab === "equipe" ? !isClient : isClient;
+        
+        return matchesSearch && matchesTab;
+    });
 
     const handleOpenDetails = (user: any) => {
         setSelectedUser(user);
@@ -103,20 +111,32 @@ const AdminUsersPage: React.FC = () => {
             </div>
 
             {/* Filters and Search */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 card-premium !p-6 bg-card/20">
-                <div className="relative w-full md:w-[450px]">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={18} />
-                    <Input 
-                        placeholder="BUSCAR POR NOME OU E-MAIL..." 
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="h-12 pl-12 bg-background/50 border-border/50 rounded-2xl text-[11px] font-bold uppercase tracking-widest focus-visible:ring-primary/20"
-                    />
+            <div className="flex flex-col xl:flex-row items-center justify-between gap-6 card-premium !p-6 bg-card/20">
+                <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 w-full xl:w-auto">
+                    <button
+                        onClick={() => setActiveTab("equipe")}
+                        className={`flex-1 xl:flex-none px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "equipe" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                        Equipe Interna ({users.filter(u => (u.user_roles?.[0]?.role || 'user') !== 'client').length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("clientes")}
+                        className={`flex-1 xl:flex-none px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "clientes" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                        Portal Cliente ({users.filter(u => u.user_roles?.[0]?.role === 'client').length})
+                    </button>
                 </div>
-                <div className="flex items-center gap-4 w-full md:w-auto">
-                    <Button variant="outline" className="h-12 border-border/50 gap-2 text-[10px] font-black uppercase tracking-widest flex-1 md:flex-none">
-                        <Filter size={16} /> Filtros Avançados
-                    </Button>
+
+                <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
+                    <div className="relative w-full md:w-[350px]">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={18} />
+                        <Input 
+                            placeholder="BUSCAR USUÁRIO..." 
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="h-12 pl-12 bg-background/50 border-border/50 rounded-2xl text-[11px] font-bold uppercase tracking-widest focus-visible:ring-primary/20"
+                        />
+                    </div>
                 </div>
             </div>
 

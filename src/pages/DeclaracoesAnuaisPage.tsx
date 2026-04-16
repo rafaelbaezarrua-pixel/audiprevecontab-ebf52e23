@@ -127,18 +127,17 @@ const DeclaracoesAnuaisPage: React.FC = () => {
             });
             setDeclaracoesIRPF(irpfMap);
             
-            // Buscar usuários da equipe interna (admins e usuários normais) que NÃO sejam clientes
-            const { data: rolesData } = await supabase.from("user_roles").select("user_id, role");
-            
-            // Filtrar IDs que possuem a role 'client'
-            const clientIds = new Set(rolesData?.filter(r => r.role === 'client').map(r => r.user_id) || []);
-            
-            // Filtrar IDs que possuem roles internas e NÃO estão no conjunto de clientes
-            const internalUserIds = [...new Set(rolesData
-                ?.filter(r => (r.role === 'admin' || r.role === 'user') && !clientIds.has(r.user_id))
-                .map(r => r.user_id) || [])];
-            
-            const { data: profs } = await supabase.from("profiles").select("*").in("user_id", internalUserIds);
+            // Buscar usuários da equipe interna (admins e usuários normais)
+            const { data: profs, error: pErr } = await supabase
+                .from("profiles")
+                .select(`
+                    *,
+                    user_roles!inner(role)
+                `)
+                .in("user_roles.role", ["admin", "user"])
+                .eq("ativo", true);
+
+            if (pErr) throw pErr;
             setProfiles(profs || []);
         } catch (err: any) {
             toast.error("Erro ao carregar dados: " + err.message);

@@ -159,7 +159,7 @@ export const TaxGuideUploader: React.FC<TaxGuideUploaderProps> = ({ empresas, on
                           </div>
                           <div className="col-span-2">
                             <p className="text-[10px] uppercase font-black text-muted-foreground/60">Empresa Identificada</p>
-                            <p className={`text-[11px] font-bold truncate ${!res.empresa ? 'text-destructive italic' : ''}`}>
+                            <p className={`text-[11px] font-bold truncate ${!res.empresa ? 'text-destructive' : ''}`}>
                               {res.empresa?.nome_empresa || "Empresa não cadastrada"}
                             </p>
                           </div>

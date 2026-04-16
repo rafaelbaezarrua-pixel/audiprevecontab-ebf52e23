@@ -16,15 +16,22 @@ export const IRPFForm = ({ record, setRecord, onSave, onCancel, year }: IRPFForm
 
   React.useEffect(() => {
     const loadUsers = async () => {
-      // Fetch both profiles and roles to filter out clients
-      const { data: rolesData } = await supabase.from("user_roles").select("user_id, role");
-      const clientUserIds = rolesData?.filter(r => r.role === 'client').map(r => r.user_id) || [];
-      
-      const { data: profilesData } = await supabase.from("profiles").select("user_id, nome_completo");
-      if (profilesData) {
-        const internalMembers = profilesData
-          .filter(p => !clientUserIds.includes(p.user_id))
-          .map(d => ({ id: d.user_id, nome: d.nome_completo || "Sem nome" }));
+      // Busca apenas usuários com papel de 'admin' ou 'user'
+      const { data: profiles, error } = await supabase
+          .from("profiles")
+          .select(`
+              user_id, 
+              nome_completo,
+              user_roles!inner(role)
+          `)
+          .in("user_roles.role", ["admin", "user"])
+          .eq("ativo", true);
+
+      if (profiles) {
+        const internalMembers = profiles.map(d => ({ 
+          id: d.user_id, 
+          nome: d.nome_completo || "Sem nome" 
+        }));
         setUsuarios(internalMembers);
       }
     };

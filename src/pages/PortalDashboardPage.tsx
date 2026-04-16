@@ -113,7 +113,7 @@ const PortalDashboardPage: React.FC = () => {
                         <LayoutDashboard size={28} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase italic px-0">
+                        <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase px-0">
                             Olá, {userData?.nome?.split(' ')[0]}!
                         </h1>
                         <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mt-0.5">
@@ -160,7 +160,7 @@ const PortalDashboardPage: React.FC = () => {
                 <div className="xl:col-span-2 glass-card !p-8 border-border/40">
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
                         <div>
-                            <h3 className="text-lg font-black flex items-center gap-2 italic text-foreground px-0 uppercase tracking-tight">
+                            <h3 className="text-lg font-black flex items-center gap-2 text-foreground px-0 uppercase tracking-tight">
                                 <TrendingUp className="text-primary" size={20} /> Desempenho Financeiro
                             </h3>
                             <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-[0.25em] opacity-40">Histórico de Honorários e Faturamento</p>
@@ -232,7 +232,7 @@ const PortalDashboardPage: React.FC = () => {
 
                 <div className="glass-card p-8 border-border/40 h-full flex flex-col">
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-lg font-black flex items-center gap-2 italic uppercase tracking-tight text-foreground">
+                        <h3 className="text-lg font-black flex items-center gap-2 uppercase tracking-tight text-foreground">
                             <PenTool className="text-primary/70" size={20} /> Validações
                         </h3>
                         {counts.pendingSigs > 0 && (
@@ -269,13 +269,13 @@ const PortalDashboardPage: React.FC = () => {
                 {/* Documentos Recentes */}
                 <section className="space-y-4">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className="text-lg font-black flex items-center gap-2 italic uppercase tracking-tight text-foreground">
+                        <h3 className="text-lg font-black flex items-center gap-2 uppercase tracking-tight text-foreground">
                             <FileText className="text-primary" size={20} /> Documentos Recentes
                         </h3>
                         <button className="text-[9px] font-black text-primary uppercase tracking-[0.25em] hover:opacity-70 transition-opacity">Ver Acervo</button>
                     </div>
                     <div className="glass-card !p-0 overflow-hidden divide-y divide-border/10 border-border/40 shadow-none">
-                        {recentDocs.length === 0 && <div className="p-12 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">Nenhum documento disponível no momento.</div>}
+                        {recentDocs.length === 0 && <div className="p-12 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Nenhum documento disponível no momento.</div>}
                         {recentDocs.map((doc) => (
                             <div key={doc.id} className="flex items-center justify-between p-5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group cursor-pointer">
                                 <div className="flex items-center gap-4">
@@ -283,7 +283,7 @@ const PortalDashboardPage: React.FC = () => {
                                         <FileText size={18} />
                                     </div>
                                     <div>
-                                        <p className="font-bold text-foreground max-w-[220px] truncate leading-tight group-hover:text-primary transition-colors italic">{doc.titulo || doc.nome_arquivo}</p>
+                                        <p className="font-bold text-foreground max-w-[220px] truncate leading-tight group-hover:text-primary transition-colors">{doc.titulo || doc.nome_arquivo}</p>
                                         <div className="flex items-center gap-2 mt-1 px-0">
                                             <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">{doc.categoria}</span>
                                             <span className="text-[9px] text-muted-foreground/20">•</span>
@@ -302,14 +302,14 @@ const PortalDashboardPage: React.FC = () => {
                 {/* Status de Processos Automados */}
                 <section className="space-y-4">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className="text-lg font-black flex items-center gap-2 italic uppercase tracking-tight text-foreground">
+                        <h3 className="text-lg font-black flex items-center gap-2 uppercase tracking-tight text-foreground">
                             <Clock className="text-primary" size={20} /> Processos Ativos
                         </h3>
                         <button className="text-[9px] font-black text-primary uppercase tracking-[0.25em] hover:opacity-70 transition-opacity">Detalhes</button>
                     </div>
                     <div className="glass-card p-8 border-border/40 h-full">
                         {activeProcs.length === 0 ? (
-                           <div className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">Nenhum processo societário ativo no momento.</div>
+                           <div className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Nenhum processo societário ativo no momento.</div>
                         ) : (
                         <div className="relative pl-8 space-y-8">
                             <div className="absolute left-[15px] top-2 bottom-2 w-[1.5px] bg-border/10" />
@@ -318,14 +318,14 @@ const PortalDashboardPage: React.FC = () => {
                                 <div className="absolute -left-[23px] top-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-background z-10" />
                                 <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-transparent group-hover:border-primary/20 transition-all hover:bg-black/10 dark:hover:bg-white/10">
                                     <div className="flex items-center justify-between">
-                                        <p className="font-black text-foreground uppercase tracking-tight italic leading-none text-xs">{proc.tipo?.replace(/_/g, ' ')}</p>
+                                        <p className="font-black text-foreground uppercase tracking-tight leading-none text-xs">{proc.tipo?.replace(/_/g, ' ')}</p>
                                         <span className="text-[9px] font-black px-2 py-0.5 bg-primary/20 text-primary rounded-md uppercase tracking-wider ml-2 shrink-0">
                                             {proc.status?.replace(/_/g, ' ')}
                                         </span>
                                     </div>
                                     <div className="mt-3 flex items-center justify-between text-[9px] text-muted-foreground">
-                                        <span className="font-black uppercase tracking-[0.15em] opacity-40 italic">Fase em andamento</span>
-                                        <span className="font-black opacity-40 italic uppercase">{format(new Date(proc.created_at), 'dd/MM/yyyy')}</span>
+                                        <span className="font-black uppercase tracking-[0.15em] opacity-40">Fase em andamento</span>
+                                        <span className="font-black opacity-40 uppercase">{format(new Date(proc.created_at), 'dd/MM/yyyy')}</span>
                                     </div>
                                     <div className="mt-3 h-1 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
                                         <div className="h-full bg-primary w-[65%] rounded-full opacity-60" />
@@ -349,14 +349,14 @@ const PortalDashboardPage: React.FC = () => {
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[9px] font-black uppercase tracking-[0.25em]">
                             <MessageSquare size={13} /> Suporte Especializado
                         </div>
-                        <h3 className="text-4xl font-black italic tracking-tighter text-foreground uppercase leading-[1.0]">
+                        <h3 className="text-4xl font-black tracking-tighter text-foreground uppercase leading-[1.0]">
                             Soluções Ágeis para <br className="hidden md:block"/> seu negócio.
                         </h3>
                         <p className="text-muted-foreground text-base font-medium leading-relaxed max-w-lg">
                             Dúvidas fiscais, contábeis ou de folha de pagamento? Nossa equipe está disponível em tempo real para auxiliar no crescimento da sua empresa.
                         </p>
                     </div>
-                    <button className="h-18 px-12 rounded-2xl text-base font-black italic gap-4 transition-all bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+                    <button className="h-18 px-12 rounded-2xl text-base font-black gap-4 transition-all bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
                         Abrir chamado técnico <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>

@@ -406,7 +406,7 @@ const RecibosPage: React.FC = () => {
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(recibo.valor)}
                                         </span>
                                     </div>
-                                    <p className="text-[10px] font-bold text-muted-foreground border-l-2 border-primary/20 pl-4 py-1.5 italic uppercase line-clamp-1 max-w-[400px]">
+                                    <p className="text-[10px] font-bold text-muted-foreground border-l-2 border-primary/20 pl-4 py-1.5 uppercase line-clamp-1 max-w-[400px]">
                                         {recibo.referente}
                                     </p>
                                 </div>

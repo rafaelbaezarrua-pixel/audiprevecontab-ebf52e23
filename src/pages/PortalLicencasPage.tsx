@@ -144,7 +144,7 @@ const PortalLicencasPage: React.FC = () => {
                                                 </Button>
                                             </>
                                         ) : (
-                                            <div className="w-full py-2 px-3 rounded-lg bg-muted text-center text-xs text-muted-foreground italic">
+                                            <div className="w-full py-2 px-3 rounded-lg bg-muted text-center text-xs text-muted-foreground">
                                                 Documento físico não anexado ainda
                                             </div>
                                         )}

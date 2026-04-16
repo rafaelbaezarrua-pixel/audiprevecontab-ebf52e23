@@ -430,8 +430,8 @@ const SimuladorCalculosPage: React.FC = () => {
                                     <Info size={24} />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs font-bold text-primary uppercase tracking-wider italic">Aviso Importante</p>
-                                    <p className="text-[11px] text-primary/80 leading-relaxed italic">
+                                    <p className="text-xs font-bold text-primary uppercase tracking-wider">Aviso Importante</p>
+                                    <p className="text-[11px] text-primary/80 leading-relaxed">
                                         Esta é uma simulação simplificada e não substitui o cálculo oficial do sistema de folha ou do Ministério do Trabalho. 
                                         {results.type === 'rescisao' ? ' Não estão inclusos descontos de INSS, IRRF, faltas ou horas extras.' : ' Os descontos de INSS e IRRF são baseados em tabelas vigentes aproximadas.'}
                                     </p>

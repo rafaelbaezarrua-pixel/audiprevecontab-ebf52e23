@@ -81,7 +81,7 @@ const ResetPasswordPage: React.FC = () => {
                         <img src={logoAudipreve} alt="Audipreve" className="w-24 h-24 object-contain mx-auto relative z-10 drop-shadow-2xl" />
                     </div>
                     <div className="space-y-1">
-                        <h1 className="header-title !text-3xl text-center">Nova <span className="text-primary italic">Senha</span></h1>
+                        <h1 className="header-title !text-3xl text-center">Nova <span className="text-primary">Senha</span></h1>
                         <p className="subtitle-premium uppercase tracking-[0.3em] text-[9px] opacity-60 text-center">Criação de Credenciais Seguras</p>
                     </div>
                 </div>

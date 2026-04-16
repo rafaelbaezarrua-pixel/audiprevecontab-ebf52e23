@@ -118,7 +118,7 @@ const PortalHelpDeskPage: React.FC = () => {
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/5">
                         {messages.length === 0 ? (
-                            <p className="text-center text-muted-foreground italic py-12">Aguardando mensagens...</p>
+                            <p className="text-center text-muted-foreground py-12">Aguardando mensagens...</p>
                         ) : (
                             messages.map((m, idx) => (
                                 <div key={idx} className={`flex ${m.is_admin_reply ? 'justify-start' : 'justify-end'}`}>

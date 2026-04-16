@@ -142,7 +142,7 @@ const PortalCertidoesPage: React.FC = () => {
                                                 </Button>
                                             </>
                                         ) : (
-                                            <div className="w-full py-2 px-3 rounded-lg bg-muted text-center text-[10px] text-muted-foreground italic">
+                                            <div className="w-full py-2 px-3 rounded-lg bg-muted text-center text-[10px] text-muted-foreground">
                                                 Documento não anexado pela contabilidade
                                             </div>
                                         )}

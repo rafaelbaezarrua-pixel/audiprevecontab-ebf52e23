@@ -464,7 +464,7 @@ const DocumentosPage = () => {
                         <p className="text-xs text-muted-foreground">Requer extensão Lacuna Web PKI instalada. Ideal para Tokens (A3).</p>
                         <div className="space-y-2 overflow-y-auto pr-1 max-h-[40vh] scrollbar-thin scrollbar-thumb-gray-300">
                           {certificates.length === 0 ? (
-                            <div className="text-center py-4 text-orange-600 font-medium italic text-sm">Nenhum certificado encontrado. Verifique seu Assinador.</div>
+                            <div className="text-center py-4 text-orange-600 font-medium text-sm">Nenhum certificado encontrado. Verifique seu Assinador.</div>
                           ) : (
                             certificates.map((cert) => (
                               <Button
@@ -533,7 +533,7 @@ const DocumentosPage = () => {
                             ESCOLHER LOCAL E ASSINAR
                           </Button>
                         </div>
-                        <p className="text-[10px] text-center text-gray-400 italic">Sessão Volátil: Seu certificado não é armazenado no servidor.</p>
+                        <p className="text-[10px] text-center text-gray-400">Sessão Volátil: Seu certificado não é armazenado no servidor.</p>
                       </TabsContent>
                     </Tabs>
                   )}
@@ -604,7 +604,7 @@ const DocumentosPage = () => {
                 {isLoading ? (
                   <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary opacity-50" /></TableCell></TableRow>
                 ) : documentos.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium italic opacity-60">Nenhum documento aguardando assinatura.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium opacity-60">Nenhum documento aguardando assinatura.</TableCell></TableRow>
                 ) : (
                   documentos.map((doc: any) => (
                     <TableRow key={doc.id} className="hover:bg-muted/30 transition-colors border-border/40">
@@ -726,7 +726,7 @@ const DocumentosPage = () => {
                 {isLoadingSoli ? (
                   <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary opacity-50" /></TableCell></TableRow>
                 ) : solicitacoes.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium italic opacity-60">Nenhuma solicitação de documento ativa.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium opacity-60">Nenhuma solicitação de documento ativa.</TableCell></TableRow>
                 ) : (
                   solicitacoes.map((sol: any) => (
                     <TableRow key={sol.id} className="hover:bg-muted/30 transition-colors border-border/40">

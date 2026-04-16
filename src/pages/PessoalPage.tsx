@@ -210,23 +210,13 @@ const PessoalPage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Page Header */}
-      <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-xl shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/10">
-            <Users size={28} />
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+             <h1 className="text-2xl font-black text-foreground tracking-tight">Departamento Pessoal</h1>
+             <FavoriteToggleButton moduleId="pessoal" />
           </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase italic px-0">
-              Departamento <span className="text-primary/90">Pessoal</span>
-            </h1>
-            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase italic">
-              Folha de Pagamento • RH • Obrigações
-            </p>
-          </div>
-          <div className="ml-2">
-            <FavoriteToggleButton moduleId="pessoal" />
-          </div>
+          <p className="text-xs font-medium text-muted-foreground tracking-wide">Folha de pagamento, RH e obrigações mensais.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -250,7 +240,6 @@ const PessoalPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats and Navigation */}
       <div className="flex flex-col gap-8 pb-4">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8 px-1">
           <div className="flex items-center gap-4 w-full lg:w-auto">
@@ -347,8 +336,8 @@ const PessoalPage: React.FC = () => {
                     <Users size={20} />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="font-black text-foreground text-sm uppercase italic tracking-tight truncate max-w-[300px] md:max-w-[400px] group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
-                    <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.15em] mt-1 italic">CNPJ: {emp.cnpj || "NÃO INFORMADO"}</span>
+                    <span className="font-black text-foreground text-sm uppercase tracking-tight truncate max-w-[300px] md:max-w-[400px] group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
+                    <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.15em] mt-1">CNPJ: {emp.cnpj || "NÃO INFORMADO"}</span>
                   </div>
                 </div>
 
@@ -358,7 +347,7 @@ const PessoalPage: React.FC = () => {
                        {done ? "CONCLUÍDO" : "PENDENTE"}
                      </span>
                      {record?.dctf_web_data_envio && (
-                        <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-widest italic">ENVIADO EM {formatDateBR(record.dctf_web_data_envio)}</span>
+                        <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-widest">ENVIADO EM {formatDateBR(record.dctf_web_data_envio)}</span>
                      )}
                   </div>
                   <button className={`p-2.5 rounded-xl border transition-all ${isOpen ? 'bg-primary text-white border-primary rotate-180 shadow-lg shadow-primary/20' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/40 border-border/10 hover:border-primary/50 hover:text-primary'}`}>
@@ -386,7 +375,7 @@ const PessoalPage: React.FC = () => {
                               <TabsTrigger value="dados" className="px-10 h-full text-[10px] font-black uppercase tracking-[0.2em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel de Processamento</TabsTrigger>
                               <TabsTrigger value="pastas" className="px-10 h-full text-[10px] font-black uppercase tracking-[0.2em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Cloud Drive</TabsTrigger>
                            </TabsList>
-                           <h3 className="text-xl font-black text-foreground uppercase tracking-tight italic flex items-center gap-3">
+                           <h3 className="text-xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
                               <span className="w-2 h-8 bg-primary rounded-full" />
                               Controle de {activeSubTab === 'folha' ? 'Folha' : 'Pró-Labore'}
                            </h3>
@@ -396,7 +385,7 @@ const PessoalPage: React.FC = () => {
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Section: Configurações */}
                             <div className="space-y-6">
-                              <h3 className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1 h-3 block italic">Configurações Base</h3>
+                              <h3 className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1 h-3 block">Configurações Base</h3>
                               <div className="bg-black/5 dark:bg-white/5 p-8 rounded-3xl border border-border/10 grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Qtd Funcionários</label>
@@ -408,7 +397,7 @@ const PessoalPage: React.FC = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Forma de Envio</label>
-                                    <input value={editForm[emp.id]?.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none transition-all uppercase italic" placeholder="EX: EMAIL" />
+                                    <input value={editForm[emp.id]?.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none transition-all uppercase" placeholder="EX: EMAIL" />
                                 </div>
                                 <div className="flex flex-col justify-end pb-1.5">
                                     <label className="flex items-center gap-3 cursor-pointer group">
@@ -426,7 +415,7 @@ const PessoalPage: React.FC = () => {
 
                             {/* Section: Obrigações */}
                             <div className="space-y-6">
-                              <h3 className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1 h-3 block italic">Obrigações Mensais</h3>
+                              <h3 className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1 h-3 block">Obrigações Mensais</h3>
                               <div className="bg-black/5 dark:bg-white/5 p-8 rounded-3xl border border-border/10 space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 items-end gap-6 pb-6 border-b border-border/10">
                                     <div className="space-y-2">
@@ -446,7 +435,7 @@ const PessoalPage: React.FC = () => {
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                                     {[{ label: "GUIA INSS", s: "inss_status", d: "inss_data_envio" }, { label: "GUIA FGTS", s: "fgts_status", d: "fgts_data_envio" }].map(enc => (
                                       <div key={enc.label} className="space-y-4">
-                                        <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest block pl-1 italic">{enc.label}</label>
+                                        <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest block pl-1">{enc.label}</label>
                                         <div className="space-y-3">
                                             <select value={editForm[emp.id]?.[enc.s] || "pendente"} onChange={e => updateForm(emp.id, enc.s, e.target.value)} className="w-full h-10 px-4 rounded-xl border border-border/10 bg-card text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all">
                                                 <option value="pendente">PENDENTE</option>
@@ -466,7 +455,7 @@ const PessoalPage: React.FC = () => {
                           {/* Section: Funcionários & Alertas */}
                           <div className="space-y-8">
                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/10 pb-4">
-                                <h3 className="text-xl font-black text-foreground uppercase tracking-tight italic flex items-center gap-3">
+                                <h3 className="text-xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
                                    <span className="w-2 h-7 bg-primary rounded-full shadow-lg shadow-primary/20" />
                                    Equipe & Ciclos de Saúde
                                 </h3>
@@ -479,7 +468,7 @@ const PessoalPage: React.FC = () => {
                                 {(funcionarios[emp.id] || []).length === 0 ? (
                                     <div className="col-span-full py-16 text-center border-2 border-dashed border-border/5 rounded-3xl">
                                         <AlertTriangle size={48} className="text-muted-foreground/10 mx-auto mb-4" />
-                                        <p className="text-[11px] font-black text-muted-foreground/40 uppercase tracking-widest italic">Nenhum registro de funcionário ativo encontrado</p>
+                                        <p className="text-[11px] font-black text-muted-foreground/40 uppercase tracking-widest">Nenhum registro de funcionário ativo encontrado</p>
                                     </div>
                                 ) : (
                                     funcionarios[emp.id].map(func => {
@@ -489,23 +478,23 @@ const PessoalPage: React.FC = () => {
                                         return (
                                           <div key={func.id} className="glass-card p-8 border-border/10 space-y-6 relative overflow-hidden group/func">
                                               <div className="flex items-center gap-4 border-b border-border/5 pb-4">
-                                                 <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center border border-border/10 italic text-[14px] font-black group-hover/func:text-primary transition-colors">
+                                                 <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center border border-border/10 text-[14px] font-black group-hover/func:text-primary transition-colors">
                                                     {func.nome.charAt(0)}
                                                  </div>
-                                                 <span className="text-[12px] font-black text-foreground italic uppercase tracking-tighter truncate leading-none">{func.nome}</span>
+                                                 <span className="text-[12px] font-black text-foreground uppercase tracking-tighter truncate leading-none">{func.nome}</span>
                                               </div>
                                               <div className="grid grid-cols-1 gap-4">
                                                   <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${asoCritical ? "bg-rose-500/10 border-rose-500/20 text-rose-500 shadow-lg shadow-rose-500/5" : "bg-black/5 dark:bg-white/5 border-border/5 text-muted-foreground/40"}`}>
                                                       <div className="flex items-center gap-3">
                                                          <AlertTriangle size={14} className={asoCritical ? "animate-pulse" : "opacity-30"} />
-                                                         <span className="text-[9px] font-black uppercase tracking-[0.15em] italic">Vencimento ASO</span>
+                                                         <span className="text-[9px] font-black uppercase tracking-[0.15em]">Vencimento ASO</span>
                                                       </div>
                                                       <span className="text-[11px] font-black font-mono tracking-wider">{func.vencimento_aso ? formatDateBR(func.vencimento_aso) : "N/D"}</span>
                                                   </div>
                                                   <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${feriasCritical ? "bg-rose-500/10 border-rose-500/20 text-rose-500 shadow-lg shadow-rose-500/5" : "bg-black/5 dark:bg-white/5 border-border/5 text-muted-foreground/40"}`}>
                                                       <div className="flex items-center gap-3">
                                                          <Calendar size={14} className={feriasCritical ? "animate-pulse" : "opacity-30"} />
-                                                         <span className="text-[9px] font-black uppercase tracking-[0.15em] italic">Vencimento FÉRIAS</span>
+                                                         <span className="text-[9px] font-black uppercase tracking-[0.15em]">Vencimento FÉRIAS</span>
                                                       </div>
                                                       <span className="text-[11px] font-black font-mono tracking-wider">{func.vencimento_ferias ? formatDateBR(func.vencimento_ferias) : "N/D"}</span>
                                                   </div>
