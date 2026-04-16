@@ -112,11 +112,10 @@ const LoginPage: React.FC = () => {
         toast.error("Segurança ativada: Múltiplas tentativas falhas.");
       }
 
-      console.error("[LOGIN DEBUG] Erro real do Supabase:", err.message, err);
       setError(
         err.message?.includes("Invalid login credentials")
           ? "Usuário ou senha inválidos."
-          : `Falha: ${err.message || "Erro desconhecido"}`
+          : "Falha na comunicação com servidor seguro."
       );
     } finally {
       const elapsed = Date.now() - startTime;
