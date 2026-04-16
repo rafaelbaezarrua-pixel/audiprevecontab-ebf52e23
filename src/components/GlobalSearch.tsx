@@ -37,30 +37,12 @@ export function GlobalSearch() {
         queryFn: async () => {
             if (!searchTerm || searchTerm.length < 2) return [];
             
-            // 1. Get user profile/role
-            const { data: { user: currentUser } } = await supabase.auth.getUser();
-            if (!currentUser) return [];
-
-            const { data: profile } = await supabase.from("profiles").select("role, empresa_id").eq("user_id", currentUser.id).maybeSingle();
-            const { data: roleCheck } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id).eq("role", "admin").maybeSingle();
-            
-            const isAdmin = roleCheck?.role === "admin" || profile?.role === "admin";
-            const empresaId = profile?.empresa_id;
-
-            // 2. Prepare query
-            let query = supabase
+            // Busca direta por NOME ou CNPJ - Liberado para todos
+            const { data, error } = await supabase
                 .from("empresas")
-                .select("id, nome_empresa, cnpj, situacao");
-
-            // 3. Clients can ONLY search for their own company, Team sees EVERYTHING
-            if (!isAdmin && empresaId) {
-                query = query.eq("id", empresaId);
-            }
-
-            // 5. Apply search filter
-            query = query.or(`nome_empresa.ilike.%${searchTerm}%,cnpj.ilike.%${searchTerm}%`).limit(5);
-
-            const { data, error } = await query;
+                .select("id, nome_empresa, cnpj, situacao")
+                .or(`nome_empresa.ilike.%${searchTerm}%,cnpj.ilike.%${searchTerm}%`)
+                .limit(10);
 
             if (error) {
                 console.error("Erro na busca global:", error);
