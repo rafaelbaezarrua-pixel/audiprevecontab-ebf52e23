@@ -29,17 +29,38 @@ export function GlobalSearch() {
     const navigate = useNavigate();
 
     // Buscar empresas dinamicamente com base no input
+    const { user } = supabase.auth.getSession().then(({data}) => data.session?.user); // Simplified for logic
+    
+    // Buscar empresas dinamicamente com base no input
     const { data: searchResults, isLoading } = useQuery({
         queryKey: ["globalSearch", searchTerm],
         queryFn: async () => {
             if (!searchTerm || searchTerm.length < 2) return [];
             
-            // Busca por NOME ou CNPJ
-            const { data, error } = await supabase
+            // 1. Get user profile/role
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            if (!currentUser) return [];
+
+            const { data: profile } = await supabase.from("profiles").select("role, empresa_id").eq("user_id", currentUser.id).maybeSingle();
+            const { data: roleCheck } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id).eq("role", "admin").maybeSingle();
+            
+            const isAdmin = roleCheck?.role === "admin" || profile?.role === "admin";
+            const empresaId = profile?.empresa_id;
+
+            // 2. Prepare query
+            let query = supabase
                 .from("empresas")
-                .select("id, nome_empresa, cnpj, situacao")
-                .or(`nome_empresa.ilike.%${searchTerm}%,cnpj.ilike.%${searchTerm}%`)
-                .limit(5);
+                .select("id, nome_empresa, cnpj, situacao");
+
+            // 3. Clients can ONLY search for their own company, Team sees EVERYTHING
+            if (!isAdmin && empresaId) {
+                query = query.eq("id", empresaId);
+            }
+
+            // 5. Apply search filter
+            query = query.or(`nome_empresa.ilike.%${searchTerm}%,cnpj.ilike.%${searchTerm}%`).limit(5);
+
+            const { data, error } = await query;
 
             if (error) {
                 console.error("Erro na busca global:", error);

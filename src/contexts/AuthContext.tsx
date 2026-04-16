@@ -53,6 +53,7 @@ export interface UserPermissions {
   favoritos?: string[];
   sidebar_config?: any[];
   theme_config?: any;
+  isTeamMember: boolean;
 }
 
 interface AuthContextType {
@@ -210,13 +211,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const firstAccessDone = !!profileData?.first_access_done;
 
       const metadata = currentUser.user_metadata || {};
-      const isAdmin = (roles?.some(r => r.role === "admin") || profileData?.role === "admin" || metadata.role === "admin") || false;
-      const metaRole = metadata.role || profileData?.role;
-      const mappedRoles = roles?.map(r => r.role) || [];
-      
       const hasEmpresaLink = !!access || !!metadata.empresa_id || !!profileData?.empresa_id;
-      const isClient = (metaRole === "client" || mappedRoles.includes("client") || (hasEmpresaLink && !isAdmin)) || false;
-      const isTeamMember = !isAdmin && !isClient;
+      
+      const isAdmin = (roles?.some(r => r.role === "admin") || profileData?.role === "admin" || metadata.role === "admin") || false;
+      
+      // Portal Cliente: users linked to companies
+      const isClient = !isAdmin && hasEmpresaLink;
+      
+      // Equipe: created by admin, has data filled, and NOT linked to companies
+      const isTeamMember = !isAdmin && !hasEmpresaLink;
       
       const empresaId = access?.empresa_id || metadata.empresa_id || profileData?.empresa_id || undefined;
 
