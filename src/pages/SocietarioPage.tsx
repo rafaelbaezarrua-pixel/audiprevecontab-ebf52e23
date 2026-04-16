@@ -489,9 +489,6 @@ const SocietarioPage: React.FC = () => {
       )}
     </div>
   );
-};  )}
-    </div>
-  );
 };
 
 export default SocietarioPage;
