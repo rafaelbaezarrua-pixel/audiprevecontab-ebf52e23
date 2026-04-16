@@ -45,14 +45,18 @@ const sanitizeNotification = (item: any): Notification | null => {
         // Validação de URL (se existir)
         let link: string | undefined = undefined;
         if (notif.link) {
-            try {
-                const url = new URL(notif.link);
-                // Permitir apenas URLs relativas ou domínios confiáveis
-                if (url.protocol === 'https:' || url.protocol === 'http:' || notif.link.startsWith('/')) {
-                    link = notif.link.slice(0, 2048); // Limite de tamanho
+            const isRelative = notif.link.startsWith('/');
+            if (isRelative) {
+                link = notif.link.slice(0, 2048);
+            } else {
+                try {
+                    const url = new URL(notif.link);
+                    if (url.protocol === 'https:' || url.protocol === 'http:') {
+                        link = notif.link.slice(0, 2048);
+                    }
+                } catch {
+                    console.warn('[WARN] Link inválido na notificação:', notif.link);
                 }
-            } catch {
-                console.warn('[WARN] Link inválido na notificação:', notif.link);
             }
         }
 

@@ -88,8 +88,11 @@ Deno.serve(async (req: Request) => {
     if (action === "toggleModule") {
       if (!module) throw new Error("Module é obrigatório.");
       if (enable) {
-        const { error: insErr } = await supabaseAdmin.from("user_module_permissions").insert({ user_id: target_user_id, module_name: module });
-        if (insErr) throw insErr;
+        const { error: upsertErr } = await supabaseAdmin.from("user_module_permissions").upsert(
+          { user_id: target_user_id, module_name: module },
+          { onConflict: 'user_id,module_name' }
+        );
+        if (upsertErr) throw upsertErr;
       } else {
         const { error: delErr } = await supabaseAdmin.from("user_module_permissions").delete().eq("user_id", target_user_id).eq("module_name", module);
         if (delErr) throw delErr;
@@ -131,7 +134,7 @@ Deno.serve(async (req: Request) => {
 
   } catch (err: any) {
     console.error("manage-user error:", err);
-    return new Response(JSON.stringify({ error: "Erro interno" }), {
+    return new Response(JSON.stringify({ error: err.message || "Erro interno" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
