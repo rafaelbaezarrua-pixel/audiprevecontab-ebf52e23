@@ -49,7 +49,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
         >
           <div className="relative flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 italic">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
                 {card.label}
               </p>
               <h3 className="text-3xl font-black text-foreground tracking-tighter">
