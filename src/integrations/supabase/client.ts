@@ -5,10 +5,15 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error("ERRO CRÍTICO: Variáveis de ambiente do Supabase não encontradas!");
+  console.info("Certifique-se de definir VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env ou no painel da Vercel.");
+}
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase = createClient<Database>(
+  SUPABASE_URL || 'https://url-temporaria-para-evitar-crash.supabase.co', 
+  SUPABASE_ANON_KEY || 'fake-key', 
+  {
   auth: {
     storage: localStorage,
     persistSession: true,
