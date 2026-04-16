@@ -275,7 +275,7 @@ const ClientLoginPage: React.FC = () => {
                             {attempts >= 2 && (
                                 <div className="flex justify-center p-2 rounded-2xl bg-white/5 border border-white/10 animate-in slide-in-from-top-4 duration-500">
                                     <ReCAPTCHA 
-                                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""} 
+                                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"} 
                                         theme="dark"
                                         onChange={setRecaptchaToken}
                                     />
