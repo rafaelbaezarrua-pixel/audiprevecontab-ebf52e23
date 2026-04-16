@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Search, Filter, Eye, Database, List as ListIcon, X, ArrowRight, Plus, Trash2, Pencil } from "lucide-react";
+import { Search, Filter, Eye, Database, List as ListIcon, X, ArrowRight, Plus, Trash2, Pencil, Shield } from "lucide-react";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 
 interface AuditLog {
@@ -124,6 +124,8 @@ const actionLabels: Record<string, { label: string; icon: React.ReactNode }> = {
     INSERT: { label: "Criação", icon: <Plus size={14} /> },
     UPDATE: { label: "Edição", icon: <Pencil size={14} /> },
     DELETE: { label: "Exclusão", icon: <Trash2 size={14} /> },
+    CONSENT_GRANTED: { label: "Aceite LGPD", icon: <Shield size={14} /> },
+    SYSTEM_SEED: { label: "Carga Sistema", icon: <Database size={14} /> },
 };
 
 // Campos que devem ser ignorados na visualização (ruído técnico)
@@ -257,6 +259,8 @@ const AuditoriaPage: React.FC = () => {
             case 'INSERT': return 'bg-success/10 text-success border-success/20';
             case 'UPDATE': return 'bg-warning/10 text-warning border-warning/20';
             case 'DELETE': return 'bg-destructive/10 text-destructive border-destructive/20';
+            case 'CONSENT_GRANTED': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+            case 'SYSTEM_SEED': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
             default: return 'bg-muted text-muted-foreground border-border';
         }
     };
