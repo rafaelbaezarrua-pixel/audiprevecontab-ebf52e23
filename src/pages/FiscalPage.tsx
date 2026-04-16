@@ -655,11 +655,6 @@ const FiscalPage: React.FC = () => {
       )}
     </div>
   );
-};s}
-        />
-      )}
-    </div>
-  );
 };
 
 export default FiscalPage;
