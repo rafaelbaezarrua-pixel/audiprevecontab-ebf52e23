@@ -572,203 +572,178 @@ const TarefasPage: React.FC = () => {
     return (
     <div className="space-y-8 animate-fade-in pb-20 relative px-1">
       {/* Page Header */}
-      <div className="glass-header sticky top-0 z-10 px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-primary text-white rounded-xl shadow-lg shadow-primary/20">
-            <ClipboardList size={24} />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0 mt-2">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="header-title">Tarefas Internas</h1>
+            <FavoriteToggleButton moduleId="tarefas" />
+            {isFetching && !isLoading && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Sincronizando</span>
+              </div>
+            )}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black tracking-tighter text-foreground uppercase">Tarefas Internas</h1>
-              <FavoriteToggleButton moduleId="tarefas" />
-              {isFetching && !isLoading && (
-                <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/20 animate-pulse">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                  <span className="text-[9px] font-black text-primary uppercase tracking-widest">Sincronizando</span>
-                </div>
-              )}
-            </div>
-            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mt-0.5">Gestão de Fluxo e Prazos Operacionais</p>
-          </div>
+          <p className="subtitle-premium">Gestão de fluxo e prazos operacionais do escritório.</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="flex items-center gap-2 bg-card/40 border border-border/40 p-1.5 rounded-xl">
+        <div className="flex flex-wrap items-center gap-3 justify-end flex-1">
             <input
-              type="month"
-              value={competencia}
-              onChange={e => setCompetencia(e.target.value)}
-              className="bg-transparent border-none text-[11px] font-black uppercase tracking-widest text-primary outline-none px-4 py-1.5 font-ubuntu"
+                type="month"
+                value={competencia}
+                onChange={e => setCompetencia(e.target.value)}
+                className="h-11 px-4 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold transition-all w-full sm:w-auto"
             />
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Batch dialog */}
+            
             <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
-              <DialogTrigger asChild>
-                <button className="h-14 px-6 rounded-2xl bg-card border border-border/60 text-[10px] font-black uppercase tracking-widest hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-2 shadow-sm">
-                  <ClipboardList size={18} /> Lote
-                </button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-10 border-border/40 rounded-[2.5rem]">
-                <DialogHeader className="mb-8 border-b border-border/40 pb-6">
-                    <div className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/20 mb-4">
-                         <ClipboardList size={28} />
-                    </div>
-                    <DialogTitle className="text-xl font-black text-card-foreground uppercase tracking-tight">Novos Lançamentos em Lote</DialogTitle>
-                    <p className="text-xs text-muted-foreground font-medium">Crie a mesma tarefa para múltiplas empresas simultaneamente.</p>
-                </DialogHeader>
+                <DialogTrigger asChild>
+                    <button className="button-secondary-premium h-11 px-6 flex items-center gap-2">
+                        <ClipboardList size={18} /> LOTE
+                    </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-3xl border border-border/50 shadow-2xl">
+                    <DialogHeader className="p-8 bg-muted/20 border-b border-border/50">
+                        <DialogTitle className="text-xl font-black text-card-foreground uppercase tracking-tight">Novos Lançamentos em Lote</DialogTitle>
+                        <p className="text-xs text-muted-foreground font-medium">Crie a mesma tarefa para múltiplas empresas simultaneamente.</p>
+                    </DialogHeader>
 
-                <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Assunto da Tarefa</Label>
-                        <input className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase" value={batchForm.assunto} onChange={e => setBatchForm({ ...batchForm, assunto: e.target.value })} placeholder="EX: LANÇAMENTO DE NOTAS..." />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Responsável pela Execução</Label>
-                        <select className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer" value={batchForm.responsavel_id} onChange={e => setBatchForm({ ...batchForm, responsavel_id: e.target.value })}>
-                            <option value="">SELECIONE O ANALISTA...</option>
-                            {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
-                        </select>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 mb-2 px-1">
-                      <input
-                          type="checkbox"
-                          id="batchSemPrazo"
-                          checked={batchForm.semPrazo}
-                          onChange={(e) => setBatchForm(prev => ({ ...prev, semPrazo: e.target.checked }))}
-                          className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                      />
-                      <label htmlFor="batchSemPrazo" className="text-[10px] font-black tracking-widest text-card-foreground cursor-pointer select-none uppercase">
-                          Tarefa sem prazo de entrega
-                      </label>
-                  </div>
-
-                  {!batchForm.semPrazo && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data Efetiva</Label>
-                            <input type="date" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" value={batchForm.data} onChange={e => setBatchForm({ ...batchForm, data: e.target.value })} />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Horário Previsto</Label>
-                            <input type="time" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" value={batchForm.horario} onChange={e => setBatchForm({ ...batchForm, horario: e.target.value })} />
-                        </div>
-                      </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Informações Adicionais / Observações</Label>
-                    <textarea className="w-full px-5 py-4 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all h-24 resize-none uppercase" value={batchForm.informacoes} onChange={e => setBatchForm({ ...batchForm, informacoes: e.target.value })} placeholder="DETALHES IMPORTANTES PARA A EXECUÇÃO..." />
-                  </div>
-
-                  <div className="space-y-4">
-                    <Label className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empresas Selecionadas ({selectedEmpresas.length})</span>
-                        <button className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 px-3 py-1 rounded-full border border-primary/10 transition-all hover:bg-primary/10" onClick={() => {
-                            if (selectedEmpresas.length === empresas.length) setSelectedEmpresas([]);
-                            else setSelectedEmpresas(empresas.map(e => e.id));
-                        }}>
-                            {selectedEmpresas.length === empresas.length ? "DESMARCAR TODAS" : "SELECIONAR TODAS AS EMPRESAS"}
-                        </button>
-                    </Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border border-border/40 rounded-[1.8rem] p-6 max-h-56 overflow-y-auto no-scrollbar bg-card/50">
-                        {empresas.map(emp => (
-                            <div key={emp.id} className={`flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer border ${selectedEmpresas.includes(emp.id) ? 'bg-primary/5 border-primary/20' : 'hover:bg-muted/50 border-transparent'}`} onClick={() => {
-                                if (selectedEmpresas.includes(emp.id)) setSelectedEmpresas(prev => prev.filter(id => id !== emp.id));
-                                else setSelectedEmpresas(prev => [...prev, emp.id]);
-                            }}>
-                                <Checkbox checked={selectedEmpresas.includes(emp.id)} className="rounded-md" />
-                                <span className="text-[10px] font-black uppercase tracking-tight truncate">{emp.nome_empresa}</span>
+                    <div className="p-8 space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Assunto da Tarefa</Label>
+                                <input className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase" value={batchForm.assunto} onChange={e => setBatchForm({ ...batchForm, assunto: e.target.value })} placeholder="EX: LANÇAMENTO DE NOTAS..." />
                             </div>
-                        ))}
-                    </div>
-                  </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Responsável pela Execução</Label>
+                                <select className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer" value={batchForm.responsavel_id} onChange={e => setBatchForm({ ...batchForm, responsavel_id: e.target.value })}>
+                                    <option value="">SELECIONE O ANALISTA...</option>
+                                    {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                                </select>
+                            </div>
+                        </div>
 
-                  <button 
-                    onClick={handleCreateBatch}
-                    className="w-full h-16 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
-                  >
-                    <Plus size={20} /> CRIAR {selectedEmpresas.length} TAREFAS EM LOTE
-                  </button>
-                </div>
-              </DialogContent>
+                        <div className="flex items-center gap-2 mb-2 px-1">
+                            <input
+                                type="checkbox"
+                                id="semPrazo"
+                                checked={batchForm.semPrazo}
+                                onChange={e => setBatchForm({ ...batchForm, semPrazo: e.target.checked })}
+                                className="w-4 h-4 rounded border-border/40 text-primary focus:ring-primary/20"
+                            />
+                            <Label htmlFor="semPrazo" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground cursor-pointer">Tarefa Sem Prazo Definido</Label>
+                        </div>
+
+                        {!batchForm.semPrazo && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="space-y-1.5">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data Efetiva</Label>
+                                    <input type="date" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all" value={batchForm.data} onChange={e => setBatchForm({ ...batchForm, data: e.target.value })} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Horário Previsto</Label>
+                                    <input type="time" className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all" value={batchForm.horario} onChange={e => setBatchForm({ ...batchForm, horario: e.target.value })} />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Informações Adicionais / Observações</Label>
+                            <textarea className="w-full px-5 py-4 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all h-24 resize-none uppercase" value={batchForm.informacoes} onChange={e => setBatchForm({ ...batchForm, informacoes: e.target.value })} placeholder="DETALHES IMPORTANTES PARA A EXECUÇÃO..." />
+                        </div>
+
+                        <div className="space-y-4">
+                            <Label className="flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empresas Selecionadas ({selectedEmpresas.length})</span>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setSelectedEmpresas(empresas.map(e => e.id))} className="text-[10px] font-bold text-primary hover:underline">Selecionar Todas</button>
+                                    <span className="text-border/40">|</span>
+                                    <button onClick={() => setSelectedEmpresas([])} className="text-[10px] font-bold text-muted-foreground hover:underline">Limpar</button>
+                                </div>
+                            </Label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border border-border/40 rounded-2xl p-4 max-h-56 overflow-y-auto custom-scrollbar bg-card/50">
+                                {empresas.map(emp => (
+                                    <div key={emp.id} className={`flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer border ${selectedEmpresas.includes(emp.id) ? 'bg-primary/5 border-primary/20' : 'hover:bg-muted/50 border-transparent'}`} onClick={() => {
+                                        if (selectedEmpresas.includes(emp.id)) setSelectedEmpresas(prev => prev.filter(id => id !== emp.id));
+                                        else setSelectedEmpresas(prev => [...prev, emp.id]);
+                                    }}>
+                                        <Checkbox checked={selectedEmpresas.includes(emp.id)} className="rounded-md" />
+                                        <span className="text-[11px] font-bold text-card-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer uppercase truncate">{emp.nome_empresa}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-4 border-t border-border/50">
+                            <button onClick={() => setIsBatchOpen(false)} className="flex-1 h-12 rounded-xl border border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all">Cancelar</button>
+                            <button onClick={handleBatchCreate} className="flex-[2] h-12 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20" disabled={selectedEmpresas.length === 0 || !batchForm.assunto}>Criar {selectedEmpresas.length} Tarefas</button>
+                        </div>
+                    </div>
+                </DialogContent>
             </Dialog>
 
             <button
-              onClick={handleClonePreviousMonth}
-              className="h-14 px-6 rounded-2xl bg-card border border-border/60 text-[10px] font-black uppercase tracking-widest hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-2 shadow-sm"
+                onClick={handleClonePreviousMonth}
+                className="button-secondary-premium h-11 px-6 flex items-center gap-2"
+                title="Clonar tarefas do mês anterior"
             >
-              <RefreshCw size={18} /> Clonar
+                <RefreshCw size={18} /> CLONAR
             </button>
 
             <button
-              onClick={() => navigate("/tarefas/novo")}
-              className="button-premium h-11 px-6 flex items-center gap-2"
+                onClick={() => navigate("/tarefas/novo")}
+                className="button-premium h-11 px-6 flex items-center gap-2"
             >
-              <Plus size={18} /> NOVA TAREFA
+                <Plus size={18} /> NOVA TAREFA
             </button>
-          </div>
         </div>
       </div>
 
       {/* ── Main Tabs ────────────────────────────────────────────────── */}
-      {/* Tabs and Search Bar */}
-      <div className="glass-card p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-2xl">
-        <div className="flex flex-col sm:flex-row items-center gap-2 bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-border/10">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mt-4">
+        <div className="flex bg-muted/20 p-1.5 rounded-2xl border border-border/40">
             <button
                 onClick={() => setActiveTab("para_mim")}
-                className={`flex-1 sm:flex-none px-8 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === "para_mim" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"}`}
+                className={`px-6 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === "para_mim" ? "bg-background border border-border/50 text-primary" : "text-muted-foreground hover:bg-background/20"}`}
             >
                 Atribuídas a mim
-                {countParaMim > 0 && <span className="ml-2 opacity-50">{countParaMim}</span>}
+                {countParaMim > 0 && <span className="ml-2 py-0.5 px-2 bg-primary/10 rounded-full text-[10px]">{countParaMim}</span>}
             </button>
             <button
                 onClick={() => setActiveTab("por_mim")}
-                className={`flex-1 sm:flex-none px-8 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === "por_mim" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"}`}
+                className={`px-6 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === "por_mim" ? "bg-background border border-border/50 text-primary" : "text-muted-foreground hover:bg-background/20"}`}
             >
                 Atribuídas por mim
-                {countPorMim > 0 && <span className="ml-2 opacity-50">{countPorMim}</span>}
+                {countPorMim > 0 && <span className="ml-2 py-0.5 px-2 bg-primary/10 rounded-full text-[10px]">{countPorMim}</span>}
             </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 flex-1 lg:max-w-4xl justify-end">
-            <div className="relative group w-full lg:w-96">
-                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/30 group-focus-within:text-primary transition-colors" />
+        <div className="flex flex-col sm:flex-row items-center gap-4 flex-1 lg:max-w-3xl justify-end">
+            <div className="relative w-full lg:w-96">
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
                 <input
                     type="text"
                     placeholder="BUSCAR TAREFA, ANALISTA OU CLIENTE..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="w-full h-10 pl-11 pr-4 bg-black/5 dark:bg-white/5 border border-border/20 rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-primary/40 outline-none transition-all placeholder:text-muted-foreground/20"
+                    className="w-full h-11 pl-11 pr-4 bg-muted/20 border border-border/40 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/40 outline-none transition-all placeholder:text-muted-foreground/30"
                 />
             </div>
 
-            <div className="flex items-center gap-3">
-                <input
-                    type="month"
-                    value={competencia}
-                    onChange={e => setCompetencia(e.target.value)}
-                    className="h-10 px-4 bg-black/5 dark:bg-white/5 border border-border/20 rounded-xl text-[10px] font-bold text-primary uppercase tracking-widest outline-none"
-                />
-                <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-border/20">
-                    <button
-                        onClick={() => setViewMode("kanban")}
-                        className={`p-2 rounded-lg transition-all ${viewMode === "kanban" ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-muted-foreground/30 hover:text-foreground"}`}
-                        title="Visão Kanban"
-                    >
-                        <LayoutDashboard size={16} />
-                    </button>
-                    <button
-                        onClick={() => setViewMode("list")}
-                        className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-muted-foreground/30 hover:text-foreground"}`}
-                        title="Visão em Lista"
-                    >
-                        <List size={16} />
-                    </button>
-                </div>
+            <div className="flex bg-muted/20 p-1 rounded-xl border border-border/40">
+                <button
+                    onClick={() => setViewMode("kanban")}
+                    className={`p-2.5 rounded-lg transition-all ${viewMode === "kanban" ? "bg-background border border-border/50 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                    title="Visão Kanban"
+                >
+                    <LayoutDashboard size={18} />
+                </button>
+                <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-2.5 rounded-lg transition-all ${viewMode === "list" ? "bg-background border border-border/50 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                    title="Visão em Lista"
+                >
+                    <List size={18} />
+                </button>
             </div>
         </div>
       </div>

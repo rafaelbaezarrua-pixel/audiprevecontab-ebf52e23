@@ -214,10 +214,6 @@
    ═══════════════════════════════════════════════════════════════ */
 
 @layer base {
-  * {
-    @apply border-border/40;
-  }
-
   body {
     @apply bg-background text-foreground font-body font-normal antialiased;
     font-size: 14px;

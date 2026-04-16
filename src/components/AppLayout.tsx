@@ -254,7 +254,7 @@ const AppLayout: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-background border-b border-border px-4 lg:px-8 py-4 flex items-center justify-between flex-shrink-0 sticky top-0 z-30">
+        <header className="bg-background border-b border-border px-4 lg:px-8 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setMobileOpen(true)}
