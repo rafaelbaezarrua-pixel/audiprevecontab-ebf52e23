@@ -39,7 +39,7 @@ export const HonorariosStats = ({
           <p className={`text-2xl font-black ${item.textColor}`}>
             {typeof item.value === 'number' ? formatCurrency(item.value) : item.value}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-1 font-medium italic">{item.note}</p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">{item.note}</p>
         </div>
       ))}
     </div>

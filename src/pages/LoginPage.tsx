@@ -139,7 +139,7 @@ const LoginPage: React.FC = () => {
             <img src={logoAudipreve} alt="Audipreve" className="w-32 h-32 object-contain mx-auto relative z-10 drop-shadow-2xl" />
           </div>
           <div className="space-y-1">
-            <h1 className="header-title !text-4xl text-center">Audipreve <span className="text-primary italic">Contabilidade</span></h1>
+            <h1 className="header-title !text-4xl text-center">Audipreve <span className="text-primary">Contabilidade</span></h1>
             <p className="subtitle-premium uppercase tracking-[0.4em] text-[10px] opacity-60">Sistema de Gestão</p>
           </div>
         </div>

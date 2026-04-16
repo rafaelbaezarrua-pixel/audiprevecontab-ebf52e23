@@ -200,22 +200,13 @@ const SocietarioPage: React.FC = () => {
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
       {/* Main Page Header */}
-      <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-xl shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/10">
-            <Building2 size={28} />
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+             <h1 className="header-title">Gestão <span className="text-primary/90">Societária</span></h1>
+             <FavoriteToggleButton moduleId="societario" />
           </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase italic px-0">
-              Gestão <span className="text-primary/90">Societária</span>
-            </h1>
-            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase italic">
-              Carteira de Clientes • Aberturas e Baixas
-            </p>
-          </div>
-          <div className="ml-2">
-            <FavoriteToggleButton moduleId="societario" />
-          </div>
+          <p className="subtitle-premium">Carteira de clientes, aberturas, alterações e baixas.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -386,7 +377,7 @@ const SocietarioPage: React.FC = () => {
         <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 px-2">
             <div className="space-y-1">
-              <h3 className="text-xl font-black text-foreground flex items-center gap-3 uppercase italic tracking-tight">
+              <h3 className="text-xl font-black text-foreground flex items-center gap-3 uppercase tracking-tight">
                 <History className="text-primary" size={22} /> Fluxo de Processos
               </h3>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-9">Acompanhamento em tempo real das etapas societárias.</p>
@@ -414,7 +405,7 @@ const SocietarioPage: React.FC = () => {
           {processos.length === 0 ? (
             <div className="glass-card flex flex-col items-center justify-center py-32 border-dashed border-border/20 opacity-60">
               <Activity size={48} className="text-muted-foreground/20 mb-4" />
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] italic">Nenhum processo em andamento no momento</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em]">Nenhum processo em andamento no momento</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
@@ -477,7 +468,7 @@ const SocietarioPage: React.FC = () => {
                <Activity size={36} />
             </div>
             <div className="space-y-2">
-              <h2 className="text-xl font-black text-foreground uppercase italic tracking-tight">Excluir Processo?</h2>
+              <h2 className="text-xl font-black text-foreground uppercase tracking-tight">Excluir Processo?</h2>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed">Você está prestes a excluir o processo de <br/><span className="text-foreground">{processoToDelete.nome}</span>.</p>
             </div>
             <div className="flex flex-col gap-3 pt-2">

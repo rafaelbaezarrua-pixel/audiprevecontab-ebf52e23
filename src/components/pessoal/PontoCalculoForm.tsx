@@ -464,7 +464,7 @@ export const PontoCalculoForm: React.FC<Props> = ({ empresa, funcionarios }) => 
         doc.text(`R$ ${liquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 190, y, { align: "right" });
 
         y += 15;
-        doc.setFont("helvetica", "italic"); doc.setFontSize(8);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(8);
         const declSplit = doc.splitTextToSize(previewFooter, 170);
         doc.text(declSplit, MARGIN, y);
 

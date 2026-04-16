@@ -318,7 +318,7 @@ const GestorAlertasPage: React.FC = () => {
             <div className="flex items-center justify-between p-3 mb-4 rounded-xl border border-primary/20 bg-primary/5">
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-primary">Modo de Teste (Forçar Todos)</span>
-                <span className="text-[10px] text-muted-foreground italic">Ignora filtros de datas (envia tudo dos próximos 30 dias)</span>
+                <span className="text-[10px] text-muted-foreground">Ignora filtros de datas (envia tudo dos próximos 30 dias)</span>
               </div>
               <button
                 onClick={() => setTestMode(!testMode)}

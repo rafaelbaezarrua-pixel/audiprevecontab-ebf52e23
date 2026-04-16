@@ -213,13 +213,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const isAdmin = (roles?.some(r => r.role === "admin") || profileData?.role === "admin" || metadata.role === "admin") || false;
       const metaRole = metadata.role || profileData?.role;
       const mappedRoles = roles?.map(r => r.role) || [];
-      const isClient = (metaRole === "client" || mappedRoles.includes("client") || (!!access && !isAdmin && !mappedRoles.includes("user"))) || false;
+      
+      const hasEmpresaLink = !!access || !!metadata.empresa_id || !!profileData?.empresa_id;
+      const isClient = (metaRole === "client" || mappedRoles.includes("client") || (hasEmpresaLink && !isAdmin)) || false;
+      const isTeamMember = !isAdmin && !isClient;
+      
       const empresaId = access?.empresa_id || metadata.empresa_id || profileData?.empresa_id || undefined;
 
       if (isAdmin) {
         setUserData({
           isAdmin: true,
           isClient: false,
+          isTeamMember: false,
           empresaId: undefined,
           userId: currentUser.id,
           modules: allModulesTrue,
@@ -241,6 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserData({
           isAdmin: false,
           isClient: isClient,
+          isTeamMember: isTeamMember,
           empresaId: empresaId,
           userId: currentUser.id,
           modules: {

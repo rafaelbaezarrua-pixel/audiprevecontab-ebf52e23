@@ -123,7 +123,7 @@ const AgendamentosPage: React.FC = () => {
                     </div>
 
                     {a.informacoes_adicionais && (
-                        <p className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg italic line-clamp-2">{a.informacoes_adicionais}</p>
+                        <p className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg line-clamp-2">{a.informacoes_adicionais}</p>
                     )}
                 </div>
 

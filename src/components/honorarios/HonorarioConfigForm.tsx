@@ -90,7 +90,7 @@ export const HonorarioConfigForm = ({
             </div>
           ))}
           {(!config.outros_servicos || config.outros_servicos.length === 0) && (
-            <p className="text-xs text-muted-foreground italic">Nenhum serviço adicional configurado.</p>
+            <p className="text-xs text-muted-foreground">Nenhum serviço adicional configurado.</p>
           )}
         </div>
       </div>

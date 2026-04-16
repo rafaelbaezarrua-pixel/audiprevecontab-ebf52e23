@@ -99,7 +99,7 @@ const NotificacoesPage: React.FC = () => {
               <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
                 <Inbox size={40} className="text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-black italic">Sua caixa está vazia</h3>
+              <h3 className="text-lg font-black">Sua caixa está vazia</h3>
               <p className="text-sm max-w-xs mx-auto">
                 Tudo em dia por aqui! Novas notificações aparecerão à medida que o sistema processar seus dados.
               </p>

@@ -559,7 +559,7 @@ const SocietarioEmpresaPage: React.FC = () => {
                   <select value={porteEmpresa} onChange={e => setPorteEmpresa(e.target.value)} className={inputCls}>
                     <option value="">Selecione</option><option value="mei">MEI</option><option value="me">Microempresa (ME)</option><option value="epp">Empresa de Pequeno Porte (EPP)</option><option value="medio">Médio Porte</option><option value="grande">Grande Porte</option>
                   </select>
-                  {porteRfb && <p className="text-[10px] text-muted-foreground ml-1 italic">RFB: {porteRfb}</p>}
+                  {porteRfb && <p className="text-[10px] text-muted-foreground ml-1">RFB: {porteRfb}</p>}
                 </div>
               </div>
               <div><label className={labelCls}>Regime Tributário</label><select value={regimeTributario} onChange={e => setRegimeTributario(e.target.value)} className={inputCls}><option value="simples">Simples Nacional</option><option value="lucro_presumido">Lucro Presumido</option><option value="lucro_real">Lucro Real</option><option value="simei">Simei (MEI)</option><option value="mei">MEI</option></select></div>

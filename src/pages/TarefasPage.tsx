@@ -55,11 +55,18 @@ const TarefasPage: React.FC = () => {
     const { data: usersData } = useQuery({
         queryKey: ["profiles_list"],
         queryFn: async () => {
-             const { data } = await supabase.from("profiles").select("id, full_name, user_id").eq("ativo", true);
-             return (data || []).filter((u: any) => u.user_id).map((u: any) => ({
-                id: u.user_id,
-                nome: u.full_name || "Sem Nome"
-            }));
+             const { data } = await supabase
+                .from("profiles")
+                .select("id, full_name, user_id, user_roles!inner(role)")
+                .eq("ativo", true);
+             
+             // Filter out clients and map to the expected format
+             return (data || [])
+                .filter((u: any) => u.user_roles?.some((r: any) => r.role !== 'client'))
+                .map((u: any) => ({
+                    id: u.user_id,
+                    nome: u.full_name || "Sem Nome"
+                }));
         },
         staleTime: 60000 * 10
     });
@@ -527,7 +534,7 @@ const TarefasPage: React.FC = () => {
 
                 {/* Additional Info / Comments */}
                 {a.informacoes_adicionais && (
-                    <div className="bg-black/[0.02] dark:bg-white/[0.02] p-3 rounded-xl text-[11px] text-muted-foreground/80 border border-border/20 italic line-clamp-2">
+                    <div className="bg-black/[0.02] dark:bg-white/[0.02] p-3 rounded-xl text-[11px] text-muted-foreground/80 border border-border/20">
                         {a.informacoes_adicionais}
                     </div>
                 )}
@@ -535,7 +542,7 @@ const TarefasPage: React.FC = () => {
                 {a.resposta && (
                     <div className="bg-primary/5 border border-primary/10 p-3 rounded-xl text-xs space-y-1">
                         <span className="text-[9px] font-black uppercase tracking-widest text-primary opacity-60">Resposta Final</span>
-                        <p className="text-foreground/80 line-clamp-2 italic">{a.resposta}</p>
+                        <p className="text-foreground/80">{a.resposta}</p>
                     </div>
                 )}
 
@@ -915,7 +922,7 @@ const TarefasPage: React.FC = () => {
                                             Por: {h.usuario_nome || "Sistema"}
                                         </p>
                                         {h.observacao && (
-                                            <p className="text-xs text-foreground/80 mt-2 bg-muted/40 p-2 rounded-lg italic border border-border/40">
+                                            <p className="text-xs text-foreground/80 mt-2 bg-muted/40 p-2 rounded-lg border border-border/40">
                                                 {h.observacao}
                                             </p>
                                         )}

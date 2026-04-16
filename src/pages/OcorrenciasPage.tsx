@@ -60,14 +60,26 @@ const OcorrenciasPage: React.FC = () => {
 
     // Fetch users for select
     const { data: usuarios = [] } = useQuery({
-        queryKey: ["usuarios_profiles"],
+        queryKey: ["usuarios_profiles_internos"],
         queryFn: async () => {
-             const { data, error } = await supabase.from("profiles").select("user_id, nome_completo").not("nome_completo", "is", null).order("nome_completo");
+             // Busca apenas usuários que tenham papel de 'admin' ou 'user'
+             const { data, error } = await supabase
+                .from("profiles")
+                .select(`
+                    user_id, 
+                    nome_completo,
+                    user_roles!inner(role)
+                `)
+                .in("user_roles.role", ["admin", "user"])
+                .not("nome_completo", "is", null)
+                .order("nome_completo");
+                
              if (error) throw error;
              return data || [];
         },
         staleTime: 60000 * 30
     });
+
 
     // Header Config
     const { data: headerConfigData } = useQuery({

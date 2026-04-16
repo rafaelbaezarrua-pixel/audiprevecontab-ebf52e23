@@ -229,22 +229,13 @@ const FiscalPage: React.FC = () => {
       )}
 
       {/* Main Page Header */}
-      <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-xl shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/10">
-            <Circle size={28} />
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+             <h1 className="header-title">Gestão <span className="text-primary/90">Fiscal</span></h1>
+             <FavoriteToggleButton moduleId="fiscal" />
           </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase italic px-0">
-              Gestão <span className="text-primary/90">Fiscal</span>
-            </h1>
-            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase italic">
-              Escrituração • Tributos • Obrigações
-            </p>
-          </div>
-          <div className="ml-2">
-            <FavoriteToggleButton moduleId="fiscal" />
-          </div>
+          <p className="subtitle-premium">Escrituração, tributos e obrigações mensais.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -380,8 +371,8 @@ const FiscalPage: React.FC = () => {
                             <Building2 size={18} className={isOpen ? "text-primary" : "text-muted-foreground/60 transition-colors group-hover:text-primary"} />
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-black text-foreground text-sm uppercase italic tracking-tight truncate max-w-[200px] leading-tight group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
-                            <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.15em] mt-1 italic">Tributário: {regimeLabels[emp.regime_tributario] || "—"}</span>
+                            <span className="font-black text-foreground text-sm uppercase tracking-tight truncate max-w-[200px] leading-tight group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
+                            <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.15em] mt-1">Tributário: {regimeLabels[emp.regime_tributario] || "—"}</span>
                           </div>
                         </div>
                       </td>
@@ -405,7 +396,7 @@ const FiscalPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-5 text-center whitespace-nowrap">
-                        <span className="text-muted-foreground/60 font-black text-[10px] uppercase italic">
+                        <span className="text-muted-foreground/60 font-black text-[10px] uppercase">
                           {record?.data_envio ? new Date(record.data_envio).toLocaleDateString("pt-BR") : "—"}
                         </span>
                       </td>
@@ -439,7 +430,7 @@ const FiscalPage: React.FC = () => {
                                <div className="space-y-10">
                                   <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                                     <div className="space-y-2">
-                                      <h3 className="text-xl font-black text-foreground uppercase tracking-tight italic flex items-center gap-3">
+                                      <h3 className="text-xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
                                          <span className="w-2 h-8 bg-primary rounded-full" />
                                          Fechamento da Competência
                                       </h3>
@@ -453,8 +444,8 @@ const FiscalPage: React.FC = () => {
                                      <div key={x.l} className="bg-black/5 dark:bg-white/5 p-6 rounded-2xl border border-border/10">
                                        <span className="block text-[9px] uppercase text-muted-foreground/40 font-black tracking-[0.2em] mb-4">{x.l}</span>
                                        <div className="flex items-center gap-3">
-                                          <div className="p-2 rounded-lg bg-black/5 dark:bg-white/5 text-muted-foreground/20 italic"><x.i size={16} /></div>
-                                          <span className="text-xs font-black text-foreground italic uppercase tracking-wider">{x.v || "NÃO INFORMADO"}</span>
+                                          <div className="p-2 rounded-lg bg-black/5 dark:bg-white/5 text-muted-foreground/20"><x.i size={16} /></div>
+                                          <span className="text-xs font-black text-foreground uppercase tracking-wider">{x.v || "NÃO INFORMADO"}</span>
                                        </div>
                                      </div>
                                    ))}
@@ -465,7 +456,7 @@ const FiscalPage: React.FC = () => {
                                    <div className="glass-card !bg-black/5 dark:!bg-white/5 p-8 border-border/10 space-y-8 shadow-none">
                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                                          <div className="space-y-4">
-                                            <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1 italic">Processamento de Notas (XML)</label>
+                                            <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pl-1">Processamento de Notas (XML)</label>
                                             <div className="relative group">
                                                <select 
                                                  value={form.xml_status || "pendente"} 
@@ -491,15 +482,15 @@ const FiscalPage: React.FC = () => {
                                    <div className="glass-card p-10 border-border/10 space-y-10 shadow-none relative overflow-hidden">
                                       <div className="flex items-center gap-4 relative z-10">
                                          <div className="p-3 rounded-2xl bg-primary text-white shadow-xl shadow-primary/10"><Building2 size={24} /></div>
-                                         <h4 className="text-xl font-black text-foreground uppercase tracking-tight italic">Tributação Federal</h4>
+                                         <h4 className="text-xl font-black text-foreground uppercase tracking-tight">Tributação Federal</h4>
                                       </div>
                                       <div className="grid grid-cols-1 gap-12 relative z-10">
                                         {[{ l: 'IRPJ/CSLL', ak1: 'aliquota_irpj', ak2: 'aliquota_csll', sk: 'irpj_csll_status', dk: 'irpj_csll_data_envio' }, { l: 'PIS/COFINS', ak1: 'aliquota_pis', ak2: 'aliquota_cofins', sk: 'pis_cofins_status', dk: 'pis_cofins_data_envio' }]
                                           .map(x => (
                                             <div key={x.l} className="space-y-6">
                                               <div className="flex items-center justify-between border-b border-border/5 pb-4">
-                                                <p className="text-sm font-black text-foreground uppercase tracking-[0.1em] italic">{x.l}</p>
-                                                <span className="text-[10px] font-black text-primary px-4 py-1.5 rounded-full bg-primary/5 uppercase tracking-widest border border-primary/10 italic">
+                                                <p className="text-sm font-black text-foreground uppercase tracking-[0.1em]">{x.l}</p>
+                                                <span className="text-[10px] font-black text-primary px-4 py-1.5 rounded-full bg-primary/5 uppercase tracking-widest border border-primary/10">
                                                    Apuração: {form[x.ak1] || "0"}% + {form[x.ak2] || "0"}%
                                                 </span>
                                               </div>
@@ -537,7 +528,7 @@ const FiscalPage: React.FC = () => {
                                       {[{ l: 'ESTADUAL (ICMS)', ak: 'aliquota_icms', sk: 'icms_status', dk: 'icms_data_envio' }, { l: 'MUNICIPAL (ISS)', ak: 'aliquota_iss', sk: 'iss_status', dk: 'iss_data_envio' }].map(x => (
                                         <div key={x.l} className="glass-card p-10 border-border/10 space-y-8 shadow-none group">
                                           <div className="flex items-center justify-between border-b border-border/10 pb-5">
-                                             <h4 className="text-xs font-black text-foreground uppercase tracking-[0.2em] italic">{x.l}</h4>
+                                             <h4 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">{x.l}</h4>
                                              <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Apuração: {form[x.ak] || "0"}%</span>
                                           </div>
                                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -564,11 +555,11 @@ const FiscalPage: React.FC = () => {
                                   <div className="flex items-center justify-between border-b border-border/10 pb-6 relative">
                                     <div className="flex items-center gap-4">
                                        <div className="p-3 rounded-2xl bg-primary/10 text-primary"><CheckCircle size={22} /></div>
-                                       <h4 className="text-xl font-black text-foreground uppercase tracking-tight italic">Consolidação de Tributos</h4>
+                                       <h4 className="text-xl font-black text-foreground uppercase tracking-tight">Consolidação de Tributos</h4>
                                     </div>
                                     <div className="flex items-center gap-2.5 px-4 py-2 bg-black/5 dark:bg-white/5 rounded-xl border border-border/10">
                                       <div className={`w-2.5 h-2.5 rounded-full ${isOkXml ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-rose-500 animate-pulse shadow-lg shadow-rose-500/20"}`} />
-                                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">Docs XML: {isOkXml ? "VERIFICADO" : "PENDENTE"}</span>
+                                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Docs XML: {isOkXml ? "VERIFICADO" : "PENDENTE"}</span>
                                     </div>
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-end">
@@ -628,7 +619,7 @@ const FiscalPage: React.FC = () => {
           {filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-40 border-dashed border-border/10">
               <Search size={64} className="text-muted-foreground/10 mb-8" />
-              <p className="text-[12px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] italic">Nenhum registro encontrado</p>
+              <p className="text-[12px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">Nenhum registro encontrado</p>
             </div>
           )}
         </div>
