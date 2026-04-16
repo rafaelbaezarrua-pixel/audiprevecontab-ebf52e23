@@ -39,7 +39,7 @@ export const AlertsSidebar: React.FC<AlertsSidebarProps> = ({ alerts }) => {
           
           <div className="space-y-3 flex-1 mb-6">
             {tarefas.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-8 text-center italic">Nada para hoje.</p>
+              <p className="text-xs text-muted-foreground py-8 text-center">Nada para hoje.</p>
             ) : (
               tarefas.map(a => (
                 <div 
@@ -90,7 +90,7 @@ export const AlertsSidebar: React.FC<AlertsSidebarProps> = ({ alerts }) => {
 
           <div className="space-y-3 flex-1">
             {vencimentos.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-8 text-center italic">Nenhum alerta pendente.</p>
+              <p className="text-xs text-muted-foreground py-8 text-center">Nenhum alerta pendente.</p>
             ) : (
               vencimentos.map(a => (
                 <div key={a.id} className="p-3 rounded-xl bg-muted/30 border border-transparent hover:border-amber-500/20 cursor-pointer">

@@ -675,7 +675,7 @@ const TarefasPage: React.FC = () => {
 
                         <div className="flex gap-3 pt-4 border-t border-border/50">
                             <button onClick={() => setIsBatchOpen(false)} className="flex-1 h-12 rounded-xl border border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all">Cancelar</button>
-                            <button onClick={handleBatchCreate} className="flex-[2] h-12 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20" disabled={selectedEmpresas.length === 0 || !batchForm.assunto}>Criar {selectedEmpresas.length} Tarefas</button>
+                            <button onClick={handleCreateBatch} className="flex-[2] h-12 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20" disabled={selectedEmpresas.length === 0 || !batchForm.assunto}>Criar {selectedEmpresas.length} Tarefas</button>
                         </div>
                     </div>
                 </DialogContent>

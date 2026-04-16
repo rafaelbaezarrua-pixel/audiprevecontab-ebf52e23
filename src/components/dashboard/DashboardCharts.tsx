@@ -49,12 +49,12 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
       {/* Donut Chart: Regimes Tributários */}
       <div className="glass-card flex flex-col items-center p-8 border-border/10">
-        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] italic flex items-center gap-2 mb-10 w-full">
+        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2 mb-10 w-full">
            <Building2 size={16} className="text-primary" /> Distribuição por Regime (Ativas)
         </h3>
         
         {data.regimes.length === 0 ? (
-           <div className="h-64 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 w-full italic">
+           <div className="h-64 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 w-full">
              Sem dados suficientes
            </div>
         ) : (
@@ -94,12 +94,12 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
 
       {/* Bar Chart: Processos Societários */}
       <div className="glass-card flex flex-col items-center p-8 border-border/10">
-        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] italic flex items-center gap-2 mb-10 w-full">
+        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2 mb-10 w-full">
            <Activity size={16} className="text-primary" /> Fluxo de Processos Societários
         </h3>
         
         {data.processos.length === 0 ? (
-           <div className="h-64 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 w-full italic">
+           <div className="h-64 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 w-full">
              Sem dados suficientes
            </div>
         ) : (
