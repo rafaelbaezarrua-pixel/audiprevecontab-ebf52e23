@@ -12,11 +12,15 @@ import React, { Suspense, lazy } from "react";
 // Layouts
 const AppLayout = lazy(() => import("@/components/AppLayout"));
 const PortalLayout = lazy(() => import("@/components/PortalLayout"));
+const ConsentModal = lazy(() => import("@/components/legal/ConsentModal").then(m => ({ default: m.ConsentModal })));
+
 
 // Lazy Loaded Pages
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const AuditoriaPage = lazy(() => import("@/pages/AuditoriaPage"));
+const AdminUsersPage = lazy(() => import("@/pages/AdminUsersPage"));
+
 const SocietarioPage = lazy(() => import("@/pages/SocietarioPage"));
 const SocietarioEmpresaPage = lazy(() => import("@/pages/SocietarioEmpresaPage"));
 const CertificadosPage = lazy(() => import("@/pages/CertificadosPage"));
@@ -163,6 +167,7 @@ const App = () => (
         <AuthProvider>
           <ThemeProvider defaultTheme="dark" storageKey="audipreve-theme">
             <Suspense fallback={<PageLoader />}>
+              <ConsentModal />
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/portal/login" element={<ClientLoginPage />} />
@@ -203,7 +208,9 @@ const App = () => (
                   <Route path="/tarefas/novo" element={<TarefaFormPage />} />
                   <Route path="/tarefas/editar/:id" element={<TarefaFormPage />} />
                   <Route path="/ocorrencias" element={<OcorrenciasPage />} />
+                  <Route path="/configuracoes/usuarios" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
                   <Route path="/configuracoes/usuarios/novo" element={<AdminRoute><UsuarioFormPage /></AdminRoute>} />
+
                   <Route path="/perfil" element={<PerfilPage />} />
                   <Route path="/notificacoes" element={<NotificacoesPage />} />
                   <Route path="/configuracoes" element={<AdminRoute><ConfiguracoesPage /></AdminRoute>} />
