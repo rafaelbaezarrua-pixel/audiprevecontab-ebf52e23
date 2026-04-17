@@ -1,6 +1,6 @@
 -- Create tickets table
 CREATE TABLE IF NOT EXISTS public.tickets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     empresa_id UUID REFERENCES public.empresas(id) ON DELETE CASCADE,
     usuario_id UUID REFERENCES auth.users(id),
     assunto TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE POLICY "Users can create tickets for their company" ON public.tickets
 
 -- Create ticket_messages table
 CREATE TABLE IF NOT EXISTS public.ticket_messages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ticket_id UUID REFERENCES public.tickets(id) ON DELETE CASCADE,
     usuario_id UUID REFERENCES auth.users(id),
     mensagem TEXT NOT NULL,

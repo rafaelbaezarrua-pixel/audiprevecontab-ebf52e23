@@ -61,7 +61,7 @@ const ConfiguracoesPage: React.FC = () => {
       const { data: consentsData } = await supabase
         .from("user_consents")
         .select('*')
-        .order('accepted_at', { ascending: false });
+        .order('timestamp_aceite', { ascending: false });
 
       const userIds = profiles?.map(p => p.user_id) || [];
       const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("user_id", userIds);
@@ -267,7 +267,7 @@ const ConfiguracoesPage: React.FC = () => {
                         <td className="py-4 text-muted-foreground">{c.document_id.replace(/_/g, ' ')}</td>
                         <td className="py-4 font-mono text-xs">{c.version}</td>
                         <td className="py-4 text-muted-foreground">
-                          {new Date(c.accepted_at).toLocaleString('pt-BR')}
+                          {new Date(c.timestamp_aceite).toLocaleString('pt-BR')}
                         </td>
                         <td className="py-4 font-mono text-xs text-primary">{c.ip_address}</td>
                         <td className="py-4 text-right">

@@ -60,6 +60,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   userData: UserPermissions | null;
+  authError: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -92,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userData, setUserData] = useState<UserPermissions | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const loadingUserRef = useRef<string | null>(null);
 
@@ -181,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [user, updateActivity, checkInactivity]);
 
-  const loadUserData = useCallback(async (currentUser: User) => {
+  const loadUserData = useCallback(async (currentUser: User): Promise<boolean> => {
     if (loadingUserRef.current === currentUser.id) return;
     loadingUserRef.current = currentUser.id;
 
@@ -288,8 +290,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           theme_config: profileData?.theme_config || null,
         });
       }
+      setAuthError(null);
+      return true;
     } catch (err) {
       console.error("AuthProvider: Critical error loading user data", err);
+      setUserData(null);
+      setAuthError("Unable to load user permissions.");
+      return false;
     } finally {
       setTimeout(() => { loadingUserRef.current = null; }, 1000); // Allow refreshing after a second
     }
@@ -367,12 +374,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let mounted = true;
 
     if (user && !userData) {
+      setLoading(true);
       loadUserData(user).then(() => {
         if (mounted) setLoading(false);
       });
     } else if (!user) {
       if (mounted) {
         setUserData(null);
+        setAuthError(null);
         setLoading(false);
       }
     }
@@ -391,6 +400,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Only update if session token or user ID actually changed to prevent focus-refetch re-renders
       setSession(prev => (prev?.access_token === newSession?.access_token ? prev : newSession));
       setUser(prev => (prev?.id === newUser?.id ? prev : newUser));
+      if (!newUser) {
+        setAuthError(null);
+      }
 
       // Trava de segurança para links de recuperação de senha enviados por e-mail
       if (event === "PASSWORD_RECOVERY" && window.location.pathname !== "/reset-password") {
@@ -482,8 +494,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [updateActivity]);
 
   const contextValue = React.useMemo(() => ({
-    user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito, updateSidebarConfig, updateThemeConfig, updateActivity
-  }), [user, session, userData, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito, updateSidebarConfig, updateThemeConfig, updateActivity]);
+    user, session, userData, authError, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito, updateSidebarConfig, updateThemeConfig, updateActivity
+  }), [user, session, userData, authError, loading, login, logout, refreshUserData, loginAsClient, toggleFavorito, updateSidebarConfig, updateThemeConfig, updateActivity]);
 
   return (
     <AuthContext.Provider value={contextValue}>

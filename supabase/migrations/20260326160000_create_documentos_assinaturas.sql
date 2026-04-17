@@ -21,31 +21,23 @@ ALTER TABLE documentos_assinaturas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Ver documentos da empresa associada" 
     ON documentos_assinaturas FOR SELECT 
     USING (
-      auth.uid() IN (
-        SELECT user_id FROM perfis p WHERE p.is_admin = true
-        UNION
-        SELECT user_id FROM empresa_acessos ea WHERE ea.empresa_id = documentos_assinaturas.empresa_id
-      )
+      public.can_access_empresa(auth.uid(), empresa_id)
     );
 
-CREATE POLICY "Admins podem inserir documentos_assinaturas" 
+CREATE POLICY "Admins e usuarios podem inserir documentos_assinaturas" 
     ON documentos_assinaturas FOR INSERT 
     WITH CHECK (
-      EXISTS (SELECT 1 FROM perfis WHERE user_id = auth.uid() AND is_admin = true)
+      EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role IN ('admin', 'user'))
     );
 
 CREATE POLICY "Atualizar assinatura (todos envolvidos)" 
     ON documentos_assinaturas FOR UPDATE 
     USING (
-      auth.uid() IN (
-        SELECT user_id FROM perfis p WHERE p.is_admin = true
-        UNION
-        SELECT user_id FROM empresa_acessos ea WHERE ea.empresa_id = documentos_assinaturas.empresa_id
-      )
+      public.can_access_empresa(auth.uid(), empresa_id)
     );
 
 CREATE POLICY "Admins deletam documentos_assinaturas" 
     ON documentos_assinaturas FOR DELETE 
     USING (
-      EXISTS (SELECT 1 FROM perfis WHERE user_id = auth.uid() AND is_admin = true)
+      EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin')
     );
