@@ -3,6 +3,7 @@ import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDateBR, formatMonthYearBR } from "@/lib/utils";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { toast } from "sonner";
@@ -334,7 +335,7 @@ const FaturamentoPage: React.FC = () => {
                 const footerText = `Fazenda Rio Grande/PR, ${dataFormatada}.`;
                 page.drawText(footerText, { x: margin, y: 60, size: 10, font: ubuntuRegular });
 
-                const vcT = `VENCIMENTO: ${format(parseISO(dataVencimento), "dd/MM/yyyy")}`;
+                const vcT = `VENCIMENTO: ${formatDateBR(dataVencimento)}`;
                 page.drawText(vcT, { x: width - margin - ubuntuBold.widthOfTextAtSize(vcT, 10), y: 60, size: 10, font: ubuntuBold });
             }
 
@@ -813,7 +814,7 @@ const FaturamentoPage: React.FC = () => {
                           <Building2 size={12} className="text-muted-foreground/30" />
                           <div className="flex flex-col min-w-0">
                             <span className="text-[10px] font-black uppercase truncate max-w-[200px]">{f.nome_cliente}</span>
-                            <span className="text-[8px] font-black text-muted-foreground/50 tracking-widest">{format(parseISO(f.data_emissao), "dd/MM/yyyy")}</span>
+                            <span className="text-[8px] font-black text-muted-foreground/50 tracking-widest">{formatDateBR(f.data_emissao)}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -872,8 +873,8 @@ const FaturamentoPage: React.FC = () => {
                           <span className="text-[10px] font-black uppercase text-foreground/80">{f.nome_cliente}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 font-mono text-[10px] text-muted-foreground/80">{format(parseISO(f.data_emissao), "dd/MM/yyyy")}</td>
-                      <td className="px-4 py-2.5 font-mono text-[10px] text-rose-500/80">{format(parseISO(f.data_vencimento), "dd/MM/yyyy")}</td>
+                      <td className="px-4 py-2.5 font-mono text-[10px] text-muted-foreground/80">{formatDateBR(f.data_emissao)}</td>
+                      <td className="px-4 py-2.5 font-mono text-[10px] text-rose-500/80">{formatDateBR(f.data_vencimento)}</td>
                       <td className="px-4 py-2.5">
                          <span className="text-[10px] font-black text-primary">R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(Number(f.valor))}</span>
                       </td>
@@ -1037,7 +1038,7 @@ const FaturamentoPage: React.FC = () => {
                              <div key={r.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group border-b border-border/5 last:border-0">
                                 <div className="flex flex-col">
                                    <span className="text-[10px] font-black uppercase truncate max-w-[300px]">{r.nome_empresa}</span>
-                                   <span className="text-[8px] font-black text-muted-foreground/40 tracking-widest uppercase">{r.periodo_inicio} ATÉ {r.periodo_fim}</span>
+                                   <span className="text-[8px] font-black text-muted-foreground/40 tracking-widest uppercase">{formatMonthYearBR(r.periodo_inicio)} ATÉ {formatMonthYearBR(r.periodo_fim)}</span>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <span className="text-[10px] font-black text-primary">R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(r.valor_total)}</span>

@@ -1,5 +1,5 @@
-
 import React from "react";
+import { formatMonthYearBR } from "@/lib/utils";
 import { Trash2 } from "lucide-react";
 import { ServicoEsporadico } from "@/types/honorarios";
 
@@ -27,7 +27,7 @@ export const HonorariosEsporadicosTable = ({ data, competencia, onTogglePago, on
         </thead>
         <tbody className="divide-y divide-border">
           {data.length === 0 ? (
-            <tr><td colSpan={5} className="px-5 py-12 text-center text-muted-foreground">Nenhum serviço esporádico para esta competência {competencia}.</td></tr>
+            <tr><td colSpan={5} className="px-5 py-12 text-center text-muted-foreground">Nenhum serviço esporádico para esta competência {formatMonthYearBR(competencia)}.</td></tr>
           ) : (
             data.map(item => (
               <tr key={item.id} className="hover:bg-muted/20 transition-colors">

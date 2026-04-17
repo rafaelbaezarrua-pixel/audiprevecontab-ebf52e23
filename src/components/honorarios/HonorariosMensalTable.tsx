@@ -1,6 +1,6 @@
 
 import React from "react";
-import { format } from "date-fns";
+import { formatDateBR, formatMonthYearBR } from "@/lib/utils";
 import { CheckCircle, Clock, Plus } from "lucide-react";
 import { HonorarioMensal } from "@/types/honorarios";
 
@@ -49,7 +49,7 @@ export const HonorariosMensalTable = ({ data, competencia, onTogglePago, onToggl
             {data.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">
-                  Nenhum honorário registrado para a competência {competencia}.
+                   Nenhum honorário registrado para a competência {formatMonthYearBR(competencia)}.
                 </td>
               </tr>
             ) : (
@@ -82,7 +82,7 @@ export const HonorariosMensalTable = ({ data, competencia, onTogglePago, onToggl
                     )}
                   </td>
                   <td className="px-5 py-4 text-center text-muted-foreground">
-                    {record.data_vencimento ? format(new Date(record.data_vencimento), 'dd/MM/yyyy') : '—'}
+                    {formatDateBR(record.data_vencimento)}
                   </td>
                   <td className="px-5 py-4 text-center">
                     <button

@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
     Building2, FileText, CheckCircle, AlertCircle,
     ArrowRight, Download, MessageSquare, Clock, Search,
-    History, Calendar, PenTool, TrendingUp
+    History, Calendar, PenTool, TrendingUp, LayoutDashboard
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
 } from "recharts";
 import { format, subMonths, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDateBR } from "@/lib/utils";
 
 const PortalDashboardPage: React.FC = () => {
     const { userData } = useAuth();
@@ -46,13 +47,13 @@ const PortalDashboardPage: React.FC = () => {
 
                 // Get counts & Recent Docs
                 const [licRes, certRes, msgRes, sigRes, docRes, procRes, billingRes] = await Promise.all([
-                    supabase.from("licencas").select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId),
-                    supabase.from("certidoes").select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId),
+                    supabase.from("licencas" as any).select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId),
+                    supabase.from("certidoes" as any).select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId),
                     supabase.from("internal_messages" as any).select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId).eq("lida", false).eq("direcao", "escritorio_para_cliente"),
-                    supabase.from("documentos_assinaturas").select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId).eq("status", "pendente"),
-                    supabase.from("documentos").select("*").eq("empresa_id", userData.empresaId).order("created_at", { ascending: false }).limit(4),
-                    supabase.from("processos_societarios").select("*").eq("empresa_id", userData.empresaId).neq("status", "concluido").order("created_at", { ascending: false }).limit(2),
-                    supabase.from("honorarios_mensal").select("competencia, valor_total").eq("empresa_id", userData.empresaId).order("competencia", { ascending: true }).limit(12)
+                    supabase.from("documentos_assinaturas" as any).select("*", { count: 'exact', head: true }).eq("empresa_id", userData.empresaId).eq("status", "pendente"),
+                    supabase.from("documentos_assinaturas" as any).select("*").eq("empresa_id", userData.empresaId).order("created_at", { ascending: false }).limit(4),
+                    supabase.from("processos_societarios" as any).select("*").eq("empresa_id", userData.empresaId).neq("status", "concluido").order("created_at", { ascending: false }).limit(2),
+                    supabase.from("honorarios_mensal" as any).select("competencia, valor_total").eq("empresa_id", userData.empresaId).order("competencia", { ascending: true }).limit(12)
                 ]);
 
                 setCounts({
@@ -62,12 +63,13 @@ const PortalDashboardPage: React.FC = () => {
                     pendingSigs: sigRes.count || 0
                 });
 
-                if (docRes.data) setRecentDocs(docRes.data);
-                if (procRes.data) setActiveProcs(procRes.data);
+                if (docRes.data) setRecentDocs(docRes.data as any[]);
+                if (procRes.data) setActiveProcs(procRes.data as any[]);
 
                 // Process Chart Data
-                if (billingRes.data && billingRes.data.length > 0) {
-                    const formatted = billingRes.data.map(d => ({
+                const billingData = (billingRes.data as any[]) || [];
+                if (billingData.length > 0) {
+                    const formatted = billingData.map(d => ({
                         name: d.competencia,
                         faturamento: d.valor_total || 0,
                         // Simulate tax estimate (e.g. 15%) for visualization if real tax data isn't joined yet
@@ -168,7 +170,7 @@ const PortalDashboardPage: React.FC = () => {
                         <div className="flex items-center gap-6 px-4 py-2 bg-black/5 dark:bg-white/5 rounded-xl border border-border/10">
                             <div className="flex items-center gap-2">
                                 <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                                <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest text-primary">Total</span>
+                                <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">Total</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
@@ -287,7 +289,7 @@ const PortalDashboardPage: React.FC = () => {
                                         <div className="flex items-center gap-2 mt-1 px-0">
                                             <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">{doc.categoria}</span>
                                             <span className="text-[9px] text-muted-foreground/20">•</span>
-                                            <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">{format(new Date(doc.created_at), 'dd MMM yyyy', { locale: ptBR })}</span>
+                                            <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">{formatDateBR(doc.created_at)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -325,7 +327,7 @@ const PortalDashboardPage: React.FC = () => {
                                     </div>
                                     <div className="mt-3 flex items-center justify-between text-[9px] text-muted-foreground">
                                         <span className="font-black uppercase tracking-[0.15em] opacity-40">Fase em andamento</span>
-                                        <span className="font-black opacity-40 uppercase">{format(new Date(proc.created_at), 'dd/MM/yyyy')}</span>
+                                        <span className="font-black opacity-40 uppercase">{formatDateBR(proc.created_at)}</span>
                                     </div>
                                     <div className="mt-3 h-1 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
                                         <div className="h-full bg-primary w-[65%] rounded-full opacity-60" />

@@ -4,6 +4,7 @@ import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDateBR } from "@/lib/utils";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { Receipt, Download, History, Trash2, Calendar, Search, Filter } from "lucide-react";
@@ -392,7 +393,7 @@ const RecibosPage: React.FC = () => {
                                 <div className="space-y-0.5 flex-1 min-w-0">
                                     <h3 className="font-black text-[11px] text-foreground uppercase tracking-tight truncate">{recibo.nome_cliente}</h3>
                                     <div className="flex items-center gap-4 text-[8px] font-black uppercase tracking-widest">
-                                        <span className="flex items-center gap-1.5 text-muted-foreground/60"><Calendar size={10} /> {format(parseISO(recibo.data_emissao), "dd/MM/yyyy")}</span>
+                                        <span className="flex items-center gap-1.5 text-muted-foreground/60"><Calendar size={10} /> {formatDateBR(recibo.data_emissao)}</span>
                                         <span className="text-primary bg-primary/5 px-1.5 py-0.5 rounded-lg border border-primary/10">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(recibo.valor)}
                                         </span>

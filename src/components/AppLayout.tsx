@@ -16,6 +16,7 @@ import { ColorCustomizer } from "./ColorCustomizer";
 import { DEFAULT_NAV_ITEMS, NavItemConfig } from "@/constants/navigation";
 
 import { AlertasInteligentesProvider } from "@/contexts/AlertasInteligentesProvider";
+import { formatDateBR } from "@/lib/utils";
 
 // NavItemConfig moved to src/constants/navigation.tsx
 // navItems list moved to src/constants/navigation.tsx
@@ -42,7 +43,7 @@ const AppLayout: React.FC = () => {
     setMobileOpen(false);
   };
 
-  const currentDate = new Date().toLocaleDateString("pt-BR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const currentDate = formatDateBR(new Date().toISOString());
 
   // Compute dynamic nav items based on user configuration
   const displayNavItems = React.useMemo(() => {
