@@ -62,20 +62,27 @@ const OcorrenciasPage: React.FC = () => {
     const { data: usuarios = [] } = useQuery({
         queryKey: ["usuarios_profiles_internos"],
         queryFn: async () => {
-             // Busca apenas usuários que tenham papel de 'admin' ou 'user'
-             const { data, error } = await supabase
+             // 1. Buscar IDs de usuários que são da equipe interna (admin ou user)
+             const { data: rolesData } = await supabase
+                .from("user_roles")
+                .select("user_id")
+                .in("role", ["admin", "user"]);
+             
+             const teamUserIds = rolesData?.map(r => r.user_id) || [];
+
+             // 2. Buscar perfis desses usuários
+             const { data: profiles, error } = await supabase
                 .from("profiles")
-                .select(`
-                    user_id, 
-                    nome_completo,
-                    user_roles!inner(role)
-                `)
-                .in("user_roles.role", ["admin", "user"])
+                .select("user_id, nome_completo")
+                .in("user_id", teamUserIds)
                 .not("nome_completo", "is", null)
                 .order("nome_completo");
                 
              if (error) throw error;
-             return data || [];
+             return (profiles || []).map((p: any) => ({
+                 user_id: p.user_id,
+                 nome_completo: p.nome_completo
+             }));
         },
         staleTime: 60000 * 30
     });

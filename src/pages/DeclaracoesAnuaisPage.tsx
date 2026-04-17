@@ -127,14 +127,19 @@ const DeclaracoesAnuaisPage: React.FC = () => {
             });
             setDeclaracoesIRPF(irpfMap);
             
-            // Buscar usuários da equipe interna (admins e usuários normais)
+            // 1. Buscar IDs de usuários que são da equipe interna (admin ou user)
+            const { data: rolesData } = await supabase
+                .from("user_roles")
+                .select("user_id")
+                .in("role", ["admin", "user"]);
+            
+            const teamUserIds = rolesData?.map(r => r.user_id) || [];
+
+            // 2. Buscar perfis desses usuários
             const { data: profs, error: pErr } = await supabase
                 .from("profiles")
-                .select(`
-                    *,
-                    user_roles!inner(role)
-                `)
-                .in("user_roles.role", ["admin", "user"])
+                .select("*")
+                .in("user_id", teamUserIds)
                 .eq("ativo", true);
 
             if (pErr) throw pErr;
