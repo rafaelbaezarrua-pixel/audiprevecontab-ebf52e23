@@ -291,7 +291,7 @@ const PessoalPage: React.FC = () => {
                                     <div className="flex items-center justify-between border-b border-border/5 pb-3">
                                       <div className="flex items-center gap-3">
                                         <Activity className="text-primary" size={20} />
-                                        <h4 className="text-[12px] font-black text-foreground uppercase tracking-tight">Fechamento</h4>
+                                        <h4 className="text-[18px] font-black text-foreground uppercase tracking-tight">Fechamento</h4>
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <div className={`w-2 h-2 rounded-full ${done ? "bg-emerald-500" : "bg-[#ff2d55]"}`} />
