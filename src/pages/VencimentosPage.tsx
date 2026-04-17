@@ -154,7 +154,6 @@ const VencimentosPage: React.FC = () => {
       {/* Background decoration elements */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
-
       {/* Main Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
         <div className="space-y-1">
@@ -174,20 +173,21 @@ const VencimentosPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-3 bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 shadow-inner">
         <div className="flex overflow-x-auto no-scrollbar gap-1 max-w-full h-9 p-0.5">
           {[
-          { key: "ativas", label: "Ativas" },
-          { key: "mei", label: "MEI" },
-          { key: "paralisadas", label: "Paralisadas" },
-          { key: "baixadas", label: "Baixadas" },
-          { key: "entregue", label: "Entregues" }
-        ].map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveStatusTab(tab.key as any)}
-            className={`px-6 h-full rounded-md text-[8px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === tab.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}
-          >
-            {tab.label}
-          </button>
-        ))}
+            { key: "ativas", label: "Ativas" },
+            { key: "mei", label: "MEI" },
+            { key: "paralisadas", label: "Paralisadas" },
+            { key: "baixadas", label: "Baixadas" },
+            { key: "entregue", label: "Entregues" }
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveStatusTab(tab.key as any)}
+              className={`px-6 h-full rounded-md text-[8px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === tab.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* KPI Stats Grid - Acting as Status Filters */}
@@ -207,8 +207,8 @@ const VencimentosPage: React.FC = () => {
                  {s.icon}
                </div>
                <div>
-                  <p className="text-[8px] text-muted-foreground/50 uppercase font-black tracking-widest">${s.label}</p>
-                  <p className={`text-[16px] font-black tracking-tight ${filter === s.key ? s.cls : 'text-foreground'}`}>${s.count}</p>
+                  <p className="text-[8px] text-muted-foreground/50 uppercase font-black tracking-widest">{s.label}</p>
+                  <p className={`text-[16px] font-black tracking-tight ${filter === s.key ? s.cls : 'text-foreground'}`}>{s.count}</p>
                </div>
             </div>
           </button>
