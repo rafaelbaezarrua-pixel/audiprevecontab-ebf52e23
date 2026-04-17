@@ -284,4 +284,4 @@ USING (public.has_role(auth.uid(), 'admin'));
 CREATE POLICY "Users read assigned agendamentos"
 ON public.agendamentos FOR SELECT
 TO authenticated
-USING (public.can_access_empresa(auth.uid(), empresa_id));
+USING (usuario_id = auth.uid() OR criado_por = auth.uid() OR public.has_role(auth.uid(), 'admin'));
