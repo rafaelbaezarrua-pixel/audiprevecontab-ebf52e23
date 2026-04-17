@@ -17,14 +17,19 @@ export const IRPFForm = ({ record, setRecord, onSave, onCancel, year }: IRPFForm
   React.useEffect(() => {
     const loadUsers = async () => {
       // Busca apenas usuários com papel de 'admin' ou 'user'
+      // 1. Buscar IDs de usuários que são da equipe interna (admin ou user)
+      const { data: rolesData } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .in("role", ["admin", "user"]);
+      
+      const teamUserIds = rolesData?.map(r => r.user_id) || [];
+
+      // 2. Buscar perfis desses usuários
       const { data: profiles, error } = await supabase
           .from("profiles")
-          .select(`
-              user_id, 
-              nome_completo,
-              user_roles!inner(role)
-          `)
-          .in("user_roles.role", ["admin", "user"])
+          .select("user_id, nome_completo")
+          .in("user_id", teamUserIds)
           .eq("ativo", true);
 
       if (profiles) {

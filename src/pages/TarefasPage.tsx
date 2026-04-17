@@ -55,15 +55,22 @@ const TarefasPage: React.FC = () => {
     const { data: usersData } = useQuery({
         queryKey: ["profiles_list"],
         queryFn: async () => {
-             const { data } = await supabase
+             // 1. Buscar IDs de usuários que não são clientes
+             const { data: rolesData } = await supabase
+                .from("user_roles")
+                .select("user_id")
+                .neq("role", "client");
+             
+             const teamUserIds = rolesData?.map(r => r.user_id) || [];
+
+             // 2. Buscar perfis desses usuários
+             const { data: profiles } = await supabase
                 .from("profiles")
-                .select("id, full_name, user_id, user_roles!inner(role)")
+                .select("user_id, full_name")
+                .in("user_id", teamUserIds)
                 .eq("ativo", true);
              
-             // Filter out clients and map to the expected format
-             return (data || [])
-                .filter((u: any) => u.user_roles?.some((r: any) => r.role !== 'client'))
-                .map((u: any) => ({
+             return (profiles || []).map((u: any) => ({
                     id: u.user_id,
                     nome: u.full_name || "Sem Nome"
                 }));
