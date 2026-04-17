@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { formatDateBR, formatMonthYearBR } from "@/lib/utils";
 
 // ── Status helpers ──────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode; border: string }> = {
@@ -212,7 +213,7 @@ const TarefasPage: React.FC = () => {
                 toast.error("Nenhuma tarefa encontrada no mês anterior.");
                 return;
             }
-            if (!window.confirm(`Deseja clonar ${prevTasks.length} tarefas de ${prevCompetencia} para ${competencia}?`)) return;
+            if (!window.confirm(`Deseja clonar ${prevTasks.length} tarefas de ${formatMonthYearBR(prevCompetencia)} para ${formatMonthYearBR(competencia)}?`)) return;
 
             const clones = prevTasks.map((t: any) => {
                 const originalDate = parseISO(t.data);
@@ -513,7 +514,7 @@ const TarefasPage: React.FC = () => {
                         <>
                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                                 <Calendar size={13} className="text-primary/50" />
-                                {format(new Date(a.data + 'T00:00:00'), "dd MMM", { locale: ptBR })}
+                                {formatDateBR(a.data)}
                             </div>
                             {a.horario && (
                                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">

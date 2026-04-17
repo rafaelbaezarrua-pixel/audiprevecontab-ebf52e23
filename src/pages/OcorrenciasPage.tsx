@@ -11,6 +11,7 @@ import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
 import { useOcorrencias, Ocorrencia } from "@/hooks/useOcorrencias";
 import { useQuery } from "@tanstack/react-query";
 import GerenciadorArquivosPage from "./GerenciadorArquivosPage";
+import { formatDateBR } from "@/lib/utils";
 
 interface HeaderConfig {
     logoUrl: string;
@@ -216,7 +217,7 @@ const OcorrenciasPage: React.FC = () => {
         doc.text(splitDesc, 20, 90);
         const descHeight = splitDesc.length * 7;
         const lineY = 90 + descHeight + 10;
-        const formattedDate = new Date(oc.data_ocorrencia).toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' });
+        const formattedDate = formatDateBR(oc.data_ocorrencia);
         doc.text(`${oc.cidade}/${oc.estado}, ${formattedDate}`, pageWidth - 20, lineY + 20, { align: "right" });
 
         const sigY = lineY + 60;
@@ -532,7 +533,7 @@ const OcorrenciasPage: React.FC = () => {
                               <LayoutGrid size={9} /> {oc.departamento}
                             </span>
                             <span className="flex items-center gap-1">
-                              <Calendar size={9} /> {new Date(oc.data_ocorrencia).toLocaleDateString("pt-BR")}
+                              <Calendar size={9} /> {formatDateBR(oc.data_ocorrencia)}
                             </span>
                             <span className="flex items-center gap-1">
                               <User size={9} /> {oc.usuarios?.nome_completo?.split(' ')[0] || "SISTEMA"}

@@ -430,7 +430,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2 px-3 h-10 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl shadow-inner group">
-          <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest group-hover:text-primary transition-colors">Ano Base:</span>
+          <span className="text-[10px] font-black text-foreground uppercase tracking-widest group-hover:text-primary transition-colors">Ano Base:</span>
           <select value={ano} onChange={e => setAno(parseInt(e.target.value))} className="bg-transparent text-foreground text-[10px] focus:outline-none font-black uppercase tracking-tighter">
             {[...Array(10)].map((_, i) => {
               const year = new Date().getFullYear() - 5 + i;
@@ -512,7 +512,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
                   <div className="border-t border-border/5 p-4 space-y-4 bg-black/[0.01] dark:bg-white/[0.01] animate-in slide-in-from-top-2 duration-200">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-border/10 shadow-inner">
                       <div className="space-y-1">
-                        <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Vínculo</label>
+                        <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Vínculo</label>
                         <div onClick={() => handleToggleObrigatorio(emp.id, activeTab)} className={`w-full h-9 px-3 rounded-lg flex items-center gap-2 cursor-pointer border transition-all ${decl.obrigatorio ? 'bg-primary/10 border-primary/20' : 'bg-card border-border/10'}`}>
                           <div className={`w-3 h-3 rounded border flex items-center justify-center transition-all ${decl.obrigatorio ? 'bg-primary border-primary text-white' : 'bg-white border-border/40'}`}>{decl.obrigatorio && <CheckCircle size={8} />}</div>
                           <span className={`text-[9px] font-black uppercase tracking-widest ${decl.obrigatorio ? 'text-primary' : 'text-muted-foreground/50'}`}>Obrigatória?</span>
@@ -527,7 +527,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
                         </select>
                       </div>
                       <div className={`space-y-1 ${decl.situacao !== 'finalizada' ? "opacity-20 pointer-events-none" : ""}`}>
-                        <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Data Entrega</label>
+                        <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data Entrega</label>
                         <input type="date" disabled={decl.situacao !== 'finalizada'} value={decl.data_envio || ""} onChange={e => updateDeclaracao(emp.id, activeTab, "data_envio", e.target.value)} className="w-full h-9 px-3 bg-card border border-border/10 rounded-lg text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20 font-mono" />
                       </div>
                       <div className="flex items-end">

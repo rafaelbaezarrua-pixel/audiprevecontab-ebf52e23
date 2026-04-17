@@ -175,11 +175,11 @@ export const HonorariosEmpresasView = ({
                           <table className="w-full border-collapse">
                             <thead>
                               <tr className="bg-black/5 dark:bg-white/5 border-b border-border/10">
-                                <th className="px-4 py-2 text-left text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Competência</th>
-                                <th className="px-4 py-2 text-left text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Valor Total</th>
-                                <th className="px-4 py-2 text-left text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Vencimento</th>
-                                <th className="px-4 py-2 text-center text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Status / Pagamento</th>
-                                <th className="px-4 py-2 text-right text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Ações</th>
+                                <th className="px-4 py-2 text-left text-[11px] font-black uppercase tracking-widest text-foreground">Competência</th>
+                                <th className="px-4 py-2 text-left text-[11px] font-black uppercase tracking-widest text-foreground">Valor Total</th>
+                                <th className="px-4 py-2 text-left text-[11px] font-black uppercase tracking-widest text-foreground">Vencimento</th>
+                                <th className="px-4 py-2 text-center text-[11px] font-black uppercase tracking-widest text-foreground">Status / Pagamento</th>
+                                <th className="px-4 py-2 text-right text-[11px] font-black uppercase tracking-widest text-foreground">Ações</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-border/5">

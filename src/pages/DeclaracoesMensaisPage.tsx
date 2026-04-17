@@ -273,7 +273,7 @@ const DeclaracoesMensaisPage: React.FC = () => {
                                       {currentStatus === 'finalizada' ? "FINALIZADO" : (currentStatus === 'em_andamento' ? "ANDAMENTO" : "PENDENTE")}
                                   </span>
                                   {currentStatus === 'finalizada' && form.dctf_web_data_envio && (
-                                      <span className="text-[8px] text-muted-foreground/40 font-black tracking-tighter mt-0.5">{new Date(form.dctf_web_data_envio + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                      <span className="text-[8px] text-muted-foreground/40 font-black tracking-tighter mt-0.5">{formatDateBR(form.dctf_web_data_envio)}</span>
                                   )}
                               </div>
                               <div className={`p-1.5 rounded-lg border transition-all ${isExpanded ? 'bg-primary text-white border-primary rotate-180' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/30 border-border/10'}`}>

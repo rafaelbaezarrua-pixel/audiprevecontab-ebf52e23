@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Search, Calendar, Clock, User, Plus, Save, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -118,7 +119,7 @@ const AgendamentosPage: React.FC = () => {
                     
                     <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1.5"><User size={12} className="text-primary" /> <span>{a.usuario_nome}</span></div>
-                        <div className="flex items-center gap-1.5"><Calendar size={12} className="text-primary" /> <span>{format(new Date(a.data + 'T00:00:00'), "dd/MM/yyyy")}</span></div>
+                        <div className="flex items-center gap-1.5"><Calendar size={12} className="text-primary" /> <span>{formatDateBR(a.data)}</span></div>
                         <div className="flex items-center gap-1.5"><Clock size={12} className="text-primary" /> <span>{a.horario.slice(0, 5)}</span></div>
                     </div>
 
