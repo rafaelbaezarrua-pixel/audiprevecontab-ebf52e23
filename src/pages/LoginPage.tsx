@@ -193,6 +193,7 @@ const LoginPage: React.FC = () => {
                 <input
                   type="password"
                   placeholder="••••••••••••"
+                  autoComplete="current-password"
                   className="w-full h-14 px-6 border border-white/5 rounded-2xl bg-background/40 text-sm font-bold text-card-foreground focus:ring-4 focus:ring-primary/10 focus:border-primary/40 outline-none transition-all shadow-inner"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

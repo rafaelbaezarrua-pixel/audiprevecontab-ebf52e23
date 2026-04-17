@@ -181,6 +181,30 @@ const ConfiguracoesPage: React.FC = () => {
     }
   };
 
+  const toggleUserType = async (userId: string, currentIsClient: boolean) => {
+    try {
+      const newRole = currentIsClient ? "user" : "client";
+      // Ao mudar para portal, remove o admin primeiro por segurança
+      if (!currentIsClient) {
+        await supabase.functions.invoke("manage-user", {
+          body: { action: "toggleAdmin", target_user_id: userId, enable: false }
+        });
+      }
+      
+      const { error } = await supabase.from("user_roles").upsert({ 
+        user_id: userId, 
+        role: newRole 
+      }, { onConflict: 'user_id,role' });
+
+      if (error) throw error;
+
+      toast.success(`Usuário movido para ${currentIsClient ? "Equipe Interna" : "Portal Cliente"}`);
+      loadUsers();
+    } catch (err: any) {
+      toast.error("Erro ao alterar tipo de acesso");
+    }
+  };
+
   const handleDelete = async (userId: string) => {
     if (!window.confirm("Excluir este usuário?")) return;
     try {
@@ -309,23 +333,48 @@ const ConfiguracoesPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                {activeTab === 'interna' && (
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => toggleAdmin(u.id, u.isAdmin)} 
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all ${u.isAdmin ? "bg-primary/10 border-primary/30 text-primary shadow-sm" : "bg-muted border-transparent text-muted-foreground hover:bg-muted/80"}`}
+                
+                <div className="flex items-center gap-2">
+                  {activeTab === 'interna' && (
+                    <>
+                      <button 
+                        onClick={() => toggleAdmin(u.id, u.isAdmin)} 
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all ${u.isAdmin ? "bg-primary/10 border-primary/30 text-primary shadow-sm" : "bg-muted border-transparent text-muted-foreground hover:bg-muted/80"}`}
+                        title={u.isAdmin ? 'Remover Admin' : 'Tornar Admin'}
+                      >
+                        {u.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
+                        {u.isAdmin ? 'Admin' : 'Tornar Admin'}
+                      </button>
+
+                      <button 
+                        onClick={() => toggleUserType(u.id, false)} 
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border border-warning/30 bg-warning/5 text-warning hover:bg-warning/10 transition-all"
+                        title="Mover para Portal Cliente"
+                      >
+                        <Building size={16} /> Portal
+                      </button>
+                    </>
+                  )}
+                  
+                  {u.isClient && activeTab === 'cliente' && (
+                     <button 
+                      onClick={() => toggleUserType(u.id, true)} 
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-all"
+                      title="Mover para Equipe Interna"
                     >
-                      {u.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
-                      {u.isAdmin ? 'Admin' : 'Tornar Admin'}
+                      <Users size={16} /> Equipe
                     </button>
+                  )}
+
+                  {activeTab === 'interna' && (
                     <button 
                       onClick={() => handleDelete(u.id)} 
                       className="p-2.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors border border-transparent hover:border-destructive/20"
                     >
                       <Trash2 size={18} />
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
               <div className="mt-6 pt-6 border-t border-border/50">
                 <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.15em] mb-4">
