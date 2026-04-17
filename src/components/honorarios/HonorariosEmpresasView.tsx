@@ -1,5 +1,6 @@
 
 import React from "react";
+import { formatDateBR, formatMonthYearBR } from "@/lib/utils";
 import { Building2, ChevronDown, ChevronUp, Plus, Clock, FolderOpen } from "lucide-react";
 import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { Empresa } from "@/types/societario";
@@ -185,7 +186,7 @@ export const HonorariosEmpresasView = ({
                             <tbody className="divide-y divide-border/5">
                               {mensalData[emp.id].map((record: HonorarioMensal) => (
                                 <tr key={record.id} className="hover:bg-primary/[0.02] transition-colors group/row">
-                                  <td className="px-4 py-2 font-black text-foreground text-[10px] uppercase">{record.competencia}</td>
+                                  <td className="px-4 py-2 font-black text-foreground text-[10px] uppercase">{formatMonthYearBR(record.competencia)}</td>
                                   <td className="px-4 py-2" onDoubleClick={() => handleStartEdit(record)}>
                                     {editingRecordId === record.id ? (
                                       <input
@@ -209,7 +210,7 @@ export const HonorariosEmpresasView = ({
                                       </div>
                                     )}
                                   </td>
-                                  <td className="px-4 py-2 text-muted-foreground/60 font-mono text-[9px]">{record.data_vencimento ? new Date(record.data_vencimento).toLocaleDateString('pt-BR') : '—'}</td>
+                                  <td className="px-4 py-2 text-muted-foreground/60 font-mono text-[9px]">{formatDateBR(record.data_vencimento)}</td>
                                   <td className="px-4 py-2 text-center">
                                     <div className="flex items-center justify-center gap-1.5">
                                       <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border ${record.status === "enviada" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : record.status === "gerada" ? "bg-primary/10 text-primary border-primary/20" : "bg-orange-500/10 text-orange-500 border-orange-500/20"}`}>

@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 import { Search, Save, CheckCircle, Circle, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";

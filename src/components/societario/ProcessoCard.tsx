@@ -1,5 +1,6 @@
 
 import React from "react";
+import { formatDateBR } from "@/lib/utils";
 import { Building2, History, Clock, ChevronDown, Trash2, CheckCircle, ArrowRight } from "lucide-react";
 import { Processo } from "@/types/societario";
 import { tipoProcessoLabels } from "@/constants/societario";
@@ -48,7 +49,7 @@ export const ProcessoCard = ({
             <div className="hidden sm:flex items-center gap-4 shrink-0">
               <span className="text-[8px] font-black text-primary uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded border border-primary/10">{tipoProcessoLabels[processo.tipo] || processo.tipo}</span>
               {processo.numero_processo && <span className="text-[8px] text-muted-foreground/30 font-mono font-black uppercase tracking-widest shrink-0"># {processo.numero_processo}</span>}
-              <span className="text-[8px] text-muted-foreground/40 flex items-center gap-1 font-black uppercase tracking-widest shrink-0"><Clock size={10} className="text-primary/30" /> {new Date(processo.data_inicio).toLocaleDateString()}</span>
+              <span className="text-[8px] text-muted-foreground/40 flex items-center gap-1 font-black uppercase tracking-widest shrink-0"><Clock size={10} className="text-primary/30" /> {formatDateBR(processo.data_inicio)}</span>
             </div>
           </div>
         </div>

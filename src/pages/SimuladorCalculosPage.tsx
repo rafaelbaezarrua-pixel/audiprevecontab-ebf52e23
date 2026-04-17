@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Calculator, Calendar, DollarSign, Info, RefreshCw, FileText, Umbrella } from "lucide-react";
 import { format, differenceInMonths, differenceInDays, addYears, isBefore, startOfMonth, endOfMonth, addMonths } from "date-fns";
+import { formatDateBR } from "@/lib/utils";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 
 const SimuladorCalculosPage: React.FC = () => {
@@ -103,7 +104,7 @@ const SimuladorCalculosPage: React.FC = () => {
             const startOfCurrentPeriod = addYears(start, years);
             const endOfCurrentPeriod = addYears(startOfCurrentPeriod, 1);
             
-            periodoAquisitivo = `${format(startOfCurrentPeriod, "dd/MM/yyyy")} a ${format(endOfCurrentPeriod, "dd/MM/yyyy")}`;
+            periodoAquisitivo = `${formatDateBR(startOfCurrentPeriod.toISOString())} a ${formatDateBR(endOfCurrentPeriod.toISOString())}`;
             diffMonths = totalMonths % 12;
             diasProporcionais = Math.min(30, diffMonths * 2.5);
         }
