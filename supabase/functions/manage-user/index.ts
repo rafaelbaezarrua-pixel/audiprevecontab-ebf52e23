@@ -107,6 +107,23 @@ Deno.serve(async (req: Request) => {
         if (delErr) throw delErr;
       }
     }
+    else if (action === "toggleUserType") {
+      const { role } = body;
+      if (!role) throw new Error("Role is required.");
+
+      // Limpa cargos conflitantes ('user', 'client') antes de inserir o novo 
+      // para evitar que o usuário acumule perfis de Equipe Interna e Portal simultaneamente.
+      await supabaseAdmin.from("user_roles").delete()
+        .eq("user_id", target_user_id)
+        .in("role", ["user", "client"]);
+
+      const { error: insErr } = await supabaseAdmin.from("user_roles").insert({ 
+        user_id: target_user_id, 
+        role: role 
+      });
+      
+      if (insErr) throw insErr;
+    }
     else if (action === "deleteUser") {
       console.log("Deletando usuário:", target_user_id);
       // First, we delete the profile. Cascades should handle the rest in public schema.
