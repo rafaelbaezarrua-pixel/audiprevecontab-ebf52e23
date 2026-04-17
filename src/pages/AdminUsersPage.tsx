@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageHeaderSkeleton, TableSkeleton } from '@/components/PageSkeleton';
+import { formatDateBR } from '@/lib/utils';
 
 export const AdminUsersPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -118,7 +119,7 @@ export const AdminUsersPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-center">
                        <span className="text-[10px] font-bold text-muted-foreground/40 uppercase">
-                         {u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : 'Nunca'}
+                         {formatDateBR(u.last_login_at)}
                        </span>
                     </td>
                     <td className="px-6 py-4 pr-8 text-right">
@@ -216,7 +217,7 @@ export const AdminUsersPage: React.FC = () => {
                                <div key={c.document_id} className="p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-center justify-between">
                                   <div className="flex flex-col">
                                      <span className="text-[10px] font-black text-primary uppercase">Termos de Uso</span>
-                                     <span className="text-[8px] font-bold text-muted-foreground uppercase">{new Date(c.timestamp).toLocaleString()}</span>
+                                     <span className="text-[8px] font-bold text-muted-foreground uppercase">{formatDateBR(c.timestamp)}</span>
                                   </div>
                                   <CheckCircle2 size={16} className="text-primary" />
                                </div>

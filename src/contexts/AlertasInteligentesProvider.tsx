@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
+import { formatDateBR } from "@/lib/utils";
 
 type AlertasContextType = {
     checkAlerts: () => Promise<void>;
@@ -73,8 +74,8 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                             : `⏳ Certificado Expirando: ${empName}`;
 
                         const message = isExpired
-                            ? `O certificado digital venceu em ${cert.data_vencimento.split('-').reverse().join('/')}.`
-                            : `O certificado digital vencerá em ${diasRestantes} dias (${cert.data_vencimento.split('-').reverse().join('/')}).`;
+                            ? `O certificado digital venceu em ${formatDateBR(cert.data_vencimento)}.`
+                            : `O certificado digital vencerá em ${diasRestantes} dias (${formatDateBR(cert.data_vencimento)}).`;
 
 
 
@@ -100,7 +101,7 @@ export const AlertasInteligentesProvider: React.FC<{ children: React.ReactNode }
                         const scheduledTime = new Date(`${agenda.data}T${agenda.horario}`);
                         if (scheduledTime < today) {
                             const title = `🚨 Agendamento Atrasado: ${agenda.assunto}`;
-                            const message = `O agendamento marcado para ${agenda.data.split('-').reverse().join('/')} às ${agenda.horario.slice(0, 5)} está pendente.`;
+                            const message = `O agendamento marcado para ${formatDateBR(agenda.data)} às ${agenda.horario.slice(0, 5)} está pendente.`;
 
                             // Unique signature per appointment
                             const signature = `alert_agenda_${agenda.id}`;

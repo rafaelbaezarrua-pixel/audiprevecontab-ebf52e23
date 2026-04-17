@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDateBR } from "@/lib/utils";
+import { formatDateBR, formatMonthYearBR } from "@/lib/utils";
 import {
   Search,
   ChevronDown,
@@ -153,23 +153,8 @@ const ParcelamentosPage: React.FC = () => {
 
   const handleToggleEncerrado = async (p: ParcelamentoRecord) => {
     const isAtualmenteEncerrado = calcIsEncerrado(p);
-    // Para reabrir, forçamos 'encerrado' para false E removemos a 'previsao_termino'
-    // se ela já tiver passado, para não fechar automaticamente de novo.
-    // Mas o mais seguro para "reabrir" é apenas setar a flag `encerrado` e
-    // deixar a data original. Na lógica, `previsao_termino` ainda forçaria encerrado.
-    // Como a instrução era ter um controle manual da aba, vamos usar a flag `encerrado`
-    // e para forçar reabrir podemos precisar limpar a data. Para o escopo pedido,
-    // o foco é encerrar manualmente.
-
-    // Simplificando o pedido: Mudar a flag `encerrado` inverte a situação?
-    // Se "Em Andamento (isEncerrado = false)", marcamos encerrado = true.
-    // Se "Encerrado (isEncerrado = true)", marcamos encerrado = false E podemos ter que adiar a previsão 
-    // ou apenas dar prioridade a flag false se quisermos um override? 
-    // Vamos apenas rodar a flag `encerrado` boolean pra simular ação manual
     try {
       const newVal = !p.encerrado;
-      // Se tentou re-abrir mas a data já passou, alertar? Ou limpar a data?
-      // Vamos apagar a data de encerramento se ele explicitamente reabrir para não dar conflito 
       const payload: Partial<ParcelamentoRecord> = { encerrado: newVal };
 
       if (!newVal && p.previsao_termino) {
@@ -203,10 +188,6 @@ const ParcelamentosPage: React.FC = () => {
     }));
   };
 
-  const inputCls =
-    "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
-  const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
-
   const completedCount = parcelamentos.filter(
     (p) =>
       mensalData[p.id]?.status === "enviada" ||
@@ -215,11 +196,9 @@ const ParcelamentosPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in relative pb-10">
-      {/* Background decoration elements */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
       <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
 
-      {/* Main Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
         <div className="space-y-1.5">
           <div className="flex items-center gap-3">
@@ -247,7 +226,6 @@ const ParcelamentosPage: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[
           { label: "Total Cadastrados", count: parcelamentos.length, cls: "text-primary", bg: "bg-primary/5", icon: <Circle size={24} /> },
@@ -266,7 +244,6 @@ const ParcelamentosPage: React.FC = () => {
         ))}
       </div>
 
-      {/* View Switch / Tabs */}
       <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar max-w-fit shadow-sm">
         <button
           onClick={() => setActiveTab("andamento")}
@@ -282,7 +259,6 @@ const ParcelamentosPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Search & Filters */}
       <div className="flex flex-col lg:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full group">
           <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -308,7 +284,6 @@ const ParcelamentosPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main List Grid */}
       <div className="space-y-4">
         {filtered.length === 0 ? (
           <div className="py-24 text-center bg-card border-2 border-dashed border-border/40 rounded-[2.5rem] opacity-40">
@@ -377,7 +352,6 @@ const ParcelamentosPage: React.FC = () => {
 
                 {isOpen && (
                   <div className="border-t border-border/40 p-10 space-y-10 bg-muted/5 animate-in slide-in-from-top-4 duration-300">
-                    {/* Header Details Info */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b border-border/40">
                       <div className="space-y-2">
                         <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Data Início</span>
@@ -405,7 +379,6 @@ const ParcelamentosPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Access Credentials Box */}
                     {(p.login_gov_br || p.codigo_sn) && (
                       <div className="bg-card border border-primary/10 rounded-2xl p-6 flex flex-wrap gap-10 shadow-sm">
                          {p.metodo_login === "gov_br" && (
@@ -429,11 +402,10 @@ const ParcelamentosPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Monthly Form */}
                     <div className="space-y-8 pt-4">
                       <div className="flex items-center gap-3">
                          <div className="w-2 h-6 bg-primary rounded-full" />
-                         <h4 className="text-[11px] font-black uppercase tracking-widest text-card-foreground">ATUALIZAÇÃO DO MÊS ({competencia.split("-").reverse().join("/")})</h4>
+                         <h4 className="text-[11px] font-black uppercase tracking-widest text-card-foreground">ATUALIZAÇÃO DO MÊS ({formatMonthYearBR(competencia)})</h4>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

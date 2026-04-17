@@ -173,7 +173,7 @@ export const EmpresaTable = ({
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id} className="h-9 bg-black/5">
                 {headerGroup.headers.map(header => (
-                  <th key={header.id} className="whitespace-nowrap py-0 px-4 text-[7px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 border-b border-border/10">
+                  <th key={header.id} className="whitespace-nowrap py-0 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-foreground border-b border-border/10">
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()

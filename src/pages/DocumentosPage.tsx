@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, ClipboardList, Plus, Loader2, Eye, EyeOff, Trash2 } from "lucide-react";
 import { lacunaApi, Certificate } from "@/lib/lacuna";
 import PdfSignPositioner from "@/components/PdfSignPositioner";
+import { formatDateBR } from "@/lib/utils";
 
 const DocumentosPage = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -479,7 +480,7 @@ const DocumentosPage = () => {
                               >
                                 <div className="flex flex-col">
                                   <span className="font-bold text-sm">{cert.name}</span>
-                                  <span className="text-[10px] text-gray-400 mt-1 uppercase">Vencimento: {new Date(cert.expirationDate).toLocaleDateString()}</span>
+                                  <span className="text-[10px] text-gray-400 mt-1 uppercase">Vencimento: {formatDateBR(cert.expirationDate)}</span>
                                 </div>
                               </Button>
                             ))
@@ -610,7 +611,7 @@ const DocumentosPage = () => {
                     <TableRow key={doc.id} className="hover:bg-muted/30 transition-colors border-border/40">
                       <TableCell className="font-black text-card-foreground py-4">{doc.titulo}</TableCell>
                       <TableCell className="py-4 text-muted-foreground font-medium">{doc.empresas?.nome_empresa || "Geral"}</TableCell>
-                      <TableCell className="py-4 text-muted-foreground font-medium">{format(new Date(doc.created_at), 'dd/MM/yyyy')}</TableCell>
+                      <TableCell className="py-4 text-muted-foreground font-medium">{formatDateBR(doc.created_at)}</TableCell>
                       <TableCell className="py-4 font-black">
                         {doc.status === 'pendente' && <span className="badge-status badge-warning text-[9px]">PENDENTE</span>}
                         {doc.status === 'assinado' && <span className="badge-status badge-success text-[9px]">ASSINADO</span>}
@@ -735,7 +736,7 @@ const DocumentosPage = () => {
                         <div className="text-[10px] text-muted-foreground font-bold uppercase mt-0.5">{sol.descricao || "Sem instruções adicionais"}</div>
                       </TableCell>
                       <TableCell className="py-4 text-muted-foreground font-medium">{sol.empresas?.nome_empresa}</TableCell>
-                      <TableCell className="py-4 text-muted-foreground font-medium">{sol.data_vencimento ? format(new Date(sol.data_vencimento), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell className="py-4 text-muted-foreground font-medium">{formatDateBR(sol.data_vencimento)}</TableCell>
                       <TableCell className="py-4 font-black">
                         {sol.status === 'pendente' && <span className="badge-status badge-warning text-[9px]">AGUARDANDO</span>}
                         {sol.status === 'entregue' && <span className="badge-status badge-success text-[9px]">ENTREGUE</span>}

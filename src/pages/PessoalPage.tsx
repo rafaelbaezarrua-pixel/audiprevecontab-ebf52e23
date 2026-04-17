@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, Save, Users, Building2, FileUp, Settings, Activity, Filter, Gift } from "lucide-react";
 import { isBefore, parseISO, addDays } from "date-fns";
-import { formatDateBR } from "@/lib/utils";
+import { formatDateBR, formatMonthYearBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { usePessoal } from "@/hooks/usePessoal";
@@ -166,15 +166,15 @@ const PessoalPage: React.FC = () => {
               <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Pessoal</span></h1>
               <FavoriteToggleButton moduleId="pessoal" />
             </div>
-            <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Folha, pró-labore, benefícios e obrigações mensais.</p>
+            <p className="text-[13px] font-black text-foreground uppercase tracking-widest text-shadow-sm">Folha, pró-labore, benefícios e obrigações mensais.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <button onClick={() => setIsUploaderOpen(true)} className="flex items-center gap-2 px-4 h-10 bg-black/10 dark:bg-white/5 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 rounded-xl transition-all font-black text-[9px] uppercase tracking-widest border border-border/10 shadow-inner">
+            <button onClick={() => setIsUploaderOpen(true)} className="flex items-center gap-2 px-4 h-10 bg-black/10 dark:bg-white/5 text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all font-black text-[11px] uppercase tracking-widest border border-border/10 shadow-inner">
               <FileUp size={16} /> <span>Processar Guias</span>
             </button>
             <div className="flex items-center gap-3 px-4 h-10 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl shadow-inner">
-              <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest">Comp.</span>
-              <input type="month" value={competencia} onChange={(e) => setCompetencia(e.target.value)} className="bg-transparent border-none focus:ring-0 text-[10px] font-black outline-none text-right h-full text-foreground uppercase cursor-pointer w-24" />
+              <span className="text-[10px] font-black text-foreground uppercase tracking-widest">Comp.</span>
+              <input type="month" value={competencia} onChange={(e) => setCompetencia(e.target.value)} className="bg-transparent border-none focus:ring-0 text-[12px] font-black outline-none text-right h-full text-foreground uppercase cursor-pointer w-24" />
             </div>
           </div>
         </div>
@@ -182,28 +182,28 @@ const PessoalPage: React.FC = () => {
         {/* Stats & Search Bar - Estilo Societário Compact */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="flex bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl overflow-hidden h-11 shrink-0 p-0.5 shadow-inner">
+            <div className="flex bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl overflow-hidden h-12 shrink-0 p-0.5 shadow-inner">
               <div className="px-4 py-1 flex flex-col justify-center border-r border-border/5">
-                <span className="text-[7px] text-muted-foreground/40 font-black uppercase tracking-wider mb-0.5">Empresas</span>
-                <span className="text-sm font-black leading-none">{filtered.length}</span>
+                <span className="text-[10px] text-foreground font-black uppercase tracking-wider mb-0.5">Empresas</span>
+                <span className="text-[15px] font-black leading-none">{filtered.length}</span>
               </div>
               <div className="px-4 py-1 flex flex-col justify-center border-r border-border/5">
-                <span className="text-[7px] text-primary/40 font-black uppercase tracking-wider mb-0.5">OK</span>
-                <span className="text-sm font-black text-primary leading-none">{completedCount}</span>
+                <span className="text-[10px] text-primary font-black uppercase tracking-wider mb-0.5">OK</span>
+                <span className="text-[15px] font-black text-primary leading-none">{completedCount}</span>
               </div>
               <div className="px-4 py-1 flex flex-col justify-center">
-                <span className="text-[7px] text-rose-500/40 font-black uppercase tracking-wider mb-0.5">Alertas</span>
-                <span className="text-sm font-black text-rose-500 leading-none">{alertsSummary.aso + alertsSummary.ferias}</span>
+                <span className="text-[10px] text-rose-500 font-black uppercase tracking-wider mb-0.5">Alertas</span>
+                <span className="text-[15px] font-black text-rose-500 leading-none">{alertsSummary.aso + alertsSummary.ferias}</span>
               </div>
             </div>
             <div className="relative flex-1 md:w-[280px] group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/30 group-focus-within:text-primary transition-colors" size={16} />
-              <input type="text" placeholder="PROCURAR EMPRESA..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 h-11 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-20 shadow-inner" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground/40 group-focus-within:text-primary transition-colors" size={16} />
+              <input type="text" placeholder="PROCURAR EMPRESA..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 h-12 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[12px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-40 shadow-inner" />
             </div>
           </div>
-          <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 shrink-0 h-11 items-center shadow-inner">
+          <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 shrink-0 h-12 items-center shadow-inner">
             {[{ id: "todos", label: "Geral" }, { id: "pendente", label: "Pendentes" }, { id: "concluido", label: "Enviados" }].map(s => (
-              <button key={s.id} onClick={() => setFilterStatus(s.id as any)} className={`px-5 h-full rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === s.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground hover:bg-card/20"}`}>{s.label}</button>
+              <button key={s.id} onClick={() => setFilterStatus(s.id as any)} className={`px-5 h-full rounded-lg text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === s.id ? "bg-card text-primary shadow-sm" : "text-foreground hover:text-foreground hover:bg-card/20"}`}>{s.label}</button>
             ))}
           </div>
         </div>
@@ -211,7 +211,7 @@ const PessoalPage: React.FC = () => {
         {/* Navegação por Abas - Estilo Societário Compact */}
         <div className="flex bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-1 w-full shadow-inner">
           {[{ id: "folha", label: "Somente Folha" }, { id: "prolabore", label: "Somente Pró-labore" }].map(t => (
-            <button key={t.id} className={`flex-1 py-3 px-4 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground hover:bg-card/20"}`} onClick={() => { setActiveTab(t.id as any); setExpanded(null); }}>{t.label}</button>
+            <button key={t.id} className={`flex-1 py-3 px-4 rounded-lg text-[12px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm" : "text-foreground hover:text-foreground hover:bg-card/20"}`} onClick={() => { setActiveTab(t.id as any); setExpanded(null); }}>{t.label}</button>
           ))}
         </div>
 
@@ -221,12 +221,12 @@ const PessoalPage: React.FC = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-black/5 dark:bg-white/5 border-b border-border/10">
-                  <th className="px-4 py-2 text-left text-[8px] font-black uppercase tracking-widest text-muted-foreground/40 min-w-[200px]">Empresas</th>
-                  <th className="px-4 py-2 text-center text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Competência</th>
-                  <th className="px-4 py-2 text-center text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Folha</th>
-                  <th className="px-4 py-2 text-center text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">DCTF Web</th>
-                  <th className="px-4 py-2 text-center text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Status</th>
-                  <th className="px-4 py-2 text-right text-[8px] font-black uppercase tracking-widest text-muted-foreground/40 pr-6">Opções</th>
+                  <th className="px-4 py-2 text-left text-[13px] font-black uppercase tracking-widest text-foreground min-w-[200px]">Empresas</th>
+                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase tracking-widest text-foreground">Competência</th>
+                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase tracking-widest text-foreground">Folha</th>
+                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase tracking-widest text-foreground">DCTF Web</th>
+                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase tracking-widest text-foreground">Status</th>
+                  <th className="px-4 py-2 text-right text-[13px] font-black uppercase tracking-widest text-foreground pr-6">Opções</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/5">
@@ -242,16 +242,16 @@ const PessoalPage: React.FC = () => {
                           <div className="flex items-center gap-4">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all border border-border/5 shrink-0 ${isOpen ? 'bg-primary text-white shadow-lg' : 'bg-black/5 dark:bg-white/5 text-primary group-hover:bg-primary/10'}`}><Users size={20} /></div>
                             <div className="flex flex-col min-w-0">
-                              <span className="font-black text-foreground text-[13px] uppercase tracking-tight truncate max-w-[400px] leading-tight group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
-                              <span className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-widest mt-1 opacity-60 font-mono italic">CNPJ: {emp.cnpj || "—"}</span>
+                              <span className="font-black text-foreground text-[15px] uppercase tracking-tight truncate max-w-[400px] leading-tight group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
+                              <span className="text-[10px] text-foreground font-black uppercase tracking-widest mt-1 opacity-80 font-mono">CNPJ: {emp.cnpj || "—"}</span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-center whitespace-nowrap"><span className="text-muted-foreground/40 font-black text-[9px] uppercase tracking-widest font-mono">{competencia}</span></td>
+                        <td className="px-4 py-2.5 text-center whitespace-nowrap"><span className="text-foreground font-black text-[12px] uppercase tracking-widest font-mono">{formatMonthYearBR(competencia)}</span></td>
                         <td className="px-4 py-2.5 text-center whitespace-nowrap"><div className={`inline-block w-2.5 h-2.5 rounded-full ${r?.inss_status === 'enviada' ? 'bg-emerald-500 shadow-md shadow-emerald-500/20' : 'bg-rose-500/20 border border-rose-500/20'}`} /></td>
                         <td className="px-4 py-2.5 text-center whitespace-nowrap"><div className={`inline-block w-2.5 h-2.5 rounded-full ${done ? 'bg-emerald-500 shadow-md shadow-emerald-500/20' : 'bg-amber-500/20 border border-amber-500/20'}`} /></td>
                         <td className="px-4 py-2.5 text-center whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter ${done ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
+                          <span className={`px-2 py-0.5 rounded-lg text-[11px] font-black uppercase tracking-tighter ${done ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
                             {done ? 'CONCLUÍDO' : 'PENDENTE'}
                           </span>
                         </td>
@@ -264,13 +264,13 @@ const PessoalPage: React.FC = () => {
                               <div className="max-w-6xl mx-auto space-y-3">
                                 <Tabs value={rowTabs[emp.id] || 'dados'} onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))} className="space-y-3">
                                   <div className="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-border/5 pb-2">
-                                    <TabsList className="h-8 bg-black/10 dark:bg-white/10 p-1 rounded-lg shadow-inner">
-                                      <TabsTrigger value="dados" className="px-6 h-full text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel</TabsTrigger>
-                                      <TabsTrigger value="config" className="px-6 h-full text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Parâmetros</TabsTrigger>
-                                      <TabsTrigger value="pastas" className="px-6 h-full text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Arquivos</TabsTrigger>
+                                    <TabsList className="h-10 bg-black/10 dark:bg-white/10 p-1 rounded-lg shadow-inner">
+                                      <TabsTrigger value="dados" className="px-6 h-full text-[11px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel</TabsTrigger>
+                                      <TabsTrigger value="config" className="px-6 h-full text-[11px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Parâmetros</TabsTrigger>
+                                      <TabsTrigger value="pastas" className="px-6 h-full text-[11px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Arquivos</TabsTrigger>
                                     </TabsList>
                                     <div className="flex items-center gap-2">
-                                      <button onClick={() => navigate(`/pessoal/funcionarios/${emp.id}`)} className="h-8 px-4 text-[8px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-lg transition-all flex items-center gap-2 shadow-sm"><Users size={14} /> Colaboradores</button>
+                                      <button onClick={() => navigate(`/pessoal/funcionarios/${emp.id}`)} className="h-9 px-4 text-[11px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-lg transition-all flex items-center gap-2 shadow-sm"><Users size={14} /> Colaboradores</button>
                                     </div>
                                   </div>
 
@@ -283,8 +283,8 @@ const PessoalPage: React.FC = () => {
                                         { label: "Cartão Ponto", val: (pessoalData[emp.id] as any)?.possui_cartao_ponto ? "ATIVO" : "NÃO" }
                                       ].map((item, i) => (
                                         <div key={i} className="bg-black/5 dark:bg-white/5 p-2 px-3 rounded-lg border border-border/5 group shadow-inner">
-                                          <p className="text-[7px] font-black text-muted-foreground/30 uppercase tracking-widest mb-0.5 group-hover:text-primary transition-colors">{item.label}</p>
-                                          <p className="text-[10px] font-black text-foreground uppercase tracking-tight">{item.val}</p>
+                                          <p className="text-[10px] font-black text-foreground uppercase tracking-widest mb-0.5 group-hover:text-primary transition-colors">{item.label}</p>
+                                          <p className="text-[12px] font-black text-foreground uppercase tracking-tight">{item.val}</p>
                                         </div>
                                       ))}
                                     </div>
@@ -295,50 +295,50 @@ const PessoalPage: React.FC = () => {
                                           <Activity className="text-primary" size={20} />
                                           <h4 className="text-[12px] font-black text-foreground uppercase tracking-tight">Fechamento Mensal</h4>
                                         </div>
-                                        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border ${done ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-rose-500/10 border-rose-500/20 text-rose-500"}`}>
+                                        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md border ${done ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-rose-500/10 border-rose-500/20 text-rose-500"}`}>
                                           <div className={`w-1.5 h-1.5 rounded-full ${done ? "bg-emerald-500 shadow-sm" : "bg-rose-500 animate-pulse"}`} />
-                                          <span className="text-[7px] font-black uppercase tracking-widest">{done ? "Finalizado" : "Em Aberto"}</span>
+                                          <span className="text-[10px] font-black uppercase tracking-widest">{done ? "Finalizado" : "Em Aberto"}</span>
                                         </div>
                                       </div>
 
                                       <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
                                         <div className="space-y-1">
-                                          <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">DCTF Web</label>
-                                          <select value={editForm[emp.id]?.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-card text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
+                                          <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">DCTF Web</label>
+                                          <select value={editForm[emp.id]?.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
                                             <option value="nao">STATUS: PENDENTE</option>
                                             <option value="sim">STATUS: OK</option>
                                           </select>
                                         </div>
                                         <div className="space-y-1">
-                                          <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Status INSS</label>
-                                          <select value={editForm[emp.id]?.inss_status || "pendente"} onChange={e => updateForm(emp.id, "inss_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-card text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
+                                          <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Status INSS</label>
+                                          <select value={editForm[emp.id]?.inss_status || "pendente"} onChange={e => updateForm(emp.id, "inss_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
                                             <option value="pendente">PENDENTE</option>
                                             <option value="gerada">GUIA OK</option>
                                             <option value="enviada">ENVIADO</option>
                                           </select>
                                         </div>
                                         <div className="space-y-1">
-                                          <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Status FGTS</label>
-                                          <select value={editForm[emp.id]?.fgts_status || "pendente"} onChange={e => updateForm(emp.id, "fgts_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-card text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
+                                          <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Status FGTS</label>
+                                          <select value={editForm[emp.id]?.fgts_status || "pendente"} onChange={e => updateForm(emp.id, "fgts_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
                                             <option value="pendente">PENDENTE</option>
                                             <option value="gerada">GUIA OK</option>
                                             <option value="enviada">ENVIADO</option>
                                           </select>
                                         </div>
                                         <div className="space-y-1">
-                                          <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Data Proc.</label>
-                                          <input type="date" value={editForm[emp.id]?.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-card text-[9px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-inner" />
+                                          <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data Proc.</label>
+                                          <input type="date" value={editForm[emp.id]?.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-card text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-inner" />
                                         </div>
                                       </div>
 
                                       {(editForm[emp.id]?.possui_vt || editForm[emp.id]?.possui_vr || editForm[emp.id]?.possui_va || editForm[emp.id]?.possui_vc) && (
                                         <div className="space-y-2 pt-1 border-t border-border/5">
-                                          <h5 className="text-[7px] font-black text-primary/40 uppercase tracking-widest">Controle de Benefícios</h5>
+                                          <h5 className="text-[10px] font-black text-primary uppercase tracking-widest">Controle de Benefícios</h5>
                                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                                             {editForm[emp.id]?.possui_vt && (
                                               <div className="space-y-1">
-                                                <label className="text-[6px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">VT</label>
-                                                <select value={editForm[emp.id]?.vt_status || "pendente"} onChange={e => updateForm(emp.id, "vt_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[8px] font-black uppercase outline-none shadow-inner">
+                                                <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">VT</label>
+                                                <select value={editForm[emp.id]?.vt_status || "pendente"} onChange={e => updateForm(emp.id, "vt_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none shadow-inner">
                                                   <option value="pendente">ABERTO</option>
                                                   <option value="gerada">GERADO</option>
                                                   <option value="enviada">OK</option>
@@ -347,8 +347,8 @@ const PessoalPage: React.FC = () => {
                                             )}
                                             {editForm[emp.id]?.possui_vr && (
                                               <div className="space-y-1">
-                                                <label className="text-[6px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">VR</label>
-                                                <select value={editForm[emp.id]?.vr_status || "pendente"} onChange={e => updateForm(emp.id, "vr_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[8px] font-black uppercase outline-none shadow-inner">
+                                                <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">VR</label>
+                                                <select value={editForm[emp.id]?.vr_status || "pendente"} onChange={e => updateForm(emp.id, "vr_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none shadow-inner">
                                                   <option value="pendente">ABERTO</option>
                                                   <option value="gerada">GERADO</option>
                                                   <option value="enviada">OK</option>
@@ -357,8 +357,8 @@ const PessoalPage: React.FC = () => {
                                             )}
                                             {editForm[emp.id]?.possui_va && (
                                               <div className="space-y-1">
-                                                <label className="text-[6px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">VA</label>
-                                                <select value={editForm[emp.id]?.va_status || "pendente"} onChange={e => updateForm(emp.id, "va_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[8px] font-black uppercase outline-none shadow-inner">
+                                                <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">VA</label>
+                                                <select value={editForm[emp.id]?.va_status || "pendente"} onChange={e => updateForm(emp.id, "va_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none shadow-inner">
                                                   <option value="pendente">ABERTO</option>
                                                   <option value="gerada">GERADO</option>
                                                   <option value="enviada">OK</option>
@@ -367,8 +367,8 @@ const PessoalPage: React.FC = () => {
                                             )}
                                             {editForm[emp.id]?.possui_vc && (
                                               <div className="space-y-1">
-                                                <label className="text-[6px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">VC</label>
-                                                <select value={editForm[emp.id]?.vc_status || "pendente"} onChange={e => updateForm(emp.id, "vc_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[8px] font-black uppercase outline-none shadow-inner">
+                                                <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">VC</label>
+                                                <select value={editForm[emp.id]?.vc_status || "pendente"} onChange={e => updateForm(emp.id, "vc_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none shadow-inner">
                                                   <option value="pendente">ABERTO</option>
                                                   <option value="gerada">GERADO</option>
                                                   <option value="enviada">OK</option>
@@ -380,40 +380,40 @@ const PessoalPage: React.FC = () => {
                                       )}
 
                                       <div className="space-y-3 pt-1 border-t border-border/5">
-                                        <h5 className="text-[7px] font-black text-primary/40 uppercase tracking-widest">Envio Para o Cliente</h5>
+                                        <h5 className="text-[10px] font-black text-primary uppercase tracking-widest">Envio Para o Cliente</h5>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                                           {/* INSS */}
                                           <div className="space-y-1.5 p-2 rounded-lg bg-black/10 dark:bg-white/5 border border-border/5 shadow-inner">
-                                            <p className="text-[7px] font-black text-muted-foreground/60 uppercase tracking-widest ml-1"> Guia INSS</p>
+                                            <p className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1"> Guia INSS</p>
                                             <div className="flex gap-1.5">
-                                              <select value={editForm[emp.id]?.inss_envio_status || "pendente"} onChange={e => updateForm(emp.id, "inss_envio_status", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[8px] font-black uppercase outline-none shadow-inner">
+                                              <select value={editForm[emp.id]?.inss_envio_status || "pendente"} onChange={e => updateForm(emp.id, "inss_envio_status", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[11px] font-black uppercase outline-none shadow-inner">
                                                 <option value="pendente">Pendente</option>
                                                 <option value="enviado">Enviado</option>
                                               </select>
-                                              <input type="date" value={editForm[emp.id]?.inss_envio_data || ""} onChange={e => updateForm(emp.id, "inss_envio_data", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[8px] font-black outline-none shadow-inner" />
+                                              <input type="date" value={editForm[emp.id]?.inss_envio_data || ""} onChange={e => updateForm(emp.id, "inss_envio_data", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[11px] font-black outline-none shadow-inner" />
                                             </div>
                                           </div>
                                           {/* FGTS */}
                                           <div className="space-y-1.5 p-2 rounded-lg bg-black/10 dark:bg-white/5 border border-border/5 shadow-inner">
-                                            <p className="text-[7px] font-black text-muted-foreground/60 uppercase tracking-widest ml-1">Guia FGTS</p>
+                                            <p className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Guia FGTS</p>
                                             <div className="flex gap-1.5">
-                                              <select value={editForm[emp.id]?.fgts_envio_status || "pendente"} onChange={e => updateForm(emp.id, "fgts_envio_status", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[8px] font-black uppercase outline-none shadow-inner">
+                                              <select value={editForm[emp.id]?.fgts_envio_status || "pendente"} onChange={e => updateForm(emp.id, "fgts_envio_status", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[11px] font-black uppercase outline-none shadow-inner">
                                                 <option value="pendente">Pendente</option>
                                                 <option value="enviado">Enviado</option>
                                               </select>
-                                              <input type="date" value={editForm[emp.id]?.fgts_envio_data || ""} onChange={e => updateForm(emp.id, "fgts_envio_data", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[8px] font-black outline-none shadow-inner" />
+                                              <input type="date" value={editForm[emp.id]?.fgts_envio_data || ""} onChange={e => updateForm(emp.id, "fgts_envio_data", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[11px] font-black outline-none shadow-inner" />
                                             </div>
                                           </div>
                                           {/* VT / OUTROS SE HOUVER */}
                                           {editForm[emp.id]?.possui_vt && (
                                             <div className="space-y-1.5 p-2 rounded-lg bg-black/10 dark:bg-white/5 border border-border/5 shadow-inner">
-                                              <p className="text-[7px] font-black text-muted-foreground/60 uppercase tracking-widest ml-1">Guia Beneficios</p>
+                                              <p className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Guia Beneficios</p>
                                               <div className="flex gap-1.5">
-                                                <select value={editForm[emp.id]?.vt_envio_status || "pendente"} onChange={e => updateForm(emp.id, "vt_envio_status", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[8px] font-black uppercase outline-none shadow-inner">
+                                                <select value={editForm[emp.id]?.vt_envio_status || "pendente"} onChange={e => updateForm(emp.id, "vt_envio_status", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[11px] font-black uppercase outline-none shadow-inner">
                                                   <option value="pendente">Pendente</option>
                                                   <option value="enviado">Enviado</option>
                                                 </select>
-                                                <input type="date" value={editForm[emp.id]?.vt_envio_data || ""} onChange={e => updateForm(emp.id, "vt_envio_data", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[8px] font-black outline-none shadow-inner" />
+                                                <input type="date" value={editForm[emp.id]?.vt_envio_data || ""} onChange={e => updateForm(emp.id, "vt_envio_data", e.target.value)} className="w-1/2 h-8 px-2 rounded-md border border-border/10 bg-card text-[11px] font-black outline-none shadow-inner" />
                                               </div>
                                             </div>
                                           )}
@@ -421,9 +421,9 @@ const PessoalPage: React.FC = () => {
                                       </div>
 
                                       <div className="flex justify-end pt-1">
-                                        <button onClick={() => handleSaveAction(emp.id)} className="h-9 px-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center gap-2 transition-all shadow-md active:scale-95 group">
-                                          <Save size={14} className="group-hover:scale-110 transition-transform" />
-                                          <span className="text-[8px] font-black uppercase tracking-widest">Confirmar Fechamento</span>
+                                        <button onClick={() => handleSaveAction(emp.id)} className="h-10 px-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center gap-2 transition-all shadow-md active:scale-95 group">
+                                          <Save size={16} className="group-hover:scale-110 transition-transform" />
+                                          <span className="text-[11px] font-black uppercase tracking-widest">Confirmar Fechamento</span>
                                         </button>
                                       </div>
                                     </div>
@@ -432,20 +432,20 @@ const PessoalPage: React.FC = () => {
                                   <TabsContent value="config" className="space-y-3 animate-in fade-in slide-in-from-right-1 duration-200 outline-none">
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
                                       <div className="space-y-1">
-                                        <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Funcionários</label>
-                                        <input type="number" value={editForm[emp.id]?.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", parseInt(e.target.value) || 0)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black shadow-inner" />
+                                        <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Funcionários</label>
+                                        <input type="number" value={editForm[emp.id]?.qtd_funcionarios || 0} onChange={e => updateForm(emp.id, "qtd_funcionarios", parseInt(e.target.value) || 0)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black shadow-inner" />
                                       </div>
                                       <div className="space-y-1">
-                                        <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Pró-Labore</label>
-                                        <input type="number" value={editForm[emp.id]?.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", parseInt(e.target.value) || 0)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black shadow-inner" />
+                                        <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Pró-Labore</label>
+                                        <input type="number" value={editForm[emp.id]?.qtd_pro_labore || 0} onChange={e => updateForm(emp.id, "qtd_pro_labore", parseInt(e.target.value) || 0)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black shadow-inner" />
                                       </div>
                                       <div className="space-y-1">
-                                        <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Forma de Envio</label>
-                                        <input value={editForm[emp.id]?.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase shadow-inner" placeholder="WHATSAPP..." />
+                                        <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Forma de Envio</label>
+                                        <input value={editForm[emp.id]?.forma_envio || ""} onChange={e => updateForm(emp.id, "forma_envio", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black uppercase shadow-inner" placeholder="WHATSAPP..." />
                                       </div>
                                       <div className="space-y-1">
-                                        <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Ponto Manual</label>
-                                        <select value={editForm[emp.id]?.possui_ponto_manual ? "sim" : "nao"} onChange={e => updateForm(emp.id, "possui_ponto_manual", e.target.value === "sim")} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase shadow-inner">
+                                        <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Ponto Manual</label>
+                                        <select value={editForm[emp.id]?.possui_ponto_manual ? "sim" : "nao"} onChange={e => updateForm(emp.id, "possui_ponto_manual", e.target.value === "sim")} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black uppercase shadow-inner">
                                           <option value="nao">NÃO UTILIZA</option>
                                           <option value="sim">SIM, REQUERIDO</option>
                                         </select>
@@ -455,7 +455,7 @@ const PessoalPage: React.FC = () => {
                                     <div className="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/10 space-y-3 shadow-inner">
                                       <div className="flex items-center gap-2 mb-0.5">
                                         <Gift size={12} className="text-primary" />
-                                        <span className="text-[8px] font-black uppercase tracking-widest text-foreground">Benefícios</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Benefícios</span>
                                       </div>
                                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                                         {[
@@ -465,7 +465,7 @@ const PessoalPage: React.FC = () => {
                                           { id: 'possui_vc', label: 'Vale Combustível' }
                                         ].map(b => (
                                           <div key={b.id} className="flex items-center justify-between p-2 px-3 bg-card rounded-lg border border-border/5 group/ben shadow-sm">
-                                            <span className="text-[9px] font-black uppercase text-muted-foreground/60 group-hover/ben:text-primary transition-colors">{b.label}</span>
+                                            <span className="text-[11px] font-black uppercase text-foreground group-hover/ben:text-primary transition-colors">{b.label}</span>
                                             <button onClick={() => updateForm(emp.id, b.id, !editForm[emp.id]?.[b.id])} className={`w-7 h-3.5 rounded-full relative transition-all ${editForm[emp.id]?.[b.id] ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-black/20'}`}>
                                               <div className={`absolute top-0.5 w-2.5 h-2.5 bg-white rounded-full transition-all ${editForm[emp.id]?.[b.id] ? 'left-4' : 'left-0.5'}`} />
                                             </button>
@@ -475,9 +475,9 @@ const PessoalPage: React.FC = () => {
                                     </div>
 
                                     <div className="flex justify-end pt-1">
-                                      <button onClick={() => handleSaveAction(emp.id)} className="h-9 px-6 bg-primary hover:bg-primary/90 text-white rounded-lg flex items-center gap-2 transition-all shadow-md group">
-                                        <Save size={14} className="group-hover:scale-110 transition-transform" />
-                                        <span className="text-[8px] font-black uppercase tracking-widest">Salvar Parâmetros</span>
+                                      <button onClick={() => handleSaveAction(emp.id)} className="h-10 px-8 bg-primary hover:bg-primary/90 text-white rounded-lg flex items-center gap-2 transition-all shadow-md group">
+                                        <Save size={16} className="group-hover:scale-110 transition-transform" />
+                                        <span className="text-[11px] font-black uppercase tracking-widest">Salvar Parâmetros</span>
                                       </button>
                                     </div>
                                   </TabsContent>

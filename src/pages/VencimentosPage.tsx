@@ -182,7 +182,7 @@ const VencimentosPage: React.FC = () => {
             <button
               key={tab.key}
               onClick={() => setActiveStatusTab(tab.key as any)}
-              className={`px-6 h-full rounded-md text-[8px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === tab.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}
+              className={`px-6 h-full rounded-md text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === tab.key ? "bg-card text-primary shadow-sm" : "text-foreground hover:text-primary hover:bg-card/20"}`}
             >
               {tab.label}
             </button>
