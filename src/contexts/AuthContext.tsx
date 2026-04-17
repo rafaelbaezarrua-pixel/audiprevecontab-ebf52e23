@@ -211,15 +211,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const firstAccessDone = !!profileData?.first_access_done;
 
       const metadata = currentUser.user_metadata || {};
-      const hasEmpresaLink = !!access || !!metadata.empresa_id || !!profileData?.empresa_id;
       
       const isAdmin = (roles?.some(r => r.role === "admin") || profileData?.role === "admin" || metadata.role === "admin") || false;
       
-      // Portal Cliente: users linked to companies
-      const isClient = !isAdmin && hasEmpresaLink;
+      // Portal Cliente: definido pelo role 'client' na tabela user_roles
+      const isClient = !isAdmin && (roles?.some(r => r.role === "client") || false);
       
-      // Equipe: created by admin, has data filled, and NOT linked to companies
-      const isTeamMember = !isAdmin && !hasEmpresaLink;
+      // Equipe Interna: qualquer usuário que não seja admin nem cliente
+      const isTeamMember = !isAdmin && !isClient;
       
       const empresaId = access?.empresa_id || metadata.empresa_id || profileData?.empresa_id || undefined;
 

@@ -55,24 +55,9 @@ export const useSocietario = () => {
       query = query.eq("regime_tributario", regime as any);
     }
 
-    if (userId && moduloId) {
-      const { data: acessos } = await supabase
-        .from("empresa_acessos")
-        .select("empresa_id, modulos_permitidos")
-        .eq("user_id", userId);
-
-      if (acessos && acessos.length > 0) {
-        const restrictedIds = acessos.map(a => a.empresa_id);
-        const allowedIds = acessos
-          .filter(a => a.modulos_permitidos.includes(moduloId))
-          .map(a => a.empresa_id);
-        
-        const disallowedIds = restrictedIds.filter(id => !allowedIds.includes(id));
-        if (disallowedIds.length > 0) {
-          query = query.not("id", "in", `(${disallowedIds.join(',')})`);
-        }
-      }
-    }
+    // RLS no banco de dados (função can_access_empresa) já filtra automaticamente as 
+    // empresas corretas para o usuário autenticado, então não precisamos mais
+    // buscar `empresa_acessos` manualmente aqui no front-end.
 
     const from = page * limit;
     const to = from + limit - 1;
