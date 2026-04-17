@@ -22,24 +22,27 @@ interface SocietarioStatsProps {
 
 export const SocietarioStats = ({ stats }: SocietarioStatsProps) => {
   const items: StatItem[] = [
-    { label: "Ativas", value: stats.ativas, cls: "text-success", bg: "bg-success/10", icon: Building2 },
-    { label: "MEI", value: stats.mei, cls: "text-info", bg: "bg-info/10", icon: Activity },
-    { label: "Paralisadas", value: stats.paralisadas, cls: "text-warning", bg: "bg-warning/10", icon: AlertCircle },
-    { label: "Baixadas", value: stats.baixadas, cls: "text-destructive", bg: "bg-destructive/10", icon: X },
-    { label: "Entregues", value: stats.entregues, cls: "text-primary", bg: "bg-primary/10", icon: Building2 }
+    { label: "Ativas", value: stats.ativas, cls: "text-emerald-500", bg: "bg-emerald-500/10", icon: Building2 },
+    { label: "MEI", value: stats.mei, cls: "text-sky-500", bg: "bg-sky-500/10", icon: Activity },
+    { label: "Paralisadas", value: stats.paralisadas, cls: "text-amber-500", bg: "bg-amber-500/10", icon: AlertCircle },
+    { label: "Baixadas", value: stats.baixadas, cls: "text-rose-500", bg: "bg-rose-500/10", icon: X },
+    { label: "Entregues", value: stats.entregues, cls: "text-indigo-500", bg: "bg-indigo-500/10", icon: Building2 }
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="flex flex-wrap items-center gap-2">
       {items.map((s) => (
-        <div key={s.label} className="card-premium group">
-          <div className="flex items-center justify-between mb-4">
-            <div className={`p-2.5 rounded-2xl ${s.bg} ${s.cls} group-hover:scale-110 transition-transform shadow-sm`}>
-              <s.icon size={20} />
+        <div 
+          key={s.label} 
+          className="flex-1 min-w-[120px] h-11 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl flex items-center justify-between px-4 group hover:bg-black/20 dark:hover:bg-white/10 transition-all shadow-inner"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`p-1.5 rounded-lg ${s.bg} ${s.cls} shadow-sm active:scale-90 transition-transform`}>
+              <s.icon size={13} />
             </div>
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{s.label}</span>
+            <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest">{s.label}</span>
           </div>
-          <p className="text-4xl font-black text-card-foreground group-hover:text-primary transition-colors duration-500">{s.value}</p>
+          <span className={`text-[13px] font-black ${s.cls} tabular-nums group-hover:scale-110 transition-transform`}>{s.value}</span>
         </div>
       ))}
     </div>

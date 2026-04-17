@@ -150,31 +150,32 @@ const VencimentosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 relative">
+    <div className="space-y-6 animate-fade-in relative pb-10">
       {/* Background decoration elements */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
-      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
+
 
       {/* Main Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-             <h1 className="header-title">Controle de <span className="text-primary/90">Vencimentos</span></h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+             <h1 className="header-title">Controle de <span className="text-primary/90 font-black">Vencimentos</span></h1>
              <FavoriteToggleButton moduleId="vencimentos" />
           </div>
-          <p className="subtitle-premium">Acompanhamento centralizado de prazos, licenças, certificados e certidões do grupo.</p>
+          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm leading-tight">Acompanhamento centralizado de prazos técnicos.</p>
         </div>
-        <div className="flex bg-muted/30 p-1 rounded-xl border border-border/60">
-            <button onClick={() => setViewMode("grid")} className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}><LayoutGrid size={18} /></button>
-            <button onClick={() => setViewMode("list")} className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}><List size={18} /></button>
+        <div className="flex bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 shadow-inner">
+            <button onClick={() => setViewMode("grid")} className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}><LayoutGrid size={16} /></button>
+            <button onClick={() => setViewMode("list")} className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}><List size={16} /></button>
         </div>
       </div>
 
       {/* Situation Tabs (Ativas, MEI, etc) */}
-      <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar max-w-fit shadow-sm">
-        {[
-          { key: "ativas", label: "Empresas Ativas" },
-          { key: "mei", label: "Microempreendedores (MEI)" },
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 shadow-inner">
+        <div className="flex overflow-x-auto no-scrollbar gap-1 max-w-full h-9 p-0.5">
+          {[
+          { key: "ativas", label: "Ativas" },
+          { key: "mei", label: "MEI" },
           { key: "paralisadas", label: "Paralisadas" },
           { key: "baixadas", label: "Baixadas" },
           { key: "entregue", label: "Entregues" }
@@ -182,7 +183,7 @@ const VencimentosPage: React.FC = () => {
           <button
             key={tab.key}
             onClick={() => setActiveStatusTab(tab.key as any)}
-            className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === tab.key ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/50"}`}
+            className={`px-6 h-full rounded-md text-[8px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === tab.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}
           >
             {tab.label}
           </button>
@@ -190,60 +191,63 @@ const VencimentosPage: React.FC = () => {
       </div>
 
       {/* KPI Stats Grid - Acting as Status Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { key: "vencido", label: "Títulos Vencidos", count: counts.vencido, cls: "text-destructive", bg: "bg-destructive/5", icon: <AlertTriangle size={24} /> },
-          { key: "próximo", label: "Vencimentos Próximos", count: counts.proximo, cls: "text-amber-500", bg: "bg-amber-500/5", icon: <Clock size={24} /> },
-          { key: "em dia", label: "Prazos Vigentes", count: counts.emDia, cls: "text-emerald-500", bg: "bg-emerald-500/5", icon: <CheckCircle size={24} /> }
+          { key: "vencido", label: "Expirados", count: counts.vencido, cls: "text-rose-500", bg: "bg-rose-500/10", icon: <AlertTriangle size={18} /> },
+          { key: "próximo", label: "Vence Logo", count: counts.proximo, cls: "text-amber-500", bg: "bg-amber-500/10", icon: <Clock size={18} /> },
+          { key: "em dia", label: "Vigentes", count: counts.emDia, cls: "text-emerald-500", bg: "bg-emerald-500/10", icon: <CheckCircle size={18} /> }
         ].map(s => (
           <button
             key={s.key}
             onClick={() => setFilter(s.key)}
-            className={`group bg-card border rounded-[2rem] p-8 flex items-center justify-between transition-all duration-500 ${filter === s.key ? "border-primary/40 shadow-2xl shadow-primary/5 ring-1 ring-primary/20 scale-[1.02]" : "border-border/60 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5"}`}
+            className={`group bg-black/10 dark:bg-white/5 border rounded-2xl h-16 flex items-center justify-between px-6 transition-all duration-300 shadow-inner ${filter === s.key ? "border-primary/50 shadow-xl shadow-primary/10 ring-1 ring-primary/20 bg-card" : "border-border/10 hover:border-border/30 hover:bg-black/20"}`}
           >
-            <div className="text-left space-y-2">
-              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">{s.label}</p>
-              <p className={`text-4xl font-black tracking-tight ${s.cls}`}>{s.count}</p>
-            </div>
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${s.bg} ${s.cls} border border-current/10 group-hover:scale-110 transition-transform duration-500`}>
-              {s.icon}
+            <div className="text-left flex items-center gap-4">
+               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.bg} ${s.cls} shadow-sm group-hover:scale-110 transition-transform duration-300`}>
+                 {s.icon}
+               </div>
+               <div>
+                  <p className="text-[8px] text-muted-foreground/50 uppercase font-black tracking-widest">${s.label}</p>
+                  <p className={`text-[16px] font-black tracking-tight ${filter === s.key ? s.cls : 'text-foreground'}`}>${s.count}</p>
+               </div>
             </div>
           </button>
         ))}
       </div>
 
       {/* Enhanced Filters Section */}
-      <div className="flex flex-col lg:flex-row gap-4 items-center">
+      <div className="flex flex-col md:flex-row items-center gap-3">
         <div className="relative flex-1 w-full group">
-          <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
           <input
             type="text"
-            placeholder="PESQUISAR POR CLIENTE OU NATUREZA DO VENCIMENTO..."
+            placeholder="PESQUISAR CLIENTE OU VENCIMENTO..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-16 pl-14 pr-8 bg-card border border-border/60 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-hover:border-primary/20"
+            className="w-full h-10 pl-12 pr-6 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all shadow-inner placeholder:text-muted-foreground/30"
           />
         </div>
         
-        <div className="flex gap-4 w-full lg:w-auto">
+        <div className="flex gap-3 w-full md:w-auto">
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="flex-1 lg:w-64 h-16 px-6 bg-card border border-border/60 rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm appearance-none cursor-pointer"
+            className="w-full md:w-56 h-10 px-4 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-foreground focus:ring-1 focus:ring-primary/20 outline-none transition-all shadow-inner appearance-none cursor-pointer"
           >
-            <option value="todos">FILTRAR POR CATEGORIA</option>
+            <option value="todos">TUDO</option>
             <option value="certificado">CERTIFICADOS DIGITAIS</option>
             <option value="licença">LICENÇAS DE FUNCIONAMENTO</option>
             <option value="taxa">TAXAS E EMOLUMENTOS</option>
-            <option value="certidão">CERTIDÕES NEGATIVAS (CND)</option>
-            <option value="procuração">PROCURAÇÕES ELETRÔNICAS</option>
+            <option value="certidão">CERTIDÕES NEGATIVAS</option>
+            <option value="procuração">PROCURAÇÕES</option>
           </select>
 
           <button
-            onClick={() => {setFilter("todos"); setCategoryFilter("todos");}}
-            className="h-16 px-10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-border/60"
+            onClick={() => {setFilter("todos"); setCategoryFilter("todos"); setSearch("");}}
+            className="h-10 px-6 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-black/10 dark:bg-white/5 text-muted-foreground/50 hover:bg-black/20 hover:text-foreground border border-border/10 shadow-inner"
+            title="Limpar Filtros"
           >
-            RESTAURAR
+            Limpar
           </button>
         </div>
       </div>

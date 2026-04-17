@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, Save, Building2, FileUp, Settings, Activity, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -14,7 +15,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI", simei: "Simei" };
 
+const formatDateBR = (d: string) => { if (!d) return ""; const parts = d.split('-'); return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d; };
+
 const FiscalPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const [competencia, setCompetencia] = useState(new Date().toISOString().slice(0, 7));
   const { empresas, loading: empresasLoading } = useEmpresas("fiscal");
   const { fiscalData, loading: fiscalLoading, saveFiscalRecord } = useFiscal(competencia);
@@ -150,81 +154,85 @@ const FiscalPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in relative pb-10 px-1">
-      {/* Header Estilo Societário */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <h1 className="header-title">Gestão <span className="text-primary/90">Fiscal</span></h1>
+    <div className="animate-fade-in relative pb-10">
+      {/* Background decoration elements */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
+
+      <div className="space-y-6">
+        {/* Header Estilo Societário */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Fiscal</span></h1>
             <FavoriteToggleButton moduleId="fiscal" />
           </div>
-          <p className="subtitle-premium">Controle de XML, impostos e obrigações tributárias mensais.</p>
+          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Controle de XML, impostos e obrigações tributárias mensais.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => setIsUploaderOpen(true)} className="flex items-center gap-2.5 px-6 h-12 bg-black/5 dark:bg-white/5 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest border border-border/10">
-            <FileUp size={18} /> <span>Processar Guias</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={() => setIsUploaderOpen(true)} className="flex items-center gap-2 px-4 h-9 bg-black/10 dark:bg-white/5 text-muted-foreground/50 hover:text-primary hover:bg-primary/5 rounded-xl transition-all font-black text-[9px] uppercase tracking-widest border border-border/10 shadow-sm active:scale-95">
+            <FileUp size={14} /> <span>Processar Guias</span>
           </button>
-          <div className="flex items-center gap-4 px-5 h-12 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl">
-            <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Comp.</span>
-            <input type="month" value={competencia} onChange={(e) => setCompetencia(e.target.value)} className="bg-transparent border-none focus:ring-0 text-[11px] font-black outline-none text-right h-full text-foreground uppercase cursor-pointer w-28" />
+          <div className="flex items-center gap-3 px-3 h-9 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl shadow-inner">
+            <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest">Comp.</span>
+            <input type="month" value={competencia} onChange={(e) => setCompetencia(e.target.value)} className="bg-transparent border-none focus:ring-0 text-[10px] font-black outline-none h-full text-primary uppercase cursor-pointer w-24" />
           </div>
         </div>
       </div>
 
-      {/* Stats & Search Bar - Estilo Societário */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="flex bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl overflow-hidden h-14 shrink-0 p-1">
-            <div className="px-5 py-2 flex flex-col justify-center border-r border-border/5">
-              <span className="text-[8px] text-muted-foreground/40 font-black uppercase tracking-wider mb-1">Empresas</span>
-              <span className="text-xl font-black">{filtered.length}</span>
+      {/* Stats & Search Bar */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl overflow-hidden h-10 shrink-0 p-0.5 shadow-inner">
+            <div className="px-4 py-1 flex flex-col justify-center border-r border-border/5">
+              <span className="text-[7px] text-muted-foreground/40 font-black uppercase tracking-wider mb-0.5">Total</span>
+              <span className="text-xs font-black">{filtered.length}</span>
             </div>
-            <div className="px-5 py-2 flex flex-col justify-center border-r border-border/5">
-              <span className="text-[8px] text-primary/40 font-black uppercase tracking-wider mb-1">OK</span>
-              <span className="text-xl font-black text-primary">{completedCount}</span>
+            <div className="px-4 py-1 flex flex-col justify-center border-r border-border/5">
+              <span className="text-[7px] text-primary/40 font-black uppercase tracking-wider mb-0.5">OK</span>
+              <span className="text-xs font-black text-primary">{completedCount}</span>
             </div>
-            <div className="px-5 py-2 flex flex-col justify-center">
-              <span className="text-[8px] text-rose-500/40 font-black uppercase tracking-wider mb-1">Alertas</span>
-              <span className="text-xl font-black text-rose-500">{filtered.length - completedCount}</span>
+            <div className="px-4 py-1 flex flex-col justify-center">
+              <span className="text-[7px] text-rose-500/40 font-black uppercase tracking-wider mb-0.5">Alertas</span>
+              <span className="text-xs font-black text-rose-500">{filtered.length - completedCount}</span>
             </div>
           </div>
-          <div className="relative flex-1 md:w-[320px] group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors" size={18} />
-            <input type="text" placeholder="BUSCAR POR NOME OU CNPJ..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-12 pr-4 h-14 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[11px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/20" />
+          <div className="relative flex-1 md:w-[280px] group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/30 group-focus-within:text-primary transition-colors" size={14} />
+            <input type="text" placeholder="PROCURAR EMPRESA..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-4 h-10 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-20 shadow-inner" />
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <select value={filterRecebimento} onChange={e => setFilterRecebimento(e.target.value)} className="h-14 px-6 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl text-[10px] font-black outline-none cursor-pointer text-foreground uppercase tracking-widest min-w-[180px]">
-            <option value="todos">RECEBIMENTO: TODOS</option>
+        <div className="flex flex-wrap items-center gap-2">
+          <select value={filterRecebimento} onChange={e => setFilterRecebimento(e.target.value)} className="h-10 px-4 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl text-[9px] font-black outline-none cursor-pointer text-foreground uppercase tracking-widest min-w-[150px] shadow-inner">
+            <option value="todos">RECB: TODOS</option>
             {recebimentoOptions.map(opt => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
           </select>
-          <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-border/10 shrink-0 h-14 items-center">
+          <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 shrink-0 h-10 items-center shadow-inner">
             {[{ id: "todos", label: "Geral" }, { id: "pendente", label: "Pendentes" }, { id: "concluido", label: "Enviados" }].map(s => (
-              <button key={s.id} onClick={() => setFilterStatus(s.id as any)} className={`px-6 h-full rounded-lg text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${filterStatus === s.id ? "bg-card text-primary shadow-sm border border-border/10" : "text-muted-foreground/60 hover:text-foreground"}`}>{s.label}</button>
+              <button key={s.id} onClick={() => setFilterStatus(s.id as any)} className={`px-4 h-full rounded-lg text-[9px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${filterStatus === s.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}>{s.label}</button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Navegação por Abas - Estilo Societário */}
-      <div className="flex bg-black/5 dark:bg-white/5 p-1.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-1 w-full">
+      {/* Navegação por Abas */}
+      <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-0.5 w-full shadow-inner">
         {[{ id: "simples", label: "Simples Nacional" }, { id: "lucro", label: "Lucro Presumido/Real" }, { id: "mei", label: "MEI / Simei" }, { id: "outras", label: "Paralisadas/Baixadas" }].map(t => (
-          <button key={t.id} className={`px-10 py-3.5 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm border border-border/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-card/30"}`} onClick={() => setActiveTab(t.id as any)}>{t.label}</button>
+          <button key={t.id} className={`flex-1 px-4 py-2 rounded-lg text-[8px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm border border-border/5" : "text-muted-foreground/40 hover:text-foreground hover:bg-card/20"}`} onClick={() => setActiveTab(t.id as any)}>{t.label}</button>
         ))}
       </div>
 
-      {/* Tabela de Dados - Estilo Societário Compacto */}
-      <div className="glass-card !p-0 overflow-hidden border-border/10 shadow-none rounded-xl">
-        <div className="overflow-x-auto relative">
+      {/* Tabela de Dados */}
+      <div className="module-card !p-0 overflow-hidden border-border/10 shadow-sm rounded-xl">
+        <div className="overflow-x-auto relative no-scrollbar">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-black/[0.02] dark:bg-white/[0.02] border-b border-border/10">
-                <th className="px-6 py-4 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 min-w-[240px]">Empresas</th>
-                <th className="px-6 py-4 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">CNPJ</th>
-                <th className="px-6 py-4 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">XML</th>
-                <th className="px-6 py-4 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Guia</th>
-                <th className="px-6 py-4 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Transmissão</th>
-                <th className="px-6 py-4 text-right text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 pr-8">Opções</th>
+              <tr className="bg-black/5 dark:bg-white/5 border-b border-border/10">
+                <th className="px-4 py-2 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 min-w-[200px]">Empresas</th>
+                <th className="px-4 py-2 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">CNPJ</th>
+                <th className="px-4 py-2 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">XML</th>
+                <th className="px-4 py-2 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 w-24">Guia</th>
+                <th className="px-4 py-2 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 w-32">Envio</th>
+                <th className="px-4 py-2 text-right text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 pr-8 w-10">...</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/5">
@@ -234,14 +242,8 @@ const FiscalPage: React.FC = () => {
                 const form = editForm[emp.id] || {};
                 
                 const okXml = form.xml_status === "ok";
-                const isConcluido = 
-                  okXml && 
-                  (form.status_guia === "gerada" || form.status_guia === "PGDAS Zerado") &&
-                  form.observacoes?.envio_status === "enviado";
-
                 const rOkXml = r?.xml_status === "ok";
                 const isLucro = emp.regime_tributario === "lucro_presumido" || emp.regime_tributario === "lucro_real";
-                
                 const checkDone = (status: any) => status === "gerada" || status === "PGDAS Zerado";
 
                 const rIsConcluido = rOkXml && (
@@ -250,7 +252,6 @@ const FiscalPage: React.FC = () => {
                   : checkDone(r?.status_guia)
                 ) && r?.observacoes?.envio_status === "enviado";
 
-                // Status para o formulário (dinâmico)
                 const isFormConcluido = okXml && (
                   isLucro
                   ? (checkDone(form.irpj_csll_status) && checkDone(form.pis_cofins_status) && checkDone(form.icms_status))
@@ -259,259 +260,173 @@ const FiscalPage: React.FC = () => {
 
                 return (
                   <React.Fragment key={emp.id}>
-                    <tr onClick={() => toggleExpand(emp.id)} className={`group cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-all ${isOpen ? 'bg-primary/[0.04]' : ''}`}>
-                      <td className="px-6 py-4">
+                    <tr onClick={() => toggleExpand(emp.id)} className={`group cursor-pointer hover:bg-primary/[0.02] transition-all ${isOpen ? 'bg-primary/[0.04]' : ''}`}>
+                      <td className="px-4 py-5">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground shrink-0 border border-border/5"><Building2 size={22} className="transition-all" /></div>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-all ${isOpen ? "bg-primary text-white border-primary shadow-lg" : "bg-black/5 dark:bg-white/5 border-border/10 group-hover:border-primary/20 group-hover:text-primary"}`}>
+                            <Building2 size={20} />
+                          </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-black text-foreground text-sm uppercase tracking-tight truncate max-w-[280px] leading-none group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
-                            <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-widest mt-1.5 opacity-60">Regime: {regimeLabels[emp.regime_tributario] || "—"}</span>
+                            <span className="font-black text-foreground text-[13px] uppercase tracking-tight truncate max-w-[400px] group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
+                            <span className="text-[10px] text-muted-foreground/30 font-black uppercase tracking-widest opacity-60 font-mono italic">{regimeLabels[emp.regime_tributario] || "—"}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap"><span className="text-muted-foreground/60 font-mono text-[10px] tracking-wider">{emp.cnpj || "—"}</span></td>
-                      <td className="px-6 py-4 text-center whitespace-nowrap"><div className={`inline-block w-3 h-3 rounded-full ${rOkXml ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20'}`} /></td>
-                      <td className="px-6 py-4 text-center whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter ${rIsConcluido ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
-                          {rIsConcluido ? 'CONCLUÍDO' : 'PENDENTE'}
+                      <td className="px-4 py-5 whitespace-nowrap"><span className="text-muted-foreground/40 font-mono text-[11px] tracking-wider">{emp.cnpj || "—"}</span></td>
+                      <td className="px-4 py-5 text-center whitespace-nowrap"><div className={`inline-block w-2 h-2 rounded-full ${rOkXml ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" : "bg-rose-500/10 border border-rose-500/10"}`} /></td>
+                      <td className="px-4 py-5 text-center whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border ${rIsConcluido ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-rose-500/5 text-rose-500/30 border-rose-500/10"}`}>
+                          {rIsConcluido ? "FECHADO" : "PENDENTE"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center whitespace-nowrap"><span className="text-muted-foreground/40 font-black text-[10px] uppercase tracking-widest">{r?.data_envio ? formatDateBR(r.data_envio) : "—"}</span></td>
-                      <td className="px-6 py-4 pr-8 text-right"><button className={`p-2 rounded-xl border transition-all ${isOpen ? 'bg-primary text-white border-primary rotate-180 shadow-lg' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/40 border-border/10 group-hover:border-primary/50 group-hover:text-primary'}`}><ChevronDown size={14} /></button></td>
+                      <td className="px-4 py-5 text-center whitespace-nowrap"><span className="text-muted-foreground/30 font-black text-[9px] uppercase tracking-widest">{r?.data_envio ? formatDateBR(r.data_envio) : "—"}</span></td>
+                      <td className="px-4 py-5 pr-8 text-right"><div className={`p-1 rounded-lg transition-all ${isOpen ? "rotate-180 bg-primary/10 text-primary" : "text-muted-foreground/20"}`}><ChevronDown size={14} /></div></td>
                     </tr>
                     {isOpen && (
-                      <tr className="bg-muted/30">
-                        <td colSpan={6} className="px-3 py-4">
-                          <div className="bg-card border border-border/50 shadow-inner rounded-2xl p-6 mx-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="max-w-5xl mx-auto space-y-3">
-                              <Tabs value={rowTabs[emp.id] || 'dados'} onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))} className="space-y-3">
-                                <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-border/10 pb-3">
-                                  <TabsList className="bg-black/5 dark:bg-white/5 p-1 rounded-xl h-12 border border-border/10">
-                                    <TabsTrigger value="dados" className="px-8 h-full text-[9px] font-black uppercase tracking-[0.2em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Dados</TabsTrigger>
-                                    <TabsTrigger value="pastas" className="px-8 h-full text-[9px] font-black uppercase tracking-[0.2em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Documentos</TabsTrigger>
+                      <tr className="bg-black/[0.02] dark:bg-white/[0.01]">
+                        <td colSpan={6} className="px-4 py-4 pb-6 border-y border-border/10">
+                          <div className="max-w-6xl space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                              <Tabs value={rowTabs[emp.id] || 'dados'} onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))} className="space-y-4">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-border/10 pb-3">
+                                  <TabsList className="bg-black/10 dark:bg-white/10 p-0.5 rounded-xl h-9 border border-border/10 shadow-inner">
+                                    <TabsTrigger value="dados" className="px-6 h-7 text-[8px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel Fiscal</TabsTrigger>
+                                    <TabsTrigger value="pastas" className="px-6 h-7 text-[8px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Repositório</TabsTrigger>
                                   </TabsList>
-                                  <button onClick={() => setDialogEmpresa(emp)} className="h-10 px-5 text-[9px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-xl transition-all flex items-center gap-3"><Settings size={16} /> Ajustar Parâmetros</button>
+                                  <button onClick={() => setDialogEmpresa(emp)} className="h-8 px-4 text-[8px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-xl transition-all flex items-center gap-2 active:scale-95 shadow-sm"><Settings size={12} /> Parâmetros</button>
                                 </div>
 
-                                <TabsContent value="dados" className="space-y-3 animate-in fade-in slide-in-from-bottom-1 duration-300 outline-none">
-                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                <TabsContent value="dados" className="space-y-4 outline-none">
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
                                       {[
                                         { l: 'Tipo de Nota', v: editForm[emp.id]?.tipo_nota, f: 'tipo_nota' },
                                         { l: 'Recebimento', v: editForm[emp.id]?.recebimento_arquivos, f: 'recebimento_arquivos' },
                                         { l: 'Forma de Envio', v: editForm[emp.id]?.forma_envio, f: 'forma_envio' },
                                         { l: 'Ramo Empresarial', v: editForm[emp.id]?.ramo_empresarial, f: 'ramo_empresarial' }
                                       ].map(x => (
-                                        <div key={x.l} className="bg-white dark:bg-black/10 p-4 rounded-xl border border-border/10 shadow-sm transition-all hover:border-primary/20">
-                                          <span className="block text-[8px] uppercase text-muted-foreground/40 font-black tracking-widest mb-2">{x.l}</span>
+                                        <div key={x.l} className="bg-card p-3 rounded-xl border border-border/10 shadow-sm transition-all hover:border-primary/20 group/input">
+                                          <span className="block text-[7px] uppercase text-muted-foreground/40 font-black tracking-widest mb-1 group-focus-within/input:text-primary transition-colors">{x.l}</span>
                                           <input
                                             type="text"
                                             value={x.v ?? ""}
                                             onChange={e => updateForm(emp.id, x.f, e.target.value)}
-                                            className="w-full bg-transparent text-[11px] font-black uppercase outline-none focus:text-primary transition-colors text-foreground"
-                                            placeholder="—"
+                                            className="w-full bg-transparent text-[10px] font-bold uppercase outline-none text-foreground placeholder-muted-foreground/10"
+                                            placeholder="NÃO DEFINIDO"
                                           />
                                         </div>
                                       ))}
                                     </div>
-                                    <div className="bg-white dark:bg-black/10 p-3 rounded-xl border border-border/10 shadow-sm space-y-2">
+
+                                    <div className="bg-card p-4 rounded-2xl border border-border/10 shadow-sm space-y-4">
                                       <div className="flex items-center justify-between border-b border-border/5 pb-3">
-                                        <h4 className="text-sm font-black text-foreground uppercase tracking-tight flex items-center gap-3"><Activity className="text-primary" size={20} /> Fechamento</h4>
+                                        <h4 className="text-[10px] font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                                          <Activity className="text-primary" size={14} /> 
+                                          Controle Mensal
+                                        </h4>
                                         <div className="flex items-center gap-2">
-                                          <div className={`w-2 h-2 rounded-full ${isFormConcluido ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-rose-500 shadow-lg shadow-rose-500/20"}`} />
-                                          <span className={`text-[10px] font-black uppercase tracking-widest ${isFormConcluido ? "text-emerald-500" : "text-rose-500"}`}>
-                                            {isFormConcluido ? "Concluído" : "Pendente"}
+                                          <div className={`w-1.5 h-1.5 rounded-full ${isFormConcluido ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" : "bg-rose-500 shadow-[0_0_4px_rgba(244,63,94,0.5)]"}`} />
+                                          <span className={`text-[8px] font-black uppercase tracking-widest ${isFormConcluido ? "text-emerald-500" : "text-rose-500"}`}>
+                                            {isFormConcluido ? "Dados Grifados" : "Em Processamento"}
                                           </span>
                                         </div>
                                       </div>
                                       
-                                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         <div className="space-y-1">
-                                          <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">XML Status</label>
-                                          <select value={editForm[emp.id]?.xml_status || "pendente"} onChange={e => updateForm(emp.id, "xml_status", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/5 dark:bg-white/5 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                          <label className="text-[7px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">XML Status</label>
+                                          <select value={editForm[emp.id]?.xml_status || "pendente"} onChange={e => updateForm(emp.id, "xml_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
                                             <option value="pendente">PENDENTE</option>
-                                            <option value="ok">PROCESSADO</option>
+                                            <option value="ok">PROCESSADO (OK)</option>
                                           </select>
                                         </div>
                                         <div className="space-y-1">
-                                          <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Guia / Imposto</label>
-                                          <select value={editForm[emp.id]?.status_guia || "pendente"} onChange={e => updateForm(emp.id, "status_guia", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/5 dark:bg-white/5 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                          <label className="text-[7px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Guia Principal</label>
+                                          <select value={editForm[emp.id]?.status_guia || "pendente"} onChange={e => updateForm(emp.id, "status_guia", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
                                             <option value="pendente">PENDENTE</option>
-                                            <option value="gerada">GERADO</option>
-                                            <option value="PGDAS Zerado">PGDAS ZERADO/S.M</option>
+                                            <option value="gerada">GUIA GERADA</option>
+                                            <option value="PGDAS Zerado">ZERADO / S.M.</option>
                                           </select>
                                         </div>
                                         <div className="space-y-1">
-                                          <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Transmissão</label>
-                                          <input type="date" value={editForm[emp.id]?.data_envio || ""} onChange={e => updateForm(emp.id, "data_envio", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/5 dark:bg-white/5 text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase" />
+                                          <label className="text-[7px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Data Transmissão</label>
+                                          <input type="date" value={editForm[emp.id]?.data_envio || ""} onChange={e => updateForm(emp.id, "data_envio", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-inner" />
                                         </div>
+                                        
                                         {emp.regime_tributario !== 'simples' && (
-                                          <div className="md:col-span-4 mt-2 space-y-2 border-t border-border/5 pt-3">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-primary/40 block mb-3">Detalhamento de Impostos Federais / Estaduais</span>
-                                            
-                                            {/* IRPJ / CSLL */}
-                                            <div className="flex flex-wrap items-end gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5">
-                                              <div className="w-44 space-y-1">
-                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status IRPJ / CSLL</label>
-                                                <select value={editForm[emp.id]?.irpj_csll_status || "pendente"} onChange={e => updateForm(emp.id, "irpj_csll_status", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                          <div className="md:col-span-3 mt-1 space-y-3 pt-3 border-t border-border/5">
+                                            <div className="flex flex-wrap items-end gap-2.5 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5 shadow-inner">
+                                              <div className="w-40 space-y-1">
+                                                <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">IRPJ / CSLL</label>
+                                                <select value={editForm[emp.id]?.irpj_csll_status || "pendente"} onChange={e => updateForm(emp.id, "irpj_csll_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
                                                   <option value="pendente">PENDENTE</option>
                                                   <option value="gerada">GERADO</option>
                                                   <option value="PGDAS Zerado">ZERADO</option>
                                                 </select>
                                               </div>
-                                              <div className="flex-1 min-w-[80px] space-y-1">
-                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. IRPJ</label>
-                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_irpj ?? ""} onChange={e => updateForm(emp.id, "aliquota_irpj", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                              <div className="flex-1 min-w-[60px] space-y-1">
+                                                <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">ALQ. IRPJ</label>
+                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_irpj ?? ""} onChange={e => updateForm(emp.id, "aliquota_irpj", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[10px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
                                               </div>
-                                              <div className="flex-1 min-w-[80px] space-y-1">
-                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. CSLL</label>
-                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_csll ?? ""} onChange={e => updateForm(emp.id, "aliquota_csll", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                              <div className="flex-1 min-w-[60px] space-y-1">
+                                                <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">ALQ. CSLL</label>
+                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_csll ?? ""} onChange={e => updateForm(emp.id, "aliquota_csll", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[10px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
                                               </div>
                                             </div>
 
-                                            {/* PIS / COFINS */}
-                                            <div className="flex flex-wrap items-end gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5">
-                                              <div className="w-44 space-y-1">
-                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status PIS / COFINS</label>
-                                                <select value={editForm[emp.id]?.pis_cofins_status || "pendente"} onChange={e => updateForm(emp.id, "pis_cofins_status", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                            <div className="flex flex-wrap items-end gap-2.5 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5 shadow-inner">
+                                              <div className="w-40 space-y-1">
+                                                <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">PIS / COFINS</label>
+                                                <select value={editForm[emp.id]?.pis_cofins_status || "pendente"} onChange={e => updateForm(emp.id, "pis_cofins_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
                                                   <option value="pendente">PENDENTE</option>
                                                   <option value="gerada">GERADO</option>
                                                   <option value="PGDAS Zerado">ZERADO</option>
                                                 </select>
                                               </div>
-                                              <div className="flex-1 min-w-[80px] space-y-1">
-                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. PIS</label>
-                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_pis ?? ""} onChange={e => updateForm(emp.id, "aliquota_pis", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                              <div className="flex-1 min-w-[60px] space-y-1">
+                                                <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">ALQ. PIS</label>
+                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_pis ?? ""} onChange={e => updateForm(emp.id, "aliquota_pis", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[10px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
                                               </div>
-                                              <div className="flex-1 min-w-[80px] space-y-1">
-                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. COFINS</label>
-                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_cofins ?? ""} onChange={e => updateForm(emp.id, "aliquota_cofins", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                              <div className="flex-1 min-w-[60px] space-y-1">
+                                                <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">ALQ. COFINS</label>
+                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_cofins ?? ""} onChange={e => updateForm(emp.id, "aliquota_cofins", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[10px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
                                               </div>
-                                            </div>
-
-                                            {/* ICMS / ISS */}
-                                            <div className="flex flex-wrap items-end gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5">
-                                              <div className="w-44 space-y-1">
-                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status ICMS / ISS</label>
-                                                <select value={editForm[emp.id]?.icms_status || "pendente"} onChange={e => updateForm(emp.id, "icms_status", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
-                                                  <option value="pendente">PENDENTE</option>
-                                                  <option value="gerada">GERADO</option>
-                                                  <option value="PGDAS Zerado">ZERADO</option>
-                                                </select>
-                                              </div>
-                                              <div className="flex-1 min-w-[120px] space-y-1">
-                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. ICMS</label>
-                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_icms ?? ""} onChange={e => updateForm(emp.id, "aliquota_icms", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
                                             </div>
                                           </div>
-                                        </div>
-                                      )}
+                                        )}
                                       </div>
 
-                                      {/* Alíquotas Dinâmicas para Simples Nacional */}
-                                      {emp.regime_tributario === 'simples' && (
-                                        <div className="pt-3 border-t border-border/5 space-y-3">
-                                          <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Detalhamento de Alíquotas</span>
-                                            <button 
-                                              onClick={() => {
-                                                const current = editForm[emp.id]?.observacoes?.aliquotas || [];
-                                                updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, aliquotas: [...current, { descricao: "", valor: 0 }] });
-                                              }}
-                                              className="px-4 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-primary/20"
-                                            >
-                                              + Adicionar Alíquota
-                                            </button>
-                                          </div>
-                                          
-                                          <div className="space-y-1.5">
-                                            {(editForm[emp.id]?.observacoes?.aliquotas || [{ descricao: "Alíquota Geral", valor: editForm[emp.id]?.aliquota || 0 }]).map((aq: any, idx: number) => (
-                                              <div key={idx} className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
-                                                <div className="w-48">
-                                                  <input 
-                                                    placeholder="Descrição"
-                                                    value={aq.descricao}
-                                                    onChange={e => {
-                                                      const list = [...(editForm[emp.id]?.observacoes?.aliquotas || [{ descricao: "Alíquota Geral", valor: editForm[emp.id]?.aliquota || 0 }])];
-                                                      list[idx].descricao = e.target.value;
-                                                      updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, aliquotas: list });
-                                                    }}
-                                                    className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-bold outline-none focus:border-primary/50 transition-all"
-                                                  />
-                                                </div>
-                                                <div className="flex-1">
-                                                  <div className="relative">
-                                                    <input 
-                                                      type="number"
-                                                      step="0.01"
-                                                      value={aq.valor}
-                                                      onChange={e => {
-                                                        const list = [...(editForm[emp.id]?.observacoes?.aliquotas || [{ descricao: "Alíquota Geral", valor: editForm[emp.id]?.aliquota || 0 }])];
-                                                        list[idx].valor = parseFloat(e.target.value) || 0;
-                                                        updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, aliquotas: list });
-                                                      }}
-                                                      className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black outline-none focus:border-primary/50 transition-all pr-8"
-                                                    />
-                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-muted-foreground/30">%</span>
-                                                  </div>
-                                                </div>
-                                                {idx > 0 && (
-                                                  <button 
-                                                    onClick={() => {
-                                                      const list = editForm[emp.id]?.observacoes?.aliquotas.filter((_: any, i: number) => i !== idx);
-                                                      updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, aliquotas: list });
-                                                    }}
-                                                    className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
-                                                  >
-                                                    <Trash2 size={14} />
-                                                  </button>
-                                                )}
-                                              </div>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {/* Controle de Envio para o Cliente */}
-                                      <div className="pt-3 border-t border-border/5 space-y-3">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 block">Envio para o Cliente</span>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                      {/* Controle de Envio Dinâmico */}
+                                      <div className="pt-2 border-t border-border/5 flex flex-col md:flex-row items-end justify-between gap-4">
+                                        <div className="flex-1 grid grid-cols-2 gap-3 w-full">
                                           <div className="space-y-1">
-                                            <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status de Envio</label>
+                                            <label className="text-[7px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Fluxo de Envio</label>
                                             <select 
                                               value={editForm[emp.id]?.observacoes?.envio_status || "pendente"} 
                                               onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_status: e.target.value })} 
-                                              className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase outline-none focus:border-primary/50 transition-all cursor-pointer"
+                                              className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
                                             >
-                                              <option value="pendente">PENDENTE</option>
-                                              <option value="enviado">ENVIADO</option>
+                                              <option value="pendente">RETIDO NA CONSULTORIA</option>
+                                              <option value="enviado">ENVIADO AO CLIENTE</option>
                                             </select>
                                           </div>
                                           <div className="space-y-1">
-                                            <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Data de Envio</label>
-                                            <input 
-                                              type="date" 
-                                              value={editForm[emp.id]?.observacoes?.envio_data || ""} 
-                                              onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_data: e.target.value })} 
-                                              className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black focus:border-primary/50 outline-none uppercase" 
-                                            />
+                                            <label className="text-[7px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Confirmação</label>
+                                            <input type="date" value={editForm[emp.id]?.observacoes?.envio_data || ""} onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_data: e.target.value })} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-inner" />
                                           </div>
                                         </div>
-                                      </div>
-
-                                      <div className="flex justify-end pt-2">
-                                        <button onClick={() => handleSaveAction(emp.id)} className="h-10 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl flex items-center gap-3 transition-all shadow-lg shadow-primary/20 group">
-                                          <Save size={16} className="group-hover:scale-110 transition-transform" />
-                                          <span className="text-[10px] font-black uppercase tracking-widest">Salvar Fechamento Fiscal</span>
+                                        <button onClick={() => handleSaveAction(emp.id)} className="h-9 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 group">
+                                          <Save size={14} className="group-hover:scale-110 transition-transform" />
+                                          <span className="text-[9px] font-black uppercase tracking-widest">Gravar Fechamento</span>
                                         </button>
                                       </div>
                                     </div>
                                 </TabsContent>
 
-                                <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300 outline-none">
-                                  <ModuleFolderView empresa={emp} departamentoId="fiscal" />
+                                <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none">
+                                  <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden shadow-inner">
+                                    <ModuleFolderView empresa={emp} departamentoId="fiscal" />
+                                  </div>
                                 </TabsContent>
                               </Tabs>
-                            </div>
                           </div>
                         </td>
                       </tr>
@@ -521,11 +436,18 @@ const FiscalPage: React.FC = () => {
               })}
             </tbody>
           </table>
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 bg-black/[0.02] dark:bg-white/[0.01]">
+              <Search size={24} className="text-muted-foreground/10 mb-2" />
+              <p className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">Nenhuma empresa encontrada no filtro</p>
+            </div>
+          )}
         </div>
       </div>
 
       {isUploaderOpen && <TaxGuideUploader empresas={empresas} onClose={() => setIsUploaderOpen(false)} onConfirm={() => queryClient.invalidateQueries({ queryKey: ["fiscal"] })} competenciaFiltro={competencia} />}
       {dialogEmpresa && <FiscalParametersDialog isOpen={!!dialogEmpresa} empresa={dialogEmpresa} initialData={editForm[dialogEmpresa.id] || {}} onClose={() => setDialogEmpresa(null)} onSave={(data) => handleSaveParameters(dialogEmpresa.id, data)} />}
+      </div>
     </div>
   );
 };

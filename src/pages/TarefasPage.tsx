@@ -584,7 +584,7 @@ const TarefasPage: React.FC = () => {
     const countParaMim = tarefas.filter(a => !a.arquivado && a.usuario_id === user?.id).length;
 
     return (
-    <div className="space-y-8 animate-fade-in pb-20 relative px-1">
+    <div className="space-y-6 animate-fade-in relative pb-10">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0 mt-2">
         <div className="space-y-1">

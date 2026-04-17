@@ -7,9 +7,9 @@ import {
     FileSpreadsheet
 } from "lucide-react";
 import { toast } from "sonner";
-import { 
-    MODULES_CONFIG, SITUATIONS, COMPANY_FIELDS, 
-    DEFAULT_HEADER 
+import {
+    MODULES_CONFIG, SITUATIONS, COMPANY_FIELDS,
+    DEFAULT_HEADER
 } from "@/constants/reports";
 import { useReportGenerator } from "@/hooks/useReportGenerator";
 import { ModuleCard } from "@/components/reports/ModuleCard";
@@ -50,7 +50,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
             setSelectedModules(prev => [...prev, id]);
             const mod = MODULES_CONFIG.find(m => m.id === id);
             setSelectedFields(prev => ({ ...prev, [id]: mod?.fields.map(f => f.id) || [] }));
-            
+
             // Inicializar filtros com todos os valores disponíveis
             if (mod?.filterOptions) {
                 setModuleFilters(prev => ({ ...prev, [id]: mod.filterOptions!.map(o => o.id) }));
@@ -93,28 +93,21 @@ const RelatorioPersonalizadoPage: React.FC = () => {
         );
     };
 
-  return (
-    <div className="space-y-6 animate-fade-in pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="header-title">Relatórios Personalizados</h1>
-            <FavoriteToggleButton moduleId="reports-custom" />
-          </div>
-          <p className="subtitle-premium">Gere relatórios complexos cruzando dados de múltiplos departamentos.</p>
-        </div>
-      </div>
+    return (
+        <div className="space-y-6 animate-fade-in pb-20">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                        <h1 className="header-title">Relatórios </h1>
+                        <FavoriteToggleButton moduleId="reports-custom" />
+                    </div>
+                    <p className="subtitle-premium">Gerenciador de Relatórios.</p>
+                </div>
+            </div>
 
-      <div className="bg-card rounded-[2rem] border border-border/50 shadow-sm shadow-primary/5 overflow-hidden">
-        <div className="p-8 space-y-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-black text-card-foreground tracking-tight">Central de Relatórios</h1>
-                                <FavoriteToggleButton moduleId="relatorios" />
-                            </div>
-                            <p className="text-muted-foreground text-sm">Configure e exporte documentos personalizados</p>
-                        </div>
+            <div className="bg-card rounded-[2rem] border border-border/50 shadow-sm shadow-primary/5 overflow-hidden">
+                <div className="p-8 space-y-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-end gap-6">
 
                         <div className="flex items-center gap-3">
                             <div className="hidden md:flex flex-col items-end px-4 border-r border-border/50">
@@ -129,8 +122,8 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                                     onClick={() => handleAction('excel')}
                                     disabled={loadingType !== null || selectedModules.length === 0}
                                     className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm transition-all shadow-sm ${loadingType !== null || selectedModules.length === 0
-                                            ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                                            : "bg-surface text-foreground border border-border/50 hover:bg-muted active:scale-95"
+                                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                                        : "bg-surface text-foreground border border-border/50 hover:bg-muted active:scale-95"
                                         }`}
                                 >
                                     {loadingType === 'excel' ? (
@@ -145,8 +138,8 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                                     onClick={() => handleAction('pdf')}
                                     disabled={loadingType !== null || selectedModules.length === 0}
                                     className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 ${loadingType !== null || selectedModules.length === 0
-                                            ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                                            : "bg-primary text-white shadow-primary/20 hover:scale-105"
+                                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                                        : "bg-primary text-white shadow-primary/20 hover:scale-105"
                                         }`}
                                 >
                                     {loadingType === 'pdf' ? (
@@ -172,8 +165,8 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                                         key={sit.id}
                                         onClick={() => toggleSituation(sit.id)}
                                         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedSituations.includes(sit.id.toLowerCase())
-                                                ? "bg-primary/10 border-primary/30 text-primary shadow-sm"
-                                                : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/20"
+                                            ? "bg-primary/10 border-primary/30 text-primary shadow-sm"
+                                            : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/20"
                                             }`}
                                     >
                                         {sit.label}
@@ -213,7 +206,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
 
                         <div className="grid grid-cols-2 gap-2">
                             {MODULES_CONFIG.map(mod => (
-                                <ModuleCard 
+                                <ModuleCard
                                     key={mod.id}
                                     module={mod}
                                     isSelected={selectedModules.includes(mod.id)}
@@ -253,8 +246,8 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                                                 prev.includes(field.id) ? prev.filter(f => f !== field.id) : [...prev, field.id]
                                             )}
                                             className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${selectedCompanyFields.includes(field.id)
-                                                    ? "border-primary/40 bg-primary/5 shadow-sm"
-                                                    : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
+                                                ? "border-primary/40 bg-primary/5 shadow-sm"
+                                                : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
                                                 }`}
                                         >
                                             <div className={`transition-colors ${selectedCompanyFields.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
@@ -270,7 +263,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                                 const mod = MODULES_CONFIG.find(m => m.id === modId)!;
                                 return (
                                     <div key={modId} className="bg-card rounded-3xl border border-border/50 shadow-sm">
-                                        <div className="p-6 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div className="space-y-6 animate-fade-in relative pb-10">
                                             <div className="flex items-center gap-3">
                                                 <div className={`p-2 rounded-lg ${mod.color} text-white`}>
                                                     {mod.icon}
@@ -294,8 +287,8 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                                                             key={field.id}
                                                             onClick={() => toggleField(modId, field.id)}
                                                             className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${selectedFields[modId]?.includes(field.id)
-                                                                    ? "border-primary/40 bg-primary/5"
-                                                                    : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
+                                                                ? "border-primary/40 bg-primary/5"
+                                                                : "border-border/60 bg-background/50 text-muted-foreground hover:border-primary/20"
                                                                 }`}
                                                         >
                                                             <div className={`transition-colors ${selectedFields[modId]?.includes(field.id) ? "text-primary" : "text-muted-foreground/40"}`}>
@@ -327,11 +320,10 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                                                                         setModuleFilters(prev => ({ ...prev, [modId]: [...current, opt.id] }));
                                                                     }
                                                                 }}
-                                                                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
-                                                                    (moduleFilters[modId] || []).includes(opt.id)
+                                                                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${(moduleFilters[modId] || []).includes(opt.id)
                                                                     ? "bg-primary text-white border-primary shadow-sm"
                                                                     : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/20"
-                                                                }`}
+                                                                    }`}
                                                             >
                                                                 {opt.label}
                                                             </button>

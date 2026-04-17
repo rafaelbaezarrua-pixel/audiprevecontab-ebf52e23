@@ -155,7 +155,7 @@ const GestorAlertasPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 animate-fade-in relative pb-10">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="header-title text-3xl font-black tracking-tight text-foreground flex items-center gap-3">

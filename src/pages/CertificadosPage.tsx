@@ -124,36 +124,35 @@ const CertificadosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 relative">
+    <div className="space-y-6 animate-fade-in relative pb-10">
       {/* Background decoration elements */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
-      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
       {/* Main Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-             <h1 className="header-title">Certificados <span className="text-primary/90">Digitais</span></h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+             <h1 className="header-title">Certificados <span className="text-primary/90 font-black">Digitais</span></h1>
              <FavoriteToggleButton moduleId="certificados" />
           </div>
-          <p className="subtitle-premium">Gestão centralizada e alertas inteligentes de validade para certificados A1, A3 e e-CNPJ.</p>
+          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Gestão centralizada e alertas inteligentes de validade para certificados A1, A3 e e-CNPJ.</p>
         </div>
       </div>
 
       {/* KPI Status Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Ativos", count: counts.ativos, cls: "text-emerald-500", bg: "bg-emerald-500/10", icon: <CheckCircle size={20} /> },
-          { label: "Próximos", count: counts.proximos, cls: "text-amber-500", bg: "bg-amber-500/10", icon: <Clock size={20} /> },
-          { label: "Vencidos", count: counts.vencidos, cls: "text-rose-500", bg: "bg-rose-500/10", icon: <AlertTriangle size={20} /> },
-          { label: "Sem Dados", count: counts.semDados, cls: "text-slate-400", bg: "bg-slate-400/10", icon: <AlertTriangle size={20} /> }
+          { label: "Ativos", count: counts.ativos, cls: "text-emerald-500", bg: "bg-emerald-500/10", icon: <CheckCircle size={14} /> },
+          { label: "Próximos", count: counts.proximos, cls: "text-amber-500", bg: "bg-amber-500/10", icon: <Clock size={14} /> },
+          { label: "Vencidos", count: counts.vencidos, cls: "text-rose-500", bg: "bg-rose-500/10", icon: <AlertTriangle size={14} /> },
+          { label: "Sem Dados", count: counts.semDados, cls: "text-slate-400", bg: "bg-slate-400/10", icon: <AlertTriangle size={14} /> }
         ].map(s => (
-          <div key={s.label} className="card-premium !p-6 flex items-center justify-between group hover:scale-[1.02] transition-all duration-300 border-none shadow-lg shadow-black/5">
-            <div className="space-y-1">
-              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{s.label}</p>
-              <p className={`text-3xl font-black ${s.cls} tracking-tight`}>{s.count}</p>
+          <div key={s.label} className="bg-card border border-border/40 p-3 rounded-xl flex items-center justify-between group hover:border-primary/20 transition-all shadow-sm">
+            <div className="space-y-0.5">
+              <p className="text-[8px] text-muted-foreground/50 uppercase font-black tracking-widest">{s.label}</p>
+              <p className={`text-xl font-black ${s.cls} tracking-tight`}>{s.count}</p>
             </div>
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${s.bg} ${s.cls} border border-current/10 shadow-inner group-hover:scale-110 transition-transform`}>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.bg} ${s.cls} border border-current/10 shadow-inner`}>
               {s.icon}
             </div>
           </div>
@@ -161,20 +160,20 @@ const CertificadosPage: React.FC = () => {
       </div>
 
       {/* Filters & Search */}
-      <div className="space-y-6">
-        <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-muted/30 p-6 rounded-3xl border border-border/60">
-          <div className="relative w-full lg:max-w-md">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <div className="space-y-4">
+        <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full lg:max-w-[320px] group">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-all" />
             <input
               type="text"
-              placeholder="Pesquisar empresa ou CNPJ..."
+              placeholder="PESQUISAR EMPRESA..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-14 pl-12 pr-4 bg-card border border-border/40 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm placeholder:font-normal placeholder:tracking-normal"
+              className="w-full h-10 pl-10 pr-4 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/20 shadow-sm"
             />
           </div>
           
-          <div className="flex bg-card p-1.5 rounded-2xl border border-border/60 overflow-x-auto no-scrollbar w-full lg:w-auto shadow-sm">
+          <div className="flex bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 overflow-x-auto no-scrollbar w-full lg:w-auto shadow-inner gap-1">
             {[
               { key: "todos", label: "Todos" },
               { key: "ativo", label: "Ativos" },
@@ -185,7 +184,7 @@ const CertificadosPage: React.FC = () => {
               <button
                 key={f.key}
                 onClick={() => setFilterStatus(f.key)}
-                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === f.key ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary hover:bg-primary/5"}`}
+                className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === f.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground/50 hover:text-foreground"}`}
               >
                 {f.label}
               </button>
@@ -194,18 +193,18 @@ const CertificadosPage: React.FC = () => {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex bg-muted/20 p-1.5 rounded-2xl border border-border/40 overflow-x-auto no-scrollbar w-full">
+        <div className="flex bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 overflow-x-auto no-scrollbar w-full shadow-inner gap-1">
             {[
-                { id: "ativas", label: "Empresas Ativas" },
-                { id: "mei", label: "Empresas MEI" },
-                { id: "paralisadas", label: "Paralisadas" },
-                { id: "baixadas", label: "Baixadas" },
-                { id: "entregue", label: "Entregues" }
+                { id: "ativas", label: "Ativas" },
+                { id: "mei", label: "MEI" },
+                { id: "paralisadas", label: "Paral." },
+                { id: "baixadas", label: "Baix." },
+                { id: "entregue", label: "Entr." }
             ].map(tab => (
                 <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex-1 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
+                    className={`flex-1 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/50 hover:text-foreground"}`}
                 >
                     {tab.label}
                 </button>
@@ -213,7 +212,7 @@ const CertificadosPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {filtered.map(emp => {
           const isOpen = expanded === emp.id;
           const form = editForm[emp.id] || {};
@@ -222,96 +221,96 @@ const CertificadosPage: React.FC = () => {
           const isAtivo = emp.status === "ativo";
           
           return (
-            <div key={emp.id} className={`group bg-card border ${isOpen ? 'border-primary/30 shadow-lg' : 'border-border/60 hover:border-primary/20'} rounded-3xl transition-all duration-300 overflow-hidden`}>
+            <div key={emp.id} className={`group bg-card border rounded-2xl transition-all duration-200 overflow-hidden shadow-sm ${isOpen ? 'border-primary/40 ring-1 ring-primary/5' : 'border-border/40 hover:border-primary/20'}`}>
               <div 
-                className={`flex items-center justify-between p-5 cursor-pointer transition-colors ${isOpen ? 'bg-primary/5' : 'hover:bg-muted/30'}`} 
+                className={`flex items-center justify-between px-4 py-2 cursor-pointer transition-colors ${isOpen ? 'bg-primary/[0.03]' : 'hover:bg-primary/[0.01]'}`} 
                 onClick={() => toggleExpand(emp.id)}
               >
-                <div className="flex items-center gap-5">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${isOpen ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-primary/10 text-primary'}`}>
-                    <User size={24} />
+                <div className="flex items-center gap-4">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isOpen ? 'bg-primary text-white shadow-lg' : 'bg-black/5 dark:bg-white/5 border border-border/10 group-hover:border-primary/30 group-hover:text-primary'}`}>
+                    <User size={14} />
                   </div>
-                  <div className="space-y-1">
-                    <p className="font-black text-sm uppercase tracking-tight text-card-foreground line-clamp-1">{emp.nome_empresa}</p>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-black text-[11px] uppercase tracking-tight text-foreground truncate max-w-[280px] group-hover:text-primary transition-colors leading-tight">{emp.nome_empresa}</span>
                     <div className="flex items-center gap-2">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{emp.cnpj || "NÃO INFORMADO"}</p>
-                        <span className="w-1 h-1 rounded-full bg-border" />
-                        <p className="text-[10px] font-black text-primary/80 uppercase tracking-tighter">RESP: {emp.adminNome}</p>
+                        <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest font-mono">{emp.cnpj || "N/D"}</span>
+                        <span className="w-0.5 h-0.5 rounded-full bg-border" />
+                        <span className="text-[8px] font-black text-primary/60 uppercase tracking-tighter">RESP: {emp.adminNome}</span>
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-4">
-                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isVencido ? 'bg-destructive/10 text-destructive' : isProximo ? 'bg-warning/10 text-warning' : isAtivo ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>
+                  <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isVencido ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : isProximo ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : isAtivo ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/40 border-border/10'}`}>
                     {isVencido ? "Vencido" : isProximo ? "Próximo" : isAtivo ? "Ativo" : "Pendente"}
                   </span>
-                  <div className={`p-2 rounded-xl bg-muted/50 text-muted-foreground group-hover:text-primary transition-all ${isOpen ? 'rotate-180 bg-primary/10 text-primary' : ''}`}>
-                    <ChevronDown size={18} />
+                  <div className={`p-1.5 rounded-lg border transition-all ${isOpen ? 'bg-primary text-white border-primary rotate-180' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/30 border-border/10 group-hover:bg-primary/5 group-hover:text-primary'}`}>
+                    <ChevronDown size={12} />
                   </div>
                 </div>
               </div>
 
               {isOpen && (
-                <div className="border-t border-border/40 p-8 space-y-8 animate-in slide-in-from-top-4 duration-300">
-                  <Tabs defaultValue="dados" className="w-full">
-                    <TabsList className="bg-muted/50 p-1 rounded-xl h-12 mb-8">
-                       <TabsTrigger value="dados" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Dados do Certificado</TabsTrigger>
-                       <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Arquivos / Pastas</TabsTrigger>
+                <div className="border-t border-border/5 p-4 bg-black/[0.01] dark:bg-white/[0.01] animate-in slide-in-from-top-2 duration-200">
+                  <Tabs defaultValue="dados" className="w-full space-y-4">
+                    <TabsList className="bg-black/10 dark:bg-white/10 p-1 rounded-lg h-9 border border-border/10 shadow-inner">
+                       <TabsTrigger value="dados" className="px-4 h-full text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm">Dados Certificado</TabsTrigger>
+                       <TabsTrigger value="pastas" className="px-4 h-full text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm">Drive / Pastas</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="dados" className="space-y-8 animate-in fade-in duration-300">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data de Validade</label>
-                        <input 
-                            type="date" 
-                            value={form.data_vencimento || ""} 
-                            onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], data_vencimento: e.target.value } }))} 
-                            className="w-full h-14 px-5 bg-muted/30 border border-border/60 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" 
-                        />
-                    </div>
-                    
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Modalidade de Emissão</label>
-                        <select 
-                            value={form.tipo_emissao || "presencial"} 
-                            onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], tipo_emissao: e.target.value } }))} 
-                            className="w-full h-14 px-5 bg-muted/30 border border-border/60 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer transition-all appearance-none"
-                        >
-                            <option value="presencial">Presencial</option>
-                            <option value="videoconferencia">Videoconferência</option>
-                        </select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Responsável Associado</label>
-                        <div className="w-full h-14 px-5 bg-muted/10 border border-border/40 rounded-2xl text-xs font-bold flex items-center text-muted-foreground/60">
-                           {emp.adminNome}
+                    <TabsContent value="dados" className="space-y-4 animate-in fade-in duration-200 outline-none">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-border/10 shadow-inner">
+                        <div className="space-y-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Data de Validade</label>
+                            <input 
+                                type="date" 
+                                value={form.data_vencimento || ""} 
+                                onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], data_vencimento: e.target.value } }))} 
+                                className="w-full h-9 px-3 bg-card border border-border/10 rounded-lg text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20 transition-all font-mono" 
+                            />
                         </div>
-                    </div>
-                  </div>
+                        
+                        <div className="space-y-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Modalidade Emissão</label>
+                            <select 
+                                value={form.tipo_emissao || "presencial"} 
+                                onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], tipo_emissao: e.target.value } }))} 
+                                className="w-full h-9 px-3 bg-card border border-border/10 rounded-lg text-[10px] font-black uppercase tracking-widest outline-none focus:ring-1 focus:ring-primary/20 cursor-pointer transition-all"
+                            >
+                                <option value="presencial">PRESENCIAL</option>
+                                <option value="videoconferencia">VIDEOCONFERÊNCIA</option>
+                            </select>
+                        </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observações do Certificado</label>
-                    <textarea 
-                        value={form.observacao || ""} 
-                        onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], observacao: e.target.value } }))} 
-                        placeholder="Informações adicionais sobre o certificado, token ou senha de acesso..."
-                        className="w-full min-h-[100px] p-5 bg-muted/30 border border-border/60 rounded-2xl text-xs font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end pt-4 border-t border-border/40">
-                      <button 
-                        onClick={() => handleSave(emp.id)} 
-                        className="px-12 h-14 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
-                      >
-                        <Save size={18} /> ATUALIZAR DADOS
-                      </button>
-                  </div>
+                        <div className="space-y-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Responsável Admin</label>
+                            <div className="w-full h-9 px-3 bg-black/5 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black flex items-center text-muted-foreground/60 uppercase truncate">
+                               {emp.adminNome}
+                            </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Observações do Certificado</label>
+                        <textarea 
+                            value={form.observacao || ""} 
+                            onChange={e => setEditForm(prev => ({ ...prev, [emp.id]: { ...prev[emp.id], observacao: e.target.value } }))} 
+                            placeholder="Notas sobre token, senhas ou renovação..."
+                            className="w-full min-h-[60px] p-3 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl text-[10px] font-medium outline-none focus:ring-1 focus:ring-primary/20 transition-all"
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end pt-2">
+                        <button 
+                          onClick={() => handleSave(emp.id)} 
+                          className="h-10 px-8 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+                        >
+                          <Save size={14} /> ATUALIZAR DADOS
+                        </button>
+                      </div>
                     </TabsContent>
 
-                    <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
+                    <TabsContent value="pastas" className="animate-in slide-in-from-right-2 duration-300 outline-none">
                        <ModuleFolderView empresa={emp} departamentoId="geral" />
                     </TabsContent>
                   </Tabs>

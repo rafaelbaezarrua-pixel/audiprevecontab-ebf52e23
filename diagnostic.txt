@@ -1,0 +1,53 @@
+| Dashboard | mt-2 | ❌ Diferente |
+| IRPF | space-y-6 animate-fade-in pb-10 | ❌ Diferente |
+| Ocorrencias | vazio (ok) | ✅ Igual |
+| Recalculos | flex items-center gap-3 | ❌ Diferente |
+| Recibos | space-y-4 animate-fade-in pb-10 relative px-0.5 | ❌ Diferente |
+| RelatorioPersonalizado | p-6 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 | ❌ Diferente |
+| Tarefas | w-1.5 h-1.5 rounded-full bg-white | ❌ Diferente |
+| Contabil | flex items-center gap-3 | ❌ Diferente |
+| Fiscal | flex items-center gap-3 | ❌ Diferente |
+| Financeiro | NOT FOUND | ❌ Diferente |
+| Pessoal | flex items-center gap-3 | ❌ Diferente |
+| Societario | pt-0 | ❌ Diferente |
+| Assinaturas | NOT FOUND | ❌ Diferente |
+| Certidoes | flex items-center gap-3 | ❌ Diferente |
+| Certificados | flex items-center gap-4 | ❌ Diferente |
+| DeclaracoesAnuais | flex items-center gap-4 | ❌ Diferente |
+| DeclaracoesMensais | flex items-center gap-4 | ❌ Diferente |
+| Faturamento | pt-0 | ❌ Diferente |
+| GerenciadorArquivos | flex items-center gap-2 min-w-0 | ❌ Diferente |
+| Licencas | flex items-center justify-between gap-4 border-b border-border/40 pb-5 | ❌ Diferente |
+| Parcelamentos | flex items-center gap-5 | ❌ Diferente |
+| Procuracoes | flex items-center gap-5 | ❌ Diferente |
+| SimuladorCalculos | space-y-6 animate-fade-in pb-10 | ❌ Diferente |
+| Auditoria | space-y-6 | ❌ Diferente |
+| Configuracoes | w-2 h-2 rounded-full bg-primary shrink-0 shadow-sm shadow-primary/40 | ❌ Diferente |
+| GestorAlertas | space-y-8 pb-10 | ❌ Diferente |
+| Agendamentos | vazio (ok) | ✅ Referência |
+
+□ Dashboard
+□ IRPF
+□ Ocorrencias
+□ Recalculos
+□ Recibos
+□ RelatorioPersonalizado
+□ Tarefas
+□ Contabil
+□ Fiscal
+□ Pessoal
+□ Societario
+□ Certidoes
+□ Certificados
+□ DeclaracoesAnuais
+□ DeclaracoesMensais
+□ Faturamento
+□ GerenciadorArquivos
+□ Licencas
+□ Parcelamentos
+□ Procuracoes
+□ SimuladorCalculos
+□ Auditoria
+□ Configuracoes
+□ GestorAlertas
+□ Agendamentos
