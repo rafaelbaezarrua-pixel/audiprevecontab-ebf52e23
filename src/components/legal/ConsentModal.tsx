@@ -54,7 +54,9 @@ export const ConsentModal: React.FC = () => {
           .eq('user_id', user.id);
 
         const acceptedIds = consents?.map(c => c.document_id) || [];
-        const pending = (docs as LegalDoc[]).filter(d => !acceptedIds.includes(d.id));
+        const pending = Array.isArray(docs) 
+          ? (docs as LegalDoc[]).filter(d => !acceptedIds.includes(d.id))
+          : [];
         
         setPendingDocs(pending);
       } catch (error) {
