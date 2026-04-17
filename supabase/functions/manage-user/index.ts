@@ -7,6 +7,7 @@ const ALLOWED_ORIGINS = [
   "https://www.audiprevecontabilidade.com.br",
   "https://portal.contab.audiprevecontabilidade.com.br",
   "http://localhost:5173",
+  "http://localhost:8080",
   "http://localhost:3000",
 ];
 
@@ -71,7 +72,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const isAdmin = roles?.some((r: { role: string }) => r.role === 'admin');
+    const isAdmin = roles?.some((r: { role: string }) => r.role === 'admin' || r.role === 'SUPER_ADMIN');
     if (!isAdmin) {
       console.warn("Usuário não tem permissão de admin:", userId);
       return new Response(JSON.stringify({ error: "Apenas administradores podem gerenciar usuários." }), {

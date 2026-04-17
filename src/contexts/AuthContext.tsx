@@ -214,7 +214,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const metadata = currentUser.user_metadata || {};
       
-      const isAdmin = (roles?.some(r => r.role === "admin") || profileData?.role === "admin" || metadata.role === "admin") || false;
+      const userRoleList = roles?.map(r => r.role) || [];
+      const isAdmin = userRoleList.includes("admin") || userRoleList.includes("SUPER_ADMIN") || profileData?.role === "admin" || metadata.role === "admin" || false;
       
       // Portal Cliente: definido pelo role 'client' na tabela user_roles
       const isClient = !isAdmin && (roles?.some(r => r.role === "client") || false);

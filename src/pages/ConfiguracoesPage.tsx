@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Shield, ShieldOff, Users, Building } from "lucide-react";
+import { Trash2, Shield, ShieldOff, Plus, CheckCircle2, Users, Building } from "lucide-react";
 import { toast } from "sonner";
 import { Navigate, useNavigate } from "react-router-dom";
 import AuditoriaPage from "./AuditoriaPage";
@@ -13,8 +13,17 @@ interface Usuario {
   email_alertas?: string;
   isAdmin: boolean;
   isClient: boolean;
-  modules: Record<string, boolean>;
+  modules: any;
   cnpj?: string;
+}
+
+interface LegalDoc {
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+  version: string;
+  is_active: boolean;
 }
 
 const moduleLabels: Record<string, string> = {
@@ -48,6 +57,8 @@ const ConfiguracoesPage: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [empresas, setEmpresas] = useState<Usuario[]>([]);
   const [consents, setConsents] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<LegalDoc[]>([]);
+  const [editingDoc, setEditingDoc] = useState<LegalDoc | null>(null);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [activeTab, setActiveTab] = useState<'interna' | 'cliente' | 'auditoria' | 'lgpd'>('interna');
 
@@ -57,11 +68,17 @@ const ConfiguracoesPage: React.FC = () => {
       const { data: profiles } = await supabase.from("profiles").select("*");
       const { data: empresasData } = await supabase.from("empresas").select("*").order('nome_empresa');
       
-      // Carregar aceites LGPD (Busca simples para evitar erro 400 de join)
+      // Carregar aceites LGPD
       const { data: consentsData } = await supabase
         .from("user_consents")
-        .select('*')
-        .order('timestamp_aceite', { ascending: false });
+        .select('*, legal_documents(title)')
+        .order('created_at', { ascending: false });
+
+      // Carregar Documentos Atuais
+      const { data: docsData } = await supabase
+        .from("legal_documents")
+        .select("*")
+        .eq("is_active", true);
 
       const userIds = profiles?.map(p => p.user_id) || [];
       const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("user_id", userIds);
@@ -113,11 +130,13 @@ const ConfiguracoesPage: React.FC = () => {
       // Mapear Consents para a aba LGPD
       const mappedConsents = (consentsData || []).map((c: any) => ({
         ...c,
+        nome_documento: c.legal_documents?.title || c.document_id,
         profile: profilesMap[c.user_id] ? {
           nome_completo: profilesMap[c.user_id].full_name || profilesMap[c.user_id].nome_completo
         } : null
       }));
       setConsents(mappedConsents);
+      setDocuments(docsData || []);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
     } finally {
@@ -126,6 +145,50 @@ const ConfiguracoesPage: React.FC = () => {
   };
 
   useEffect(() => { loadUsers(); }, []);
+
+  const handleSaveDocument = async () => {
+    if (!editingDoc) return;
+    try {
+      const { error } = await supabase
+        .from("legal_documents")
+        .update({ 
+          title: editingDoc.title, 
+          content: editingDoc.content,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", editingDoc.id);
+
+      if (error) throw error;
+      toast.success("Documento atualizado com sucesso!");
+      setEditingDoc(null);
+      loadUsers();
+    } catch (err: any) {
+      toast.error("Erro ao salvar documento");
+    }
+  };
+
+  const releaseVersion = async (doc: LegalDoc) => {
+    if (!window.confirm(`Deseja lançar a versão ${doc.version} como obrigatória para todos? Isso fará com que todos os usuários tenham que aceitar novamente.`)) return;
+    try {
+      // Cria uma nova versão baseada na atual (ex: v1.0 -> v1.1)
+      const currentV = parseFloat(doc.version.replace('v', '')) || 1.0;
+      const nextVersion = `v${(currentV + 0.1).toFixed(1)}`;
+      
+      const { error } = await supabase.rpc('release_document_update', {
+        doc_type: doc.type,
+        doc_title: doc.title,
+        doc_content: doc.content,
+        new_version: nextVersion
+      });
+
+      if (error) throw error;
+      toast.success(`Versão ${nextVersion} lançada com sucesso!`);
+      loadUsers();
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao lançar atualização. Verifique se a função rpc existe no banco.");
+    }
+  };
 
   if (!userData) return null;
   if (!userData.isAdmin) return <Navigate to="/dashboard" replace />;
@@ -156,28 +219,7 @@ const ConfiguracoesPage: React.FC = () => {
     }
   };
 
-  const toggleUserType = async (userId: string, currentIsClient: boolean) => {
-    try {
-      const newRole = currentIsClient ? "user" : "client";
-      // Ao mudar para portal, remove o admin primeiro por segurança
-      if (!currentIsClient) {
-        await supabase.functions.invoke("manage-user", {
-          body: { action: "toggleAdmin", target_user_id: userId, enable: false }
-        });
-      }
-      
-      const { error } = await supabase.functions.invoke("manage-user", {
-        body: { action: "toggleUserType", target_user_id: userId, role: newRole }
-      });
 
-      if (error) throw error;
-
-      toast.success(`Usuário movido para ${currentIsClient ? "Equipe Interna" : "Portal Cliente"}`);
-      loadUsers();
-    } catch (err: any) {
-      toast.error("Erro ao alterar tipo de acesso");
-    }
-  };
 
   const handleDelete = async (userId: string) => {
     if (!window.confirm("Excluir este usuário?")) return;
@@ -237,11 +279,79 @@ const ConfiguracoesPage: React.FC = () => {
       {activeTab === 'auditoria' ? (
         <AuditoriaPage />
       ) : activeTab === 'lgpd' ? (
-        <div className="space-y-6">
+        <div className="space-y-8">
+          {/* Painel de Documentos Ativos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {documents.map((doc) => (
+              <div key={doc.id} className="card-premium border-l-4 border-l-emerald-500">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-emerald-500 mb-1">{doc.type.replace(/_/g, ' ')}</h4>
+                    <p className="text-lg font-bold text-card-foreground">{doc.title}</p>
+                    <span className="badge-status badge-success text-[10px] uppercase mt-2">{doc.version} - Ativa</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setEditingDoc(doc)}
+                      className="p-2 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground transition-all"
+                      title="Savar rascunho"
+                    >
+                      <Plus size={16} />
+                    </button>
+                    <button 
+                      onClick={() => releaseVersion(doc)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-900/20"
+                    >
+                      <Plus size={14} /> Lançar Atualização
+                    </button>
+                  </div>
+                </div>
+                <div className="bg-black/20 p-4 rounded-xl max-h-32 overflow-y-auto text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {doc.content.substring(0, 300)}...
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Modal de Edição (Condicional) */}
+          {editingDoc && (
+            <div className="fixed inset-0 z-[110] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-card border border-border w-full max-w-4xl rounded-2xl shadow-2xl p-8 space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-black uppercase tracking-tight">Editar Documento Legal</h3>
+                  <button onClick={() => setEditingDoc(null)} className="text-muted-foreground hover:text-foreground">Fechar</button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-muted-foreground mb-2 block">Título do Documento</label>
+                    <input 
+                      className="w-full bg-muted border border-border p-4 rounded-xl text-sm font-bold"
+                      value={editingDoc.title}
+                      onChange={(e) => setEditingDoc({...editingDoc, title: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-muted-foreground mb-2 block">Conteúdo Jurídico</label>
+                    <textarea 
+                      className="w-full bg-muted border border-border p-4 rounded-xl text-sm h-96 font-medium leading-relaxed"
+                      value={editingDoc.content}
+                      onChange={(e) => setEditingDoc({...editingDoc, content: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button onClick={() => setEditingDoc(null)} className="px-6 py-3 rounded-xl text-sm font-bold bg-muted hover:bg-muted/80 transition-all">Cancelar</button>
+                  <button onClick={handleSaveDocument} className="px-8 py-3 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-all">Salvar Alterações</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Histórico de Consentimentos */}
           <div className="card-premium">
             <h3 className="text-lg font-black text-card-foreground mb-4 flex items-center gap-2">
               <Shield className="text-emerald-500" size={20} />
-              Registro de Consentimentos (LGPD)
+              Histórico de Aceites (Logs de Auditoria)
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -251,30 +361,24 @@ const ConfiguracoesPage: React.FC = () => {
                     <th className="text-left pb-4">Documento</th>
                     <th className="text-left pb-4">Versão</th>
                     <th className="text-left pb-4">Data do Aceite</th>
-                    <th className="text-left pb-4">IP de Origem</th>
-                    <th className="text-right pb-4">Assinatura Digital</th>
+                    <th className="text-left pb-4">Método</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
                   {consents.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-10 text-center text-muted-foreground font-bold">Nenhum aceite registrado até o momento.</td>
+                      <td colSpan={5} className="py-10 text-center text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Nenhuma prova de consentimento registrada.</td>
                     </tr>
                   ) : (
                     consents.map((c) => (
                       <tr key={c.id} className="hover:bg-muted/30 transition-colors">
                         <td className="py-4 font-bold text-card-foreground">{c.profile?.nome_completo || "Usuário Removido"}</td>
-                        <td className="py-4 text-muted-foreground">{c.document_id.replace(/_/g, ' ')}</td>
-                        <td className="py-4 font-mono text-xs">{c.version}</td>
-                        <td className="py-4 text-muted-foreground">
-                          {new Date(c.timestamp_aceite).toLocaleString('pt-BR')}
+                        <td className="py-4 text-muted-foreground font-bold">{c.nome_documento}</td>
+                        <td className="py-4"><span className="badge-status badge-success text-[9px]">{c.version || 'v1.0'}</span></td>
+                        <td className="py-4 text-muted-foreground text-xs">
+                          {new Date(c.created_at).toLocaleString('pt-BR')}
                         </td>
-                        <td className="py-4 font-mono text-xs text-primary">{c.ip_address}</td>
-                        <td className="py-4 text-right">
-                          <span className="inline-block max-w-[100px] truncate text-[10px] bg-muted px-2 py-1 rounded font-mono text-muted-foreground" title={c.integrity_hash}>
-                            {c.integrity_hash}
-                          </span>
-                        </td>
+                        <td className="py-4 text-muted-foreground text-[10px] font-black uppercase">{c.metodo_aceite}</td>
                       </tr>
                     ))
                   )}
@@ -320,34 +424,18 @@ const ConfiguracoesPage: React.FC = () => {
                         {u.isAdmin ? 'Admin' : 'Tornar Admin'}
                       </button>
 
-                      <button 
-                        onClick={() => toggleUserType(u.id, false)} 
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border border-warning/30 bg-warning/5 text-warning hover:bg-warning/10 transition-all"
-                        title="Mover para Portal Cliente"
-                      >
-                        <Building size={16} /> Portal
-                      </button>
                     </>
                   )}
                   
-                  {u.isClient && activeTab === 'cliente' && (
-                     <button 
-                      onClick={() => toggleUserType(u.id, true)} 
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-all"
-                      title="Mover para Equipe Interna"
-                    >
-                      <Users size={16} /> Equipe
-                    </button>
-                  )}
 
-                  {activeTab === 'interna' && (
-                    <button 
-                      onClick={() => handleDelete(u.id)} 
-                      className="p-2.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors border border-transparent hover:border-destructive/20"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  )}
+
+                  <button 
+                    onClick={() => handleDelete(u.id)} 
+                    className="p-2.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors border border-transparent hover:border-destructive/20"
+                    title="Excluir Usuário"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </div>
               <div className="mt-6 pt-6 border-t border-border/50">

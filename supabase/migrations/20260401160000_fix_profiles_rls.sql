@@ -8,6 +8,7 @@ DROP POLICY IF EXISTS "Users update own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Users can view all profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Profiles are viewable by authenticated" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_select" ON public.profiles;
+DROP POLICY IF EXISTS "Authenticated users read profiles" ON public.profiles;
 
 -- Admins: full CRUD
 CREATE POLICY "Admins full access profiles"
