@@ -170,14 +170,14 @@ const HonorariosPage: React.FC = () => {
             <FavoriteToggleButton moduleId="honorarios" />
             {isFetchingHonorarios && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 shadow-sm ml-2">
-                  <div className="w-1 h-1 rounded-full bg-primary animate-ping" />
-                  <span className="text-[8px] font-black text-primary uppercase tracking-tight">Sync</span>
+                <div className="w-1 h-1 rounded-full bg-primary animate-ping" />
+                <span className="text-[8px] font-black text-primary uppercase tracking-tight">Sync</span>
               </div>
             )}
           </div>
-          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Honorários, serviços extras e faturamento mensal.</p>
+          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Honorários, serviços esporadicos.</p>
         </div>
-        
+
         <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 w-full max-w-[320px] shadow-inner h-10 items-center">
           <button
             onClick={() => setMainTab("empresas")}
@@ -261,34 +261,34 @@ const HonorariosPage: React.FC = () => {
       ) : (
         <div className="space-y-4 animate-in slide-in-from-left-1 duration-300">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-             <div className="relative flex-1 w-full md:max-w-md group">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/30 group-focus-within:text-primary transition-colors" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="PROCURAR EMPRESA..." 
-                  value={search} 
-                  onChange={e => setSearch(e.target.value)} 
-                  className="w-full pl-10 pr-4 h-11 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-20 shadow-inner" 
-                />
-              </div>
+            <div className="relative flex-1 w-full md:max-w-md group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/30 group-focus-within:text-primary transition-colors" size={16} />
+              <input
+                type="text"
+                placeholder="PROCURAR EMPRESA..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 h-11 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-20 shadow-inner"
+              />
+            </div>
 
-              <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-0.5 w-full md:w-auto h-11 items-center shadow-inner">
-                {[
-                  { id: "ativas", label: "Ativas" }, 
-                  { id: "mei", label: "MEI" }, 
-                  { id: "paralisadas", label: "Paradas" }, 
-                  { id: "baixadas", label: "Baixas" }, 
-                  { id: "entregue", label: "Enc." }
-                ].map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveStatusTab(t.id as any)}
-                    className={`px-5 h-full rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === t.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground hover:bg-card/20"}`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
+            <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-0.5 w-full md:w-auto h-11 items-center shadow-inner">
+              {[
+                { id: "ativas", label: "Ativas" },
+                { id: "mei", label: "MEI" },
+                { id: "paralisadas", label: "Paradas" },
+                { id: "baixadas", label: "Baixas" },
+                { id: "entregue", label: "Enc." }
+              ].map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveStatusTab(t.id as any)}
+                  className={`px-5 h-full rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === t.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground hover:bg-card/20"}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">
