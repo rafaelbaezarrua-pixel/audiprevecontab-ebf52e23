@@ -191,10 +191,9 @@ const ConfiguracoesPage: React.FC = () => {
         });
       }
       
-      const { error } = await supabase.from("user_roles").upsert({ 
-        user_id: userId, 
-        role: newRole 
-      }, { onConflict: 'user_id,role' });
+      const { error } = await supabase.functions.invoke("manage-user", {
+        body: { action: "toggleUserType", target_user_id: userId, role: newRole }
+      });
 
       if (error) throw error;
 
