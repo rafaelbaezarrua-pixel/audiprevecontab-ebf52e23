@@ -54,8 +54,15 @@ Deno.serve(async (req: Request) => {
     // Verify JWT via Supabase Auth (validates signature + expiration)
     const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !authUser) {
-      console.error("Token verification failed:", authError?.message);
-      return new Response(JSON.stringify({ error: "Token inválido ou expirado" }), {
+      console.error("Token verification failed details:", {
+        error: authError?.message,
+        status: authError?.status,
+        tokenPrefix: token.substring(0, 10)
+      });
+      return new Response(JSON.stringify({ 
+        error: "Token inválido ou expirado", 
+        details: authError?.message 
+      }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
