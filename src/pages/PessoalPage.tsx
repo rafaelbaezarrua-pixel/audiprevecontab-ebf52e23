@@ -303,14 +303,14 @@ const PessoalPage: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                       <div className="space-y-1">
                                         <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">DCTF Web</label>
-                                        <select value={editForm[emp.id]?.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                        <select value={editForm[emp.id]?.dctf_web_gerada ? "sim" : "nao"} onChange={e => updateForm(emp.id, "dctf_web_gerada", e.target.value === "sim")} className="w-full h-10 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
                                           <option value="nao">STATUS: PENDENTE</option>
                                           <option value="sim">STATUS: CONCLUÍDO</option>
                                         </select>
                                       </div>
                                       <div className="space-y-1">
                                         <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status INSS</label>
-                                        <select value={editForm[emp.id]?.inss_status || "pendente"} onChange={e => updateForm(emp.id, "inss_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                        <select value={editForm[emp.id]?.inss_status || "pendente"} onChange={e => updateForm(emp.id, "inss_status", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
                                           <option value="pendente">PENDENTE</option>
                                           <option value="gerada">GUIA GERADA</option>
                                           <option value="enviada">ENVIADO</option>
@@ -318,7 +318,7 @@ const PessoalPage: React.FC = () => {
                                       </div>
                                       <div className="space-y-1">
                                         <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status FGTS</label>
-                                        <select value={editForm[emp.id]?.fgts_status || "pendente"} onChange={e => updateForm(emp.id, "fgts_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                        <select value={editForm[emp.id]?.fgts_status || "pendente"} onChange={e => updateForm(emp.id, "fgts_status", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
                                           <option value="pendente">PENDENTE</option>
                                           <option value="gerada">GUIA GERADA</option>
                                           <option value="enviada">ENVIADO</option>
@@ -326,7 +326,7 @@ const PessoalPage: React.FC = () => {
                                       </div>
                                       <div className="space-y-1">
                                         <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Data Efetivada</label>
-                                        <input type="date" value={editForm[emp.id]?.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase" />
+                                        <input type="date" value={editForm[emp.id]?.dctf_web_data_envio || ""} onChange={e => updateForm(emp.id, "dctf_web_data_envio", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase" />
                                       </div>
                                     </div>
 
@@ -338,7 +338,7 @@ const PessoalPage: React.FC = () => {
                                           {editForm[emp.id]?.possui_vt && (
                                             <div className="space-y-1">
                                               <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status VT</label>
-                                              <select value={editForm[emp.id]?.vt_status || "pendente"} onChange={e => updateForm(emp.id, "vt_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black uppercase outline-none cursor-pointer">
+                                              <select value={editForm[emp.id]?.vt_status || "pendente"} onChange={e => updateForm(emp.id, "vt_status", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase outline-none cursor-pointer">
                                                 <option value="pendente">PENDENTE</option>
                                                 <option value="gerada">GUIA GERADA</option>
                                                 <option value="enviada">ENVIADO</option>
@@ -348,7 +348,7 @@ const PessoalPage: React.FC = () => {
                                           {editForm[emp.id]?.possui_vr && (
                                             <div className="space-y-1">
                                               <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status VR</label>
-                                              <select value={editForm[emp.id]?.vr_status || "pendente"} onChange={e => updateForm(emp.id, "vr_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black uppercase outline-none cursor-pointer">
+                                              <select value={editForm[emp.id]?.vr_status || "pendente"} onChange={e => updateForm(emp.id, "vr_status", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase outline-none cursor-pointer">
                                                 <option value="pendente">PENDENTE</option>
                                                 <option value="gerada">GUIA GERADA</option>
                                                 <option value="enviada">ENVIADO</option>
@@ -358,7 +358,7 @@ const PessoalPage: React.FC = () => {
                                           {editForm[emp.id]?.possui_va && (
                                             <div className="space-y-1">
                                               <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status VA</label>
-                                              <select value={editForm[emp.id]?.va_status || "pendente"} onChange={e => updateForm(emp.id, "va_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black uppercase outline-none cursor-pointer">
+                                              <select value={editForm[emp.id]?.va_status || "pendente"} onChange={e => updateForm(emp.id, "va_status", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase outline-none cursor-pointer">
                                                 <option value="pendente">PENDENTE</option>
                                                 <option value="gerada">GUIA GERADA</option>
                                                 <option value="enviada">ENVIADO</option>
@@ -368,7 +368,7 @@ const PessoalPage: React.FC = () => {
                                           {editForm[emp.id]?.possui_vc && (
                                             <div className="space-y-1">
                                               <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status VC</label>
-                                              <select value={editForm[emp.id]?.vc_status || "pendente"} onChange={e => updateForm(emp.id, "vc_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black uppercase outline-none cursor-pointer">
+                                              <select value={editForm[emp.id]?.vc_status || "pendente"} onChange={e => updateForm(emp.id, "vc_status", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase outline-none cursor-pointer">
                                                 <option value="pendente">PENDENTE</option>
                                                 <option value="gerada">GUIA GERADA</option>
                                                 <option value="enviada">ENVIADO</option>
@@ -385,56 +385,56 @@ const PessoalPage: React.FC = () => {
 
                                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-5">
                                         {/* GRUPO INSS */}
-                                        <div className="space-y-1.5 p-2 rounded-xl bg-black/[0.01] dark:bg-white/[0.01] border border-border/5">
+                                        <div className="space-y-1.5 p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-border/10">
                                           <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-1">Guia INSS</p>
                                           <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-1">
                                               <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Status</label>
-                                              <select value={editForm[emp.id]?.inss_envio_status || "pendente"} onChange={e => updateForm(emp.id, "inss_envio_status", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black uppercase outline-none">
+                                              <select value={editForm[emp.id]?.inss_envio_status || "pendente"} onChange={e => updateForm(emp.id, "inss_envio_status", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black uppercase outline-none">
                                                 <option value="pendente">PENDENTE</option>
                                                 <option value="enviado">ENVIADO</option>
                                               </select>
                                             </div>
                                             <div className="space-y-1">
                                               <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Data</label>
-                                              <input type="date" value={editForm[emp.id]?.inss_envio_data || ""} onChange={e => updateForm(emp.id, "inss_envio_data", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black outline-none" />
+                                              <input type="date" value={editForm[emp.id]?.inss_envio_data || ""} onChange={e => updateForm(emp.id, "inss_envio_data", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black outline-none" />
                                             </div>
                                           </div>
                                         </div>
 
                                         {/* GRUPO FGTS */}
-                                        <div className="space-y-1.5 p-2 rounded-xl bg-black/[0.01] dark:bg-white/[0.01] border border-border/5">
+                                        <div className="space-y-1.5 p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-border/10">
                                           <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-1">Guia FGTS</p>
                                           <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-1">
                                               <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Status</label>
-                                              <select value={editForm[emp.id]?.fgts_envio_status || "pendente"} onChange={e => updateForm(emp.id, "fgts_envio_status", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black uppercase outline-none">
+                                              <select value={editForm[emp.id]?.fgts_envio_status || "pendente"} onChange={e => updateForm(emp.id, "fgts_envio_status", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black uppercase outline-none">
                                                 <option value="pendente">PENDENTE</option>
                                                 <option value="enviado">ENVIADO</option>
                                               </select>
                                             </div>
                                             <div className="space-y-1">
                                               <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Data</label>
-                                              <input type="date" value={editForm[emp.id]?.fgts_envio_data || ""} onChange={e => updateForm(emp.id, "fgts_envio_data", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black outline-none" />
+                                              <input type="date" value={editForm[emp.id]?.fgts_envio_data || ""} onChange={e => updateForm(emp.id, "fgts_envio_data", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black outline-none" />
                                             </div>
                                           </div>
                                         </div>
 
                                         {/* GRUPO VT */}
                                         {editForm[emp.id]?.possui_vt && (
-                                          <div className="space-y-1.5 p-2 rounded-xl bg-black/[0.01] dark:bg-white/[0.01] border border-border/5">
+                                          <div className="space-y-1.5 p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-border/10">
                                             <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-1">Guia VT</p>
                                             <div className="grid grid-cols-2 gap-2">
                                               <div className="space-y-1">
                                                 <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Status</label>
-                                                <select value={editForm[emp.id]?.vt_envio_status || "pendente"} onChange={e => updateForm(emp.id, "vt_envio_status", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black uppercase outline-none">
+                                                <select value={editForm[emp.id]?.vt_envio_status || "pendente"} onChange={e => updateForm(emp.id, "vt_envio_status", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black uppercase outline-none">
                                                   <option value="pendente">PENDENTE</option>
                                                   <option value="enviado">ENVIADO</option>
                                                 </select>
                                               </div>
                                               <div className="space-y-1">
                                                 <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Data</label>
-                                                <input type="date" value={editForm[emp.id]?.vt_envio_data || ""} onChange={e => updateForm(emp.id, "vt_envio_data", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black outline-none" />
+                                                <input type="date" value={editForm[emp.id]?.vt_envio_data || ""} onChange={e => updateForm(emp.id, "vt_envio_data", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black outline-none" />
                                               </div>
                                             </div>
                                           </div>
@@ -442,19 +442,19 @@ const PessoalPage: React.FC = () => {
 
                                         {/* GRUPO VR */}
                                         {editForm[emp.id]?.possui_vr && (
-                                          <div className="space-y-1.5 p-2 rounded-xl bg-black/[0.01] dark:bg-white/[0.01] border border-border/5">
+                                          <div className="space-y-1.5 p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-border/10">
                                             <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-1">Guia VR</p>
                                             <div className="grid grid-cols-2 gap-2">
                                               <div className="space-y-1">
                                                 <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Status</label>
-                                                <select value={editForm[emp.id]?.vr_envio_status || "pendente"} onChange={e => updateForm(emp.id, "vr_envio_status", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black uppercase outline-none">
+                                                <select value={editForm[emp.id]?.vr_envio_status || "pendente"} onChange={e => updateForm(emp.id, "vr_envio_status", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black uppercase outline-none">
                                                   <option value="pendente">PENDENTE</option>
                                                   <option value="enviado">ENVIADO</option>
                                                 </select>
                                               </div>
                                               <div className="space-y-1">
                                                 <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Data</label>
-                                                <input type="date" value={editForm[emp.id]?.vr_envio_data || ""} onChange={e => updateForm(emp.id, "vr_envio_data", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black outline-none" />
+                                                <input type="date" value={editForm[emp.id]?.vr_envio_data || ""} onChange={e => updateForm(emp.id, "vr_envio_data", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black outline-none" />
                                               </div>
                                             </div>
                                           </div>
@@ -462,19 +462,19 @@ const PessoalPage: React.FC = () => {
 
                                         {/* GRUPO VA */}
                                         {editForm[emp.id]?.possui_va && (
-                                          <div className="space-y-1.5 p-2 rounded-xl bg-black/[0.01] dark:bg-white/[0.01] border border-border/5">
+                                          <div className="space-y-1.5 p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-border/10">
                                             <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-1">Guia VA</p>
                                             <div className="grid grid-cols-2 gap-2">
                                               <div className="space-y-1">
                                                 <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Status</label>
-                                                <select value={editForm[emp.id]?.va_envio_status || "pendente"} onChange={e => updateForm(emp.id, "va_status_envio", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black uppercase outline-none">
+                                                <select value={editForm[emp.id]?.va_envio_status || "pendente"} onChange={e => updateForm(emp.id, "va_status_envio", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black uppercase outline-none">
                                                   <option value="pendente">PENDENTE</option>
                                                   <option value="enviado">ENVIADO</option>
                                                 </select>
                                               </div>
                                               <div className="space-y-1">
                                                 <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Data</label>
-                                                <input type="date" value={editForm[emp.id]?.va_envio_data || ""} onChange={e => updateForm(emp.id, "va_envio_data", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black outline-none" />
+                                                <input type="date" value={editForm[emp.id]?.va_envio_data || ""} onChange={e => updateForm(emp.id, "va_envio_data", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black outline-none" />
                                               </div>
                                             </div>
                                           </div>
@@ -482,19 +482,19 @@ const PessoalPage: React.FC = () => {
 
                                         {/* GRUPO VC */}
                                         {editForm[emp.id]?.possui_vc && (
-                                          <div className="space-y-1.5 p-2 rounded-xl bg-black/[0.01] dark:bg-white/[0.01] border border-border/5">
+                                          <div className="space-y-1.5 p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-border/10">
                                             <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-1">Guia VC</p>
                                             <div className="grid grid-cols-2 gap-2">
                                               <div className="space-y-1">
                                                 <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Status</label>
-                                                <select value={editForm[emp.id]?.vc_envio_status || "pendente"} onChange={e => updateForm(emp.id, "vc_envio_status", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black uppercase outline-none">
+                                                <select value={editForm[emp.id]?.vc_envio_status || "pendente"} onChange={e => updateForm(emp.id, "vc_envio_status", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black uppercase outline-none">
                                                   <option value="pendente">PENDENTE</option>
                                                   <option value="enviado">ENVIADO</option>
                                                 </select>
                                               </div>
                                               <div className="space-y-1">
                                                 <label className="text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest ml-0.5">Data</label>
-                                                <input type="date" value={editForm[emp.id]?.vc_envio_data || ""} onChange={e => updateForm(emp.id, "vc_envio_data", e.target.value)} className="w-full h-8 px-2 rounded-md border border-border/10 bg-background text-[9px] font-black outline-none" />
+                                                <input type="date" value={editForm[emp.id]?.vc_envio_data || ""} onChange={e => updateForm(emp.id, "vc_envio_data", e.target.value)} className="w-full h-10 px-2 rounded-md border border-border/10 bg-black/10 dark:bg-white/5 text-[9px] font-black outline-none" />
                                               </div>
                                             </div>
                                           </div>

@@ -134,21 +134,34 @@ Deno.serve(async (req: Request) => {
       if (insErr) throw insErr;
     }
     else if (action === "deleteUser") {
-      console.log("Deletando usuário:", target_user_id);
-      // First, we delete the profile. Cascades should handle the rest in public schema.
+      console.log("Iniciando exclusão total do usuário:", target_user_id);
+      
+      // 1. Limpar permissões de módulos
+      await supabaseAdmin.from("user_module_permissions").delete().eq("user_id", target_user_id);
+      
+      // 2. Limpar cargos (roles)
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", target_user_id);
+      
+      // 3. Limpar consentimentos LGPD
+      await supabaseAdmin.from("user_consents").delete().eq("user_id", target_user_id);
+
+      // 4. Limpar vínculos com empresas (Portal Cliente)
+      await supabaseAdmin.from("empresa_acessos").delete().eq("user_id", target_user_id);
+
+      // 5. Deletar o perfil
       const { error: profileError } = await supabaseAdmin.from("profiles").delete().eq("user_id", target_user_id);
       if (profileError) {
-        console.error("Error deleting profile:", profileError);
+        console.error("Erro ao deletar perfil:", profileError);
         throw new Error(`Erro ao excluir perfil: ${profileError.message}`);
       }
 
-      // Then delete the auth user
+      // 6. Deletar o usuário do Auth
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(target_user_id);
       if (deleteError) {
-        console.error("Error deleting auth user:", deleteError);
+        console.error("Erro ao deletar usuário no Auth:", deleteError);
         throw deleteError;
       }
-      console.log("Usuário deletado com sucesso.");
+      console.log("Usuário e todas as suas dependências deletados com sucesso.");
     }
     else {
       throw new Error(`Ação desconhecida: ${action}`);
