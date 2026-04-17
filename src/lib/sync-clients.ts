@@ -35,14 +35,12 @@ export const syncCompanyClients = async (onProgress?: (current: number, total: n
             if (!cleanCNPJ) continue;
 
             const email = company.email_rfb;
-            const password = cleanCNPJ; // Default password is CNPJ
 
             try {
                 const { error } = await supabase.functions.invoke("create-user", {
                     body: {
                         email,
                         nome: company.nome_empresa,
-                        password,
                         role: 'client',
                         empresa_id: company.id
                     }

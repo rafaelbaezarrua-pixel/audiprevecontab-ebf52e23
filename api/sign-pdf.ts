@@ -15,44 +15,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { pdfBase64, pfxBase64, passphrase, visualText, x, y, pageIndex, location } = req.body;
+    const { pdfBase64, pfxBase64, passphrase, x, y, pageIndex, location } = req.body;
 
     if (!pdfBase64 || !pfxBase64 || !passphrase) {
       return res.status(400).json({ error: 'Parâmetros ausentes (pdfBase64, pfxBase64, passphrase)' });
     }
 
-    // 1. Carregar o PDF e Normalizar
+    if (
+      typeof pdfBase64 !== 'string' ||
+      typeof pfxBase64 !== 'string' ||
+      typeof passphrase !== 'string' ||
+      pdfBase64.length > 30_000_000 ||
+      pfxBase64.length > 10_000_000 ||
+      passphrase.length > 256
+    ) {
+      return res.status(400).json({ error: 'Carga de assinatura inválida.' });
+    }
+
     const pdfBuffer = Buffer.from(cleanBase64(pdfBase64), 'base64');
     const pdfDoc = await PDFDocument.load(pdfBuffer);
-    
-    // Configurar Fonte
+
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    // 2. Aplicar Assinatura Visual (Selo Moderno)
     const pages = pdfDoc.getPages();
-    const targetPageIndex = (pageIndex !== undefined && pageIndex < pages.length) ? pageIndex : pages.length - 1;
+    const targetPageIndex = pageIndex !== undefined && pageIndex < pages.length ? pageIndex : pages.length - 1;
     const lastPage = pages[targetPageIndex];
     const { width, height } = lastPage.getSize();
 
-    // Coordenadas calculadas
     const finalX = x !== undefined ? (x / 100) * width : 30;
     const finalY = y !== undefined ? height - ((y / 100) * height) : 30;
 
-    // Design do Selo Premium
     const sealWidth = 200;
     const sealHeight = 70;
-    const adjustedY = Math.max(10, finalY - (sealHeight / 2));
+    const adjustedY = Math.max(10, finalY - sealHeight / 2);
 
-    // 1. Sombra do Selo (Blur simulado com retângulos)
     lastPage.drawRectangle({
       x: finalX + 1.5,
       y: adjustedY - 1.5,
       width: sealWidth,
       height: sealHeight,
       color: rgb(0.85, 0.85, 0.85),
-      opacity: 0.4
+      opacity: 0.4,
     });
 
-    // 2. Fundo do Selo
     lastPage.drawRectangle({
       x: finalX,
       y: adjustedY,
@@ -63,38 +67,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       borderWidth: 0.5,
     });
 
-    // 3. Barra Lateral de Identidade (Laranja Audipreve)
     lastPage.drawRectangle({
       x: finalX,
       y: adjustedY,
       width: 4,
       height: sealHeight,
-      color: rgb(0.95, 0.4, 0.1), // Laranja mais vibrante
+      color: rgb(0.95, 0.4, 0.1),
     });
 
-    // 4. Textos do Selo com Hierarquia Visual
     const now = new Date();
     const timestamp = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`;
 
-    // Título
     lastPage.drawText('ASSINADO DIGITALMENTE', {
       x: finalX + 12,
       y: adjustedY + sealHeight - 14,
       size: 7,
-      font: font,
+      font,
       color: rgb(0.3, 0.3, 0.3),
     });
 
-    // Nome da Empresa
     lastPage.drawText('AUDIPREVE CONTABILIDADE LTDA', {
       x: finalX + 12,
       y: adjustedY + sealHeight - 28,
       size: 8.5,
-      font: font,
+      font,
       color: rgb(0, 0, 0),
     });
 
-    // Detalhes Técnicos
     const detailsFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const drawDetail = (text: string, yPos: number) => {
       lastPage.drawText(text, {
@@ -111,38 +110,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     drawDetail(`Local: ${location || 'Fazenda Rio Grande - PR'}`, 62);
 
     const pdfBufferNormalized = Buffer.from(await pdfDoc.save({ useObjectStreams: false }));
-    console.log('[API Sign] PDF normalizado. Novo tamanho:', pdfBufferNormalized.length);
-
-    // 2. Adicionar o Placeholder de Assinatura
-    console.log('[API Sign] Adicionando placeholder...');
     const pdfWithPlaceholder = await plainAddPlaceholder({
       pdfBuffer: pdfBufferNormalized,
       reason: 'Assinatura Digital Audipreve',
       signatureLength: 8192,
     });
 
-    // 3. Realizar a Assinatura Real
     const pfxBuffer = Buffer.from(cleanBase64(pfxBase64), 'base64');
     const signer = new P12Signer(pfxBuffer, { passphrase });
-
-    console.log('[API Sign] Chamando signpdf...');
     const signedPdfBuffer = await new SignPdf().sign(pdfWithPlaceholder, signer);
 
-    // 4. Retornar o resultado
-    const signedBase64 = signedPdfBuffer.toString('base64');
-    
-    console.log('[API Sign] Sucesso total.');
-    
-    res.status(200).json({ 
-      success: true, 
-      signedPdfBase64: signedBase64 
+    return res.status(200).json({
+      success: true,
+      signedPdfBase64: signedPdfBuffer.toString('base64'),
     });
-
-  } catch (error: any) {
+  } catch (error) {
     console.error('[API Sign] Erro crítico:', error);
-    res.status(500).json({ 
-      error: 'Falha na assinatura digital', 
-      details: error.message || error 
+    return res.status(500).json({
+      error: 'Falha na assinatura digital',
     });
   }
 }

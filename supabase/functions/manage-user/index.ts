@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 const ALLOWED_ORIGINS = [
   "https://audiprevecontabilidade.com.br",
   "https://www.audiprevecontabilidade.com.br",
+  "https://portal.contab.audiprevecontabilidade.com.br",
   "http://localhost:5173",
   "http://localhost:3000",
 ];

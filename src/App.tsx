@@ -95,19 +95,21 @@ const PageLoader = () => (
 );
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading, userData } = useAuth();
+  const { user, loading, userData, authError } = useAuth();
   if (loading) return null;
+  if (authError) return <Navigate to="/login" replace />;
   if (!user) return <Navigate to="/login" replace />;
+  if (!userData) return <Navigate to="/login" replace />;
 
-  if (userData && !userData.isClient && !userData.profileCompleted) {
+  if (!userData.isClient && !userData.profileCompleted) {
     return <Navigate to="/completar-perfil" replace />;
   }
   
-  if (userData && !userData.isClient && userData.profileCompleted && !userData.termsAccepted) {
+  if (!userData.isClient && userData.profileCompleted && !userData.termsAccepted) {
     return <Navigate to="/termos" replace />;
   }
 
-  if (userData && !userData.isClient && userData.termsAccepted && !userData.firstAccessDone) {
+  if (!userData.isClient && userData.termsAccepted && !userData.firstAccessDone) {
     return <Navigate to="/verificacao" replace />;
   }
 
@@ -120,8 +122,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading, userData } = useAuth();
+  const { user, loading, userData, authError } = useAuth();
   if (loading) return null;
+  if (authError) return <Navigate to="/login" replace />;
   if (!user || !userData?.isAdmin) {
     if (user) {
       import("@/lib/audit").then(({ logAction }) => {
@@ -135,8 +138,9 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const ClientRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading, userData } = useAuth();
+  const { user, loading, userData, authError } = useAuth();
   if (loading) return null;
+  if (authError) return <Navigate to="/login" replace />;
   if (!user || (!userData?.isClient && !userData?.isAdmin)) {
     if (user) {
       import("@/lib/audit").then(({ logAction }) => {
@@ -150,8 +154,9 @@ const ClientRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, authError } = useAuth();
   if (loading) return null;
+  if (authError) return <Navigate to="/login" replace />;
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };

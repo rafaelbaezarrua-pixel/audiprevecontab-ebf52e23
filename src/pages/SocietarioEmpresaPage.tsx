@@ -458,14 +458,13 @@ const SocietarioEmpresaPage: React.FC = () => {
             <button
               onClick={async () => {
                 if (!cnpj || !emailRfb) { toast.error("Dados incompletos para criar acesso."); return; }
-                const cleanCNPJ = cnpj.replace(/\D/g, "");
                 toast.loading("Criando acesso...", { id: "sync" });
                 try {
                   const { error } = await supabase.functions.invoke("create-user", {
-                    body: { email: emailRfb, nome: nomeEmpresa, password: cleanCNPJ, role: 'client', empresa_id: id }
+                    body: { email: emailRfb, nome: nomeEmpresa, role: 'client', empresa_id: id }
                   });
                   if (error) throw error;
-                  toast.success("Acesso criado com sucesso!", { id: "sync" });
+                  toast.success("Acesso criado com sucesso. O cliente receberá um link para ativação.", { id: "sync" });
                 } catch (err: any) { toast.error("Erro: " + err.message, { id: "sync" }); }
               }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-info/10 text-info hover:bg-info/20 transition-all shadow-sm"

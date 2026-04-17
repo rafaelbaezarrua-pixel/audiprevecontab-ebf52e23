@@ -81,7 +81,7 @@ DROP POLICY IF EXISTS "Permitir tudo para usuários autenticados declaracoes_irp
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'declaracoes_irpf') THEN
-    ALTER TABLE public.declaracoes_irpf ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.declaracoes_irpf ENABLE ROW LEVEL SECURITY';
     
     EXECUTE 'CREATE POLICY "Admins full access declaracoes_irpf" ON public.declaracoes_irpf FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
   END IF;
@@ -94,7 +94,7 @@ DROP POLICY IF EXISTS "Authenticated users access controle_irpf" ON public.contr
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'controle_irpf') THEN
-    ALTER TABLE public.controle_irpf ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.controle_irpf ENABLE ROW LEVEL SECURITY';
     
     EXECUTE 'CREATE POLICY "Admins full access controle_irpf" ON public.controle_irpf FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
   END IF;
@@ -107,10 +107,10 @@ DROP POLICY IF EXISTS "Authenticated users access servicos_esporadicos" ON publi
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'servicos_esporadicos') THEN
-    ALTER TABLE public.servicos_esporadicos ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.servicos_esporadicos ENABLE ROW LEVEL SECURITY';
     
     EXECUTE 'CREATE POLICY "Admins full access servicos_esporadicos" ON public.servicos_esporadicos FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
-    EXECUTE 'CREATE POLICY "Users read assigned servicos_esporadicos" ON public.servicos_esporadicos FOR SELECT TO authenticated USING (public.can_access_empresa(auth.uid(), empresa_id))';
+    -- servicos_esporadicos não tem empresa_id, então fica admin-only por enquanto
   END IF;
 END $$;
 
@@ -142,12 +142,12 @@ DROP POLICY IF EXISTS "Authenticated users view tarefas" ON public.tarefas;
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'tarefas') THEN
-    ALTER TABLE public.tarefas ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.tarefas ENABLE ROW LEVEL SECURITY';
     
     EXECUTE 'DROP POLICY IF EXISTS "Admins full access tarefas" ON public.tarefas';
     EXECUTE 'CREATE POLICY "Admins full access tarefas" ON public.tarefas FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
     EXECUTE 'DROP POLICY IF EXISTS "Users view own tarefas" ON public.tarefas';
-    EXECUTE 'CREATE POLICY "Users view own tarefas" ON public.tarefas FOR SELECT TO authenticated USING (criado_por = auth.uid() OR atribuido_para = auth.uid())';
+    EXECUTE 'CREATE POLICY "Users view own tarefas" ON public.tarefas FOR SELECT TO authenticated USING (criado_por = auth.uid() OR usuario_id = auth.uid())';
   END IF;
 END $$;
 
@@ -156,7 +156,7 @@ END $$;
 -- =============================================
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'documentos_assinaturas') THEN
-    ALTER TABLE public.documentos_assinaturas ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.documentos_assinaturas ENABLE ROW LEVEL SECURITY';
     
     EXECUTE 'DROP POLICY IF EXISTS "Admins full access documentos_assinaturas" ON public.documentos_assinaturas';
     EXECUTE 'CREATE POLICY "Admins full access documentos_assinaturas" ON public.documentos_assinaturas FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
@@ -170,7 +170,7 @@ END $$;
 -- =============================================
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'funcionarios') THEN
-    ALTER TABLE public.funcionarios ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.funcionarios ENABLE ROW LEVEL SECURITY';
     
     EXECUTE 'DROP POLICY IF EXISTS "Admins full access funcionarios" ON public.funcionarios';
     EXECUTE 'CREATE POLICY "Admins full access funcionarios" ON public.funcionarios FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
@@ -184,17 +184,17 @@ END $$;
 -- =============================================
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'tickets') THEN
-    ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY';
     EXECUTE 'DROP POLICY IF EXISTS "Admins full access tickets" ON public.tickets';
     EXECUTE 'CREATE POLICY "Admins full access tickets" ON public.tickets FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
     EXECUTE 'DROP POLICY IF EXISTS "Users view own tickets" ON public.tickets';
-    EXECUTE 'CREATE POLICY "Users view own tickets" ON public.tickets FOR SELECT TO authenticated USING (criado_por = auth.uid())';
+    EXECUTE 'CREATE POLICY "Users view own tickets" ON public.tickets FOR SELECT TO authenticated USING (usuario_id = auth.uid())';
   END IF;
 END $$;
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'document_requests') THEN
-    ALTER TABLE public.document_requests ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.document_requests ENABLE ROW LEVEL SECURITY';
     EXECUTE 'DROP POLICY IF EXISTS "Admins full access document_requests" ON public.document_requests';
     EXECUTE 'CREATE POLICY "Admins full access document_requests" ON public.document_requests FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
   END IF;
@@ -205,7 +205,7 @@ END $$;
 -- =============================================
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'relacao_faturamentos') THEN
-    ALTER TABLE public.relacao_faturamentos ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.relacao_faturamentos ENABLE ROW LEVEL SECURITY';
     EXECUTE 'DROP POLICY IF EXISTS "Admins full access relacao_faturamentos" ON public.relacao_faturamentos';
     EXECUTE 'CREATE POLICY "Admins full access relacao_faturamentos" ON public.relacao_faturamentos FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
   END IF;
@@ -213,7 +213,7 @@ END $$;
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'relacao_faturamento_items') THEN
-    ALTER TABLE public.relacao_faturamento_items ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.relacao_faturamento_items ENABLE ROW LEVEL SECURITY';
     EXECUTE 'DROP POLICY IF EXISTS "Admins full access relacao_faturamento_items" ON public.relacao_faturamento_items';
     EXECUTE 'CREATE POLICY "Admins full access relacao_faturamento_items" ON public.relacao_faturamento_items FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
   END IF;
@@ -224,11 +224,11 @@ END $$;
 -- =============================================
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'internal_messages') THEN
-    ALTER TABLE public.internal_messages ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.internal_messages ENABLE ROW LEVEL SECURITY';
     EXECUTE 'DROP POLICY IF EXISTS "Admins full access internal_messages" ON public.internal_messages';
     EXECUTE 'CREATE POLICY "Admins full access internal_messages" ON public.internal_messages FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
     EXECUTE 'DROP POLICY IF EXISTS "Users view own messages" ON public.internal_messages';
-    EXECUTE 'CREATE POLICY "Users view own messages" ON public.internal_messages FOR SELECT TO authenticated USING (destinatario_id = auth.uid() OR remetente_id = auth.uid())';
+    EXECUTE 'CREATE POLICY "Users view own messages" ON public.internal_messages FOR SELECT TO authenticated USING (recipient_id = auth.uid() OR sender_id = auth.uid())';
   END IF;
 END $$;
 
@@ -238,16 +238,19 @@ END $$;
 DROP POLICY IF EXISTS "Users can view all profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Profiles are viewable by authenticated" ON public.profiles;
 
+DROP POLICY IF EXISTS "Admins full access profiles" ON public.profiles;
 CREATE POLICY "Admins full access profiles"
 ON public.profiles FOR ALL
 TO authenticated
 USING (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "Users view own profile" ON public.profiles;
 CREATE POLICY "Users view own profile"
 ON public.profiles FOR SELECT
 TO authenticated
 USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users update own profile" ON public.profiles;
 CREATE POLICY "Users update own profile"
 ON public.profiles FOR UPDATE
 TO authenticated
@@ -258,7 +261,7 @@ USING (user_id = auth.uid());
 -- =============================================
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'licencas_taxas') THEN
-    ALTER TABLE public.licencas_taxas ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'ALTER TABLE public.licencas_taxas ENABLE ROW LEVEL SECURITY';
     EXECUTE 'DROP POLICY IF EXISTS "Admins full access licencas_taxas" ON public.licencas_taxas';
     EXECUTE 'CREATE POLICY "Admins full access licencas_taxas" ON public.licencas_taxas FOR ALL TO authenticated USING (public.has_role(auth.uid(), ''admin''))';
     EXECUTE 'DROP POLICY IF EXISTS "Users read assigned licencas_taxas" ON public.licencas_taxas';
