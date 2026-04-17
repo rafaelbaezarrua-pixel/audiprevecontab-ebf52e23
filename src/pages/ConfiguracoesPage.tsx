@@ -84,8 +84,8 @@ const ConfiguracoesPage: React.FC = () => {
         return acc;
       }, {});
 
-      // Mapear Equipe Interna
-      const team: Usuario[] = (profiles || []).map((p: any) => {
+      // Mapear Usuários
+      const mappedUsers: Usuario[] = (profiles || []).map((p: any) => {
         const userRoles = rolesByUserId[p.user_id] || [];
         const userPerms = permsByUserId[p.user_id] || [];
         const modules: Record<string, boolean> = {};
@@ -102,38 +102,22 @@ const ConfiguracoesPage: React.FC = () => {
         };
       });
 
-      // No momento de exibir na aba 'interna', mostramos quem NÃO for cliente
-      const filteredTeam = team.filter(u => !u.isClient);
-      
-      setUsuarios(filteredTeam);
+      // Equipe Interna
+      const internalTeam = mappedUsers.filter(u => !u.isClient);
+      setUsuarios(internalTeam);
 
-      // Mapear Consents para a aba LGPD com os nomes dos perfis
+      // Portal Cliente (Usuários, não empresas)
+      const portalClients = mappedUsers.filter(u => u.isClient);
+      setEmpresas(portalClients); // Usa a mesma variável de state para exibir na aba cliente
+
+      // Mapear Consents para a aba LGPD
       const mappedConsents = (consentsData || []).map((c: any) => ({
         ...c,
         profile: profilesMap[c.user_id] ? {
           nome_completo: profilesMap[c.user_id].full_name || profilesMap[c.user_id].nome_completo
         } : null
       }));
-
       setConsents(mappedConsents);
-
-      const clients: Usuario[] = (empresasData || []).map(e => {
-        const modules: Record<string, boolean> = {};
-        (e.modulos_ativos || []).forEach((m: string) => { modules[m] = true; });
-        return {
-          id: e.id,
-          nome: e.nome_fantasia || e.nome_empresa,
-          cnpj: e.cnpj || "",
-          email: "",
-          isClient: true,
-          isAdmin: false,
-          modules,
-        };
-      });
-
-      setUsuarios(team);
-      setEmpresas(clients);
-      setConsents(consentsData || []);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
     } finally {
@@ -146,21 +130,12 @@ const ConfiguracoesPage: React.FC = () => {
   if (!userData) return null;
   if (!userData.isAdmin) return <Navigate to="/dashboard" replace />;
 
-  const toggleModule = async (targetId: string, module: string, current: boolean, isClient: boolean) => {
+  const toggleModule = async (targetId: string, module: string, current: boolean) => {
     try {
-      if (isClient) {
-        const empresa = empresas.find(e => e.id === targetId);
-        if (!empresa) return;
-        const currentModules = Object.keys(empresa.modules).filter(k => empresa.modules[k]);
-        const newModules = !current ? [...currentModules, module] : currentModules.filter(m => m !== module);
-        const { error } = await supabase.from("empresas").update({ modulos_ativos: newModules }).eq("id", targetId);
-        if (error) throw error;
-      } else {
-        const res = await supabase.functions.invoke("manage-user", {
-          body: { action: "toggleModule", target_user_id: targetId, module, enable: !current }
-        });
-        if (res.error) throw res.error;
-      }
+      const res = await supabase.functions.invoke("manage-user", {
+        body: { action: "toggleModule", target_user_id: targetId, module, enable: !current }
+      });
+      if (res.error) throw res.error;
       toast.success(`${moduleLabels[module]} atualizado`);
       loadUsers();
     } catch (err: any) {
@@ -386,7 +361,7 @@ const ConfiguracoesPage: React.FC = () => {
                       <button 
                         key={key} 
                         disabled={activeTab === 'interna' && u.isAdmin} 
-                        onClick={() => toggleModule(u.id, key, !!u.modules?.[key], activeTab === 'cliente')} 
+                        onClick={() => toggleModule(u.id, key, !!u.modules?.[key])} 
                         className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess ? "border-primary/40 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/20"} ${activeTab === 'interna' && u.isAdmin ? "opacity-70 cursor-not-allowed" : ""}`}
                       >
                         <span className="truncate pr-2">{label}</span>

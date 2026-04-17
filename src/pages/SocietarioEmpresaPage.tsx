@@ -122,28 +122,8 @@ const SocietarioEmpresaPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin || false;
   const [modulosAtivos, setModulosAtivos] = useState<string[]>(AVAILABLE_MODULES.map(m => m.id));
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [userAcessos, setUserAcessos] = useState<Record<string, string[]>>({});
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProfiles = async () => {
-      if (!isAdmin) return;
-      const { data: profiles } = await supabase.from("profiles").select("*").eq("ativo", true);
-      if (!profiles) return;
-      const userIds = profiles.map(p => p.user_id);
-      const [{ data: roles }, { data: access }] = await Promise.all([
-        supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
-        supabase.from("empresa_acessos").select("user_id").in("user_id", userIds)
-      ]);
-      const clientIds = new Set([
-        ...(roles?.filter(r => (r.role as any) === 'client').map(r => r.user_id) || []),
-      ]);
-      const internalProfiles = profiles.filter(p => !clientIds.has(p.user_id));
-      setProfiles(internalProfiles);
-    };
-    fetchProfiles();
-
     if (isNew) {
       if (state?.nome) setNomeEmpresa(state.nome);
       setLicencas(Object.keys(licencaLabels).map(tipo => ({ tipo_licenca: tipo, status: null, vencimento: null, numero_processo: null })));
@@ -179,13 +159,6 @@ const SocietarioEmpresaPage: React.FC = () => {
         setPossuiFuncionarios((emp as any).possui_funcionarios || false);
         setSomenteProlabore((emp as any).somente_pro_labore || false);
         setPossuiCartaoPonto((emp as any).possui_cartao_ponto || false);
-      }
-
-      if (isAdmin) {
-        const { data: acessos } = await supabase.from("empresa_acessos").select("*").eq("empresa_id", id);
-        const acessosMap: Record<string, string[]> = {};
-        if (acessos) acessos.forEach(a => { acessosMap[a.user_id] = a.modulos_permitidos; });
-        setUserAcessos(acessosMap);
       }
 
       const { data: sociosData } = await supabase.from("socios").select("*").order("nome", { ascending: true }).eq("empresa_id", id);
@@ -270,20 +243,11 @@ const SocietarioEmpresaPage: React.FC = () => {
         if (socError) throw socError;
       }
 
-      if (!isNew) await supabase.from("licencas").delete().eq("empresa_id", empresaId!);
+      if (!isNew && empresaId) await supabase.from("licencas").delete().eq("empresa_id", empresaId!);
       const licToInsert = licencas.filter(l => l.status);
       if (licToInsert.length > 0) {
         const { error: licError } = await supabase.from("licencas").insert(licToInsert.map(l => ({ empresa_id: empresaId!, tipo_licenca: l.tipo_licenca, status: l.status as any, vencimento: l.vencimento || null, numero_processo: l.numero_processo || null })));
         if (licError) throw licError;
-      }
-
-      if (isAdmin) {
-        if (!isNew && empresaId) await supabase.from("empresa_acessos").delete().eq("empresa_id", empresaId);
-        const acessosToInsert = Object.entries(userAcessos).map(([uid, mods]) => ({ empresa_id: empresaId!, user_id: uid, modulos_permitidos: mods }));
-        if (acessosToInsert.length > 0) {
-          const { error: accError } = await supabase.from("empresa_acessos").insert(acessosToInsert);
-          if (accError) throw accError;
-        }
       }
 
       if (isNew && state?.processoId) await supabase.from("processos_societarios" as any).update({ status: 'concluido' }).eq("id", state.processoId);
@@ -785,89 +749,6 @@ const SocietarioEmpresaPage: React.FC = () => {
                 ))}
               </div>
             </div>
-
-            {isAdmin && (
-              <div className="space-y-4 pt-6 mt-6 border-t border-border">
-                <h3 className="font-medium text-card-foreground">Restrição de Acesso por Usuário</h3>
-                <p className="text-sm text-muted-foreground mb-4">Selecione os usuários da equipe que terão acesso limitado a certos módulos desta empresa.</p>
-                
-                {profiles.length === 0 ? (
-                  <div className="p-4 bg-muted/30 rounded-xl border border-dashed border-border text-center text-sm text-muted-foreground">
-                    Nenhum usuário apto para configuração de acessos encontrado.
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {profiles.map(user => {
-                      const hasCustomRule = !!userAcessos[user.user_id];
-                      const allowedModules = userAcessos[user.user_id] || modulosAtivos;
-                      const userName = user.nome_completo || user.full_name || "Usuário sem nome";
-                      
-                      return (
-                        <div key={user.user_id} className="p-4 bg-card rounded-xl border border-border transition-all hover:border-primary/20">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <Shield size={16} className={hasCustomRule ? "text-primary" : "text-muted-foreground"} />
-                              <span className="text-sm font-bold text-card-foreground">{userName}</span>
-                            </div>
-                            <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                checked={hasCustomRule} 
-                                onChange={e => {
-                                  if (e.target.checked) {
-                                    setUserAcessos(prev => ({ ...prev, [user.user_id]: [...modulosAtivos] }));
-                                    setSelectedUserId(user.user_id);
-                                  } else {
-                                    const newAcessos = { ...userAcessos };
-                                    delete newAcessos[user.user_id];
-                                    setUserAcessos(newAcessos);
-                                    if (selectedUserId === user.user_id) setSelectedUserId(null);
-                                  }
-                                }} 
-                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary" 
-                              />
-                              {hasCustomRule ? "Acesso Restrito" : "Acesso Total"}
-                            </label>
-                          </div>
-                          
-                          {hasCustomRule && (
-                            <div className="mt-3 pt-3 border-t border-border/50 animate-in fade-in">
-                              <p className="text-[10px] uppercase font-bold text-muted-foreground mb-2 tracking-widest">
-                                Módulos Permitidos
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {modulosAtivos.map(modId => {
-                                  const modInfo = AVAILABLE_MODULES.find(m => m.id === modId);
-                                  if (!modInfo) return null;
-                                  const isAllowed = allowedModules.includes(modId);
-                                  
-                                  return (
-                                    <button
-                                      key={modId}
-                                      onClick={() => {
-                                        const current = userAcessos[user.user_id] || [];
-                                        if (isAllowed) {
-                                          setUserAcessos(prev => ({ ...prev, [user.user_id]: current.filter(m => m !== modId) }));
-                                        } else {
-                                          setUserAcessos(prev => ({ ...prev, [user.user_id]: [...current, modId] }));
-                                        }
-                                      }}
-                                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all border ${isAllowed ? "bg-primary/10 text-primary border-primary/20" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
-                                    >
-                                      {modInfo.label}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
       </div>
