@@ -669,447 +669,402 @@ const FaturamentoPage: React.FC = () => {
     }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 relative">
+    <div className="animate-fade-in relative pb-10">
       {/* Background decoration elements */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
-      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
-      {/* Main Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-             <h1 className="header-title">Controle de <span className="text-primary/90">Faturamento</span></h1>
-             <FavoriteToggleButton moduleId="faturamento" />
+      <div className="space-y-6">
+        {/* Main Page Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="header-title">Controle de <span className="text-primary/90 font-black">Faturamento</span></h1>
+            <FavoriteToggleButton moduleId="faturamento" />
           </div>
-          <p className="subtitle-premium">Emissão de notas, faturas e relatórios de faturamento mensal.</p>
+          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Emissão de notas, faturas e relatórios mensais.</p>
         </div>
       </div>
 
-      <Tabs defaultValue="emissao" className="w-full space-y-6">
-        <TabsList className="flex bg-muted/30 p-1.5 rounded-xl border border-border/60 overflow-x-auto no-scrollbar w-full sm:w-auto h-auto">
-          <TabsTrigger
-            value="emissao"
-            className="px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border transition-all whitespace-nowrap"
-          >
-            <DollarSign size={16} className="mr-2 inline" /> Emissão
-          </TabsTrigger>
-          <TabsTrigger
-            value="historico"
-            className="px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border transition-all whitespace-nowrap"
-          >
-            <History size={16} className="mr-2 inline" /> Histórico
-          </TabsTrigger>
-          <TabsTrigger
-            value="relacao"
-            className="px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border transition-all whitespace-nowrap"
-          >
-            <TableIcon size={16} className="mr-2 inline" /> Relação de Faturamento
-          </TabsTrigger>
-          <TabsTrigger
-            value="pastas"
-            className="px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border transition-all whitespace-nowrap"
-          >
-            <FolderOpen size={16} className="mr-2 inline" /> Pastas
-          </TabsTrigger>
+      <Tabs defaultValue="emissao" className="w-full space-y-4">
+        <TabsList className="flex bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 overflow-x-auto no-scrollbar w-full sm:w-auto h-auto gap-1">
+          {[
+            { value: "emissao", label: "Emissão", icon: DollarSign },
+            { value: "historico", label: "Histórico", icon: History },
+            { value: "relacao", label: "Relação", icon: TableIcon },
+            { value: "pastas", label: "Pastas", icon: FolderOpen }
+          ].map(tab => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="px-6 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
+            >
+              <tab.icon size={12} className="mr-2" /> {tab.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="emissao" className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* FORMULÁRIO */}
-                <div className="lg:col-span-1">
-                    <div className="card-premium">
-                        <h2 className="text-lg font-black text-primary flex items-center gap-3 mb-6 uppercase tracking-widest">
-                            <div className="p-2 rounded-lg bg-primary/10"><FileText size={20} /></div>
-                            Novo Faturamento
-                        </h2>
+        <TabsContent value="emissao" className="animate-in fade-in slide-in-from-bottom-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* FORMULÁRIO COMPACTO */}
+            <div className="lg:col-span-1">
+              <div className="module-card space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-border/10">
+                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                    <FileText size={14} />
+                  </div>
+                  <h2 className="text-[10px] font-black uppercase tracking-widest text-foreground">Novo Faturamento</h2>
+                </div>
 
-                        <div className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Selecione o Cliente</label>
-                                <Select value={nomeCliente} onValueChange={setNomeCliente} disabled={loadingEmpresas}>
-                                    <SelectTrigger className="w-full h-14 px-4 border border-border/60 rounded-xl bg-card text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition-all">
-                                        <SelectValue placeholder={loadingEmpresas ? "Carregando..." : "Selecione a empresa"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {empresas.map((emp) => (
-                                            <SelectItem key={emp.id} value={emp.nome_empresa}>
-                                                {emp.nome_empresa}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Cliente</label>
+                    <Select value={nomeCliente} onValueChange={setNomeCliente} disabled={loadingEmpresas}>
+                      <SelectTrigger className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black uppercase tracking-tight focus:ring-1 focus:ring-primary/20 transition-all">
+                        <SelectValue placeholder={loadingEmpresas ? "CARREGANDO..." : "SELECIONE A EMPRESA"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {empresas.map((emp) => (
+                          <SelectItem key={emp.id} value={emp.nome_empresa} className="text-[10px] font-bold uppercase">
+                            {emp.nome_empresa}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data Emissão</label>
-                                    <input
-                                        type="date"
-                                        className="w-full h-14 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition-all"
-                                        value={dataEmissao}
-                                        onChange={e => setDataEmissao(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vencimento</label>
-                                    <input
-                                        type="date"
-                                        className="w-full h-14 px-4 bg-muted/30 border border-border/60 rounded-2xl text-xs font-bold text-primary focus:ring-2 focus:ring-primary outline-none transition-all"
-                                        value={dataVencimento}
-                                        onChange={e => setDataVencimento(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Documento PDF</label>
-                                <div className="relative group">
-                                    <input
-                                        type="file"
-                                        accept=".pdf"
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                        onChange={handleFileChange}
-                                    />
-                                    <div className={`border-2 border-dashed ${selectedFile ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/60 group-hover:border-primary/50 bg-card'} rounded-xl p-10 transition-all text-center`}>
-                                        <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${selectedFile ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                                            <UploadCloud size={28} />
-                                        </div>
-                                        <p className="text-xs font-black text-card-foreground uppercase tracking-widest leading-relaxed">
-                                            {selectedFile ? selectedFile.name : "Clique para anexar o PDF"}
-                                        </p>
-                                        <p className="text-[9px] text-muted-foreground mt-2 uppercase tracking-tight">O sistema processará o cabeçalho automaticamente</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="pt-4">
-                                <button
-                                    onClick={generateProcessedPDF}
-                                    disabled={isGenerating || !selectedFile}
-                                    className="w-full h-18 bg-primary text-primary-foreground font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-3"
-                                >
-                                    {isGenerating ? (
-                                        <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> PROCESSANDO...</>
-                                    ) : (
-                                        <><Download size={20} /> GERAR E SALVAR FATURAMENTO</>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Emissão</label>
+                      <input
+                        type="date"
+                        className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20 font-mono"
+                        value={dataEmissao}
+                        onChange={e => setDataEmissao(e.target.value)}
+                      />
                     </div>
-                </div>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Vencimento</label>
+                      <input
+                        type="date"
+                        className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black text-primary outline-none focus:ring-1 focus:ring-primary/20 font-mono"
+                        value={dataVencimento}
+                        onChange={e => setDataVencimento(e.target.value)}
+                      />
+                    </div>
+                  </div>
 
-                <div className="lg:col-span-2">
-                     <div className="card-premium h-full flex flex-col justify-center items-center opacity-70 border-dashed">
-                        <div className="p-8 text-center max-w-sm">
-                            <Building2 size={48} className="text-primary/30 mx-auto mb-4" />
-                            <h3 className="text-sm font-black text-muted-foreground uppercase tracking-widest">Informações Adicionais</h3>
-                            <p className="text-xs text-muted-foreground/60 mt-3 leading-relaxed">Selecione um arquivo PDF de faturamento para que o sistema possa aplicar o cabeçalho personalizado da Audipreve automaticamente.</p>
-                        </div>
-                     </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Arquivo PDF</label>
+                    <div className="relative group">
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        onChange={handleFileChange}
+                      />
+                      <div className={`border border-dashed transition-all p-6 text-center rounded-xl ${selectedFile ? 'border-primary bg-primary/5' : 'border-border/20 bg-black/5 dark:bg-white/5 group-hover:border-primary/40'}`}>
+                        <UploadCloud size={20} className={`mx-auto mb-2 ${selectedFile ? 'text-primary' : 'text-muted-foreground/30'}`} />
+                        <p className="text-[9px] font-black text-foreground uppercase tracking-widest truncate max-w-full">
+                          {selectedFile ? selectedFile.name : "ANEXAR ORIGINAL"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={generateProcessedPDF}
+                    disabled={isGenerating || !selectedFile}
+                    className="w-full h-10 mt-2 bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isGenerating ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Download size={14} /> GERAR E SALVAR</>}
+                  </button>
                 </div>
+              </div>
             </div>
+
+            <div className="lg:col-span-2 space-y-4">
+               {/* MINI STATS COMPACTOS */}
+               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: "Total Geral", value: stats.total, icon: DollarSign, color: "text-primary" },
+                    { label: "Mês Atual", value: stats.monthly[competenciaFiltro] || 0, icon: Calendar, color: "text-emerald-500" }
+                  ].map((stat, i) => (
+                    <div key={i} className="module-card !p-3 flex items-center gap-3">
+                      <div className={`p-2 rounded-lg bg-black/5 dark:bg-white/5 ${stat.color}`}>
+                        <stat.icon size={14} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest truncate">{stat.label}</p>
+                        <p className="text-[12px] font-black text-foreground tracking-tight">R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(stat.value)}</p>
+                      </div>
+                    </div>
+                  ))}
+               </div>
+
+               <div className="module-card">
+                  <div className="flex items-center gap-2 mb-4">
+                    <History size={14} className="text-primary" />
+                    <h3 className="text-[10px] font-black uppercase tracking-widest">Últimos Lançamentos</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {allFaturamentos?.slice(0, 5).map(f => (
+                      <div key={f.id} className="flex items-center justify-between p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-border/5 hover:bg-primary/[0.02] transition-colors group">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Building2 size={12} className="text-muted-foreground/30" />
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] font-black uppercase truncate max-w-[200px]">{f.nome_cliente}</span>
+                            <span className="text-[8px] font-black text-muted-foreground/50 tracking-widest">{format(parseISO(f.data_emissao), "dd/MM/yyyy")}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                           <span className="text-[10px] font-black text-primary">R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(Number(f.valor))}</span>
+                           <Download size={12} className="text-muted-foreground/20 group-hover:text-primary transition-colors cursor-pointer" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+               </div>
+            </div>
+          </div>
         </TabsContent>
 
-        <TabsContent value="historico" className="animate-in fade-in slide-in-from-bottom-4">
-            <div className="space-y-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-muted/30 p-6 rounded-3xl border border-border/50">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-inner">
-                            <History size={24} />
+        <TabsContent value="historico" className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1 group">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-all" />
+              <input
+                type="text"
+                placeholder="BUSCAR NO HISTÓRICO..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full h-10 pl-10 pr-4 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-1 focus:ring-primary/20 shadow-sm"
+              />
+            </div>
+            <div className="flex items-center gap-2 bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 shadow-inner h-10">
+               <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest ml-2">Competência:</span>
+               <input
+                 type="month"
+                 value={competenciaFiltro}
+                 onChange={e => setCompetenciaFiltro(e.target.value)}
+                 className="bg-transparent text-[10px] font-black uppercase outline-none px-2 text-primary"
+               />
+            </div>
+          </div>
+
+          <div className="module-card !p-0 overflow-hidden border-border/10">
+            <div className="overflow-x-auto overflow-y-auto max-h-[500px] no-scrollbar">
+              <table className="w-full text-left">
+                <thead className="sticky top-0 bg-card border-b border-border/10 z-10 shadow-sm">
+                  <tr className="bg-black/5 dark:bg-white/5">
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Cliente/Empresa</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Emissão</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Vencimento</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Valor</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/5">
+                  {filteredHistory.map(f => (
+                    <tr key={f.id} className="hover:bg-primary/[0.02] transition-colors group">
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-3">
+                          <Building2 size={14} className="text-muted-foreground/30" />
+                          <span className="text-[10px] font-black uppercase text-foreground/80">{f.nome_cliente}</span>
                         </div>
+                      </td>
+                      <td className="px-4 py-2.5 font-mono text-[10px] text-muted-foreground/80">{format(parseISO(f.data_emissao), "dd/MM/yyyy")}</td>
+                      <td className="px-4 py-2.5 font-mono text-[10px] text-rose-500/80">{format(parseISO(f.data_vencimento), "dd/MM/yyyy")}</td>
+                      <td className="px-4 py-2.5">
+                         <span className="text-[10px] font-black text-primary">R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(Number(f.valor))}</span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all"
+                            onClick={() => {
+                               // Funcionalidade de download viria aqui
+                            }}
+                          >
+                            <Download size={12} />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(f.id)}
+                            className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredHistory.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground/40 text-[10px] font-black uppercase tracking-widest">
+                        NENHUM REGISTRO NESTA COMPETÊNCIA
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="relacao" className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                {/* CONFIGURAÇÃO DA RELAÇÃO */}
+                <div className="xl:col-span-4 space-y-4">
+                    <div className="module-card space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-border/10">
+                           <Calendar size={14} className="text-primary" />
+                           <h4 className="text-[10px] font-black uppercase tracking-widest">Gerador de Relação</h4>
+                        </div>
+
                         <div className="space-y-1">
-                            <h2 className="text-lg font-black uppercase tracking-widest">Histórico de Emissões</h2>
-                            <p className="text-xs text-muted-foreground">Registros de faturamentos processados recentemente.</p>
+                          <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Empresa</label>
+                          <Select value={relacaoEmpresaId} onValueChange={setRelacaoEmpresaId}>
+                            <SelectTrigger className="h-9 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black focus:ring-1 focus:ring-primary/20">
+                              <SelectValue placeholder="SELECIONE..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {empresas.map(e => (
+                                <SelectItem key={e.id} value={e.id} className="text-[10px] font-bold uppercase">{e.nome_empresa}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Início</label>
+                            <input type="month" value={relacaoInicio} onChange={e => setRelacaoInicio(e.target.value)} className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black outline-none" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Fim</label>
+                            <input type="month" value={relacaoFim} onChange={e => setRelacaoFim(e.target.value)} className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black outline-none" />
+                          </div>
+                        </div>
+
+                        <button onClick={handleGenerateRange} className="w-full h-9 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-black/20 dark:hover:bg-white/10 transition-all">
+                          GERAR LISTA AUTOMÁTICA
+                        </button>
+
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <div className="space-y-1">
+                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Data Emissão</label>
+                                <input type="date" value={relacaoDataEmissao} onChange={e => setRelacaoDataEmissao(e.target.value)} className="w-full h-9 px-2 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Válido Até</label>
+                                <input type="date" value={relacaoDataVencimento} onChange={e => setRelacaoDataVencimento(e.target.value)} className="w-full h-10 px-2 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black" />
+                            </div>
+                        </div>
+
+                        <button
+                          onClick={() => generateRelacaoPDF()}
+                          disabled={isGeneratingRelacao}
+                          className="w-full h-10 bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                        >
+                           {isGeneratingRelacao ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Printer size={14} /> IMPRIMIR RELAÇÃO</>}
+                        </button>
                     </div>
-                    
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-64">
-                            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                            <input
-                                type="text"
-                                placeholder="Filtrar por cliente..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                className="w-full h-12 pl-12 pr-4 bg-card border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20"
-                            />
+
+                    <div className="module-card !p-4 bg-primary/[0.03] border-primary/10">
+                        <div className="flex flex-col items-center">
+                            <span className="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-1">Total da Relação</span>
+                            <span className="text-2xl font-black text-primary tracking-tight">R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(totalRelacao)}</span>
                         </div>
-                        <input
-                            type="month"
-                            value={competenciaFiltro}
-                            onChange={e => setCompetenciaFiltro(e.target.value)}
-                            className="h-12 px-4 bg-primary/10 border border-primary/20 rounded-xl text-xs font-black text-primary outline-none"
-                        />
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {loadingHistory ? (
-                        <div className="col-span-full py-32 text-center">
-                             <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest animate-pulse">Carregando histórico...</p>
-                        </div>
-                    ) : filteredHistory.length === 0 ? (
-                        <div className="col-span-full py-32 text-center bg-card border border-dashed border-border/60 rounded-[2.5rem] opacity-60">
-                            <Filter size={48} className="mx-auto mb-4 text-muted-foreground/30" />
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Nenhum registro encontrado para este período</p>
-                        </div>
-                    ) : (
-                        filteredHistory.map(item => (
-                            <div key={item.id} className="group bg-card border border-border/60 hover:border-primary/40 p-6 rounded-[2rem] transition-all hover:shadow-xl hover:shadow-primary/5 flex items-center justify-between">
-                                <div className="flex items-center gap-5">
-                                    <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary/60 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                        <FileText size={24} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <h3 className="font-black text-xs uppercase tracking-tight text-card-foreground">{item.nome_cliente}</h3>
-                                        <div className="flex flex-wrap gap-3 items-center">
-                                            <span className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full uppercase tracking-tighter">
-                                                <Calendar size={12} /> {format(parseISO(item.data_emissao), "dd/MM/yyyy")}
-                                            </span>
-                                            <span className="text-[10px] font-black text-primary bg-primary/10 px-2.5 py-1 rounded-full uppercase tracking-widest">
-                                                VENC: {format(parseISO(item.data_vencimento), "dd/MM/yyyy")}
-                                            </span>
-                                        </div>
-                                    </div>
+                {/* TABELA DE ITENS DA RELAÇÃO */}
+                <div className="xl:col-span-8 space-y-4">
+                    <div className="module-card overflow-hidden">
+                       <div className="flex items-center justify-between mb-4">
+                          <h5 className="text-[10px] font-black uppercase tracking-widest">Itens de Faturamento</h5>
+                          <button onClick={handleAddRelacaoItem} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest hover:bg-primary transition-all hover:text-white">
+                             <PlusCircle size={12} /> Adicionar Mês
+                          </button>
+                       </div>
+
+                       <div className="space-y-2 max-h-[600px] overflow-y-auto no-scrollbar pr-1">
+                          {relacaoItems.map((item, idx) => (
+                             <div key={item.id} className="flex items-center gap-3 bg-black/5 dark:bg-white/5 p-2 rounded-xl border border-border/5 group animate-in slide-in-from-right-2 duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
+                                <div className="flex-1">
+                                   <input
+                                     type="text"
+                                     placeholder="Mês (Ex: Janeiro)"
+                                     value={item.mes}
+                                     onChange={e => handleUpdateRelacaoItem(item.id, "mes", e.target.value)}
+                                     className="w-full h-8 bg-card border border-border/10 rounded-lg px-2 text-[10px] font-black uppercase tracking-tight outline-none focus:ring-1 focus:ring-primary/20"
+                                   />
                                 </div>
-                                <button
-                                    onClick={() => handleDelete(item.id)}
-                                    className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                                >
-                                    <Trash2 size={20} />
+                                <div className="w-24">
+                                   <input
+                                     type="text"
+                                     placeholder="Ano"
+                                     value={item.ano}
+                                     onChange={e => handleUpdateRelacaoItem(item.id, "ano", e.target.value)}
+                                     className="w-full h-8 bg-card border border-border/10 rounded-lg px-2 text-[10px] font-black text-center outline-none focus:ring-1 focus:ring-primary/20"
+                                   />
+                                </div>
+                                <div className="w-32">
+                                   <div className="relative">
+                                     <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-muted-foreground/40">R$</span>
+                                     <input
+                                       type="number"
+                                       value={item.valor}
+                                       placeholder="0,00"
+                                       onChange={e => handleUpdateRelacaoItem(item.id, "valor", e.target.value)}
+                                       className="w-full h-8 bg-card border border-border/10 rounded-lg pl-6 pr-2 text-[10px] font-black text-right outline-none focus:ring-1 focus:ring-primary/20"
+                                     />
+                                   </div>
+                                </div>
+                                <button onClick={() => handleRemoveRelacaoItem(item.id)} className="p-2 text-rose-500/30 hover:text-rose-500 transition-colors">
+                                   <X size={14} />
                                 </button>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-        </TabsContent>
-
-        <TabsContent value="relacao" className="animate-in fade-in slide-in-from-bottom-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* FORMULÁRIO DE RELAÇÃO */}
-                <div className="lg:col-span-1">
-                    <div className="card-premium">
-                        <h2 className="text-lg font-black text-primary flex items-center gap-3 mb-6 uppercase tracking-widest">
-                            <div className="p-2 rounded-lg bg-primary/10"><Building2 size={20} /></div>
-                            Dados da Relação
-                        </h2>
-
-                        <div className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empresa</label>
-                                <Select value={relacaoEmpresaId} onValueChange={setRelacaoEmpresaId} disabled={loadingEmpresas}>
-                                    <SelectTrigger className="w-full h-14 px-4 border border-border/60 rounded-xl bg-card text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition-all">
-                                        <SelectValue placeholder={loadingEmpresas ? "Carregando..." : "Selecione a empresa"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {empresas.map((emp) => (
-                                            <SelectItem key={emp.id} value={emp.id}>
-                                                {emp.nome_empresa}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Período Início</label>
-                                    <input
-                                        type="month"
-                                        className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-1 focus:ring-primary"
-                                        value={relacaoInicio}
-                                        onChange={(e) => setRelacaoInicio(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Período Fim</label>
-                                    <input
-                                        type="month"
-                                        className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-1 focus:ring-primary"
-                                        value={relacaoFim}
-                                        onChange={(e) => setRelacaoFim(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data Emissão</label>
-                                    <input
-                                        type="date"
-                                        className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-1 focus:ring-primary"
-                                        value={relacaoDataEmissao}
-                                        onChange={(e) => setRelacaoDataEmissao(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vencimento</label>
-                                    <input
-                                        type="date"
-                                        className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs outline-none focus:ring-1 focus:ring-primary font-black text-primary"
-                                        value={relacaoDataVencimento}
-                                        onChange={(e) => setRelacaoDataVencimento(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 pt-4 border-t border-border/40">
-                                <div className="flex flex-col gap-3">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Itens do Faturamento</label>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={handleGenerateRange}
-                                            className="flex-1 h-11 text-[10px] font-black uppercase tracking-widest rounded-xl bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <Calendar size={14} /> Gerar Período
-                                        </button>
-                                        <button
-                                            onClick={handleAddRelacaoItem}
-                                            className="flex-1 h-11 text-[10px] font-black uppercase tracking-widest rounded-xl bg-muted text-muted-foreground hover:bg-muted/80 border border-border/60 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <PlusCircle size={14} /> Add Manual
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                    {relacaoItems.map((item) => (
-                                        <div key={item.id} className="flex gap-3 items-center bg-card border border-border/60 p-4 rounded-2xl relative group hover:shadow-lg transition-all">
-                                            <div className="flex-1 grid grid-cols-2 gap-3">
-                                                <input
-                                                    type="text"
-                                                    className="h-10 px-3 bg-muted/20 border border-border/40 rounded-xl text-[11px] font-bold outline-none focus:ring-1 focus:ring-primary"
-                                                    placeholder="Mês"
-                                                    value={item.mes}
-                                                    onChange={(e) => handleUpdateRelacaoItem(item.id, "mes", e.target.value)}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    className="h-10 px-3 bg-muted/20 border border-border/40 rounded-xl text-[11px] font-bold outline-none focus:ring-1 focus:ring-primary"
-                                                    placeholder="Ano"
-                                                    value={item.ano}
-                                                    onChange={(e) => handleUpdateRelacaoItem(item.id, "ano", e.target.value)}
-                                                />
-                                                <div className="col-span-2">
-                                                    <input
-                                                        type="number"
-                                                        className="w-full h-11 px-4 bg-primary/5 border border-primary/10 rounded-xl text-[11px] font-black text-primary outline-none focus:ring-1 focus:ring-primary"
-                                                        placeholder="Valor R$ 0,00"
-                                                        value={item.valor || ""}
-                                                        onChange={(e) => handleUpdateRelacaoItem(item.id, "valor", Number(e.target.value))}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handleRemoveRelacaoItem(item.id)}
-                                                className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="pt-6 border-t border-border/60">
-                                <div className="flex items-center justify-between mb-6 px-2">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Soma Total</span>
-                                    <span className="text-xl font-black text-primary tracking-tight">
-                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalRelacao)}
-                                    </span>
-                                </div>
-
-                                <button
-                                    onClick={() => generateRelacaoPDF()}
-                                    disabled={isGeneratingRelacao}
-                                    className="w-full h-18 bg-primary text-primary-foreground font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-3"
-                                >
-                                    <Printer size={20} />
-                                    {isGeneratingRelacao ? "GERANDO DOCUMENTO..." : "GERAR RELAÇÃO PDF"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* HISTÓRICO DE RELAÇÕES */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="flex items-center gap-4 bg-muted/30 p-6 rounded-3xl border border-border/50">
-                        <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-inner">
-                            <TableIcon size={24} />
-                        </div>
-                        <div className="space-y-1">
-                            <h2 className="text-lg font-black uppercase tracking-widest">Relatórios Gerados</h2>
-                            <p className="text-xs text-muted-foreground">Histórico completo de relações de faturamento real.</p>
-                        </div>
+                             </div>
+                          ))}
+                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {relacoes.length === 0 ? (
-                            <div className="col-span-full py-32 text-center bg-card border border-dashed border-border/60 rounded-[2.5rem] opacity-60">
-                                <History size={48} className="mx-auto mb-4 text-muted-foreground/30" />
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Nenhuma relação gerada ainda</p>
-                            </div>
-                        ) : (
-                            relacoes.map((rel) => (
-                                <div key={rel.id} className="group bg-card border border-border/60 hover:border-primary/40 p-6 rounded-[2rem] transition-all hover:shadow-xl hover:shadow-primary/5 flex items-center justify-between">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary/60 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                            <FileText size={24} />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <h3 className="font-black text-xs uppercase tracking-tight text-card-foreground line-clamp-1">{rel.nome_empresa}</h3>
-                                            <div className="flex flex-wrap gap-2 items-center">
-                                                <span className="text-[9px] bg-muted px-2 py-0.5 rounded-full font-black text-muted-foreground uppercase tracking-tighter">
-                                                    {rel.periodo_inicio} — {rel.periodo_fim}
-                                                </span>
-                                                <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(rel.valor_total)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <button
-                                            onClick={() => generateRelacaoPDF(rel)}
-                                            className="p-2.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                                            title="Imprimir Novamente"
-                                        >
-                                            <Printer size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                if (confirm("Excluir esta relação do histórico?")) {
-                                                    deleteRelacao.mutate(rel.id);
-                                                }
-                                            }}
-                                            className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                    <div className="module-card !p-0 overflow-hidden">
+                       <div className="bg-black/5 dark:bg-white/5 px-4 py-2 border-b border-border/10">
+                          <h6 className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Histórico de Relações Geradas</h6>
+                       </div>
+                       <div className="max-h-[300px] overflow-y-auto no-scrollbar">
+                          {relacoes?.map(r => (
+                             <div key={r.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group border-b border-border/5 last:border-0">
+                                <div className="flex flex-col">
+                                   <span className="text-[10px] font-black uppercase truncate max-w-[300px]">{r.nome_empresa}</span>
+                                   <span className="text-[8px] font-black text-muted-foreground/40 tracking-widest uppercase">{r.periodo_inicio} ATÉ {r.periodo_fim}</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[10px] font-black text-primary">R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(r.valor_total)}</span>
+                                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                       <button onClick={() => generateRelacaoPDF(r)} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+                                          <Printer size={12} />
+                                       </button>
+                                       <button onClick={() => deleteRelacao.mutate(r.id)} className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
+                                          <Trash2 size={12} />
+                                       </button>
                                     </div>
                                 </div>
-                            ))
-                        )}
+                             </div>
+                          ))}
+                        </div>
                     </div>
                 </div>
             </div>
         </TabsContent>
 
-        <TabsContent value="pastas" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-card border border-border/60 rounded-[2.5rem] p-8">
-                <h2 className="text-xl font-black text-card-foreground uppercase tracking-tight mb-8">Gerenciador de Arquivos do Servidor</h2>
-                <div className="bg-muted/10 rounded-2xl border border-dashed border-border/40 p-1">
-                    <GerenciadorArquivosPage />
-                </div>
-            </div>
+        <TabsContent value="pastas" className="animate-in fade-in slide-in-from-bottom-2">
+            <GerenciadorArquivosPage />
         </TabsContent>
       </Tabs>
+      </div>
     </div>
-    );
+  );
 };
 
 export default FaturamentoPage;

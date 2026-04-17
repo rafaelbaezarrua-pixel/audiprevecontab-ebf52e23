@@ -236,7 +236,7 @@ const ConfiguracoesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in pb-10">
+    <div className="space-y-6 animate-fade-in relative pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
         <div className="space-y-1">
           <div className="flex items-center gap-3">

@@ -28,8 +28,8 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 pb-10 animate-fade-in relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 mt-2">
+    <div className="space-y-6 animate-fade-in relative pb-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
         <div>
           <h1 className="header-title flex items-center gap-3">
             Dashboard <span className="text-primary/70">Audipreve</span>

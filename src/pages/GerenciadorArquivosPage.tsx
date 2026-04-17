@@ -337,7 +337,7 @@ const GerenciadorArquivosPage: React.FC = () => {
   // ────────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
+    <div className="space-y-6 animate-fade-in relative pb-10">
 
       {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">

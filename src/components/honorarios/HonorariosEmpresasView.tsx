@@ -66,7 +66,7 @@ export const HonorariosEmpresasView = ({
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {loading && empresas.length === 0 && (
         <div className="flex items-center justify-center py-12">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -74,8 +74,8 @@ export const HonorariosEmpresasView = ({
       )}
 
       {!loading && empresas.length === 0 && (
-        <div className="text-center py-12 card-premium bg-muted/20">
-          <p className="text-muted-foreground">Nenhuma empresa encontrada com estes critérios.</p>
+        <div className="text-center py-12 module-card bg-black/5">
+          <p className="text-[10px] font-black uppercase text-muted-foreground/30 tracking-widest">Nenhuma empresa encontrada com estes critérios.</p>
         </div>
       )}
 
@@ -86,108 +86,112 @@ export const HonorariosEmpresasView = ({
         const hasMensalRecords = mensalData[emp.id] && mensalData[emp.id].length > 0;
 
         return (
-          <div key={emp.id} className="module-card !p-0 overflow-hidden">
-            <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => onToggleExpand(emp.id)}>
+          <div key={emp.id} className={`module-card !p-0 overflow-hidden border-border/10 transition-all ${isOpen ? "ring-1 ring-primary/20 bg-primary/[0.02]" : ""}`}>
+            <div className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-primary/[0.04] transition-all group" onClick={() => onToggleExpand(emp.id)}>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Building2 size={16} className="text-primary" />
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isOpen ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-black/5 dark:bg-white/5 border border-border/5 text-primary group-hover:bg-primary/10"}`}>
+                  <Building2 size={16} />
                 </div>
-                <div>
-                  <p className="font-medium text-card-foreground">{emp.nome_empresa}</p>
-                  <p className="text-xs text-muted-foreground">{emp.cnpj || "—"}</p>
+                <div className="flex flex-col">
+                  <span className="font-black text-foreground text-[11px] uppercase tracking-tight group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
+                  <span className="text-[8px] text-muted-foreground/40 font-black uppercase tracking-widest opacity-60 font-mono italic">{emp.cnpj || "—"}</span>
                 </div>
               </div>
-              {isOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+              <div className={`p-1 rounded-lg transition-all ${isOpen ? "rotate-180 text-primary" : "text-muted-foreground/20"}`}>
+                <ChevronDown size={14} />
+              </div>
             </div>
 
             {isOpen && (
-              <div className="border-t border-border bg-muted/10">
-                <div className="flex border-b border-border">
-                  <button 
-                    className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === "mensal" ? "text-primary border-b-2 border-primary bg-background/50" : "text-muted-foreground hover:bg-muted/50"}`} 
-                    onClick={() => setActiveTab(emp.id, "mensal")}
-                  >
-                    Controle Mensal
-                  </button>
-                  <button 
-                    className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === "configuracao" ? "text-primary border-b-2 border-primary bg-background/50" : "text-muted-foreground hover:bg-muted/50"}`} 
-                    onClick={() => setActiveTab(emp.id, "configuracao")}
-                  >
-                    Configuração
-                  </button>
-                  <button 
-                    className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === "pastas" ? "text-primary border-b-2 border-primary bg-background/50" : "text-muted-foreground hover:bg-muted/50"}`} 
-                    onClick={() => setActiveTab(emp.id, "pastas")}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                       <FolderOpen size={14} />
-                       Pastas
-                    </div>
-                  </button>
+              <div className="border-t border-border/10 animate-fade-in">
+                <div className="flex bg-black/5 dark:bg-white/5 p-1 border-b border-border/5 items-center justify-between px-4">
+                  <div className="flex gap-1 h-8 items-center bg-black/10 dark:bg-white/10 p-1 rounded-lg shadow-inner">
+                    {[
+                      { id: "mensal", label: "Histórico" },
+                      { id: "configuracao", label: "Config" },
+                      { id: "pastas", label: "Arquivos", icon: FolderOpen }
+                    ].map(t => (
+                      <button 
+                        key={t.id}
+                        className={`h-full px-4 rounded-md text-[8px] font-black uppercase tracking-widest transition-all gap-1.5 flex items-center ${tab === t.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`} 
+                        onClick={() => setActiveTab(emp.id, t.id as any)}
+                      >
+                        {t.icon && <t.icon size={10} />}
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">ID: {emp.id.slice(0,8).toUpperCase()}</span>
+                  </div>
                 </div>
 
-                <div className="p-5">
+                <div className="p-4 bg-transparent outline-none">
                   {tab === "configuracao" && (
-                    <HonorarioConfigForm 
-                      config={configForms[emp.id] || {}}
-                      onUpdateField={(f, v) => onUpdateConfigField(emp.id, f, v)}
-                      onAddOutroServico={() => onAddOutroServico(emp.id)}
-                      onUpdateOutroServico={(idx, f, v) => onUpdateOutroServico(emp.id, idx, f, v)}
-                      onRemoveOutroServico={(idx) => onRemoveOutroServico(emp.id, idx)}
-                      onSave={() => onSaveConfig(emp.id)}
-                    />
+                    <div className="animate-in slide-in-from-top-1 duration-200">
+                      <HonorarioConfigForm 
+                        config={configForms[emp.id] || {}}
+                        onUpdateField={(f, v) => onUpdateConfigField(emp.id, f, v)}
+                        onAddOutroServico={() => onAddOutroServico(emp.id)}
+                        onUpdateOutroServico={(idx, f, v) => onUpdateOutroServico(emp.id, idx, f, v)}
+                        onRemoveOutroServico={(idx) => onRemoveOutroServico(emp.id, idx)}
+                        onSave={() => onSaveConfig(emp.id)}
+                      />
+                    </div>
                   )}
 
                   {tab === "mensal" && (
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       {!mForm && (
-                        <div className="flex flex-col sm:flex-row items-end gap-3 bg-background p-4 rounded-lg border border-border">
-                          <div className="flex-1 w-full">
-                            <label className={labelCls}>Nova Competência</label>
+                        <div className="flex flex-col sm:flex-row items-end gap-2.5 bg-black/10 dark:bg-white/5 p-3 rounded-xl border border-border/10 shadow-inner">
+                          <div className="flex-1 w-full space-y-1">
+                            <label className="text-[7px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Nova Competência</label>
                             <input 
                               type="month" 
                               value={competenciaSelecionada[emp.id] || ""} 
                               onChange={e => setCompetenciaSelecionada(emp.id, e.target.value)} 
-                              className={inputCls} 
+                              className="w-full h-9 px-3 rounded-lg border border-border/10 bg-card text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner" 
                             />
                           </div>
-                          <button onClick={() => onGenerateMonth(emp.id)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-sm font-semibold transition-colors">
-                            <Plus size={16} /> Gerar ou Editar Mês
+                          <button onClick={() => onGenerateMonth(emp.id)} className="w-full sm:w-auto flex items-center justify-center gap-2 h-9 px-6 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-primary/20">
+                            <Plus size={14} /> Gerar Mês
                           </button>
                         </div>
                       )}
 
                       {mForm && (
-                        <HonorarioMensalForm 
-                          form={mForm}
-                          onUpdateField={(f, v) => onUpdateMensalField(emp.id, f, v)}
-                          onCancel={() => onCancelMensalForm(emp.id)}
-                          onSave={() => onSaveMensal(emp.id)}
-                        />
+                        <div className="animate-in slide-in-from-top-1 duration-200">
+                          <HonorarioMensalForm 
+                            form={mForm}
+                            onUpdateField={(f, v) => onUpdateMensalField(emp.id, f, v)}
+                            onCancel={() => onCancelMensalForm(emp.id)}
+                            onSave={() => onSaveMensal(emp.id)}
+                          />
+                        </div>
                       )}
 
                       {hasMensalRecords && !mForm && (
-                        <div className="overflow-x-auto rounded-lg border border-border">
-                          <table className="w-full text-sm text-left">
-                            <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
-                              <tr>
-                                <th className="px-4 py-3 font-medium">Competência</th>
-                                <th className="px-4 py-3 font-medium">Valor Total</th>
-                                <th className="px-4 py-3 font-medium">Vencimento</th>
-                                <th className="px-4 py-3 font-medium">Status / Pago</th>
-                                <th className="px-4 py-3 font-medium text-right">Ações</th>
+                        <div className="overflow-hidden rounded-xl border border-border/10 shadow-sm">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="bg-black/5 dark:bg-white/5 border-b border-border/10">
+                                <th className="px-4 py-2 text-left text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Competência</th>
+                                <th className="px-4 py-2 text-left text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Valor Total</th>
+                                <th className="px-4 py-2 text-left text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Vencimento</th>
+                                <th className="px-4 py-2 text-center text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Status / Pagamento</th>
+                                <th className="px-4 py-2 text-right text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Ações</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-border bg-background">
+                            <tbody className="divide-y divide-border/5">
                               {mensalData[emp.id].map((record: HonorarioMensal) => (
-                                <tr key={record.id} className="hover:bg-muted/20 transition-colors">
-                                  <td className="px-4 py-3 font-medium text-card-foreground">{record.competencia}</td>
-                                  <td className="px-4 py-3 text-primary font-semibold cursor-pointer group" onDoubleClick={() => handleStartEdit(record)}>
+                                <tr key={record.id} className="hover:bg-primary/[0.02] transition-colors group/row">
+                                  <td className="px-4 py-2 font-black text-foreground text-[10px] uppercase">{record.competencia}</td>
+                                  <td className="px-4 py-2" onDoubleClick={() => handleStartEdit(record)}>
                                     {editingRecordId === record.id ? (
                                       <input
                                         autoFocus
                                         type="text"
-                                        className="w-24 px-2 py-1 text-right border border-primary rounded bg-background outline-none"
+                                        className="w-24 h-7 px-2 text-right border border-primary/50 rounded-md bg-black/10 outline-none text-[10px] font-black text-primary shadow-inner"
                                         value={editVal}
                                         onChange={(e) => setEditVal(e.target.value)}
                                         onBlur={() => handleSave(emp.id)}
@@ -198,24 +202,28 @@ export const HonorariosEmpresasView = ({
                                       />
                                     ) : (
                                       <div className="flex items-center gap-2">
-                                        <span>{formatCurrency(record.valor_total)}</span>
-                                        <div className="opacity-0 group-hover:opacity-50 transition-opacity">
-                                          <Plus size={10} className="rotate-45" /> 
+                                        <span className="text-[10px] font-black text-primary tracking-tight">{formatCurrency(record.valor_total)}</span>
+                                        <div className="opacity-0 group-hover/row:opacity-10 transition-opacity">
+                                          <Plus size={8} className="rotate-45" /> 
                                         </div>
                                       </div>
                                     )}
                                   </td>
-                                  <td className="px-4 py-3 text-muted-foreground">{record.data_vencimento ? new Date(record.data_vencimento).toLocaleDateString('pt-BR') : '—'}</td>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${record.status === "enviada" ? "bg-success/10 text-success" : record.status === "gerada" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"}`}>
+                                  <td className="px-4 py-2 text-muted-foreground/60 font-mono text-[9px]">{record.data_vencimento ? new Date(record.data_vencimento).toLocaleDateString('pt-BR') : '—'}</td>
+                                  <td className="px-4 py-2 text-center">
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border ${record.status === "enviada" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : record.status === "gerada" ? "bg-primary/10 text-primary border-primary/20" : "bg-orange-500/10 text-orange-500 border-orange-500/20"}`}>
                                         {record.status}
                                       </span>
-                                      {record.pago ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-success/10 text-success border border-success/20">PAGO</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider text-muted-foreground border border-border">PENDENTE</span>}
+                                      {record.pago ? (
+                                        <span className="px-2 py-0.5 rounded-lg text-[8px] font-black border bg-emerald-500/20 text-emerald-500 border-emerald-500/30">PAGO</span>
+                                      ) : (
+                                        <span className="px-2 py-0.5 rounded-lg text-[8px] font-black border border-border/5 text-muted-foreground/30 uppercase">ABERTO</span>
+                                      )}
                                     </div>
                                   </td>
-                                  <td className="px-4 py-3 text-right">
-                                    <button onClick={() => onStartEditMensal(emp.id, record)} className="text-primary hover:underline text-xs font-medium">Editar</button>
+                                  <td className="px-4 py-2 text-right">
+                                    <button onClick={() => onStartEditMensal(emp.id, record)} className="text-[8px] font-black uppercase tracking-widest text-primary/40 hover:text-primary transition-colors">Editar</button>
                                   </td>
                                 </tr>
                               ))}
@@ -223,31 +231,33 @@ export const HonorariosEmpresasView = ({
                           </table>
                         </div>
                       )}
+                    </div>
+                  )}
 
-                      {tab === "pastas" && (
-                         <div className="animate-in slide-in-from-right-4 duration-300">
-                           <ModuleFolderView empresa={emp} departamentoId="financeiro" />
+                  {tab === "pastas" && (
+                         <div className="animate-in slide-in-from-right-1 duration-200 h-[320px] bg-black/5 rounded-xl border border-dashed border-border/10 p-0.5">
+                           <div className="h-full overflow-hidden rounded-lg">
+                             <ModuleFolderView empresa={emp} departamentoId="financeiro" />
+                           </div>
                          </div>
                       )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        );
-      })}
+            );
+          })}
 
       {totalCount > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-border/50">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-            Mostrando {pagination.pageIndex * pagination.pageSize + 1} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalCount)} de {totalCount} empresas
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t border-border/5">
+          <p className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">
+            EXIBINDO {pagination.pageIndex * pagination.pageSize + 1} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalCount)} DE {totalCount} EMPRESAS
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => onPageChange(Math.max(0, pagination.pageIndex - 1))}
               disabled={pagination.pageIndex === 0 || loading}
-              className="px-4 py-2 text-xs font-black uppercase tracking-tighter bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all border border-border/50"
+              className="px-3 h-8 text-[8px] font-black uppercase tracking-widest bg-black/10 hover:bg-black/20 disabled:opacity-20 disabled:cursor-not-allowed rounded-lg transition-all border border-border/10"
             >
               Anterior
             </button>
@@ -259,29 +269,31 @@ export const HonorariosEmpresasView = ({
                  const end = Math.min(totalPages, start + 5);
                  
                  return Array.from({ length: end - start }).map((_, i) => {
-                   const pageIdx = start + i;
-                   return (
+                    const pageIdx = start + i;
+                    return (
                     <button
                       key={pageIdx}
                       onClick={() => onPageChange(pageIdx)}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${pagination.pageIndex === pageIdx ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-[9px] font-black transition-all ${pagination.pageIndex === pageIdx ? "bg-primary text-white shadow-sm" : "text-muted-foreground/30 hover:text-foreground hover:bg-black/5 font-mono"}`}
                     >
-                      {pageIdx + 1}
+                      {String(pageIdx + 1).padStart(2, '0')}
                     </button>
-                   );
+                    );
                  });
                })()}
             </div>
             <button
               onClick={() => onPageChange(pagination.pageIndex + 1)}
               disabled={(pagination.pageIndex + 1) * pagination.pageSize >= totalCount || loading}
-              className="px-4 py-2 text-xs font-black uppercase tracking-tighter bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all border border-border/50"
+              className="px-3 h-8 text-[8px] font-black uppercase tracking-widest bg-black/10 hover:bg-black/20 disabled:opacity-20 disabled:cursor-not-allowed rounded-lg transition-all border border-border/10"
             >
               Próxima
             </button>
           </div>
         </div>
-      )}
+        )}
     </div>
   );
 };
+
+export default HonorariosEmpresasView;

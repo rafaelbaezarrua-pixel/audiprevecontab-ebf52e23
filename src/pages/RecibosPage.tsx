@@ -246,93 +246,91 @@ const RecibosPage: React.FC = () => {
     }
 
     return (
-    <div className="space-y-8 animate-fade-in pb-20 relative">
+
+    <div className="space-y-6 animate-fade-in relative pb-10">
       {/* Background decoration elements */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
-      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
       {/* Main Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-             <h1 className="header-title">Emissão de <span className="text-primary/90">Recibos</span></h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+             <h1 className="header-title">Emissão de <span className="text-primary/90 font-black">Recibos</span></h1>
              <FavoriteToggleButton moduleId="recibos" />
           </div>
-          <p className="subtitle-premium">Gerador inteligente de recibos com 2 vias automáticas e arquivamento em nuvem.</p>
+          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Gerador de recibos com 2 vias automáticas e histórico inteligente.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* NEW RECEIPT FORM */}
-        <div className="lg:col-span-4 lg:sticky lg:top-24 h-fit">
-          <div className="bg-card border border-primary/20 rounded-[2.5rem] p-10 shadow-2xl shadow-primary/5">
-            <div className="flex items-center gap-4 mb-10 border-b border-border/40 pb-6">
-                <div className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/20">
-                     <Receipt size={28} />
+        <div className="lg:col-span-4 h-fit">
+          <div className="module-card space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-border/10">
+                <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                     <Receipt size={14} />
                 </div>
                 <div>
-                    <h2 className="text-xl font-black text-card-foreground uppercase tracking-tight">Novo Recibo</h2>
-                    <p className="text-xs text-muted-foreground font-medium">Preencha para gerar as duas vias.</p>
+                    <h2 className="text-[10px] font-black uppercase tracking-widest">Novo Recibo</h2>
                 </div>
             </div>
 
-            <div className="space-y-8">
-                <div className="space-y-1.5 font-ubuntu">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Recebemos de (Cliente/Empresa)</label>
+            <div className="space-y-3">
+                <div className="space-y-1">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Pagador</label>
                     <input
                         type="text"
-                        className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase"
+                        className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20 transition-all uppercase placeholder:opacity-20"
                         value={nomeCliente}
                         onChange={(e) => setNomeCliente(e.target.value)}
-                        placeholder="NOME COMPLETO DO PAGADOR..."
+                        placeholder="NOME COMPLETO OU EMPRESA"
                     />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 font-ubuntu">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Valor (R$)</label>
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Valor (R$)</label>
                         <input
                             type="number"
                             step="0.01"
-                            min="0"
-                            className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-sm font-black text-primary outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu"
+                            className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[11px] font-black text-primary outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                             value={valor || ""}
                             onChange={(e) => setValor(Number(e.target.value) || 0)}
                             placeholder="0,00"
                         />
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data Emissão</label>
+                    <div className="space-y-1">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Emissão</label>
                         <input
                             type="date"
-                            className="w-full h-12 px-5 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu"
+                            className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                             value={dataEmissao}
                             onChange={(e) => setDataEmissao(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <div className="space-y-1.5 font-ubuntu">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Referente a</label>
+                <div className="space-y-1">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Referente a</label>
                     <textarea
-                        rows={4}
-                        className="w-full px-5 py-4 bg-muted/30 border border-border/40 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none uppercase leading-relaxed"
+                        rows={3}
+                        className="w-full px-3 py-2 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl text-[10px] font-bold outline-none focus:ring-1 focus:ring-primary/20 transition-all resize-none uppercase leading-tight placeholder:opacity-20"
                         value={referente}
                         onChange={(e) => setReferente(e.target.value)}
-                        placeholder="DESCREVA O MOTIVO DO RECEBIMENTO..."
+                        placeholder="DETALHAMENTO DOS SERVIÇOS OU PRODUTOS..."
                     />
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-2">
                     <button
                         onClick={handleSaveAndGenerate}
                         disabled={createRecibo.isPending}
-                        className="w-full h-16 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary/20 disabled:opacity-50 disabled:scale-100"
+                        className="w-full h-10 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-[0.98] disabled:opacity-50"
                     >
                         {createRecibo.isPending ? (
-                            <div className="w-6 h-6 border-3 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                            <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                         ) : (
-                            <><Download size={20} /> EMITIR, SALVAR E BAIXAR PDF</>
+                            <><Download size={14} /> GERAR E SALVAR</>
                         )}
                     </button>
                 </div>
@@ -341,78 +339,71 @@ const RecibosPage: React.FC = () => {
         </div>
 
         {/* HISTORY LIST */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="bg-card border border-border/60 rounded-[2.5rem] overflow-hidden flex flex-col shadow-sm">
+        <div className="lg:col-span-8 space-y-3">
+          <div className="module-card !p-0 overflow-hidden shadow-sm flex flex-col h-fit">
             {/* History Header Controls */}
-            <div className="p-8 border-b border-border/40 bg-muted/10 space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-inner">
-                            <History size={22} />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-black text-card-foreground uppercase tracking-tight">Histórico de Emissões</h2>
-                            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Consulta de registros anteriores</p>
-                        </div>
-                        {loadingRecibos && <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin ml-2" />}
+            <div className="px-4 py-3 border-b border-border/10 bg-black/5 dark:bg-white/5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                        <History size={14} className="text-primary" />
+                        <h2 className="text-[10px] font-black uppercase tracking-widest">Histórico de Emissões</h2>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         <div className="relative group">
-                            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-all" />
                             <input 
                                 type="text" 
-                                placeholder="BUSCAR REGISTRO..."
+                                placeholder="PROCURAR..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                className="h-12 pl-12 pr-6 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all w-full sm:w-64"
+                                className="h-8 pl-9 pr-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black uppercase tracking-widest outline-none focus:ring-1 focus:ring-primary/20 transition-all w-full sm:w-44"
                             />
                         </div>
                         <input 
                             type="month" 
                             value={competenciaFiltro}
                             onChange={e => setCompetenciaFiltro(e.target.value)}
-                            className="h-12 px-6 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-primary focus:ring-2 focus:ring-primary/20 outline-none font-ubuntu"
+                            className="h-8 px-2 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black uppercase text-primary outline-none focus:ring-1 focus:ring-primary/20"
                         />
                     </div>
                 </div>
             </div>
 
             {/* List Container */}
-            <div className="p-8 max-h-[700px] overflow-y-auto no-scrollbar space-y-4 bg-card/50">
+            <div className="p-2 space-y-1.5 max-h-[600px] overflow-y-auto no-scrollbar">
                 {loadingRecibos ? (
-                    <div className="py-32 text-center space-y-4">
-                        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto shadow-xl" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sincronizando histórico...</p>
+                    <div className="py-20 text-center space-y-2">
+                        <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto" />
+                        <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Sincronizando registros...</p>
                     </div>
                 ) : filteredRecibos.length === 0 ? (
-                    <div className="py-32 text-center border-2 border-dashed border-border/40 rounded-[2.5rem] bg-muted/5 opacity-50">
-                        <Filter size={48} className="mx-auto mb-6 text-muted-foreground" />
-                        <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Nenhum recibo identificado para este período</p>
-                        <p className="text-[9px] font-bold text-muted-foreground/60 mt-2">Tente ajustar os filtros ou busque por outro critério.</p>
+                    <div className="py-16 text-center bg-black/5 dark:bg-white/5 border border-dashed border-border/10 rounded-xl opacity-30">
+                        <Filter size={24} className="mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Competência Vazia</p>
                     </div>
                 ) : (
                     filteredRecibos.map(recibo => (
-                        <div key={recibo.id} className="group bg-card border border-border/60 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 p-6 rounded-[1.8rem] transition-all duration-500 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                            <div className="flex items-center gap-5">
-                                <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center shrink-0 border border-border/40 group-hover:bg-primary/5 group-hover:border-primary/20 transition-colors">
-                                    <Receipt size={24} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                        <div key={recibo.id} className="group bg-card border border-border/10 hover:border-primary/20 p-2.5 rounded-xl transition-all flex items-center justify-between gap-4 shadow-sm">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-10 h-10 rounded-lg bg-black/5 dark:bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-primary/5 transition-all text-primary/40 group-hover:text-primary">
+                                    <Receipt size={18} />
                                 </div>
-                                <div className="space-y-2">
-                                    <h3 className="font-black text-sm text-card-foreground uppercase tracking-tight">{recibo.nome_cliente}</h3>
-                                    <div className="flex items-center gap-4 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                                        <span className="flex items-center gap-2 bg-muted/80 px-3 py-1 rounded-full"><Calendar size={12} className="text-primary" /> {format(parseISO(recibo.data_emissao), "dd/MM/yyyy")}</span>
-                                        <span className="text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex items-center gap-1">
+                                <div className="space-y-0.5 flex-1 min-w-0">
+                                    <h3 className="font-black text-[11px] text-foreground uppercase tracking-tight truncate">{recibo.nome_cliente}</h3>
+                                    <div className="flex items-center gap-4 text-[8px] font-black uppercase tracking-widest">
+                                        <span className="flex items-center gap-1.5 text-muted-foreground/60"><Calendar size={10} /> {format(parseISO(recibo.data_emissao), "dd/MM/yyyy")}</span>
+                                        <span className="text-primary bg-primary/5 px-1.5 py-0.5 rounded-lg border border-primary/10">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(recibo.valor)}
                                         </span>
                                     </div>
-                                    <p className="text-[10px] font-bold text-muted-foreground border-l-2 border-primary/20 pl-4 py-1.5 uppercase line-clamp-1 max-w-[400px]">
+                                    <p className="text-[8px] font-bold text-muted-foreground/40 uppercase truncate">
                                         {recibo.referente}
                                     </p>
                                 </div>
                             </div>
                             
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
                                 <button 
                                     onClick={() => generatePDF({ 
                                         nome: recibo.nome_cliente, 
@@ -420,15 +411,17 @@ const RecibosPage: React.FC = () => {
                                         referente: recibo.referente, 
                                         dataEmissao: recibo.data_emissao 
                                     })}
-                                    className="h-12 px-6 rounded-xl bg-primary/5 text-primary border border-primary/10 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-sm"
+                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/5 dark:bg-white/5 text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-all"
+                                    title="REIMPRIMIR"
                                 >
-                                    <Download size={16} /> REEMITIR
+                                    <Download size={14} />
                                 </button>
                                 <button 
                                     onClick={() => handleDelete(recibo.id)}
-                                    className="h-12 w-12 flex items-center justify-center rounded-xl bg-destructive/5 text-destructive border border-destructive/10 hover:bg-destructive hover:text-white transition-all shadow-sm group-hover:opacity-100 sm:opacity-0"
+                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/5 dark:bg-white/5 text-muted-foreground/40 hover:text-rose-500 hover:bg-rose-500/5 transition-all"
+                                    title="EXCLUIR"
                                 >
-                                    <Trash2 size={16} />
+                                    <Trash2 size={14} />
                                 </button>
                             </div>
                         </div>

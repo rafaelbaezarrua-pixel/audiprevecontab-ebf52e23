@@ -180,252 +180,180 @@ const CertidoesPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 relative">
+    <div className="space-y-6 animate-fade-in relative pb-10">
       {/* Background decoration elements */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
-      <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
       {/* Main Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-             <h1 className="header-title">Gestão de <span className="text-primary/90">Certidões</span></h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+             <h1 className="header-title">Gestão de <span className="text-primary/90 font-black">Certidões</span></h1>
              <FavoriteToggleButton moduleId="certidoes" />
           </div>
-          <p className="subtitle-premium">Monitoramento e emissão automatizada de CNDs Federais, Estaduais e Municipais.</p>
+          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Monitoramento e emissão automatizada de CNDs Federais, Estaduais e Municipais.</p>
         </div>
       </div>
 
-      <div className="card-premium !p-6 border-none shadow-xl shadow-primary/5">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-          <input 
-            placeholder="Pesquisar por empresa ou CNPJ..." 
-            className="w-full h-14 pl-12 pr-4 bg-muted/30 border border-border/40 rounded-2xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:font-normal placeholder:tracking-normal"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      <div className="relative w-full max-w-md group pb-2">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-all" size={14} />
+        <input 
+          placeholder="BUSCAR EMPRESA OU CNPJ..." 
+          className="w-full h-10 pl-10 pr-4 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/20 shadow-sm"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {filtered.map(emp => {
           const isOpen = expanded === emp.id;
           const empCerts = certidoes.filter(c => c.empresa_id === emp.id);
           const vencidas = empCerts.filter(c => calcDias(c.vencimento) < 0).length;
           
           return (
-            <div key={emp.id} className={`group bg-card border ${isOpen ? 'border-primary/30 shadow-lg' : 'border-border/60 hover:border-primary/20'} rounded-3xl transition-all duration-300 overflow-hidden`}>
+            <div key={emp.id} className={`group bg-card border rounded-2xl transition-all duration-200 overflow-hidden shadow-sm ${isOpen ? 'border-primary/40 ring-1 ring-primary/5' : 'border-border/40 hover:border-primary/20'}`}>
               <div 
-                className={`flex items-center justify-between p-5 cursor-pointer transition-colors ${isOpen ? 'bg-primary/5' : 'hover:bg-muted/30'}`} 
+                className={`flex items-center justify-between px-4 py-2 cursor-pointer transition-colors ${isOpen ? 'bg-primary/[0.03]' : 'hover:bg-primary/[0.01]'}`} 
                 onClick={() => setExpanded(isOpen ? null : emp.id)}
               >
-                <div className="flex items-center gap-5">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${isOpen ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
-                    <Building2 size={24} />
+                <div className="flex items-center gap-4">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isOpen ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-black/5 dark:bg-white/5 border border-border/10 group-hover:border-primary/30 group-hover:text-primary'}`}>
+                    <Building2 size={14} />
                   </div>
-                  <div className="space-y-1">
-                    <p className="font-black text-sm uppercase tracking-tight text-card-foreground line-clamp-1">{emp.nome_empresa}</p>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{emp.cnpj || "CNPJ NÃO CADASTRADO"}</p>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-black text-[11px] uppercase tracking-tight text-foreground line-clamp-1 group-hover:text-primary transition-colors leading-tight">{emp.nome_empresa}</span>
+                    <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest font-mono">{emp.cnpj || "N/D"}</span>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-4">
-                  <div className="hidden sm:flex flex-col items-end gap-1">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{empCerts.length} CERTIDÕES</span>
+                  <div className="hidden sm:flex items-center gap-3">
+                    <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">{empCerts.length} ITENS</span>
                     {vencidas > 0 && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-destructive/10 text-destructive text-[9px] font-black uppercase tracking-tighter animate-pulse">
+                      <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[8px] font-black uppercase tracking-widest border border-rose-500/20 animate-pulse">
                         {vencidas} VENCIDAS
                       </span>
                     )}
                   </div>
-                  <div className={`p-2 rounded-xl bg-muted/50 text-muted-foreground group-hover:text-primary transition-all ${isOpen ? 'rotate-180 bg-primary/10 text-primary' : ''}`}>
-                    <ChevronDown size={18} />
+                  <div className={`p-1.5 rounded-lg border transition-all ${isOpen ? 'bg-primary text-white border-primary rotate-180' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/30 border-border/10 group-hover:bg-primary/5 group-hover:text-primary'}`}>
+                    <ChevronDown size={12} />
                   </div>
                 </div>
               </div>
 
               {isOpen && (
-                <div className="border-t border-border/40 p-6 space-y-8 animate-in slide-in-from-top-4 duration-300">
+                <div className="border-t border-border/5 p-4 space-y-6 bg-black/[0.01] dark:bg-white/[0.01] animate-in slide-in-from-top-2 duration-200">
                   <Tabs defaultValue="dados" className="w-full">
-                    <TabsList className="bg-muted/50 p-1 rounded-xl h-12 mb-8">
-                       <TabsTrigger value="dados" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Certidões e Downloads</TabsTrigger>
-                       <TabsTrigger value="pastas" className="px-8 h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all whitespace-nowrap">Arquivos / Pastas</TabsTrigger>
-                    </TabsList>
+                    <div className="flex items-center justify-between border-b border-border/5 pb-3 mb-4">
+                      <TabsList className="bg-black/10 dark:bg-white/10 p-1 rounded-lg h-9 border border-border/10 shadow-inner">
+                         <TabsTrigger value="dados" className="px-4 h-full text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm">Documentos</TabsTrigger>
+                         <TabsTrigger value="pastas" className="px-4 h-full text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm">Drive / Pastas</TabsTrigger>
+                      </TabsList>
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                        <span className="w-1.5 h-3 bg-primary rounded-full" /> Detalhes Técnicos
+                      </h3>
+                    </div>
 
-                    <TabsContent value="dados" className="space-y-8 animate-in fade-in duration-300">
+                    <TabsContent value="dados" className="space-y-6 animate-in fade-in duration-200 outline-none">
                   {empCerts.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {empCerts.map((c: CertidaoRecord) => {
                         const dias = calcDias(c.vencimento);
                         const isExpired = dias < 0;
                         const isNear = dias >= 0 && dias <= 30;
                         
                         return (
-                          <div key={c.id} className="flex items-center justify-between p-5 rounded-2xl border border-border/60 bg-muted/5 group/item hover:border-primary/30 transition-all">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isExpired ? 'bg-destructive/10 text-destructive' : isNear ? 'bg-warning/10 text-warning' : 'bg-primary/10 text-primary'}`}>
-                                <FileText size={20} />
+                          <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-border/40 bg-card group/item hover:border-primary/20 transition-all shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${isExpired ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : isNear ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
+                                <FileText size={14} />
                               </div>
-                              <div className="space-y-1">
-                                <p className="text-xs font-black uppercase tracking-tight text-card-foreground">{c.tipo_certidao}</p>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] font-black uppercase tracking-tight text-foreground truncate max-w-[180px]">{c.tipo_certidao}</span>
                                 <div className="flex items-center gap-2">
-                                   <span className={`text-[10px] font-bold ${isExpired ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                      {c.vencimento ? `Vencimento: ${formatDateBR(c.vencimento)}` : "Sem data de expiração"}
+                                   <span className={`text-[8px] font-bold ${isExpired ? 'text-rose-500' : 'text-muted-foreground/50'}`}>
+                                      {c.vencimento ? formatDateBR(c.vencimento) : "Pendente"}
                                    </span>
                                    {dias !== 999 && (
-                                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${isExpired ? 'bg-destructive text-destructive-foreground' : isNear ? 'bg-warning/20 text-warning' : 'bg-primary/10 text-primary'}`}>
-                                       {isExpired ? "Vencida" : `${dias} dias`}
+                                     <span className={`text-[8px] font-black px-1.5 rounded-md uppercase tracking-tighter ${isExpired ? 'bg-rose-500 text-white' : isNear ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
+                                       {isExpired ? "Expirada" : `${dias}d`}
                                      </span>
                                    )}
                                 </div>
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-1 opacity-40 group-hover/item:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1 opacity-20 group-hover/item:opacity-100 transition-opacity">
                               {c.arquivo_url ? (
                                 <>
-                                  <button onClick={() => viewFile(c.arquivo_url)} title="Visualizar" className="p-2.5 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"><Eye size={16} /></button>
-                                  <button onClick={() => downloadFile(c.arquivo_url, `${c.tipo_certidao}.pdf`)} title="Baixar" className="p-2.5 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"><Download size={16} /></button>
+                                  <button onClick={() => viewFile(c.arquivo_url)} title="Visualizar" className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary"><Eye size={13} /></button>
+                                  <button onClick={() => downloadFile(c.arquivo_url, `${c.tipo_certidao}.pdf`)} title="Baixar" className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary"><Download size={13} /></button>
                                 </>
                               ) : (
-                                <button
-                                  onClick={() => handleFileUpload(c.id)}
-                                  disabled={uploading === c.id}
-                                  title="Anexar PDF"
-                                  className="p-2.5 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all disabled:opacity-50"
-                                >
-                                  <Upload size={16} />
-                                </button>
+                                <button onClick={() => handleFileUpload(c.id)} disabled={uploading === c.id} title="Anexar PDF" className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary"><Upload size={13} /></button>
                               )}
-                              {c.arquivo_url && (
-                                <button
-                                  onClick={() => handleFileUpload(c.id)}
-                                  disabled={uploading === c.id}
-                                  title="Substituir PDF"
-                                  className="p-2.5 rounded-xl hover:bg-warning/10 text-muted-foreground hover:text-warning transition-all disabled:opacity-50"
-                                >
-                                  <Upload size={16} />
-                                </button>
-                              )}
-                              <button onClick={() => removeCertidao(c.id)} title="Excluir" className="p-2.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"><Trash2 size={16} /></button>
+                              <button onClick={() => removeCertidao(c.id)} title="Excluir" className="p-1.5 rounded-md hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500"><Trash2 size={13} /></button>
                             </div>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <div className="py-12 text-center border-2 border-dashed border-border/40 rounded-3xl opacity-40">
-                       <FileText size={48} className="mx-auto mb-4 text-muted-foreground" />
-                       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nenhuma certidão cadastrada</p>
+                    <div className="py-8 text-center border-2 border-dashed border-border/10 rounded-2xl opacity-30 flex flex-col items-center gap-2">
+                       <FileText size={24} className="text-muted-foreground" />
+                       <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Nenhuma certidão</p>
                     </div>
                   )}
 
-                  <div className="bg-card border border-border/60 rounded-3xl p-8 space-y-8 shadow-inner shadow-muted/50">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-6">
-                       <div className="space-y-1">
-                         <h3 className="text-sm font-black uppercase tracking-widest text-primary">Nova Certidão</h3>
-                         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Preencha os dados ou realize uma consulta automática</p>
+                  <div className="bg-black/10 dark:bg-white/5 border border-border/10 rounded-2xl p-4 md:p-5 space-y-4 shadow-inner">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-border/5 pb-3">
+                       <div className="flex items-center gap-2">
+                         <Plus size={14} className="text-primary" />
+                         <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Nova Certidão</span>
                        </div>
                        
                        {newCert.tipo_certidao === "CND Federal" && (
-                         <div className="flex items-center gap-3 bg-muted/30 p-2 rounded-2xl border border-border/60">
+                         <div className="flex items-center gap-2 p-1 bg-card rounded-lg border border-border/10">
                            <select 
                              value={cndTipoPessoa} 
                              onChange={e => setCndTipoPessoa(e.target.value as "PJ" | "PF")} 
-                             className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none px-3 border-r border-border/60 cursor-pointer"
+                             className="bg-transparent text-[9px] font-black uppercase tracking-widest outline-none px-2 border-r border-border/10 cursor-pointer h-7"
                            >
-                             <option value="PJ">EMPRESA (PJ)</option>
-                             <option value="PF">SÓCIO ADM (PF)</option>
+                             <option value="PJ">PJ</option>
+                             <option value="PF">PF</option>
                            </select>
                            <button 
                              onClick={() => handleConsultaCND(emp.id, emp.cnpj)}
                              disabled={consulting === emp.id}
-                             className="px-6 h-10 bg-info text-info-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-info/20 disabled:opacity-50"
+                             className="px-4 h-7 bg-primary text-primary-foreground rounded-md text-[9px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center gap-2 shadow-md shadow-primary/20 disabled:opacity-50"
                            >
-                             {consulting === emp.id ? (
-                               <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                  CONSULTANDO...
-                               </div>
-                             ) : <><Search size={14} /> CONSULTAR CND</>}
+                             {consulting === emp.id ? "AGUARDE..." : "CONSULTAR SERPRO"}
                            </button>
                          </div>
                        )}
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tipo de Certidão</label>
-                        <select 
-                          value={newCert.tipo_certidao} 
-                          onChange={e => setNewCert({ ...newCert, tipo_certidao: e.target.value })} 
-                          className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer transition-all"
-                        >
-                          {tiposCertidao.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                         <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Data de Validade</label>
-                         <input 
-                           type="date" 
-                           value={newCert.vencimento} 
-                           onChange={e => setNewCert({ ...newCert, vencimento: e.target.value })} 
-                           className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all font-ubuntu" 
-                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observações</label>
-                        <input 
-                          value={newCert.observacao} 
-                          placeholder="Notas internas..."
-                          onChange={e => setNewCert({ ...newCert, observacao: e.target.value })} 
-                          className="w-full h-12 px-4 bg-muted/30 border border-border/60 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Arquivo PDF</label>
-                        <div className="relative">
-                          <input 
-                            type="file" 
-                            ref={newFileInputRef} 
-                            accept=".pdf" 
-                            onChange={e => setNewFile(e.target.files?.[0] || null)} 
-                            className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
-                          />
-                          <div className={`h-12 flex items-center justify-center border-2 border-dashed rounded-xl px-4 text-[10px] font-black uppercase tracking-widest transition-all ${newFile ? 'bg-primary/10 border-primary text-primary' : 'bg-muted/30 border-border/60 text-muted-foreground hover:border-primary/40'}`}>
-                             {newFile ? newFile.name : <><Upload size={14} className="mr-2" /> Selecionar PDF</>}
-                          </div>
-                        </div>
-                      </div>
+                    <div className="flex justify-end pt-2">
+                      <button 
+                        onClick={() => addCertidao(emp.id)} 
+                        className="h-10 px-8 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+                      >
+                        <Plus size={16} /> SALVAR CERTIDÃO
+                      </button>
                     </div>
+                  </div>
+                  </TabsContent>
 
-                      <div className="flex justify-end pt-4">
-                         <button 
-                           onClick={() => addCertidao(emp.id)} 
-                           className="px-10 h-14 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-primary/20"
-                         >
-                           <Plus size={18} /> SALVAR CERTIDÃO
-                         </button>
-                      </div>
-                    </div>
-                    </TabsContent>
-
-                    <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
-                       <ModuleFolderView empresa={emp} departamentoId="certidoes" />
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      
-      <input type="file" ref={fileInputRef} className="hidden" accept=".pdf" />
+                  <TabsContent value="pastas" className="animate-in slide-in-from-right-2 duration-300 outline-none">
+                     <ModuleFolderView empresa={emp} departamentoId="certidoes" />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
     </div>
   );
 };

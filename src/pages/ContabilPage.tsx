@@ -94,7 +94,7 @@ const ContabilPage: React.FC = () => {
 
   if (empresasLoading || contabilLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fade-in relative pb-10">
         <PageHeaderSkeleton />
         <TableSkeleton />
       </div>
@@ -102,49 +102,52 @@ const ContabilPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in relative pb-20 px-1">
+    <div className="space-y-4 animate-fade-in relative pb-10 px-0.5">
+      {/* Background decoration elements */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
+
       {/* Main Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-             <h1 className="header-title">Gestão <span className="text-primary/90">Contábil</span></h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+             <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Contábil</span></h1>
              <FavoriteToggleButton moduleId="contabil" />
           </div>
-          <p className="subtitle-premium">Escrituração, conciliação e balancetes.</p>
+          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Escrituração, conciliação e balancetes corporativos.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-4 px-5 h-12 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl">
-            <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] leading-none mb-0.5">Competência</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3 h-9 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl shadow-inner">
+            <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest">Comp.</span>
             <input 
               type="month" 
               value={competencia} 
               onChange={(e) => setCompetencia(e.target.value)}
-              className="bg-transparent border-none focus:ring-0 text-[11px] font-black outline-none text-right h-full text-foreground uppercase tracking-widest cursor-pointer"
+              className="bg-transparent border-none focus:ring-0 text-[10px] font-black outline-none text-primary uppercase tracking-widest cursor-pointer font-ubuntu h-full"
             />
           </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-1">
-        <div className="relative flex-1 w-full md:max-w-[400px] group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors" size={16} />
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="relative flex-1 w-full md:max-w-[280px] group">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-all" size={14} />
           <input 
             type="text" 
-            placeholder="BUSCAR EMPRESA OU CNPJ..." 
+            placeholder="PROCURAR EMPRESA..." 
             value={search} 
             onChange={(e) => setSearch(e.target.value)} 
-            className="w-full pl-11 pr-4 h-14 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl focus:ring-1 focus:ring-primary/20 outline-none text-[11px] font-black uppercase tracking-[0.15em] transition-all placeholder:text-muted-foreground/20" 
+            className="w-full pl-9 pr-4 h-9 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl focus:ring-1 focus:ring-primary/20 outline-none text-[10px] font-black uppercase tracking-widest transition-all placeholder:opacity-20" 
           />
         </div>
 
-        <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-1 max-w-full">
+        <div className="flex bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-1 max-w-full shadow-inner">
           {["ativas", "mei", "paralisadas", "baixadas", "entregue"].map(t => (
             <button 
               key={t} 
               onClick={() => setActiveStatusTab(t as any)} 
-              className={`px-6 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all whitespace-nowrap ${activeStatusTab === t ? "bg-card text-primary shadow-sm border border-border/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-card/20"}`}
+              className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all whitespace-nowrap ${activeStatusTab === t ? "bg-card text-primary shadow-sm" : "text-muted-foreground/50 hover:text-foreground"}`}
             >
               {t === "entregue" ? "Entregues" : t.toUpperCase()}
             </button>
@@ -153,16 +156,16 @@ const ContabilPage: React.FC = () => {
       </div>
 
       {/* Main Content Card */}
-      <div className="glass-card !p-0 overflow-hidden border-border/10">
+      <div className="module-card !p-0 shadow-sm border-border/10 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="data-table w-full border-collapse">
+          <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-black/[0.02] dark:bg-white/[0.02] border-b border-border/10">
-                <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 min-w-[200px]">Empresa / CNPJ</th>
-                <th className="px-6 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Conciliação</th>
-                <th className="px-6 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Status Balanço</th>
-                <th className="px-6 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Progresso Geral</th>
-                <th className="px-6 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 pr-8">Ações</th>
+              <tr className="bg-black/5 dark:bg-white/5 border-b border-border/10">
+                <th className="px-4 py-2 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 min-w-[200px]">Empresa / CNPJ</th>
+                <th className="px-4 py-2 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Conciliação</th>
+                <th className="px-4 py-2 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Balancete</th>
+                <th className="px-4 py-2 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Status</th>
+                <th className="px-4 py-2 text-right text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 pr-6 w-10">...</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/5">
@@ -173,75 +176,75 @@ const ContabilPage: React.FC = () => {
                 return (
                   <React.Fragment key={empresa.id}>
                     <tr 
-                      className={`group cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-all ${isExpanded ? 'bg-primary/[0.03]' : ''}`}
+                      className={`group cursor-pointer hover:bg-primary/[0.02] transition-all ${isExpanded ? 'bg-primary/[0.04]' : ''}`}
                       onClick={() => toggleExpand(empresa.id)}
                     >
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-2">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center shrink-0 border border-border/10 group-hover:border-primary/20 transition-all">
-                            <Calculator size={18} className={isExpanded ? "text-primary" : "text-muted-foreground/60 transition-colors group-hover:text-primary"} />
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-all ${isExpanded ? 'bg-primary text-white border-primary shadow-md' : 'bg-black/5 dark:bg-white/5 border-border/10 group-hover:border-primary/20 group-hover:text-primary'}`}>
+                            <Calculator size={14} />
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-black text-foreground text-sm uppercase tracking-tight truncate max-w-[250px] leading-tight group-hover:text-primary transition-colors">{empresa.nome_empresa}</span>
-                            <span className="text-[9px] text-muted-foreground/40 font-black uppercase font-mono tracking-wider mt-1">{empresa.cnpj || "CNPJ NÃO INFORMADO"}</span>
+                            <span className="font-black text-foreground text-[11px] uppercase tracking-tight truncate max-w-[280px] group-hover:text-primary transition-colors">{empresa.nome_empresa}</span>
+                            <span className="text-[8px] text-muted-foreground/40 font-black uppercase tracking-wider font-mono">{empresa.cnpj || "N/D"}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-center">
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${record?.conciliacao_patrimonial_status === 'concluido' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                      <td className="px-4 py-2 text-center">
+                        <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${record?.conciliacao_patrimonial_status === 'concluido' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/5 text-rose-500/40 border-rose-500/10'}`}>
                           {record?.conciliacao_patrimonial_status === 'concluido' ? 'CONCILIADA' : 'PENDENTE'}
                         </span>
                       </td>
-                      <td className="px-6 py-5 text-center">
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${record?.balanco_status === 'concluido' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/40 border border-border/10'}`}>
-                          {record?.balanco_status === 'concluido' ? 'FECHADO' : 'ABERTO'}
+                      <td className="px-4 py-2 text-center">
+                        <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${record?.balanco_status === 'concluido' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/20 border-border/10'}`}>
+                          {record?.balanco_status === 'concluido' ? 'CONCLUÍDO' : 'ABERTO'}
                         </span>
                       </td>
-                      <td className="px-6 py-5 text-center">
+                      <td className="px-4 py-2 text-center">
                         <div className="flex justify-center gap-1">
                            {[record?.importacao_extratos_status, record?.conciliacao_patrimonial_status, record?.are_status, record?.balanco_status].map((s, i) => (
-                             <div key={i} className={`w-1.5 h-1.5 rounded-full ${s === 'concluido' ? 'bg-emerald-500' : 'bg-black/10 dark:bg-white/10'}`} />
+                             <div key={i} className={`w-1 h-1 rounded-full ${s === 'concluido' ? 'bg-emerald-500 shadow-[0_0_3px_rgba(16,185,129,0.5)]' : 'bg-black/10 dark:bg-white/10'}`} />
                            ))}
                         </div>
                       </td>
-                      <td className="px-6 py-5 pr-8 text-right">
-                        <button className={`p-2 rounded-xl border transition-all ${isExpanded ? 'bg-primary text-white border-primary rotate-180' : 'bg-black/5 dark:bg-white/5 text-muted-foreground/40 border-border/10 group-hover:border-primary/50 group-hover:text-primary'}`}>
+                      <td className="px-4 py-2 pr-6 text-right">
+                        <div className={`p-1 rounded-lg transition-all ${isExpanded ? 'rotate-180 bg-primary/10 text-primary' : 'text-muted-foreground/20'}`}>
                           <ChevronDown size={14} />
-                        </button>
+                        </div>
                       </td>
                     </tr>
                     
                     {isExpanded && (
-                      <tr className="bg-black/[0.01] dark:bg-white/[0.01]">
-                        <td colSpan={5} className="px-6 py-12 pt-8">
-                        <div className="max-w-6xl mx-auto space-y-10">
-                          <Tabs value={activeSubTab} onValueChange={(val) => setActiveSubTab(val as any)} className="w-full space-y-8">
-                            <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-border/10 pb-6">
-                              <TabsList className="bg-black/5 dark:bg-white/5 p-1 rounded-xl h-14 border border-border/10 overflow-x-auto no-scrollbar justify-start">
-                                <TabsTrigger value="rotinas" className="px-6 h-full text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                                  <ClipboardCheck size={14} /> Rotinas
+                      <tr className="bg-black/[0.02] dark:bg-white/[0.01]">
+                        <td colSpan={5} className="px-4 py-4 pb-6 border-y border-border/10">
+                        <div className="max-w-6xl">
+                          <Tabs value={activeSubTab} onValueChange={(val) => setActiveSubTab(val as any)} className="w-full space-y-4">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-border/10 pb-3">
+                              <TabsList className="bg-black/10 dark:bg-white/10 p-0.5 rounded-xl h-9 border border-border/10 shadow-inner overflow-x-auto no-scrollbar">
+                                <TabsTrigger value="rotinas" className="px-3 h-7 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                                  <ClipboardCheck size={10} /> Rotinas
                                 </TabsTrigger>
-                                <TabsTrigger value="fechamentos" className="px-6 h-full text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                                  <BookOpen size={14} /> Fechamentos
+                                <TabsTrigger value="fechamentos" className="px-3 h-7 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                                  <BookOpen size={10} /> Fechamentos
                                 </TabsTrigger>
-                                <TabsTrigger value="obrigacoes" className="px-6 h-full text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                                  <Calculator size={14} /> Obrigações
+                                <TabsTrigger value="obrigacoes" className="px-3 h-7 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                                  <Calculator size={10} /> Obrigações
                                 </TabsTrigger>
-                                <TabsTrigger value="gestao" className="px-6 h-full text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                                  <BarChart3 size={14} /> Gestão
+                                <TabsTrigger value="gestao" className="px-3 h-7 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                                  <BarChart3 size={10} /> Gestão
                                 </TabsTrigger>
-                                <TabsTrigger value="pastas" className="px-6 h-full text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                                  <FolderOpen size={14} /> Drive
+                                <TabsTrigger value="pastas" className="px-3 h-7 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                                  <FolderOpen size={10} /> Arquivos
                                 </TabsTrigger>
                               </TabsList>
 
-                              <h3 className="text-xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
-                                 <span className="w-2 h-8 bg-primary rounded-full" />
+                              <h3 className="text-[10px] font-black text-foreground uppercase tracking-widest flex items-center gap-2 opacity-60">
+                                 <span className="w-1 h-3 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
                                  Controle Técnico
                               </h3>
                             </div>
 
-                            <TabsContent value="rotinas" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-300">
+                            <TabsContent value="rotinas" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-1 duration-200 outline-none">
                               {[
                                 { id: 'importacao_extratos_status', label: 'Importação Extratos' },
                                 { id: 'conciliacao_patrimonial_status', label: 'Conciliação Patrimonial' },
@@ -250,10 +253,10 @@ const ContabilPage: React.FC = () => {
                                 { id: 'apropriacao_despesas_status', label: 'Apropriação Despesas' },
                                 { id: 'integracao_folha_fiscal_status', label: 'Integração Folha/Fiscal' },
                               ].map(field => (
-                                <div key={field.id} className="p-6 bg-black/5 dark:bg-white/5 border border-border/10 rounded-2xl flex flex-col gap-4 group/field transition-all hover:border-primary/20">
-                                  <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">{field.label}</span>
+                                <div key={field.id} className="p-3 bg-card border border-border/10 rounded-xl flex flex-col gap-1.5 group/field hover:border-primary/30 transition-all shadow-sm">
+                                  <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest">{field.label}</span>
                                   <select 
-                                    className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all cursor-pointer"
+                                    className="w-full h-8 px-2 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                                     value={editForm[empresa.id]?.[field.id] || "pendente"}
                                     onChange={(e) => handleUpdateField(empresa.id, field.id, e.target.value)}
                                   >
@@ -265,7 +268,7 @@ const ContabilPage: React.FC = () => {
                               ))}
                             </TabsContent>
 
-                            <TabsContent value="fechamentos" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-300">
+                            <TabsContent value="fechamentos" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-1 duration-200 outline-none">
                               {[
                                 { id: 'are_status', label: 'Resultado (ARE)' },
                                 { id: 'balancete_status', label: 'Balancete Verificação' },
@@ -275,10 +278,10 @@ const ContabilPage: React.FC = () => {
                                 { id: 'dfc_status', label: 'DFC' },
                                 { id: 'notas_explicativas_status', label: 'Notas Explicativas' },
                               ].map(field => (
-                                <div key={field.id} className="p-6 bg-black/5 dark:bg-white/5 border border-border/10 rounded-2xl flex flex-col gap-4 group/field transition-all hover:border-primary/20">
-                                  <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">{field.label}</span>
+                                <div key={field.id} className="p-3 bg-card border border-border/10 rounded-xl flex flex-col gap-1.5 group/field hover:border-primary/30 transition-all shadow-sm">
+                                  <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest">{field.label}</span>
                                   <select 
-                                    className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all cursor-pointer"
+                                    className="w-full h-8 px-2 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                                     value={editForm[empresa.id]?.[field.id] || "pendente"}
                                     onChange={(e) => handleUpdateField(empresa.id, field.id, e.target.value)}
                                   >
@@ -290,16 +293,16 @@ const ContabilPage: React.FC = () => {
                               ))}
                             </TabsContent>
 
-                            <TabsContent value="obrigacoes" className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-300">
+                            <TabsContent value="obrigacoes" className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-1 duration-200 outline-none">
                               {[
                                 { id: 'ecd_status', label: 'ECD (DIGITAL)' },
                                 { id: 'ecf_status', label: 'ECF (FISCAL)' },
                                 { id: 'ibge_status', label: 'PESQUISA IBGE' },
                               ].map(field => (
-                                <div key={field.id} className="p-6 bg-black/5 dark:bg-white/5 border border-border/10 rounded-2xl flex flex-col gap-4 group/field transition-all hover:border-primary/20">
-                                  <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">{field.label}</span>
+                                <div key={field.id} className="p-3 bg-card border border-border/10 rounded-xl flex flex-col gap-1.5 group/field hover:border-primary/30 transition-all shadow-sm">
+                                  <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest">{field.label}</span>
                                   <select 
-                                    className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all cursor-pointer"
+                                    className="w-full h-8 px-2 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                                     value={editForm[empresa.id]?.[field.id] || "pendente"}
                                     onChange={(e) => handleUpdateField(empresa.id, field.id, e.target.value)}
                                   >
@@ -311,30 +314,30 @@ const ContabilPage: React.FC = () => {
                               ))}
                             </TabsContent>
 
-                            <TabsContent value="gestao" className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
-                               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                  <div className="p-8 bg-black/5 dark:bg-white/5 border border-border/10 rounded-3xl space-y-6">
-                                    <div className="flex items-center gap-3 border-b border-border/5 pb-4">
-                                       <BarChart3 size={18} className="text-primary" />
-                                       <span className="text-[10px] font-black uppercase text-foreground tracking-widest">Análise de Índices</span>
+                            <TabsContent value="gestao" className="space-y-3 animate-in fade-in duration-200 outline-none">
+                               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                  <div className="p-4 bg-card border border-border/10 rounded-2xl relative shadow-sm">
+                                    <div className="flex items-center gap-2 border-b border-border/5 pb-2 mb-3">
+                                       <BarChart3 size={12} className="text-primary" />
+                                       <span className="text-[8px] font-black uppercase text-foreground tracking-widest">Análise de Índices</span>
                                     </div>
-                                    <div className="grid grid-cols-1 gap-6">
-                                      <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Liquidez Corrente</label>
-                                        <Input 
+                                    <div className="grid grid-cols-1 gap-3">
+                                      <div className="space-y-1">
+                                        <label className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Liquidez Corrente</label>
+                                        <input 
                                           type="number" 
                                           step="0.01" 
-                                          className="h-12 bg-card border-border/10 text-[11px] font-black focus-visible:ring-primary/20 rounded-xl"
+                                          className="w-full h-8 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-bold focus:ring-1 focus:ring-primary/20 outline-none transition-all shadow-inner"
                                           value={editForm[empresa.id]?.indices_financeiros?.liquidez_corrente || 0}
                                           onChange={(e) => handleUpdateField(empresa.id, 'indices_financeiros', { ...editForm[empresa.id]?.indices_financeiros, liquidez_corrente: parseFloat(e.target.value) })}
                                         />
                                       </div>
-                                      <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Endividamento</label>
-                                        <Input 
+                                      <div className="space-y-1">
+                                        <label className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest pl-1">Endividamento</label>
+                                        <input 
                                           type="number" 
                                           step="0.01" 
-                                          className="h-12 bg-card border-border/10 text-[11px] font-black focus-visible:ring-primary/20 rounded-xl"
+                                          className="w-full h-8 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-bold focus:ring-1 focus:ring-primary/20 outline-none transition-all shadow-inner"
                                           value={editForm[empresa.id]?.indices_financeiros?.endividamento || 0}
                                           onChange={(e) => handleUpdateField(empresa.id, 'indices_financeiros', { ...editForm[empresa.id]?.indices_financeiros, endividamento: parseFloat(e.target.value) })}
                                         />
@@ -342,11 +345,11 @@ const ContabilPage: React.FC = () => {
                                     </div>
                                   </div>
                                   
-                                  <div className="p-8 bg-black/5 dark:bg-white/5 border border-border/10 rounded-3xl flex flex-col justify-between">
-                                    <div className="space-y-4">
-                                      <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] mb-4 block">Distribuição de Lucros</span>
+                                  <div className="p-4 bg-card border border-border/10 rounded-2xl flex flex-col justify-between shadow-sm">
+                                    <div className="space-y-2">
+                                      <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest block pl-1">Distribuição Lucros</span>
                                       <select 
-                                        className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all cursor-pointer"
+                                        className="w-full h-8 px-2 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                                         value={editForm[empresa.id]?.distribuicao_lucros_status || "pendente"}
                                         onChange={(e) => handleUpdateField(empresa.id, 'distribuicao_lucros_status', e.target.value)}
                                       >
@@ -355,14 +358,14 @@ const ContabilPage: React.FC = () => {
                                         ))}
                                       </select>
                                     </div>
-                                    <p className="text-[10px] text-muted-foreground/40 font-black mt-6 border-t border-border/5 pt-4">Controle de apuração e destinação de dividendos.</p>
+                                    <p className="text-[7px] text-muted-foreground/30 font-bold mt-3 uppercase tracking-widest">Dividendos e JCP</p>
                                   </div>
 
-                                  <div className="p-8 bg-black/5 dark:bg-white/5 border border-border/10 rounded-3xl flex flex-col justify-between">
-                                    <div className="space-y-4">
-                                      <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] mb-4 block">Emissão de DECORE</span>
+                                  <div className="p-4 bg-card border border-border/10 rounded-2xl flex flex-col justify-between shadow-sm">
+                                    <div className="space-y-2">
+                                      <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest block pl-1">Emissão DECORE</span>
                                       <select 
-                                        className="w-full h-12 px-4 rounded-xl border border-border/10 bg-card text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 outline-none transition-all cursor-pointer"
+                                        className="w-full h-8 px-2 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[9px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                                         value={editForm[empresa.id]?.decore_status || "pendente"}
                                         onChange={(e) => handleUpdateField(empresa.id, 'decore_status', e.target.value)}
                                       >
@@ -371,27 +374,29 @@ const ContabilPage: React.FC = () => {
                                         ))}
                                       </select>
                                     </div>
-                                    <p className="text-[10px] text-muted-foreground/40 font-black mt-6 border-t border-border/5 pt-4">Declaração de Comprovação de Percepção de Rendimentos.</p>
+                                    <p className="text-[7px] text-muted-foreground/30 font-bold mt-3 uppercase tracking-widest">Rendimentos Sócios</p>
                                   </div>
                                </div>
                             </TabsContent>
 
-                            <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-500 outline-none">
-                               <ModuleFolderView empresa={empresa} departamentoId="contabil" />
+                            <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none">
+                               <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden">
+                                 <ModuleFolderView empresa={empresa} departamentoId="contabil" />
+                               </div>
                             </TabsContent>
 
-                            <div className="mt-12 flex justify-end gap-4 border-t border-border/10 pt-8">
+                            <div className="mt-6 flex justify-end gap-2 border-t border-border/5 pt-4">
                               <button 
                                 onClick={() => setExpanded(null)}
-                                className="h-14 px-10 text-[11px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-foreground transition-colors"
+                                className="h-9 px-6 text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-foreground transition-colors"
                               >
-                                CANCELAR
+                                FECHAR
                               </button>
                               <button 
                                 onClick={() => handleSave(empresa.id)}
-                                className="button-premium px-12 h-14 text-[11px] tracking-[0.2em] shadow-2xl shadow-primary/20 group"
+                                className="h-9 px-8 bg-primary text-primary-foreground rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-[0.98]"
                               >
-                                <Save size={18} className="group-hover:scale-110 transition-transform" /> <span>SALVAR CONTROLE</span>
+                                <Save size={12} /> GRAVAR DADOS
                               </button>
                             </div>
                           </Tabs>
@@ -405,9 +410,9 @@ const ContabilPage: React.FC = () => {
             </tbody>
           </table>
           {filteredEmpresas.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-40 border-dashed border-border/10">
-              <Search size={64} className="text-muted-foreground/10 mb-8" />
-              <p className="text-[12px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">Nenhum registro encontrado</p>
+            <div className="flex flex-col items-center justify-center py-16 bg-black/[0.02] dark:bg-white/[0.01]">
+              <Search size={24} className="text-muted-foreground/10 mb-2" />
+              <p className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">Nenhuma empresa encontrada</p>
             </div>
           )}
         </div>

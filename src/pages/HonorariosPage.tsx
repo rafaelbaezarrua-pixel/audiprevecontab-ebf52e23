@@ -160,34 +160,34 @@ const HonorariosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 relative">
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+    <div className="space-y-4 animate-fade-in pb-10 relative px-1">
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0 pt-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <h1 className="header-title">Gestão <span className="text-primary/90">Financeira</span></h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Financeira</span></h1>
             <FavoriteToggleButton moduleId="honorarios" />
             {isFetchingHonorarios && (
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 shadow-sm animate-pulse ml-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                  <span className="text-[10px] font-black text-primary uppercase tracking-tight">Sincronizando...</span>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 shadow-sm ml-2">
+                  <div className="w-1 h-1 rounded-full bg-primary animate-ping" />
+                  <span className="text-[8px] font-black text-primary uppercase tracking-tight">Sync</span>
               </div>
             )}
           </div>
-          <p className="subtitle-premium">Controle de honorários, serviços extras e faturamento mensal.</p>
+          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Honorários, serviços extras e faturamento mensal.</p>
         </div>
         
-        <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/50 w-full max-w-sm shadow-sm h-14 items-center">
+        <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 w-full max-w-[320px] shadow-inner h-10 items-center">
           <button
             onClick={() => setMainTab("empresas")}
-            className={`flex-1 flex items-center justify-center py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mainTab === "empresas" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+            className={`flex-1 flex items-center justify-center h-full rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mainTab === "empresas" ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground hover:bg-card/20"}`}
           >
             Individual
           </button>
           <button
             onClick={() => setMainTab("geral")}
-            className={`flex-1 flex items-center justify-center py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mainTab === "geral" ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+            className={`flex-1 flex items-center justify-center h-full rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mainTab === "geral" ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground hover:bg-card/20"}`}
           >
             Consolidado
           </button>
@@ -195,7 +195,7 @@ const HonorariosPage: React.FC = () => {
       </div>
 
       {mainTab === "geral" ? (
-        <div className="animate-in slide-in-from-right-4 duration-500">
+        <div className="animate-in slide-in-from-right-1 duration-300">
           <HonorariosGeralView
             geralData={listGeral}
             esporadicosData={listEsporadicos}
@@ -259,31 +259,31 @@ const HonorariosPage: React.FC = () => {
           />
         </div>
       ) : (
-        <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-             <div className="relative flex-1 w-full md:max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+        <div className="space-y-4 animate-in slide-in-from-left-1 duration-300">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+             <div className="relative flex-1 w-full md:max-w-md group">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/30 group-focus-within:text-primary transition-colors" size={16} />
                 <input 
                   type="text" 
-                  placeholder="Buscar empresa por nome ou CNPJ..." 
+                  placeholder="PROCURAR EMPRESA..." 
                   value={search} 
                   onChange={e => setSearch(e.target.value)} 
-                  className="w-full pl-12 pr-4 h-14 bg-card border border-border/60 rounded-2xl focus:ring-2 focus:ring-primary outline-none text-xs shadow-sm font-bold transition-all placeholder:text-muted-foreground/60" 
+                  className="w-full pl-10 pr-4 h-11 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-20 shadow-inner" 
                 />
               </div>
 
-              <div className="flex bg-muted/30 p-1.5 rounded-2xl border border-border/50 overflow-x-auto no-scrollbar gap-1 w-full md:w-auto h-14 items-center">
+              <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-0.5 w-full md:w-auto h-11 items-center shadow-inner">
                 {[
                   { id: "ativas", label: "Ativas" }, 
                   { id: "mei", label: "MEI" }, 
-                  { id: "paralisadas", label: "Paralisadas" }, 
-                  { id: "baixadas", label: "Baixadas" }, 
-                  { id: "entregue", label: "Entregues" }
+                  { id: "paralisadas", label: "Paradas" }, 
+                  { id: "baixadas", label: "Baixas" }, 
+                  { id: "entregue", label: "Enc." }
                 ].map(t => (
                   <button
                     key={t.id}
                     onClick={() => setActiveStatusTab(t.id as any)}
-                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === t.id ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground hover:bg-card/30"}`}
+                    className={`px-5 h-full rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeStatusTab === t.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground hover:bg-card/20"}`}
                   >
                     {t.label}
                   </button>
@@ -291,7 +291,7 @@ const HonorariosPage: React.FC = () => {
               </div>
           </div>
 
-          <div className="animate-in fade-in zoom-in-95 duration-500">
+          <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">
             <HonorariosEmpresasView
               empresas={paginatedData as any}
               expanded={expanded}
