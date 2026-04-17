@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, Save, Building2, FileUp, Settings, Activity } from "lucide-react";
+import { Search, ChevronDown, Save, Building2, FileUp, Settings, Activity, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { useFiscal } from "@/hooks/useFiscal";
@@ -84,6 +84,13 @@ const FiscalPage: React.FC = () => {
       ...prev, [id]: {
         ...fixedFields, forma_envio: existing.forma_envio || "",
         status_guia: existing.status_guia || "pendente", data_envio: existing.data_envio || "",
+        irpj_csll_status: existing.irpj_csll_status || "pendente", irpj_csll_data_envio: existing.irpj_csll_data_envio || "",
+        pis_cofins_status: existing.pis_cofins_status || "pendente", pis_cofins_data_envio: existing.pis_cofins_data_envio || "",
+        icms_status: existing.icms_status || "pendente", icms_data_envio: existing.icms_data_envio || "",
+        iss_status: existing.iss_status || "pendente", iss_data_envio: existing.iss_data_envio || "",
+        aliquota_irpj: existing.aliquota_irpj, aliquota_csll: existing.aliquota_csll,
+        aliquota_pis: existing.aliquota_pis, aliquota_cofins: existing.aliquota_cofins,
+        aliquota_icms: existing.aliquota_icms,
         observacoes: existing.observacoes || {},
       }
     }));
@@ -101,6 +108,15 @@ const FiscalPage: React.FC = () => {
         status_guia: form.status_guia || "pendente",
         xml_status: form.xml_status || "pendente",
         data_envio: form.data_envio || null,
+        irpj_csll_status: form.irpj_csll_status || "pendente", irpj_csll_data_envio: form.irpj_csll_data_envio || null,
+        pis_cofins_status: form.pis_cofins_status || "pendente", pis_cofins_data_envio: form.pis_cofins_data_envio || null,
+        icms_status: form.icms_status || "pendente", icms_data_envio: form.icms_data_envio || null,
+        iss_status: form.iss_status || "pendente", iss_data_envio: form.iss_data_envio || null,
+        aliquota_irpj: form.aliquota_irpj ? parseFloat(String(form.aliquota_irpj)) : null,
+        aliquota_csll: form.aliquota_csll ? parseFloat(String(form.aliquota_csll)) : null,
+        aliquota_pis: form.aliquota_pis ? parseFloat(String(form.aliquota_pis)) : null,
+        aliquota_cofins: form.aliquota_cofins ? parseFloat(String(form.aliquota_cofins)) : null,
+        aliquota_icms: form.aliquota_icms ? parseFloat(String(form.aliquota_icms)) : null,
         observacoes: form.observacoes || {},
         ramo_empresarial: form.ramo_empresarial || null,
       });
@@ -215,10 +231,31 @@ const FiscalPage: React.FC = () => {
               {filtered.map(emp => {
                 const isOpen = expanded === emp.id;
                 const r = fiscalData[emp.id];
-                const okXml = r?.xml_status === "ok" || r?.xml_status === "enviada" || r?.xml_status === "gerada";
-                const done = (emp.regime_tributario === "lucro_real" || emp.regime_tributario === "lucro_presumido")
-                  ? (okXml && (r?.irpj_csll_status === "enviada" || r?.irpj_csll_status === "gerada" || (r?.irpj_csll_status as any) === "PGDAS Zerado"))
-                  : (okXml && (r?.status_guia === "enviada" || r?.status_guia === "gerada" || (r?.status_guia as any) === "PGDAS Zerado"));
+                const form = editForm[emp.id] || {};
+                
+                const okXml = form.xml_status === "ok";
+                const isConcluido = 
+                  okXml && 
+                  (form.status_guia === "gerada" || form.status_guia === "PGDAS Zerado") &&
+                  form.observacoes?.envio_status === "enviado";
+
+                const rOkXml = r?.xml_status === "ok";
+                const isLucro = emp.regime_tributario === "lucro_presumido" || emp.regime_tributario === "lucro_real";
+                
+                const checkDone = (status: any) => status === "gerada" || status === "PGDAS Zerado";
+
+                const rIsConcluido = rOkXml && (
+                  isLucro 
+                  ? (checkDone(r?.irpj_csll_status) && checkDone(r?.pis_cofins_status) && checkDone(r?.icms_status))
+                  : checkDone(r?.status_guia)
+                ) && r?.observacoes?.envio_status === "enviado";
+
+                // Status para o formulário (dinâmico)
+                const isFormConcluido = okXml && (
+                  isLucro
+                  ? (checkDone(form.irpj_csll_status) && checkDone(form.pis_cofins_status) && checkDone(form.icms_status))
+                  : checkDone(form.status_guia)
+                ) && form.observacoes?.envio_status === "enviado";
 
                 return (
                   <React.Fragment key={emp.id}>
@@ -233,10 +270,10 @@ const FiscalPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap"><span className="text-muted-foreground/60 font-mono text-[10px] tracking-wider">{emp.cnpj || "—"}</span></td>
-                      <td className="px-6 py-4 text-center whitespace-nowrap"><div className={`inline-block w-3 h-3 rounded-full ${okXml ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20'}`} /></td>
+                      <td className="px-6 py-4 text-center whitespace-nowrap"><div className={`inline-block w-3 h-3 rounded-full ${rOkXml ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20'}`} /></td>
                       <td className="px-6 py-4 text-center whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter ${done ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
-                          {r?.status_guia === "enviada" || r?.status_guia === "gerada" ? 'ENVIADA' : (r?.status_guia === "PGDAS Zerado" ? "PGDAS ZERADO" : "PENDENTE")}
+                        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter ${rIsConcluido ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
+                          {rIsConcluido ? 'CONCLUÍDO' : 'PENDENTE'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center whitespace-nowrap"><span className="text-muted-foreground/40 font-black text-[10px] uppercase tracking-widest">{r?.data_envio ? formatDateBR(r.data_envio) : "—"}</span></td>
@@ -246,9 +283,9 @@ const FiscalPage: React.FC = () => {
                       <tr className="bg-muted/30">
                         <td colSpan={6} className="px-3 py-4">
                           <div className="bg-card border border-border/50 shadow-inner rounded-2xl p-6 mx-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="max-w-5xl mx-auto space-y-6">
-                              <Tabs value={rowTabs[emp.id] || 'dados'} onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))} className="space-y-6">
-                                <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-border/10 pb-6">
+                            <div className="max-w-5xl mx-auto space-y-3">
+                              <Tabs value={rowTabs[emp.id] || 'dados'} onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))} className="space-y-3">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-border/10 pb-3">
                                   <TabsList className="bg-black/5 dark:bg-white/5 p-1 rounded-xl h-12 border border-border/10">
                                     <TabsTrigger value="dados" className="px-8 h-full text-[9px] font-black uppercase tracking-[0.2em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Dados</TabsTrigger>
                                     <TabsTrigger value="pastas" className="px-8 h-full text-[9px] font-black uppercase tracking-[0.2em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Documentos</TabsTrigger>
@@ -256,70 +293,218 @@ const FiscalPage: React.FC = () => {
                                   <button onClick={() => setDialogEmpresa(emp)} className="h-10 px-5 text-[9px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-xl transition-all flex items-center gap-3"><Settings size={16} /> Ajustar Parâmetros</button>
                                 </div>
 
-                                <TabsContent value="dados" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
-                                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                    {[
-                                      { l: 'Tipo de Nota', v: editForm[emp.id]?.tipo_nota, f: 'tipo_nota' },
-                                      { l: 'Recebimento', v: editForm[emp.id]?.recebimento_arquivos, f: 'recebimento_arquivos' },
-                                      { l: 'Forma de Envio', v: editForm[emp.id]?.forma_envio, f: 'forma_envio' },
-                                      { l: 'Ramo Empresarial', v: editForm[emp.id]?.ramo_empresarial, f: 'ramo_empresarial' }
-                                    ].map(x => (
-                                      <div key={x.l} className="bg-white dark:bg-black/10 p-5 rounded-2xl border border-border/10 shadow-sm transition-all hover:border-primary/20">
-                                        <span className="block text-[8px] uppercase text-muted-foreground/40 font-black tracking-widest mb-3">{x.l}</span>
-                                        <input
-                                          type="text"
-                                          value={x.v ?? ""}
-                                          onChange={e => updateForm(emp.id, x.f, e.target.value)}
-                                          className="w-full bg-transparent text-[11px] font-black uppercase outline-none focus:text-primary transition-colors text-foreground"
-                                          placeholder="—"
-                                        />
+                                <TabsContent value="dados" className="space-y-3 animate-in fade-in slide-in-from-bottom-1 duration-300 outline-none">
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                      {[
+                                        { l: 'Tipo de Nota', v: editForm[emp.id]?.tipo_nota, f: 'tipo_nota' },
+                                        { l: 'Recebimento', v: editForm[emp.id]?.recebimento_arquivos, f: 'recebimento_arquivos' },
+                                        { l: 'Forma de Envio', v: editForm[emp.id]?.forma_envio, f: 'forma_envio' },
+                                        { l: 'Ramo Empresarial', v: editForm[emp.id]?.ramo_empresarial, f: 'ramo_empresarial' }
+                                      ].map(x => (
+                                        <div key={x.l} className="bg-white dark:bg-black/10 p-4 rounded-xl border border-border/10 shadow-sm transition-all hover:border-primary/20">
+                                          <span className="block text-[8px] uppercase text-muted-foreground/40 font-black tracking-widest mb-2">{x.l}</span>
+                                          <input
+                                            type="text"
+                                            value={x.v ?? ""}
+                                            onChange={e => updateForm(emp.id, x.f, e.target.value)}
+                                            className="w-full bg-transparent text-[11px] font-black uppercase outline-none focus:text-primary transition-colors text-foreground"
+                                            placeholder="—"
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="bg-white dark:bg-black/10 p-3 rounded-xl border border-border/10 shadow-sm space-y-2">
+                                      <div className="flex items-center justify-between border-b border-border/5 pb-3">
+                                        <h4 className="text-sm font-black text-foreground uppercase tracking-tight flex items-center gap-3"><Activity className="text-primary" size={20} /> Fechamento</h4>
+                                        <div className="flex items-center gap-2">
+                                          <div className={`w-2 h-2 rounded-full ${isFormConcluido ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-rose-500 shadow-lg shadow-rose-500/20"}`} />
+                                          <span className={`text-[10px] font-black uppercase tracking-widest ${isFormConcluido ? "text-emerald-500" : "text-rose-500"}`}>
+                                            {isFormConcluido ? "Concluído" : "Pendente"}
+                                          </span>
+                                        </div>
                                       </div>
-                                    ))}
-                                  </div>
+                                      
+                                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                        <div className="space-y-1">
+                                          <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">XML Status</label>
+                                          <select value={editForm[emp.id]?.xml_status || "pendente"} onChange={e => updateForm(emp.id, "xml_status", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/5 dark:bg-white/5 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                            <option value="pendente">PENDENTE</option>
+                                            <option value="ok">PROCESSADO</option>
+                                          </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Guia / Imposto</label>
+                                          <select value={editForm[emp.id]?.status_guia || "pendente"} onChange={e => updateForm(emp.id, "status_guia", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/5 dark:bg-white/5 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                            <option value="pendente">PENDENTE</option>
+                                            <option value="gerada">GERADO</option>
+                                            <option value="PGDAS Zerado">PGDAS ZERADO/S.M</option>
+                                          </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Transmissão</label>
+                                          <input type="date" value={editForm[emp.id]?.data_envio || ""} onChange={e => updateForm(emp.id, "data_envio", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/5 dark:bg-white/5 text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase" />
+                                        </div>
+                                        {emp.regime_tributario !== 'simples' && (
+                                          <div className="md:col-span-4 mt-2 space-y-2 border-t border-border/5 pt-3">
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-primary/40 block mb-3">Detalhamento de Impostos Federais / Estaduais</span>
+                                            
+                                            {/* IRPJ / CSLL */}
+                                            <div className="flex flex-wrap items-end gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5">
+                                              <div className="w-44 space-y-1">
+                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status IRPJ / CSLL</label>
+                                                <select value={editForm[emp.id]?.irpj_csll_status || "pendente"} onChange={e => updateForm(emp.id, "irpj_csll_status", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                                  <option value="pendente">PENDENTE</option>
+                                                  <option value="gerada">GERADO</option>
+                                                  <option value="PGDAS Zerado">ZERADO</option>
+                                                </select>
+                                              </div>
+                                              <div className="flex-1 min-w-[80px] space-y-1">
+                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. IRPJ</label>
+                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_irpj ?? ""} onChange={e => updateForm(emp.id, "aliquota_irpj", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                              </div>
+                                              <div className="flex-1 min-w-[80px] space-y-1">
+                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. CSLL</label>
+                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_csll ?? ""} onChange={e => updateForm(emp.id, "aliquota_csll", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                              </div>
+                                            </div>
 
-                                  <div className="bg-white dark:bg-black/10 p-8 rounded-3xl border border-border/10 shadow-sm space-y-8">
-                                    <div className="flex items-center justify-between border-b border-border/5 pb-5">
-                                      <h4 className="text-sm font-black text-foreground uppercase tracking-tight flex items-center gap-3"><Activity className="text-primary" size={20} /> Fechamento</h4>
-                                      <div className="flex items-center gap-2">
-                                        <div className={`w-2 h-2 rounded-full ${okXml ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-amber-500 shadow-lg shadow-amber-500/20"}`} />
-                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Fluxo {okXml ? "Liberado" : "Aguardando XML"}</span>
+                                            {/* PIS / COFINS */}
+                                            <div className="flex flex-wrap items-end gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5">
+                                              <div className="w-44 space-y-1">
+                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status PIS / COFINS</label>
+                                                <select value={editForm[emp.id]?.pis_cofins_status || "pendente"} onChange={e => updateForm(emp.id, "pis_cofins_status", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                                  <option value="pendente">PENDENTE</option>
+                                                  <option value="gerada">GERADO</option>
+                                                  <option value="PGDAS Zerado">ZERADO</option>
+                                                </select>
+                                              </div>
+                                              <div className="flex-1 min-w-[80px] space-y-1">
+                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. PIS</label>
+                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_pis ?? ""} onChange={e => updateForm(emp.id, "aliquota_pis", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                              </div>
+                                              <div className="flex-1 min-w-[80px] space-y-1">
+                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. COFINS</label>
+                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_cofins ?? ""} onChange={e => updateForm(emp.id, "aliquota_cofins", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                              </div>
+                                            </div>
+
+                                            {/* ICMS / ISS */}
+                                            <div className="flex flex-wrap items-end gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5">
+                                              <div className="w-44 space-y-1">
+                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status ICMS / ISS</label>
+                                                <select value={editForm[emp.id]?.icms_status || "pendente"} onChange={e => updateForm(emp.id, "icms_status", e.target.value)} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                                  <option value="pendente">PENDENTE</option>
+                                                  <option value="gerada">GERADO</option>
+                                                  <option value="PGDAS Zerado">ZERADO</option>
+                                                </select>
+                                              </div>
+                                              <div className="flex-1 min-w-[120px] space-y-1">
+                                                <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alq. ICMS</label>
+                                                <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_icms ?? ""} onChange={e => updateForm(emp.id, "aliquota_icms", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-10 px-4 rounded-lg border border-border/10 bg-white dark:bg-black/20 text-[10px] font-black outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                      </div>
+
+                                      {/* Alíquotas Dinâmicas para Simples Nacional */}
+                                      {emp.regime_tributario === 'simples' && (
+                                        <div className="pt-3 border-t border-border/5 space-y-3">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Detalhamento de Alíquotas</span>
+                                            <button 
+                                              onClick={() => {
+                                                const current = editForm[emp.id]?.observacoes?.aliquotas || [];
+                                                updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, aliquotas: [...current, { descricao: "", valor: 0 }] });
+                                              }}
+                                              className="px-4 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-primary/20"
+                                            >
+                                              + Adicionar Alíquota
+                                            </button>
+                                          </div>
+                                          
+                                          <div className="space-y-1.5">
+                                            {(editForm[emp.id]?.observacoes?.aliquotas || [{ descricao: "Alíquota Geral", valor: editForm[emp.id]?.aliquota || 0 }]).map((aq: any, idx: number) => (
+                                              <div key={idx} className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
+                                                <div className="w-48">
+                                                  <input 
+                                                    placeholder="Descrição"
+                                                    value={aq.descricao}
+                                                    onChange={e => {
+                                                      const list = [...(editForm[emp.id]?.observacoes?.aliquotas || [{ descricao: "Alíquota Geral", valor: editForm[emp.id]?.aliquota || 0 }])];
+                                                      list[idx].descricao = e.target.value;
+                                                      updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, aliquotas: list });
+                                                    }}
+                                                    className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-bold outline-none focus:border-primary/50 transition-all"
+                                                  />
+                                                </div>
+                                                <div className="flex-1">
+                                                  <div className="relative">
+                                                    <input 
+                                                      type="number"
+                                                      step="0.01"
+                                                      value={aq.valor}
+                                                      onChange={e => {
+                                                        const list = [...(editForm[emp.id]?.observacoes?.aliquotas || [{ descricao: "Alíquota Geral", valor: editForm[emp.id]?.aliquota || 0 }])];
+                                                        list[idx].valor = parseFloat(e.target.value) || 0;
+                                                        updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, aliquotas: list });
+                                                      }}
+                                                      className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black outline-none focus:border-primary/50 transition-all pr-8"
+                                                    />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-muted-foreground/30">%</span>
+                                                  </div>
+                                                </div>
+                                                {idx > 0 && (
+                                                  <button 
+                                                    onClick={() => {
+                                                      const list = editForm[emp.id]?.observacoes?.aliquotas.filter((_: any, i: number) => i !== idx);
+                                                      updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, aliquotas: list });
+                                                    }}
+                                                    className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
+                                                  >
+                                                    <Trash2 size={14} />
+                                                  </button>
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Controle de Envio para o Cliente */}
+                                      <div className="pt-3 border-t border-border/5 space-y-3">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 block">Envio para o Cliente</span>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                          <div className="space-y-1">
+                                            <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Status de Envio</label>
+                                            <select 
+                                              value={editForm[emp.id]?.observacoes?.envio_status || "pendente"} 
+                                              onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_status: e.target.value })} 
+                                              className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase outline-none focus:border-primary/50 transition-all cursor-pointer"
+                                            >
+                                              <option value="pendente">PENDENTE</option>
+                                              <option value="enviado">ENVIADO</option>
+                                            </select>
+                                          </div>
+                                          <div className="space-y-1">
+                                            <label className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Data de Envio</label>
+                                            <input 
+                                              type="date" 
+                                              value={editForm[emp.id]?.observacoes?.envio_data || ""} 
+                                              onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_data: e.target.value })} 
+                                              className="w-full h-10 px-4 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black focus:border-primary/50 outline-none uppercase" 
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex justify-end pt-2">
+                                        <button onClick={() => handleSaveAction(emp.id)} className="h-10 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl flex items-center gap-3 transition-all shadow-lg shadow-primary/20 group">
+                                          <Save size={16} className="group-hover:scale-110 transition-transform" />
+                                          <span className="text-[10px] font-black uppercase tracking-widest">Salvar Fechamento Fiscal</span>
+                                        </button>
                                       </div>
                                     </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                      <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">XML Status</label>
-                                        <select value={editForm[emp.id]?.xml_status || "pendente"} onChange={e => updateForm(emp.id, "xml_status", e.target.value)} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
-                                          <option value="pendente">PENDENTE</option>
-                                          <option value="ok">PROCESSADO</option>
-                                        </select>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Guia / Imposto</label>
-                                        <select value={editForm[emp.id]?.status_guia || "pendente"} onChange={e => updateForm(emp.id, "status_guia", e.target.value)} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
-                                          <option value="pendente">PENDENTE</option>
-                                          <option value="gerada">GUIA GERADA</option>
-                                          <option value="enviada">ENVIADO</option>
-                                          <option value="PGDAS Zerado">PGDAS ZERADO/S.M</option>
-                                        </select>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Alíquota (%)</label>
-                                        <input type="number" step="0.01" value={editForm[emp.id]?.aliquota ?? ""} onChange={e => updateForm(emp.id, "aliquota", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none" placeholder="0,00" />
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest ml-1">Transmissão</label>
-                                        <input type="date" value={editForm[emp.id]?.data_envio || ""} onChange={e => updateForm(emp.id, "data_envio", e.target.value)} className="w-full h-12 px-4 rounded-xl border border-border/10 bg-black/[0.02] dark:bg-white/[0.02] text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase" />
-                                      </div>
-                                    </div>
-
-                                    <div className="flex justify-end pt-4">
-                                      <button onClick={() => handleSaveAction(emp.id)} className="h-14 px-12 bg-[#4c7045] hover:bg-[#3d5a37] text-white rounded-2xl flex items-center gap-3 transition-all shadow-xl shadow-emerald-900/10 group">
-                                        <Save size={18} className="group-hover:scale-110 transition-transform" />
-                                        <span className="text-[11px] font-black uppercase tracking-[0.2em]">Salvar Fechamento Fiscal</span>
-                                      </button>
-                                    </div>
-                                  </div>
                                 </TabsContent>
 
                                 <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300 outline-none">
