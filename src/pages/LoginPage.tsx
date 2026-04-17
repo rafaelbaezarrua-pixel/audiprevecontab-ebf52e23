@@ -205,7 +205,7 @@ const LoginPage: React.FC = () => {
                 <div className="flex justify-center py-2 animate-in slide-in-from-top-4 duration-500">
                   <div className="p-2 bg-white/5 rounded-2xl border border-white/10">
                     <ReCAPTCHA
-                      sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
+                      sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                       onChange={setRecaptchaToken}
                       theme="dark"
                     />

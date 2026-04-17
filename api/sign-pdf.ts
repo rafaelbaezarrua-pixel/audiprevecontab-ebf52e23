@@ -9,9 +9,30 @@ const cleanBase64 = (str: string) => {
   return str.includes(',') ? str.split(',')[1] : str;
 };
 
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || '';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Security Verification: JWT Authentication
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+  if (authError || !user) {
+    console.warn('[SECURITY] Tentativa de acesso não autorizado ao sign-pdf');
+    return res.status(401).json({ error: 'Token inválido ou expirado' });
   }
 
   try {
