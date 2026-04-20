@@ -585,10 +585,10 @@ const TarefasPage: React.FC = () => {
     const countParaMim = tarefas.filter(a => !a.arquivado && a.usuario_id === user?.id).length;
 
     return (
-    <div className="space-y-6 animate-fade-in relative pb-10">
+    <div className="space-y-4 animate-fade-in relative pb-10">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0 mt-2">
-        <div className="space-y-1">
+        <div className="space-y-1 -mt-4">
           <div className="flex items-center gap-3">
             <h1 className="header-title">Tarefas Internas</h1>
             <FavoriteToggleButton moduleId="tarefas" />
@@ -860,7 +860,7 @@ const TarefasPage: React.FC = () => {
                 <DialogTitle className="text-lg font-black text-card-foreground uppercase tracking-tight">Enviar Resposta</DialogTitle>
                 <p className="text-xs text-muted-foreground font-medium">Descreva o resultado da tarefa ou observações relevantes.</p>
             </DialogHeader>
-            <div className="space-y-6">
+            <div className="space-y-6 -mt-6">
                 <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Sua Resposta</Label>
                     <textarea

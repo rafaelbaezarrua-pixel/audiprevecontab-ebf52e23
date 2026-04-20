@@ -248,25 +248,25 @@ const RecibosPage: React.FC = () => {
 
     return (
 
-    <div className="space-y-6 animate-fade-in relative pb-10">
+    <div className="space-y-2 animate-fade-in relative pb-10">
       {/* Background decoration elements */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
       {/* Main Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
-        <div className="space-y-1">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-1 shrink-0">
+        <div className="space-y-1 -mt-4">
           <div className="flex items-center gap-2">
              <h1 className="header-title">Emissão de <span className="text-primary/90 font-black">Recibos</span></h1>
              <FavoriteToggleButton moduleId="recibos" />
           </div>
-          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Gerador de recibos com 2 vias automáticas e histórico inteligente.</p>
+          <p className="text-[14px] font-bold text-muted-foreground/70 text-shadow-sm">Gerador de recibos.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* NEW RECEIPT FORM */}
         <div className="lg:col-span-4 h-fit">
-          <div className="module-card space-y-4">
+          <div className="module-card space-y-2">
             <div className="flex items-center gap-2 pb-2 border-b border-border/10">
                 <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
                      <Receipt size={14} />
@@ -276,7 +276,7 @@ const RecibosPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-1">
                 <div className="space-y-1">
                     <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Pagador</label>
                     <input

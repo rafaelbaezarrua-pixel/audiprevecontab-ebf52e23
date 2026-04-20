@@ -163,18 +163,18 @@ const RecalculosPage: React.FC = () => {
   }
 
    return (
-    <div className="space-y-6 animate-fade-in relative pb-10">
+    <div className="space-y-3 animate-fade-in relative pb-10">
       {/* Background decoration elements */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
       {/* Main Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
-        <div className="space-y-1">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 shrink-0 pt-0">
+        <div className="space-y-0 -mt-5">
           <div className="flex items-center gap-2">
             <h1 className="header-title">Gestão de <span className="text-primary/90 font-black">Recálculos</span></h1>
             <FavoriteToggleButton moduleId="recalculos" />
           </div>
-          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Controle centralizado de atualizações e encargos fora do prazo.</p>
+          <p className="text-[14px] font-bold text-muted-foreground/70 text-shadow-sm">Controle de Recálculos.</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-2">
@@ -222,7 +222,7 @@ const RecalculosPage: React.FC = () => {
 
               {newRecalculo.modulo_origem === "Parcelamentos" ? (
                 <div className="space-y-1 col-span-1 md:col-span-2">
-                  <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Cliente (PF)</label>
+                  <label className="text-[8px] font-black text-muted-foreground/50 ml-1">Cliente (PF)</label>
                   <select value={newRecalculo.parcelamento_id} onChange={e => setNewRecalculo({ ...newRecalculo, parcelamento_id: e.target.value })} className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
                     <option value="">SELECIONE O CLIENTE...</option>
                     {parcelamentos.map(p => (

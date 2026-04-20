@@ -160,11 +160,11 @@ const HonorariosPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in pb-10 relative px-1">
+    <div className="space-y-3 animate-fade-in pb-10 relative px-0">
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
-        <div className="space-y-1">
+        <div className="space-y-1 -mt-5">
           <div className="flex items-center gap-2">
             <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Financeira</span></h1>
             <FavoriteToggleButton moduleId="honorarios" />
@@ -175,7 +175,7 @@ const HonorariosPage: React.FC = () => {
               </div>
             )}
           </div>
-          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Honorários, serviços esporadicos.</p>
+          <p className="text-[14px] font-bold text-muted-foreground/70 text-shadow-sm">Honorários, serviços esporadicos.</p>
         </div>
 
         <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 w-full max-w-[320px] shadow-inner h-10 items-center">

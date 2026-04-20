@@ -96,7 +96,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
     return (
         <div className="space-y-6 animate-fade-in pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
-                <div className="space-y-1">
+                <div className="space-y-1 -mt-2">
                     <div className="flex items-center gap-3">
                         <h1 className="header-title">Relatórios </h1>
                         <FavoriteToggleButton moduleId="reports-custom" />

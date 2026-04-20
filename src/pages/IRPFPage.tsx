@@ -59,7 +59,7 @@ const IRPFPage = () => {
     return (
         <div className="space-y-6 animate-fade-in relative pb-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
-                <div className="space-y-1">
+                <div className="space-y-1 -mt-1">
                     <div className="flex items-center gap-3">
                         <h1 className="header-title">IRPF <span className="text-primary">{selectedYear}</span></h1>
                         <FavoriteToggleButton moduleId="irpf" />
