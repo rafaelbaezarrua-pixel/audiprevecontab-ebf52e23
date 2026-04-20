@@ -28,6 +28,7 @@ const FiscalPage: React.FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState<"simples" | "lucro" | "mei" | "outras">("simples");
+  const [movimentoTab, setMovimentoTab] = useState<"com" | "sem">("com");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
   const [filterRecebimento, setFilterRecebimento] = useState<string>("todos");
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
@@ -41,15 +42,22 @@ const FiscalPage: React.FC = () => {
       const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
       let matchTab = false;
       const isOutra = e.situacao === "entregue";
+      const record = fiscalData[e.id];
 
       if (activeTab === "simples") matchTab = !isOutra && e.regime_tributario === "simples" && e.porte_empresa !== "mei";
       else if (activeTab === "lucro") matchTab = !isOutra && (e.regime_tributario === "lucro_presumido" || e.regime_tributario === "lucro_real");
       else if (activeTab === "mei") matchTab = !isOutra && (e.regime_tributario === "mei" || e.regime_tributario === "simei" || e.porte_empresa === "mei" || e.situacao === "mei");
       else if (activeTab === "outras") matchTab = false; // Tab removed
 
+      // Filtro de Movimentação (apenas para Simples e Lucro)
+      let matchMovimento = true;
+      if (activeTab === "simples" || activeTab === "lucro") {
+        const status = record?.observacoes?.movimento_status || "com_movimento";
+        matchMovimento = movimentoTab === "com" ? status === "com_movimento" : status === "sem_movimento";
+      }
+
       let matchStatus = true;
       if (filterStatus !== "todos") {
-        const record = fiscalData[e.id];
         const items = e.regime_tributario === 'simples' ? ['status_guia'] :
           (e.regime_tributario === 'lucro_presumido' || e.regime_tributario === 'lucro_real') ?
             ['irpj_csll_status', 'pis_cofins_status', 'icms_status', 'iss_status'] : [];
@@ -62,13 +70,12 @@ const FiscalPage: React.FC = () => {
 
       let matchRecebimento = true;
       if (filterRecebimento !== "todos") {
-        const record = fiscalData[e.id];
         matchRecebimento = (record?.recebimento_arquivos?.trim() || "").toLowerCase() === filterRecebimento.toLowerCase();
       }
 
-      return matchSearch && matchTab && matchStatus && matchRecebimento;
+      return matchSearch && matchTab && matchStatus && matchRecebimento && matchMovimento;
     });
-  }, [search, activeTab, filterStatus, filterRecebimento, empresas, fiscalData]);
+  }, [search, activeTab, movimentoTab, filterStatus, filterRecebimento, empresas, fiscalData]);
 
   const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
@@ -214,11 +221,46 @@ const FiscalPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Navegação por Abas */}
-        <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-0.5 w-full shadow-inner">
-          {[{ id: "simples", label: "Simples Nacional" }, { id: "lucro", label: "Lucro Presumido/Real" }, { id: "mei", label: "MEI / Simei" }].map(t => (
-            <button key={t.id} className={`flex-1 px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm border border-border/5" : "text-foreground hover:text-foreground hover:bg-card/20"}`} onClick={() => setActiveTab(t.id as any)}>{t.label}</button>
-          ))}
+        {/* Navegação por Abas Integradas - Alta Legibilidade */}
+        <div className="bg-white dark:bg-zinc-900/80 rounded-[1.5rem] border border-border/20 shadow-md overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          {/* Abas Principais */}
+          <div className="flex p-1 gap-1 border-b border-border/10">
+            {[
+              { id: "simples", label: "Simples Nacional" },
+              { id: "lucro", label: "Lucro Presumido/Real" },
+              { id: "mei", label: "MEI / Simei" }
+            ].map(t => (
+              <button
+                key={t.id}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-primary text-white shadow-lg scale-[1.01]" : "text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5"}`}
+                onClick={() => setActiveTab(t.id as any)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Sub-abas Conectadas (Apenas para Simples e Lucro) */}
+          {(activeTab === "simples" || activeTab === "lucro") && (
+            <div className="px-6 py-4 bg-slate-50/50 dark:bg-black/20 flex items-center gap-8 animate-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-1.5 p-1 bg-white dark:bg-zinc-800 rounded-xl border border-border/10 shadow-sm">
+                <button
+                  onClick={() => setMovimentoTab("com")}
+                  className={`flex items-center gap-2 px-6 h-9 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${movimentoTab === "com" ? "bg-slate-900 text-white shadow-md dark:bg-primary" : "text-slate-400 hover:text-slate-600 dark:hover:text-white"}`}
+                >
+                  <Activity size={12} className={movimentoTab === "com" ? "text-primary dark:text-white" : "opacity-30"} />
+                  Com Movimento
+                </button>
+                <button
+                  onClick={() => setMovimentoTab("sem")}
+                  className={`flex items-center gap-2 px-6 h-9 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${movimentoTab === "sem" ? "bg-amber-500 text-white shadow-md" : "text-slate-400 hover:text-amber-500 dark:hover:text-amber-400"}`}
+                >
+                  <Trash2 size={12} className={movimentoTab === "sem" ? "text-white" : "opacity-30"} />
+                  Sem Movimento
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="bg-black/[0.03] dark:bg-white/[0.02] border border-border/10 rounded-[2.5rem] shadow-inner p-1 pb-4 relative">
@@ -331,250 +373,250 @@ const FiscalPage: React.FC = () => {
                   nome_empresa={emp.nome_empresa} // Fallback support
                   icon={<Building2 size={20} />} // Fallback support
                 >
-                <div className="max-w-6xl space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                  <Tabs value={rowTabs[emp.id] || 'dados'} onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))} className="space-y-4">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-border/10 pb-3">
-                      <TabsList className="bg-black/10 dark:bg-white/10 p-0.5 rounded-xl h-9 border border-border/10 shadow-inner">
-                        <TabsTrigger value="dados" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel Fiscal</TabsTrigger>
-                        <TabsTrigger value="pastas" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Pastas</TabsTrigger>
-                      </TabsList>
-                      <button onClick={() => setDialogEmpresa(emp)} className="h-8 px-4 text-[11px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-xl transition-all flex items-center gap-2 active:scale-95 shadow-sm"><Settings size={12} /> Parâmetros</button>
-                    </div>
-
-                    <TabsContent value="dados" className="space-y-4 outline-none">
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-                        {[
-                          { l: 'Tipo de Nota', v: editForm[emp.id]?.tipo_nota, f: 'tipo_nota' },
-                          { l: 'Recebimento', v: editForm[emp.id]?.recebimento_arquivos, f: 'recebimento_arquivos' },
-                          { l: 'Forma de Envio', v: editForm[emp.id]?.forma_envio, f: 'forma_envio' },
-                          { l: 'Ramo Empresarial', v: editForm[emp.id]?.ramo_empresarial, f: 'ramo_empresarial' }
-                        ].map(x => (
-                          <div key={x.l} className="bg-card p-3 rounded-xl border border-border/10 shadow-sm transition-all hover:border-primary/20 group/input">
-                            <span className="block text-[10px] uppercase text-foreground font-black tracking-widest mb-1 group-focus-within/input:text-primary transition-colors">{x.l}</span>
-                            <input
-                              type="text"
-                              value={x.v ?? ""}
-                              onChange={e => updateForm(emp.id, x.f, e.target.value)}
-                              className="w-full bg-transparent text-[12px] font-bold uppercase outline-none text-foreground placeholder-muted-foreground/20"
-                              placeholder="NÃO DEFINIDO"
-                            />
-                          </div>
-                        ))}
+                  <div className="max-w-6xl space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <Tabs value={rowTabs[emp.id] || 'dados'} onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))} className="space-y-4">
+                      <div className="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-border/10 pb-3">
+                        <TabsList className="bg-black/10 dark:bg-white/10 p-0.5 rounded-xl h-9 border border-border/10 shadow-inner">
+                          <TabsTrigger value="dados" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel Fiscal</TabsTrigger>
+                          <TabsTrigger value="pastas" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Pastas</TabsTrigger>
+                        </TabsList>
+                        <button onClick={() => setDialogEmpresa(emp)} className="h-8 px-4 text-[11px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-xl transition-all flex items-center gap-2 active:scale-95 shadow-sm"><Settings size={12} /> Parâmetros</button>
                       </div>
 
-                      <div className="bg-card p-4 rounded-2xl border border-border/10 shadow-sm space-y-4">
-                        <div className="flex items-center justify-between border-b border-border/5 pb-3">
-                          <h4 className="text-[12px] font-black text-foreground uppercase tracking-widest flex items-center gap-2">
-                            <Activity className="text-primary" size={14} />
-                            Controle Mensal
-                          </h4>
+                      <TabsContent value="dados" className="space-y-4 outline-none">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                          {[
+                            { l: 'Tipo de Nota', v: editForm[emp.id]?.tipo_nota, f: 'tipo_nota' },
+                            { l: 'Recebimento', v: editForm[emp.id]?.recebimento_arquivos, f: 'recebimento_arquivos' },
+                            { l: 'Forma de Envio', v: editForm[emp.id]?.forma_envio, f: 'forma_envio' },
+                            { l: 'Ramo Empresarial', v: editForm[emp.id]?.ramo_empresarial, f: 'ramo_empresarial' }
+                          ].map(x => (
+                            <div key={x.l} className="bg-card p-3 rounded-xl border border-border/10 shadow-sm transition-all hover:border-primary/20 group/input">
+                              <span className="block text-[10px] uppercase text-foreground font-black tracking-widest mb-1 group-focus-within/input:text-primary transition-colors">{x.l}</span>
+                              <input
+                                type="text"
+                                value={x.v ?? ""}
+                                onChange={e => updateForm(emp.id, x.f, e.target.value)}
+                                className="w-full bg-transparent text-[12px] font-bold uppercase outline-none text-foreground placeholder-muted-foreground/20"
+                                placeholder="NÃO DEFINIDO"
+                              />
+                            </div>
+                          ))}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">XML</label>
-                            <select value={editForm[emp.id]?.xml_status || "pendente"} onChange={e => updateForm(emp.id, "xml_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
-                              <option value="pendente">PENDENTE</option>
-                              <option value="ok">OK</option>
-                            </select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Guia Mensal</label>
-                            <select value={editForm[emp.id]?.status_guia || "pendente"} onChange={e => updateForm(emp.id, "status_guia", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
-                              <option value="pendente">PENDENTE</option>
-                              <option value="gerada">GERADA</option>
-                              <option value="PGDAS Zerado">ZERADO/S.M.</option>
-                            </select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data Transmissão</label>
-                            <input type="date" value={editForm[emp.id]?.data_envio || ""} onChange={e => updateForm(emp.id, "data_envio", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-inner" />
+                        <div className="bg-card p-4 rounded-2xl border border-border/10 shadow-sm space-y-4">
+                          <div className="flex items-center justify-between border-b border-border/5 pb-3">
+                            <h4 className="text-[12px] font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                              <Activity className="text-primary" size={14} />
+                              Controle Mensal
+                            </h4>
                           </div>
 
-                          <div className="space-y-3 md:col-span-3 pt-2 border-t border-border/5">
-                            <div className="flex items-center justify-between">
-                              <h5 className="text-[11px] font-black text-foreground uppercase tracking-widest flex items-center gap-1.5">
-                                <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Detalhamento de Alíquotas</label>
-                              </h5>
-                              <button
-                                onClick={() => {
-                                  const currentAliquotas = editForm[emp.id]?.observacoes?.aliquotas_detalhadas || [];
-                                  updateForm(emp.id, "observacoes", {
-                                    ...editForm[emp.id]?.observacoes,
-                                    aliquotas_detalhadas: [...currentAliquotas, { descricao: "", valor: 0 }]
-                                  });
-                                }}
-                                className="px-2 py-1 bg-primary/5 hover:bg-primary/10 text-primary rounded-md text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1 active:scale-95 border border-primary/10"
-                              >
-                                <Plus size={10} /> Add Alíquota
-                              </button>
-                            </div>
-
-                            <div className="space-y-2">
-                              {(editForm[emp.id]?.observacoes?.aliquotas_detalhadas || []).map((alq: any, idx: number) => (
-                                <div key={idx} className="flex items-center gap-3 animate-in slide-in-from-left-2 duration-200">
-                                  <input
-                                    type="text"
-                                    placeholder="DESCRIÇÃO DA ALÍQUOTA"
-                                    value={alq.descricao}
-                                    onChange={e => {
-                                      const newAlqs = [...editForm[emp.id].observacoes.aliquotas_detalhadas];
-                                      newAlqs[idx].descricao = e.target.value;
-                                      updateForm(emp.id, "observacoes", { ...editForm[emp.id].observacoes, aliquotas_detalhadas: newAlqs });
-                                    }}
-                                    className="flex-1 h-10 px-4 rounded-xl border border-border/10 bg-black/5 dark:bg-white/5 text-[12px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
-                                  />
-                                  <div className="relative flex-[2]">
-                                    <input
-                                      type="number"
-                                      step="0.01"
-                                      placeholder="0,00"
-                                      value={alq.valor}
-                                      onChange={e => {
-                                        const newAlqs = [...editForm[emp.id].observacoes.aliquotas_detalhadas];
-                                        newAlqs[idx].valor = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                                        updateForm(emp.id, "observacoes", { ...editForm[emp.id].observacoes, aliquotas_detalhadas: newAlqs });
-                                      }}
-                                      className="w-full h-10 px-4 pr-8 rounded-xl border border-border/10 bg-black/5 dark:bg-white/5 text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner text-right font-mono text-foreground"
-                                    />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-black text-primary">%</span>
-                                  </div>
-                                  <button
-                                    onClick={() => {
-                                      const newAlqs = editForm[emp.id].observacoes.aliquotas_detalhadas.filter((_: any, i: number) => i !== idx);
-                                      updateForm(emp.id, "observacoes", { ...editForm[emp.id].observacoes, aliquotas_detalhadas: newAlqs });
-                                    }}
-                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/5 hover:bg-rose-500 text-rose-500/30 hover:text-white transition-all active:scale-95 shadow-sm"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              ))}
-                              {(!editForm[emp.id]?.observacoes?.aliquotas_detalhadas || editForm[emp.id]?.observacoes?.aliquotas_detalhadas.length === 0) && (
-                                <div className="py-4 text-center border border-dashed border-border/10 rounded-xl">
-                                  <p className="text-[8px] font-black text-muted-foreground/20 uppercase tracking-[0.2em]">Nenhuma alíquota detalhada</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {emp.regime_tributario !== 'simples' && (
-                            <div className="md:col-span-3 mt-1 space-y-3 pt-3 border-t border-border/5">
-                              <div className="flex flex-wrap items-end gap-2.5 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5 shadow-inner">
-                                <div className="w-40 space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">IRPJ / CSLL</label>
-                                  <select value={editForm[emp.id]?.irpj_csll_status || "pendente"} onChange={e => updateForm(emp.id, "irpj_csll_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
-                                    <option value="pendente">PENDENTE</option>
-                                    <option value="gerada">GERADO</option>
-                                    <option value="PGDAS Zerado">ZERADO</option>
-                                  </select>
-                                </div>
-                                <div className="flex-1 min-w-[60px] space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. IRPJ</label>
-                                  <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_irpj ?? ""} onChange={e => updateForm(emp.id, "aliquota_irpj", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
-                                </div>
-                                <div className="flex-1 min-w-[60px] space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. CSLL</label>
-                                  <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_csll ?? ""} onChange={e => updateForm(emp.id, "aliquota_csll", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
-                                </div>
-                              </div>
-
-                              <div className="flex flex-wrap items-end gap-2.5 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5 shadow-inner">
-                                <div className="w-40 space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">PIS / COFINS</label>
-                                  <select value={editForm[emp.id]?.pis_cofins_status || "pendente"} onChange={e => updateForm(emp.id, "pis_cofins_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
-                                    <option value="pendente">PENDENTE</option>
-                                    <option value="gerada">GERADO</option>
-                                    <option value="PGDAS Zerado">ZERADO</option>
-                                  </select>
-                                </div>
-                                <div className="flex-1 min-w-[60px] space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. PIS</label>
-                                  <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_pis ?? ""} onChange={e => updateForm(emp.id, "aliquota_pis", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
-                                </div>
-                                <div className="flex-1 min-w-[60px] space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. COFINS</label>
-                                  <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_cofins ?? ""} onChange={e => updateForm(emp.id, "aliquota_cofins", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
-                                </div>
-                              </div>
-
-                              <div className="flex flex-wrap items-end gap-2.5 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5 shadow-inner">
-                                <div className="w-40 space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ICMS</label>
-                                  <select value={editForm[emp.id]?.icms_status || "pendente"} onChange={e => updateForm(emp.id, "icms_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
-                                    <option value="pendente">PENDENTE</option>
-                                    <option value="gerada">GERADO</option>
-                                    <option value="PGDAS Zerado">ZERADO</option>
-                                  </select>
-                                </div>
-                                <div className="flex-1 min-w-[60px] space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. ICMS</label>
-                                  <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_icms ?? ""} onChange={e => updateForm(emp.id, "aliquota_icms", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
-                                </div>
-                                <div className="w-40 space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ISS</label>
-                                  <select value={editForm[emp.id]?.iss_status || "pendente"} onChange={e => updateForm(emp.id, "iss_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
-                                    <option value="pendente">PENDENTE</option>
-                                    <option value="gerada">GERADO</option>
-                                    <option value="PGDAS Zerado">ZERADO</option>
-                                  </select>
-                                </div>
-                                <div className="flex-1 min-w-[60px] space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. ISS</label>
-                                  <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_iss ?? ""} onChange={e => updateForm(emp.id, "aliquota_iss", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Controle de Envio Dinâmico */}
-                        <div className="pt-2 border-t border-border/5 flex flex-col md:flex-row items-end justify-between gap-4">
-                          <div className="flex-1 grid grid-cols-2 gap-3 w-full">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div className="space-y-1">
-                              <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Envio para o Cliente</label>
-                              <select
-                                value={editForm[emp.id]?.observacoes?.envio_status || "pendente"}
-                                onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_status: e.target.value })}
-                                className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
-                              >
-                                <option value="pendente">Pendente</option>
-                                <option value="enviado">Enviado</option>
+                              <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">XML</label>
+                              <select value={editForm[emp.id]?.xml_status || "pendente"} onChange={e => updateForm(emp.id, "xml_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
+                                <option value="pendente">PENDENTE</option>
+                                <option value="ok">OK</option>
                               </select>
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data de envio</label>
-                              <input type="date" value={editForm[emp.id]?.observacoes?.envio_data || ""} onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_data: e.target.value })} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-inner" />
+                              <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Guia Mensal</label>
+                              <select value={editForm[emp.id]?.status_guia || "pendente"} onChange={e => updateForm(emp.id, "status_guia", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
+                                <option value="pendente">PENDENTE</option>
+                                <option value="gerada">GERADA</option>
+                                <option value="PGDAS Zerado">ZERADO/S.M.</option>
+                              </select>
                             </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data Transmissão</label>
+                              <input type="date" value={editForm[emp.id]?.data_envio || ""} onChange={e => updateForm(emp.id, "data_envio", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-inner" />
+                            </div>
+
+                            <div className="space-y-3 md:col-span-3 pt-2 border-t border-border/5">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-[11px] font-black text-foreground uppercase tracking-widest flex items-center gap-1.5">
+                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Detalhamento de Alíquotas</label>
+                                </h5>
+                                <button
+                                  onClick={() => {
+                                    const currentAliquotas = editForm[emp.id]?.observacoes?.aliquotas_detalhadas || [];
+                                    updateForm(emp.id, "observacoes", {
+                                      ...editForm[emp.id]?.observacoes,
+                                      aliquotas_detalhadas: [...currentAliquotas, { descricao: "", valor: 0 }]
+                                    });
+                                  }}
+                                  className="px-2 py-1 bg-primary/5 hover:bg-primary/10 text-primary rounded-md text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1 active:scale-95 border border-primary/10"
+                                >
+                                  <Plus size={10} /> Add Alíquota
+                                </button>
+                              </div>
+
+                              <div className="space-y-2">
+                                {(editForm[emp.id]?.observacoes?.aliquotas_detalhadas || []).map((alq: any, idx: number) => (
+                                  <div key={idx} className="flex items-center gap-3 animate-in slide-in-from-left-2 duration-200">
+                                    <input
+                                      type="text"
+                                      placeholder="DESCRIÇÃO DA ALÍQUOTA"
+                                      value={alq.descricao}
+                                      onChange={e => {
+                                        const newAlqs = [...editForm[emp.id].observacoes.aliquotas_detalhadas];
+                                        newAlqs[idx].descricao = e.target.value;
+                                        updateForm(emp.id, "observacoes", { ...editForm[emp.id].observacoes, aliquotas_detalhadas: newAlqs });
+                                      }}
+                                      className="flex-1 h-10 px-4 rounded-xl border border-border/10 bg-black/5 dark:bg-white/5 text-[12px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
+                                    />
+                                    <div className="relative flex-[2]">
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="0,00"
+                                        value={alq.valor}
+                                        onChange={e => {
+                                          const newAlqs = [...editForm[emp.id].observacoes.aliquotas_detalhadas];
+                                          newAlqs[idx].valor = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                          updateForm(emp.id, "observacoes", { ...editForm[emp.id].observacoes, aliquotas_detalhadas: newAlqs });
+                                        }}
+                                        className="w-full h-10 px-4 pr-8 rounded-xl border border-border/10 bg-black/5 dark:bg-white/5 text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner text-right font-mono text-foreground"
+                                      />
+                                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-black text-primary">%</span>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        const newAlqs = editForm[emp.id].observacoes.aliquotas_detalhadas.filter((_: any, i: number) => i !== idx);
+                                        updateForm(emp.id, "observacoes", { ...editForm[emp.id].observacoes, aliquotas_detalhadas: newAlqs });
+                                      }}
+                                      className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/5 hover:bg-rose-500 text-rose-500/30 hover:text-white transition-all active:scale-95 shadow-sm"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
+                                ))}
+                                {(!editForm[emp.id]?.observacoes?.aliquotas_detalhadas || editForm[emp.id]?.observacoes?.aliquotas_detalhadas.length === 0) && (
+                                  <div className="py-4 text-center border border-dashed border-border/10 rounded-xl">
+                                    <p className="text-[8px] font-black text-muted-foreground/20 uppercase tracking-[0.2em]">Nenhuma alíquota detalhada</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {emp.regime_tributario !== 'simples' && (
+                              <div className="md:col-span-3 mt-1 space-y-3 pt-3 border-t border-border/5">
+                                <div className="flex flex-wrap items-end gap-2.5 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5 shadow-inner">
+                                  <div className="w-40 space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">IRPJ / CSLL</label>
+                                    <select value={editForm[emp.id]?.irpj_csll_status || "pendente"} onChange={e => updateForm(emp.id, "irpj_csll_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                      <option value="pendente">PENDENTE</option>
+                                      <option value="gerada">GERADO</option>
+                                      <option value="PGDAS Zerado">ZERADO</option>
+                                    </select>
+                                  </div>
+                                  <div className="flex-1 min-w-[60px] space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. IRPJ</label>
+                                    <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_irpj ?? ""} onChange={e => updateForm(emp.id, "aliquota_irpj", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                  </div>
+                                  <div className="flex-1 min-w-[60px] space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. CSLL</label>
+                                    <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_csll ?? ""} onChange={e => updateForm(emp.id, "aliquota_csll", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-end gap-2.5 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5 shadow-inner">
+                                  <div className="w-40 space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">PIS / COFINS</label>
+                                    <select value={editForm[emp.id]?.pis_cofins_status || "pendente"} onChange={e => updateForm(emp.id, "pis_cofins_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                      <option value="pendente">PENDENTE</option>
+                                      <option value="gerada">GERADO</option>
+                                      <option value="PGDAS Zerado">ZERADO</option>
+                                    </select>
+                                  </div>
+                                  <div className="flex-1 min-w-[60px] space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. PIS</label>
+                                    <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_pis ?? ""} onChange={e => updateForm(emp.id, "aliquota_pis", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                  </div>
+                                  <div className="flex-1 min-w-[60px] space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. COFINS</label>
+                                    <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_cofins ?? ""} onChange={e => updateForm(emp.id, "aliquota_cofins", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-end gap-2.5 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/5 shadow-inner">
+                                  <div className="w-40 space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ICMS</label>
+                                    <select value={editForm[emp.id]?.icms_status || "pendente"} onChange={e => updateForm(emp.id, "icms_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                      <option value="pendente">PENDENTE</option>
+                                      <option value="gerada">GERADO</option>
+                                      <option value="PGDAS Zerado">ZERADO</option>
+                                    </select>
+                                  </div>
+                                  <div className="flex-1 min-w-[60px] space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. ICMS</label>
+                                    <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_icms ?? ""} onChange={e => updateForm(emp.id, "aliquota_icms", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                  </div>
+                                  <div className="w-40 space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ISS</label>
+                                    <select value={editForm[emp.id]?.iss_status || "pendente"} onChange={e => updateForm(emp.id, "iss_status", e.target.value)} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer">
+                                      <option value="pendente">PENDENTE</option>
+                                      <option value="gerada">GERADO</option>
+                                      <option value="PGDAS Zerado">ZERADO</option>
+                                    </select>
+                                  </div>
+                                  <div className="flex-1 min-w-[60px] space-y-1">
+                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-0.5">ALQ. ISS</label>
+                                    <input type="number" step="0.01" value={editForm[emp.id]?.aliquota_iss ?? ""} onChange={e => updateForm(emp.id, "aliquota_iss", e.target.value === "" ? null : parseFloat(e.target.value))} className="w-full h-8 px-2 rounded-lg border border-border/10 bg-card text-[12px] font-bold outline-none focus:ring-1 focus:ring-primary/20" placeholder="0,00" />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <button onClick={() => handleSaveAction(emp.id)} className="h-9 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 group">
-                            <Save size={14} className="group-hover:scale-110 transition-transform" />
-                            <span className="text-[11px] font-black uppercase tracking-widest">Gravar Fechamento</span>
-                          </button>
+
+                          {/* Controle de Envio Dinâmico */}
+                          <div className="pt-2 border-t border-border/5 flex flex-col md:flex-row items-end justify-between gap-4">
+                            <div className="flex-1 grid grid-cols-2 gap-3 w-full">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Envio para o Cliente</label>
+                                <select
+                                  value={editForm[emp.id]?.observacoes?.envio_status || "pendente"}
+                                  onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_status: e.target.value })}
+                                  className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
+                                >
+                                  <option value="pendente">Pendente</option>
+                                  <option value="enviado">Enviado</option>
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data de envio</label>
+                                <input type="date" value={editForm[emp.id]?.observacoes?.envio_data || ""} onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_data: e.target.value })} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-inner" />
+                              </div>
+                            </div>
+                            <button onClick={() => handleSaveAction(emp.id)} className="h-9 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 group">
+                              <Save size={14} className="group-hover:scale-110 transition-transform" />
+                              <span className="text-[11px] font-black uppercase tracking-widest">Gravar Fechamento</span>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </TabsContent>
+                      </TabsContent>
 
-                    <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none">
-                      <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden shadow-inner">
-                        <ModuleFolderView empresa={emp} departamentoId="fiscal" />
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              </EmpresaAccordion>
-            );
-          })}
-          {filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 bg-black/[0.02] dark:bg-white/[0.01] rounded-xl border border-dashed border-border/10">
-              <Search size={24} className="text-muted-foreground mb-2" />
-              <p className="text-[12px] font-black text-foreground uppercase tracking-widest">Nenhuma empresa encontrada no filtro</p>
-            </div>
-          )}
-        </div>
+                      <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none">
+                        <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden shadow-inner">
+                          <ModuleFolderView empresa={emp} departamentoId="fiscal" />
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                </EmpresaAccordion>
+              );
+            })}
+            {filtered.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 bg-black/[0.02] dark:bg-white/[0.01] rounded-xl border border-dashed border-border/10">
+                <Search size={24} className="text-muted-foreground mb-2" />
+                <p className="text-[12px] font-black text-foreground uppercase tracking-widest">Nenhuma empresa encontrada no filtro</p>
+              </div>
+            )}
+          </div>
 
-        {isUploaderOpen && <TaxGuideUploader empresas={empresas} onClose={() => setIsUploaderOpen(false)} onConfirm={() => queryClient.invalidateQueries({ queryKey: ["fiscal"] })} competenciaFiltro={competencia} />}
-        {dialogEmpresa && <FiscalParametersDialog isOpen={!!dialogEmpresa} empresa={dialogEmpresa} initialData={editForm[dialogEmpresa.id] || {}} onClose={() => setDialogEmpresa(null)} onSave={(data) => handleSaveParameters(dialogEmpresa.id, data)} />}
+          {isUploaderOpen && <TaxGuideUploader empresas={empresas} onClose={() => setIsUploaderOpen(false)} onConfirm={() => queryClient.invalidateQueries({ queryKey: ["fiscal"] })} competenciaFiltro={competencia} />}
+          {dialogEmpresa && <FiscalParametersDialog isOpen={!!dialogEmpresa} empresa={dialogEmpresa} initialData={editForm[dialogEmpresa.id] || {}} onClose={() => setDialogEmpresa(null)} onSave={(data) => handleSaveParameters(dialogEmpresa.id, data)} />}
         </div>
       </div>
     </div>

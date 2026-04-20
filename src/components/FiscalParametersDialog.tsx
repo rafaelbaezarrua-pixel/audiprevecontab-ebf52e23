@@ -47,6 +47,17 @@ export const FiscalParametersDialog: React.FC<Props> = ({ empresa, initialData, 
             <div><label className={labelCls}>Recebimento</label><input value={form.recebimento_arquivos ?? ""} onChange={e => updateForm('recebimento_arquivos', e.target.value)} className={inputCls} placeholder="Fly Notas, Email..." /></div>
             <div><label className={labelCls}>Forma de Envio</label><input value={form.forma_envio ?? ""} onChange={e => updateForm('forma_envio', e.target.value)} className={inputCls} placeholder="WhatsApp, Email..." /></div>
             <div><label className={labelCls}>Ramo Empresarial</label><input value={form.ramo_empresarial ?? ""} onChange={e => updateForm('ramo_empresarial', e.target.value)} className={inputCls} placeholder="Comércio, Serviço..." /></div>
+            <div className="md:col-span-2">
+              <label className={labelCls}>Tipo de Movimentação (Sub-abas)</label>
+              <select 
+                value={form.observacoes?.movimento_status || "com_movimento"} 
+                onChange={e => updateForm('observacoes', { ...form.observacoes, movimento_status: e.target.value })} 
+                className={inputCls}
+              >
+                <option value="com_movimento">Com Movimento (Padrão)</option>
+                <option value="sem_movimento">Sem Movimento (Inativa no Mês)</option>
+              </select>
+            </div>
           </div>
 
         </div>
