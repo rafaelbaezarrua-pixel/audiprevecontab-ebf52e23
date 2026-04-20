@@ -44,9 +44,9 @@ const FiscalPage: React.FC = () => {
       const isOutra = e.situacao === "entregue";
       const record = fiscalData[e.id];
 
-      if (activeTab === "simples") matchTab = !isOutra && e.regime_tributario === "simples" && e.porte_empresa !== "mei";
+      if (activeTab === "simples") matchTab = !isOutra && (e.regime_tributario === "simples" || (e.regime_tributario !== "mei" && e.regime_tributario !== "simei" && e.regime_tributario !== "lucro_presumido" && e.regime_tributario !== "lucro_real" && e.porte_empresa !== "mei"));
       else if (activeTab === "lucro") matchTab = !isOutra && (e.regime_tributario === "lucro_presumido" || e.regime_tributario === "lucro_real");
-      else if (activeTab === "mei") matchTab = !isOutra && (e.regime_tributario === "mei" || e.regime_tributario === "simei" || e.porte_empresa === "mei" || e.situacao === "mei");
+      else if (activeTab === "mei") matchTab = !isOutra && (e.regime_tributario === "mei" || e.regime_tributario === "simei" || (e.porte_empresa === "mei" && e.regime_tributario !== "simples" && e.regime_tributario !== "lucro_presumido" && e.regime_tributario !== "lucro_real"));
       else if (activeTab === "outras") matchTab = false; // Tab removed
 
       // Filtro de Movimentação (apenas para Simples e Lucro)
@@ -246,7 +246,7 @@ const FiscalPage: React.FC = () => {
               <div className="flex items-center gap-1.5 p-1 bg-white dark:bg-zinc-800 rounded-xl border border-border/10 shadow-sm">
                 <button
                   onClick={() => setMovimentoTab("com")}
-                  className={`flex items-center gap-2 px-6 h-9 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${movimentoTab === "com" ? "bg-slate-900 text-white shadow-md dark:bg-primary" : "text-slate-400 hover:text-slate-600 dark:hover:text-white"}`}
+                  className={`flex items-center gap-2 px-6 h-9 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${movimentoTab === "com" ? "bg-blue-400/100 text-white shadow-md dark:bg-primary" : "text-slate-400 hover:text-slate-600 dark:hover:text-white"}`}
                 >
                   <Activity size={12} className={movimentoTab === "com" ? "text-primary dark:text-white" : "opacity-30"} />
                   Com Movimento
@@ -293,7 +293,7 @@ const FiscalPage: React.FC = () => {
 
               // Custom Header for Fiscal Module
               const customHeader = (
-                <div className="md:grid md:grid-cols-[2fr_1.2fr_1fr_80px_1fr_1.2fr_60px] items-center w-full py-1">
+                <div className="md:grid md:grid-cols-[2.2fr_1fr_1fr_80px_1fr_1.2fr_60px] items-center w-full py-1 gap-6">
                   {/* Empresa */}
                   <div className="flex items-center gap-4 min-w-0">
                     <div className={cn(

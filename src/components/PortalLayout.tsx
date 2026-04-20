@@ -18,8 +18,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { useAppConfig } from "@/hooks/useAppConfig";
+
 const PortalLayout: React.FC = () => {
     const { user, userData, logout } = useAuth();
+    const { config } = useAppConfig();
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -48,9 +51,15 @@ const PortalLayout: React.FC = () => {
                 <div className="p-6 border-b border-border mb-2">
                     <div className="flex items-center gap-3">
                         <div className="h-9 w-9 flex items-center justify-center">
-                            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">A</div>
+                            {config.system_logo_url ? (
+                                <img src={config.system_logo_url} alt={config.system_title} className="w-8 h-8 object-contain" />
+                            ) : (
+                                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                                    {config.system_title?.charAt(0) || "A"}
+                                </div>
+                            )}
                         </div>
-                        <span className="font-bold text-xl tracking-tight text-foreground">Audipreve</span>
+                        <span className="font-bold text-xl tracking-tight text-foreground">{config.system_title || "Audipreve"}</span>
                     </div>
                     <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mt-1">Portal do Cliente</p>
                 </div>

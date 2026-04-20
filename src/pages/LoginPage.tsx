@@ -5,9 +5,11 @@ import { Loader2, ShieldCheck, Lock, Mail, ArrowRight, ShieldAlert } from "lucid
 import logoAudipreve from "@/assets/logo-audipreve.png";
 import ReCAPTCHA from "react-google-recaptcha";
 import { toast } from "sonner";
+import { useAppConfig } from "@/hooks/useAppConfig";
 
 const LoginPage: React.FC = () => {
   const { user, loading, login } = useAuth();
+  const { config } = useAppConfig();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -66,7 +68,7 @@ const LoginPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background font-ubuntu">
         <div className="text-center animate-in fade-in duration-700">
-          <img src={logoAudipreve} alt="Audipreve" className="w-24 h-24 object-contain mx-auto mb-8 drop-shadow-2xl" />
+          <img src={config.system_logo_url || logoAudipreve} alt={config.system_title} className="w-24 h-24 object-contain mx-auto mb-8 drop-shadow-2xl" />
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="animate-spin text-primary" size={32} />
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Autenticando Protocolos</p>
@@ -136,11 +138,13 @@ const LoginPage: React.FC = () => {
         <div className="text-center space-y-4">
           <div className="inline-block relative">
             <div className="absolute inset-0 bg-primary/10 blur-3xl rounded-full scale-150 animate-pulse" />
-            <img src={logoAudipreve} alt="Audipreve" className="w-32 h-32 object-contain mx-auto relative z-10 drop-shadow-2xl" />
+            <img src={config.system_logo_url || logoAudipreve} alt={config.system_title} className="w-32 h-32 object-contain mx-auto relative z-10 drop-shadow-2xl" />
           </div>
           <div className="space-y-1">
-            <h1 className="header-title !text-4xl text-center">Audipreve <span className="text-primary">Contabilidade</span></h1>
-            <p className="subtitle-premium uppercase tracking-[0.4em] text-[10px] opacity-60">Sistema de Gestão</p>
+            <h1 className="header-title !text-4xl text-center">{config.system_title}</h1>
+            <p className="subtitle-premium uppercase tracking-[0.4em] text-[10px] opacity-60">
+              {config.welcome_message || "Sistema de Gestão"}
+            </p>
           </div>
         </div>
 

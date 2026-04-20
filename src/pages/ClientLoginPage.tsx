@@ -8,8 +8,10 @@ import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";
 import { supabase } from "@/integrations/supabase/client";
 import logoAudipreve from "@/assets/logo-audipreve.png";
+import { useAppConfig } from "@/hooks/useAppConfig";
 
 const ClientLoginPage: React.FC = () => {
+    const { config } = useAppConfig();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -204,11 +206,11 @@ const ClientLoginPage: React.FC = () => {
                 <div className="text-center space-y-4">
                     <div className="inline-block relative">
                         <div className="absolute inset-0 bg-primary/10 blur-3xl rounded-full scale-150 animate-pulse" />
-                        <img src={logoAudipreve} alt="Audipreve" className="w-32 h-32 object-contain mx-auto relative z-10 drop-shadow-2xl" />
+                        <img src={config.system_logo_url || logoAudipreve} alt={config.system_title} className="w-32 h-32 object-contain mx-auto relative z-10 drop-shadow-2xl" />
                     </div>
                     <div className="space-y-1">
-                        <h1 className="header-title !text-4xl text-center">Portal <span className="text-primary">Cliente</span></h1>
-                        <p className="subtitle-premium uppercase tracking-[0.4em] text-[10px] opacity-60 text-center">Audipreve Contabilidade Digital</p>
+                        <h1 className="header-title !text-4xl text-center">{config.system_title} <span className="text-primary">Portal</span></h1>
+                        <p className="subtitle-premium uppercase tracking-[0.4em] text-[10px] opacity-60 text-center">{config.welcome_message || "Audipreve Contabilidade Digital"}</p>
                     </div>
                 </div>
 

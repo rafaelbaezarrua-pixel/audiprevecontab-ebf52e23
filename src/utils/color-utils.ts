@@ -68,3 +68,29 @@ export const hslVariablesToHex = (hslVars: string): string => {
 
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 };
+/**
+ * Adjusts the lightness of an HSL variable string.
+ * @param hslVars "H S% L%"
+ * @param amount Number between -100 and 100
+ */
+export const adjustLightness = (hslVars: string, amount: number): string => {
+  const parts = hslVars.split(" ");
+  if (parts.length !== 3) return hslVars;
+
+  let h = parts[0];
+  let s = parts[1];
+  let l = parseInt(parts[2]);
+
+  l = Math.max(0, Math.min(100, l + amount));
+
+  return `${h} ${s} ${l}%`;
+};
+
+/**
+ * Gets the lightness value from an HSL variable string.
+ */
+export const getLightness = (hslVars: string): number => {
+  const parts = hslVars.split(" ");
+  if (parts.length !== 3) return 50;
+  return parseInt(parts[2]) || 50;
+};
