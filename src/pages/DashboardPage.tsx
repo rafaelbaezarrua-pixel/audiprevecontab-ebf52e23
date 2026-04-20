@@ -28,21 +28,21 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in relative pb-10">
+    <div className="space-y-6 -mt-2 animate-fade-in relative pb-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
         <div>
           <h1 className="header-title flex items-center gap-3">
             Dashboard <span className="text-primary/70">Audipreve</span>
             <FavoriteToggleButton moduleId="dashboard" />
-          </h1>
-          <p className="text-muted-foreground font-medium mt-1">
-            Bem-vindo de volta, <span className="font-bold text-foreground">{userData?.nome?.split(' ')[0]}</span> ! Aqui está o resumo de hoje.
+          </h1>o
+          <p className="text-muted-foreground font-bold mt-1">
+            Bem-vindo de volta, <span className="font-bold text-foreground">{userData?.nome?.split(' ')[0]}</span>! Aqui está o resumo de hoje.
           </p>
         </div>
 
         <div className="flex items-center gap-2 p-1.5 rounded-full bg-muted/30 border border-border/50 shadow-sm">
-          <button className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-full bg-card text-primary shadow-sm ring-1 ring-border transition-all">Vista Geral</button>
-          <button className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-full text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all">Relatórios</button>
+          <button className="px-6 py-2.5 text-[10px] font-black uppercase rounded-full bg-card text-primary shadow-sm ring-1 ring-border transition-all">Vista Geral</button>
+          <button className="px-6 py-2.5 text-[10px] font-black uppercase rounded-full text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all">Relatórios</button>
         </div>
       </div>
 
