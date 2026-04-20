@@ -7,6 +7,7 @@ import {
   LayoutDashboard, Settings, LogOut, ChevronLeft, ChevronRight,
   Bell, Menu, Shield, User, Calendar, Database, FileSignature
 } from "lucide-react";
+import { useAppConfig } from "@/hooks/useAppConfig";
 import logoAudipreve from "@/assets/logo-audipreve.png";
 import { useTheme } from "@/components/theme-provider";
 import NotificationHeader from "./NotificationHeader";
@@ -18,17 +19,21 @@ import { DEFAULT_NAV_ITEMS, NavItemConfig } from "@/constants/navigation";
 import { AlertasInteligentesProvider } from "@/contexts/AlertasInteligentesProvider";
 import { formatDateBR } from "@/lib/utils";
 
-// NavItemConfig moved to src/constants/navigation.tsx
-// navItems list moved to src/constants/navigation.tsx
-
 const AppLayout: React.FC = () => {
   const { user, userData, logout, toggleFavorito } = useAuth();
+  const { config } = useAppConfig();
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
+  useEffect(() => {
+    if (config?.system_title) {
+      document.title = config.system_title;
+    }
+  }, [config]);
+  
   const hasAccess = (moduleKey?: string) => {
     if (!moduleKey) return true;
     if (userData?.isAdmin) return true;
@@ -102,17 +107,25 @@ const AppLayout: React.FC = () => {
           {!collapsed && (
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 flex items-center justify-center">
-                <img src={logoAudipreve} alt="Audipreve" className="w-8 h-8 object-contain brightness-0 dark:invert" />
+                <img 
+                  src={config.system_logo_url || logoAudipreve} 
+                  alt={config.system_title} 
+                  className="w-8 h-8 object-contain brightness-0 dark:invert" 
+                />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-card-foreground tracking-tight">Audipreve</h1>
+                <h1 className="text-lg font-bold text-card-foreground tracking-tight">{config.system_title}</h1>
                 <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Contabilidade</p>
               </div>
             </div>
           )}
           {collapsed && (
             <div className="h-9 w-9 mx-auto flex items-center justify-center">
-              <img src={logoAudipreve} alt="Audipreve" className="w-8 h-8 object-contain mx-auto brightness-0 dark:invert" />
+              <img 
+                src={config.system_logo_url || logoAudipreve} 
+                alt={config.system_title} 
+                className="w-8 h-8 object-contain mx-auto brightness-0 dark:invert" 
+              />
             </div>
           )}
           <button

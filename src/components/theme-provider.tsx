@@ -9,12 +9,15 @@ type ThemeProviderProps = {
     storageKey?: string;
 };
 
+import { adjustLightness, getLightness } from "@/utils/color-utils";
+
 type ThemeProviderState = {
     theme: Theme;
     setTheme: (theme: Theme) => void;
     customColors: any;
     updateCustomColors: (colors: any) => Promise<void>;
     resetCustomColors: () => Promise<void>;
+    setPreviewColors: (colors: any) => void;
 };
 
 const initialState: ThemeProviderState = {
@@ -23,6 +26,7 @@ const initialState: ThemeProviderState = {
     customColors: null,
     updateCustomColors: async () => {},
     resetCustomColors: async () => {},
+    setPreviewColors: () => {},
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
@@ -37,6 +41,7 @@ export function ThemeProvider({
     const [theme, setTheme] = useState<Theme>(
         () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
     );
+    const [previewColors, setPreviewColors] = useState<any>(null);
 
     // Apply main theme class (light/dark)
     useEffect(() => {
@@ -56,60 +61,90 @@ export function ThemeProvider({
         root.classList.add(theme);
     }, [theme]);
 
-    // Apply custom colors from userData
+    // Function to apply a set of colors to the DOM
+    const applyColorsToDOM = (modeColors: any) => {
+        const root = window.document.documentElement;
+        const currentMode = theme === 'system' 
+            ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light')
+            : theme;
+
+        Object.entries(modeColors).forEach(([key, value]) => {
+            if (value) {
+                const hslValue = value as string;
+                root.style.setProperty(key, hslValue);
+
+                // Auto-disable background gradient if a custom background is given
+                if (key === '--background') {
+                    root.style.setProperty('--gradient-bg', 'none');
+                    root.style.setProperty('--surface-bg', `hsl(${hslValue})`);
+                }
+
+                // Autoadapt accessory variables
+                const l = getLightness(hslValue);
+                const isDark = l < 50;
+
+                // 1. Text Contrast (Foregrounds)
+                if (['--primary', '--background', '--sidebar-background', '--card'].includes(key)) {
+                    const textHsl = isDark ? '0 0% 100%' : '240 10% 10%';
+                    if (key === '--primary') root.style.setProperty('--primary-foreground', textHsl);
+                    if (key === '--background') root.style.setProperty('--foreground', textHsl);
+                    if (key === '--sidebar-background') root.style.setProperty('--sidebar-foreground', textHsl);
+                    if (key === '--card') root.style.setProperty('--card-foreground', textHsl);
+                }
+
+                // 2. Harmonic Borders & Muted (based on background)
+                if (key === '--background') {
+                    const borderL = isDark ? l + 8 : l - 8;
+                    const mutedL = isDark ? l + 5 : l - 4;
+                    root.style.setProperty('--border', adjustLightness(hslValue, isDark ? 8 : -10));
+                    root.style.setProperty('--input', adjustLightness(hslValue, isDark ? 8 : -10));
+                    root.style.setProperty('--muted', adjustLightness(hslValue, isDark ? 5 : -4));
+                    root.style.setProperty('--muted-foreground', isDark ? '240 5% 70%' : '240 4% 40%');
+                    root.style.setProperty('--secondary', adjustLightness(hslValue, isDark ? 6 : -5));
+                    root.style.setProperty('--secondary-foreground', isDark ? '0 0% 100%' : '240 10% 10%');
+                    root.style.setProperty('--accent', adjustLightness(hslValue, isDark ? 10 : -8));
+                    root.style.setProperty('--accent-foreground', isDark ? '0 0% 100%' : '240 10% 10%');
+                    
+                    // Sidebar accent harmony
+                    root.style.setProperty('--sidebar-accent', adjustLightness(hslValue, isDark ? 12 : -6));
+                    root.style.setProperty('--sidebar-border', adjustLightness(hslValue, isDark ? 8 : -8));
+                    
+                    // Glassmorphism update
+                    root.style.setProperty('--glass-bg', isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)');
+                }
+
+                // 3. Ring follows Primary
+                if (key === '--primary') {
+                    root.style.setProperty('--ring', hslValue);
+                    root.style.setProperty('--sidebar-primary', hslValue);
+                }
+            }
+        });
+    };
+
+    // Apply colors from userData OR preview
     useEffect(() => {
         const root = window.document.documentElement;
         const currentMode = theme === 'system' 
             ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light')
             : theme;
         
-        const customTheme = userData?.theme_config;
+        const colorsToApply = previewColors || userData?.theme_config?.[currentMode];
         
-        // Clear previous custom properties if any (optional, usually overwriting is enough)
-        if (!customTheme || !customTheme[currentMode]) {
-            // Remove specific custom style properties if they were set
+        if (!colorsToApply) {
             const varsToClear = [
                 '--primary', '--background', '--sidebar-background', '--card', '--accent',
                 '--gradient-bg', '--foreground', '--card-foreground', 
-                '--sidebar-foreground', '--primary-foreground'
+                '--sidebar-foreground', '--primary-foreground', '--border', '--input',
+                '--muted', '--muted-foreground', '--secondary', '--secondary-foreground',
+                '--accent-foreground', '--ring', '--sidebar-primary'
             ];
             varsToClear.forEach(v => root.style.removeProperty(v));
             return;
         }
 
-        const modeColors = customTheme[currentMode];
-        Object.entries(modeColors).forEach(([key, value]) => {
-            if (value) {
-                const hslValue = value as string;
-                root.style.setProperty(key, hslValue);
-
-                // Auto-disable background gradient if a solid custom background is given
-                if (key === '--background') {
-                    root.style.setProperty('--gradient-bg', 'none');
-                }
-
-                // Autoadapt text contrast based on the Lightness (L) parameter of "H S% L%"
-                if (['--primary', '--background', '--sidebar-background', '--card'].includes(key)) {
-                    const parts = hslValue.split(' ');
-                    if (parts.length >= 3) {
-                        const lMatch = parts[2].match(/\d+/);
-                        if (lMatch) {
-                            const l = parseInt(lMatch[0]);
-                            const isDark = l < 50;
-                            // Predefined text contrast variables: Light = White, Dark = Slate 900
-                            const textHsl = isDark ? '0 0% 100%' : '215 25% 15%';
-                            
-                            if (key === '--primary') root.style.setProperty('--primary-foreground', textHsl);
-                            if (key === '--background') root.style.setProperty('--foreground', textHsl);
-                            if (key === '--sidebar-background') root.style.setProperty('--sidebar-foreground', textHsl);
-                            if (key === '--card') root.style.setProperty('--card-foreground', textHsl);
-                        }
-                    }
-                }
-            }
-        });
-
-    }, [userData?.theme_config, theme]);
+        applyColorsToDOM(colorsToApply);
+    }, [userData?.theme_config, theme, previewColors]);
 
     const value = {
         theme,
@@ -130,7 +165,11 @@ export function ThemeProvider({
                     ...colors
                 }
             };
+            setPreviewColors(null); // Clear preview when saving
             await updateThemeConfig(newConfig);
+        },
+        setPreviewColors: (colors: any) => {
+            setPreviewColors(colors);
         },
         resetCustomColors: async () => {
             const currentMode = theme === 'system' 
@@ -139,16 +178,8 @@ export function ThemeProvider({
                 
             const newConfig = { ...(userData?.theme_config || {}) };
             delete newConfig[currentMode];
+            setPreviewColors(null);
             await updateThemeConfig(newConfig);
-            
-            // Immediately clear from style
-            const root = window.document.documentElement;
-            const varsToClear = [
-                '--primary', '--background', '--sidebar-background', '--card', '--accent',
-                '--gradient-bg', '--foreground', '--card-foreground', 
-                '--sidebar-foreground', '--primary-foreground'
-            ];
-            varsToClear.forEach(v => root.style.removeProperty(v));
         }
     };
 

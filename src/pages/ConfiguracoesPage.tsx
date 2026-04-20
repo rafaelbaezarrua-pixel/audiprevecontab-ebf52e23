@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Trash2, Shield, ShieldOff, Plus, CheckCircle2, Users, Building } from "lucide-react";
+import { 
+  Trash2, Shield, ShieldOff, Plus, CheckCircle2, Users, Building,
+  Palette, Layout, Flag, Image as LucideImage, Globe, Save
+} from "lucide-react";
 import { toast } from "sonner";
 import { Navigate, useNavigate } from "react-router-dom";
 import AuditoriaPage from "./AuditoriaPage";
+import { useAppConfig } from "@/hooks/useAppConfig";
+import { SidebarCustomizer } from "@/components/SidebarCustomizer";
+import { ColorCustomizer } from "@/components/ColorCustomizer";
 
 interface Usuario {
   id: string;
@@ -54,13 +60,32 @@ const moduleLabels: Record<string, string> = {
 const ConfiguracoesPage: React.FC = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
+  const { config, updateConfig, loading: configLoading } = useAppConfig();
+  
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [empresas, setEmpresas] = useState<Usuario[]>([]);
   const [consents, setConsents] = useState<any[]>([]);
   const [documents, setDocuments] = useState<LegalDoc[]>([]);
   const [editingDoc, setEditingDoc] = useState<LegalDoc | null>(null);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [activeTab, setActiveTab] = useState<'interna' | 'cliente' | 'auditoria' | 'lgpd'>('interna');
+  const [activeTab, setActiveTab] = useState<'interna' | 'cliente' | 'auditoria' | 'lgpd' | 'personalizacao'>('interna');
+
+  // Local state for branding edits
+  const [brandForm, setBrandForm] = useState({
+    system_title: "",
+    system_logo_url: "",
+    welcome_message: ""
+  });
+
+  useEffect(() => {
+    if (config) {
+      setBrandForm({
+        system_title: config.system_title,
+        system_logo_url: config.system_logo_url,
+        welcome_message: config.welcome_message
+      });
+    }
+  }, [config]);
 
   const loadUsers = async () => {
     try {
@@ -269,10 +294,10 @@ const ConfiguracoesPage: React.FC = () => {
           <Shield size={16} /> Auditoria do Sistema
         </button>
         <button 
-          onClick={() => setActiveTab('lgpd')} 
-          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'lgpd' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+          onClick={() => setActiveTab('personalizacao')} 
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'personalizacao' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
         >
-          <Shield size={16} className="text-emerald-500" /> Gestão LGPD
+          <Palette size={16} /> Personalizar Sistema
         </button>
       </div>
 
@@ -389,6 +414,106 @@ const ConfiguracoesPage: React.FC = () => {
               <p className="text-xs text-emerald-700 font-medium leading-relaxed">
                 <strong>Nota Jurídica:</strong> Este registro constitui prova de consentimento livre, informado e inequívoco conforme exigido pela LGPD (Lei 13.709/2018). O Hash de Integridade garante que o registro não foi alterado após a submissão.
               </p>
+            </div>
+          </div>
+        </div>
+      ) : activeTab === 'personalizacao' ? (
+        <div className="space-y-8 animate-in fade-in duration-500">
+          {/* Identidade Visual */}
+          <div className="card-premium">
+            <h3 className="text-lg font-black text-card-foreground mb-6 flex items-center gap-2 border-b border-border/50 pb-4">
+              <LucideImage className="text-primary" size={20} />
+              Identidade Visual do Portal
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black uppercase text-muted-foreground mb-2 block tracking-widest">Nome do Sistema</label>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                      <Flag size={18} />
+                    </div>
+                    <input 
+                      className="w-full bg-muted/30 border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 p-4 pl-12 rounded-2xl text-sm font-bold transition-all outline-none"
+                      value={brandForm.system_title}
+                      onChange={(e) => setBrandForm({...brandForm, system_title: e.target.value})}
+                      placeholder="Ex: Audipreve Contabilidade"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-muted-foreground mb-2 block tracking-widest">URL do Logotipo (PNG/SVG)</label>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                      <Globe size={18} />
+                    </div>
+                    <input 
+                      className="w-full bg-muted/30 border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 p-4 pl-12 rounded-2xl text-sm font-bold transition-all outline-none"
+                      value={brandForm.system_logo_url}
+                      onChange={(e) => setBrandForm({...brandForm, system_logo_url: e.target.value})}
+                      placeholder="https://exemplo.com/logo.png"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-muted-foreground mb-2 block tracking-widest">Mensagem de Boas-vindas</label>
+                  <textarea 
+                    className="w-full bg-muted/30 border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 p-4 rounded-2xl text-sm font-medium transition-all outline-none min-h-[100px]"
+                    value={brandForm.welcome_message}
+                    onChange={(e) => setBrandForm({...brandForm, welcome_message: e.target.value})}
+                    placeholder="Mensagem exibida na tela de login..."
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <button 
+                    onClick={() => updateConfig(brandForm)}
+                    className="button-premium group flex items-center gap-2"
+                  >
+                    <Save size={18} className="group-hover:rotate-12 transition-transform" />
+                    Salvar Identidade
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center justify-center p-8 bg-muted/20 border border-dashed border-border rounded-3xl relative overflow-hidden">
+                <div className="absolute top-4 left-4 text-[10px] font-black uppercase text-muted-foreground opacity-30">Preview do Logo</div>
+                {brandForm.system_logo_url ? (
+                  <img src={brandForm.system_logo_url} alt="Preview" className="max-w-[200px] max-h-[80px] object-contain drop-shadow-md" />
+                ) : (
+                  <div className="flex flex-col items-center gap-3 text-muted-foreground/30">
+                    <LucideImage size={64} strokeWidth={1} />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-center">Nenhum logo externo definido<br/>(Usando padrão local)</p>
+                  </div>
+                )}
+                <div className="mt-8 text-center">
+                  <p className="text-xl font-bold text-card-foreground">{brandForm.system_title || "Audipreve"}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1">Slogan ou Descrição</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Customização de Cores */}
+            <div className="card-premium h-fit">
+              <h3 className="text-lg font-black text-card-foreground mb-6 flex items-center gap-2 border-b border-border/50 pb-4">
+                <Palette className="text-primary" size={20} />
+                Cores do Sistema
+              </h3>
+              <ColorCustomizer />
+            </div>
+
+            {/* Customização de Sidebar */}
+            <div className="card-premium">
+              <h3 className="text-lg font-black text-card-foreground mb-6 flex items-center gap-2 border-b border-border/50 pb-4">
+                <Layout className="text-primary" size={20} />
+                Menu de Navegação
+              </h3>
+              <SidebarCustomizer />
             </div>
           </div>
         </div>

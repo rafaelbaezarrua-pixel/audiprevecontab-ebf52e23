@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export const ColorCustomizer: React.FC = () => {
     const { updateThemeConfig } = useAuth();
-    const { theme, customColors, updateCustomColors, resetCustomColors } = useTheme();
+    const { theme, customColors, updateCustomColors, resetCustomColors, setPreviewColors } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
 
     // Internal state to track changes before saving
@@ -30,19 +30,18 @@ export const ColorCustomizer: React.FC = () => {
     });
 
     // Default CSS values (placeholders for reset or if not set)
-    // These are approximations of the defaults in index.css
     const defaults: any = {
         light: {
-            '--primary': '217 91% 60%',
-            '--background': '210 20% 98%',
-            '--sidebar-background': '0 0% 100%',
+            '--primary': '211 100% 50%',
+            '--background': '0 0% 98%',
+            '--sidebar-background': '240 5% 96%',
             '--card': '0 0% 100%',
         },
         dark: {
-            '--primary': '217 91% 60%',
-            '--background': '222 47% 11%',
-            '--sidebar-background': '222 47% 11%',
-            '--card': '215 28% 17%',
+            '--primary': '211 100% 56%',
+            '--background': '240 6% 7%',
+            '--sidebar-background': '240 6% 10%',
+            '--card': '240 5% 12%',
         }
     };
 
@@ -56,56 +55,56 @@ export const ColorCustomizer: React.FC = () => {
             name: "Roxo Noturno",
             color: "bg-purple-500",
             config: {
-                light: { '--primary': '300 59% 25%', '--background': '300 10% 98%', '--sidebar-background': '0 0% 100%', '--card': '0 0% 100%' },
-                dark: { '--primary': '300 59% 25%', '--background': '300 30% 12%', '--sidebar-background': '300 30% 15%', '--card': '300 25% 20%' }
+                light: { '--primary': '270 70% 50%', '--background': '270 20% 98%', '--sidebar-background': '270 10% 96%', '--card': '0 0% 100%' },
+                dark: { '--primary': '270 70% 60%', '--background': '270 30% 8%', '--sidebar-background': '270 25% 12%', '--card': '270 20% 15%' }
             }
         },
         {
-            name: "Fern Green",
+            name: "Fern Green (Original)",
             color: "bg-[#4F7942]",
             config: {
-                light: { '--primary': '106 29% 37%', '--background': '106 10% 98%', '--sidebar-background': '0 0% 100%', '--card': '0 0% 100%' },
+                light: { '--primary': '106 29% 37%', '--background': '106 10% 98%', '--sidebar-background': '106 5% 96%', '--card': '0 0% 100%' },
                 dark: { '--primary': '106 29% 37%', '--background': '106 30% 10%', '--sidebar-background': '106 25% 15%', '--card': '106 20% 20%' }
             }
         },
         {
-            name: "Pôr do Sol",
+            name: "Laranja Solar",
             color: "bg-orange-500",
             config: {
-                light: { '--primary': '24 90% 55%', '--background': '30 10% 98%', '--sidebar-background': '0 0% 100%', '--card': '0 0% 100%' },
-                dark: { '--primary': '24 90% 55%', '--background': '24 30% 12%', '--sidebar-background': '24 30% 16%', '--card': '24 25% 20%' }
+                light: { '--primary': '24 95% 53%', '--background': '24 15% 98%', '--sidebar-background': '24 10% 96%', '--card': '0 0% 100%' },
+                dark: { '--primary': '24 90% 58%', '--background': '24 35% 8%', '--sidebar-background': '24 30% 12%', '--card': '24 25% 16%' }
             }
         },
         {
-            name: "Lavanda Pastel",
-            color: "bg-[#B19CD9]",
+            name: "Lavanda",
+            color: "bg-indigo-400",
             config: {
-                light: { '--primary': '260 40% 65%', '--background': '260 15% 98%', '--sidebar-background': '0 0% 100%', '--card': '0 0% 100%' },
-                dark: { '--primary': '260 40% 65%', '--background': '260 20% 12%', '--sidebar-background': '260 20% 15%', '--card': '260 15% 18%' }
+                light: { '--primary': '245 58% 66%', '--background': '245 20% 99%', '--sidebar-background': '0 0% 100%', '--card': '0 0% 100%' },
+                dark: { '--primary': '245 60% 70%', '--background': '245 40% 8%', '--sidebar-background': '245 35% 12%', '--card': '245 30% 15%' }
             }
         },
         {
-            name: "Menta Pastel",
-            color: "bg-[#98FF98]",
+            name: "Rosa Bubblegum",
+            color: "bg-pink-500",
             config: {
-                light: { '--primary': '140 50% 60%', '--background': '140 15% 98%', '--sidebar-background': '0 0% 100%', '--card': '0 0% 100%' },
-                dark: { '--primary': '140 50% 60%', '--background': '140 20% 10%', '--sidebar-background': '140 20% 14%', '--card': '140 15% 18%' }
+                light: { '--primary': '330 81% 60%', '--background': '330 15% 99%', '--sidebar-background': '0 0% 100%', '--card': '0 0% 100%' },
+                dark: { '--primary': '330 75% 65%', '--background': '330 40% 10%', '--sidebar-background': '330 35% 14%', '--card': '330 30% 18%' }
             }
         },
         {
-            name: "Pêssego Pastel",
-            color: "bg-[#FFDAB9]",
+            name: "Slate Modern",
+            color: "bg-slate-700",
             config: {
-                light: { '--primary': '20 70% 65%', '--background': '20 15% 98%', '--sidebar-background': '0 0% 100%', '--card': '0 0% 100%' },
-                dark: { '--primary': '20 70% 65%', '--background': '20 20% 12%', '--sidebar-background': '20 20% 15%', '--card': '20 15% 18%' }
+                light: { '--primary': '215 25% 27%', '--background': '210 20% 98%', '--sidebar-background': '210 10% 96%', '--card': '0 0% 100%' },
+                dark: { '--primary': '215 20% 80%', '--background': '222 47% 4%', '--sidebar-background': '222 47% 8%', '--card': '222 40% 12%' }
             }
         },
         {
-            name: "Oceano Pastel",
-            color: "bg-[#AEC6CF]",
+            name: "Amora",
+            color: "bg-fuchsia-700",
             config: {
-                light: { '--primary': '200 40% 65%', '--background': '200 15% 98%', '--sidebar-background': '0 0% 100%', '--card': '0 0% 100%' },
-                dark: { '--primary': '200 40% 65%', '--background': '200 25% 12%', '--sidebar-background': '200 25% 15%', '--card': '200 20% 18%' }
+                light: { '--primary': '320 70% 45%', '--background': '320 10% 98%', '--sidebar-background': '320 5% 96%', '--card': '0 0% 100%' },
+                dark: { '--primary': '320 65% 55%', '--background': '320 40% 7%', '--sidebar-background': '320 35% 11%', '--card': '320 30% 15%' }
             }
         }
     ];
@@ -118,17 +117,35 @@ export const ColorCustomizer: React.FC = () => {
 
     const handleColorChange = (mode: 'light' | 'dark', variable: string, hex: string) => {
         const hslValue = hexToHSLVariables(hex);
+        const updatedModeColors = {
+            ...(localColors[mode] || {}),
+            [variable]: hslValue
+        };
+
         setLocalColors((prev: any) => ({
             ...prev,
-            [mode]: {
-                ...(prev[mode] || {}),
-                [variable]: hslValue
-            }
+            [mode]: updatedModeColors
         }));
+
+        // Apply preview instantly
+        const currentMode = theme === 'system' 
+            ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light')
+            : theme;
+
+        if (mode === currentMode) {
+            setPreviewColors(updatedModeColors);
+        }
     };
 
     const handleApplyPreset = async (presetConfig: any) => {
         setLocalColors(presetConfig);
+        
+        const currentMode = theme === 'system' 
+            ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light')
+            : theme;
+            
+        setPreviewColors(presetConfig[currentMode]);
+
         try {
             await updateThemeConfig(presetConfig);
             toast.success("Tema aplicado com sucesso!");
