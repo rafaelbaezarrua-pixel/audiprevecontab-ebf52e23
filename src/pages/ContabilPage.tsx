@@ -159,7 +159,7 @@ const ContabilPage: React.FC = () => {
 
       <div className="bg-black/[0.03] dark:bg-white/[0.02] border border-border/10 rounded-[2.5rem] shadow-inner p-1 pb-4 relative">
         {/* Main Content -> Agora Accordions com Cabeçalho Rico */}
-        <div className="hidden md:grid grid-cols-[2fr_1.2fr_1fr_1fr_1.2fr_60px] px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 italic mb-0 relative z-20">
+        <div className="hidden md:grid grid-cols-[2fr_1.2fr_1fr_1fr_1.2fr_60px] px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-0 relative z-20">
           <span>Empresa</span>
           <span className="text-center">Competência</span>
           <span className="text-center">Movimento</span>
@@ -194,7 +194,7 @@ const ContabilPage: React.FC = () => {
                   )}>
                     {empresa.nome_empresa}
                   </span>
-                  <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-widest italic">
+                  <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-widest">
                     CNPJ: {empresa.cnpj}
                   </span>
                 </div>
@@ -293,7 +293,7 @@ const ContabilPage: React.FC = () => {
                       { id: 'integracao_folha_fiscal_status', label: 'Integração Folha/Fiscal' },
                     ].map(field => (
                       <div key={field.id} className="p-3 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl flex flex-col gap-1.5 group/field hover:border-primary/30 transition-all shadow-inner">
-                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest ml-1 opacity-60 italic">{field.label}</span>
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest ml-1 opacity-60">{field.label}</span>
                         <select 
                           className="w-full h-10 px-3 bg-card border border-border/10 rounded-lg text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-sm cursor-pointer"
                           value={editForm[empresa.id]?.[field.id] || "pendente"}
@@ -318,7 +318,7 @@ const ContabilPage: React.FC = () => {
                       { id: 'notas_explicativas_status', label: 'Notas Explicativas' },
                     ].map(field => (
                       <div key={field.id} className="p-3 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl flex flex-col gap-1.5 group/field hover:border-primary/30 transition-all shadow-inner">
-                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest ml-1 opacity-60 italic">{field.label}</span>
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest ml-1 opacity-60">{field.label}</span>
                         <select 
                           className="w-full h-10 px-3 bg-card border border-border/10 rounded-lg text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-sm cursor-pointer"
                           value={editForm[empresa.id]?.[field.id] || "pendente"}
@@ -339,7 +339,7 @@ const ContabilPage: React.FC = () => {
                       { id: 'ibge_status', label: 'PESQUISA IBGE' },
                     ].map(field => (
                       <div key={field.id} className="p-3 bg-black/5 dark:bg-white/5 border border-border/10 rounded-xl flex flex-col gap-1.5 group/field hover:border-primary/30 transition-all shadow-inner">
-                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest ml-1 opacity-60 italic">{field.label}</span>
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest ml-1 opacity-60">{field.label}</span>
                         <select 
                           className="w-full h-10 px-3 bg-card border border-border/10 rounded-lg text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-sm cursor-pointer"
                           value={editForm[empresa.id]?.[field.id] || "pendente"}
@@ -358,11 +358,11 @@ const ContabilPage: React.FC = () => {
                         <div className="p-4 bg-black/5 border border-border/10 rounded-2xl relative shadow-inner">
                           <div className="flex items-center gap-2 border-b border-border/5 pb-2 mb-4">
                              <BarChart3 size={14} className="text-primary" />
-                             <span className="text-[10px] font-black uppercase text-foreground tracking-widest italic">Análise de Índices</span>
+                             <span className="text-[10px] font-black uppercase text-foreground tracking-widest">Análise de Índices</span>
                           </div>
                           <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-1.5">
-                              <label className="text-[9px] font-black text-foreground uppercase tracking-widest pl-1 italic">Liquidez Corrente</label>
+                              <label className="text-[9px] font-black text-foreground uppercase tracking-widest pl-1">Liquidez Corrente</label>
                               <input 
                                 type="number" 
                                 step="0.01" 
@@ -372,7 +372,7 @@ const ContabilPage: React.FC = () => {
                               />
                             </div>
                             <div className="space-y-1.5">
-                              <label className="text-[9px] font-black text-foreground uppercase tracking-widest pl-1 italic">Endividamento</label>
+                              <label className="text-[9px] font-black text-foreground uppercase tracking-widest pl-1">Endividamento</label>
                               <input 
                                 type="number" 
                                 step="0.01" 
@@ -386,7 +386,7 @@ const ContabilPage: React.FC = () => {
                         
                         <div className="p-4 bg-black/5 border border-border/10 rounded-2xl flex flex-col justify-between shadow-inner">
                           <div className="space-y-3">
-                            <span className="text-[10px] font-black text-foreground uppercase tracking-widest block pl-1 italic">Distribuição Lucros</span>
+                            <span className="text-[10px] font-black text-foreground uppercase tracking-widest block pl-1">Distribuição Lucros</span>
                             <select 
                               className="w-full h-10 px-3 bg-card border border-border/10 rounded-xl text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-sm cursor-pointer"
                               value={editForm[empresa.id]?.distribuicao_lucros_status || "pendente"}
@@ -397,12 +397,12 @@ const ContabilPage: React.FC = () => {
                               ))}
                             </select>
                           </div>
-                          <p className="text-[8px] text-muted-foreground/40 font-black mt-4 uppercase tracking-[0.2em] italic">Dividendos e JCP</p>
+                          <p className="text-[8px] text-muted-foreground/40 font-black mt-4 uppercase tracking-[0.2em]">Dividendos e JCP</p>
                         </div>
 
                         <div className="p-4 bg-black/5 border border-border/10 rounded-2xl flex flex-col justify-between shadow-inner">
                           <div className="space-y-3">
-                            <span className="text-[10px] font-black text-foreground uppercase tracking-widest block pl-1 italic">Emissão DECORE</span>
+                            <span className="text-[10px] font-black text-foreground uppercase tracking-widest block pl-1">Emissão DECORE</span>
                             <select 
                               className="w-full h-10 px-3 bg-card border border-border/10 rounded-xl text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-sm cursor-pointer"
                               value={editForm[empresa.id]?.decore_status || "pendente"}
@@ -413,7 +413,7 @@ const ContabilPage: React.FC = () => {
                               ))}
                             </select>
                           </div>
-                          <p className="text-[8px] text-muted-foreground/40 font-black mt-4 uppercase tracking-[0.2em] italic">Rendimentos Sócios</p>
+                          <p className="text-[8px] text-muted-foreground/40 font-black mt-4 uppercase tracking-[0.2em]">Rendimentos Sócios</p>
                         </div>
                      </div>
                   </TabsContent>
@@ -441,7 +441,7 @@ const ContabilPage: React.FC = () => {
         {filteredEmpresas.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 bg-black/[0.02] dark:bg-white/[0.01] rounded-xl border border-dashed border-border/10">
             <Search size={32} className="text-muted-foreground/10 mb-4" />
-            <p className="text-[12px] font-black text-muted-foreground/30 uppercase tracking-widest italic">Nenhuma empresa encontrada</p>
+            <p className="text-[12px] font-black text-muted-foreground/30 uppercase tracking-widest">Nenhuma empresa encontrada</p>
           </div>
         )}
       </div>

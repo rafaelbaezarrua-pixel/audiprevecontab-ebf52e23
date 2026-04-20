@@ -218,6 +218,8 @@
 @layer base {
   body {
     @apply bg-background text-foreground font-body font-normal antialiased;
+    font-family: 'Ubuntu', sans-serif !important;
+    font-style: normal !important;
     font-size: 14px;
     line-height: 1.5;
     background-color: var(--surface-bg);

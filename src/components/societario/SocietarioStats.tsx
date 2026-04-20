@@ -34,15 +34,18 @@ export const SocietarioStats = ({ stats }: SocietarioStatsProps) => {
       {items.map((s) => (
         <div 
           key={s.label} 
-          className="flex-1 min-w-[120px] h-11 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl flex items-center justify-between px-4 group hover:bg-black/20 dark:hover:bg-white/10 transition-all shadow-inner"
+          className="flex-1 min-w-[140px] h-20 bg-card border border-border/10 rounded-2xl flex items-center px-5 group hover:bg-black/[0.02] dark:hover:bg-white/[0.05] transition-all shadow-sm border-b-2 border-b-primary/5 gap-4"
         >
-          <div className="flex items-center gap-3">
-            <div className={`p-1.5 rounded-lg ${s.bg} ${s.cls} shadow-sm active:scale-90 transition-transform`}>
-              <s.icon size={13} />
-            </div>
-            <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-widest">{s.label}</span>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.bg} ${s.cls} shadow-sm active:scale-90 transition-transform`}>
+            <s.icon size={18} />
           </div>
-          <span className={`text-[13px] font-black ${s.cls} tabular-nums group-hover:scale-110 transition-transform`}>{s.value}</span>
+          
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.15em] truncate">{s.label}</span>
+            <span className={`text-[20px] font-black ${s.cls} tabular-nums leading-none tracking-tighter group-hover:scale-105 origin-left transition-transform`}>
+              {s.value}
+            </span>
+          </div>
         </div>
       ))}
     </div>
