@@ -252,7 +252,7 @@ const SocietarioPage: React.FC = () => {
             >
               <Activity size={12} /> Processos
               {stats.processosAtivos > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[7px] font-black text-white shadow-sm ring-2 ring-background">{stats.processosAtivos}</span>
+                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[7px] font-black text-primary-foreground shadow-sm ring-2 ring-background">{stats.processosAtivos}</span>
               )}
             </button>
           </div>
@@ -383,7 +383,7 @@ const SocietarioPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowNovoProcesso(true)}
-                className="h-10 bg-primary text-white px-6 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center gap-2"
+                className="h-10 bg-primary text-primary-foreground px-6 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center gap-2"
               >
                 <Plus size={18} /> INICIAR PROCESSO
               </button>

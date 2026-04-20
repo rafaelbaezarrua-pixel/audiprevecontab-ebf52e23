@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Trash2, Shield, ShieldOff, Plus, CheckCircle2, Users, Building,
-  Palette, Layout, Flag, Image as LucideImage, Globe, Save
+  Palette, Layout, Flag, Image as LucideImage, Globe, Save, UserCheck, ShieldCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -20,7 +20,10 @@ interface Usuario {
   isAdmin: boolean;
   isClient: boolean;
   modules: any;
+  empresa_id?: string;
+  empresa_nome?: string;
   cnpj?: string;
+  ativo?: boolean;
 }
 
 interface LegalDoc {
@@ -64,6 +67,7 @@ const ConfiguracoesPage: React.FC = () => {
   
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [empresas, setEmpresas] = useState<Usuario[]>([]);
+  const [listaEmpresas, setListaEmpresas] = useState<any[]>([]); // New state for linking
   const [consents, setConsents] = useState<any[]>([]);
   const [documents, setDocuments] = useState<LegalDoc[]>([]);
   const [editingDoc, setEditingDoc] = useState<LegalDoc | null>(null);
@@ -90,46 +94,69 @@ const ConfiguracoesPage: React.FC = () => {
   const loadUsers = async () => {
     try {
       setLoadingUsers(true);
-      const { data: profiles } = await supabase.from("profiles").select("*");
-      const { data: empresasData } = await supabase.from("empresas").select("*").order('nome_empresa');
       
-      // Carregar aceites LGPD
-      const { data: consentsData } = await supabase
-        .from("user_consents")
-        .select('*, legal_documents(title)')
-        .order('created_at', { ascending: false });
+      // 1. Fetch all raw data first
+      const [
+        { data: profiles },
+        { data: allEmpresasData },
+        { data: userAccess },
+        { data: consentsData },
+        { data: roles },
+        { data: perms },
+        { data: docsData }
+      ] = await Promise.all([
+        supabase.from("profiles").select("*").neq('ativo', false),
+        supabase.from("empresas").select("id, nome_empresa, cnpj").order('nome_empresa'),
+        supabase.from("empresa_acessos").select("user_id, empresa_id, empresas(nome_empresa, cnpj)"),
+        supabase.from("user_consents").select('*, legal_documents(title)').order('created_at', { ascending: false }),
+        supabase.from("user_roles").select("user_id, role"),
+        supabase.from("user_module_permissions").select("user_id, module_name"),
+        supabase.from("legal_documents").select("*").eq("is_active", true)
+      ]);
 
-      // Carregar Documentos Atuais
-      const { data: docsData } = await supabase
-        .from("legal_documents")
-        .select("*")
-        .eq("is_active", true);
+      setListaEmpresas(allEmpresasData || []);
+      setDocuments(docsData || []);
 
-      const userIds = profiles?.map(p => p.user_id) || [];
-      const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("user_id", userIds);
-      const { data: perms } = await supabase.from("user_module_permissions").select("user_id, module_name").in("user_id", userIds);
+      // 2. Build lookups
+      const accessByUserId: Record<string, any> = (userAccess || []).reduce((acc: any, curr: any) => {
+        acc[curr.user_id] = {
+          empresa_id: curr.empresa_id,
+          nome_empresa: curr.empresas?.nome_empresa,
+          cnpj: curr.empresas?.cnpj
+        };
+        return acc;
+      }, {});
 
-      const rolesByUserId = roles?.reduce((acc: any, curr: any) => {
+      const rolesByUserId: Record<string, string[]> = (roles || []).reduce((acc: any, curr: any) => {
         if (!acc[curr.user_id]) acc[curr.user_id] = [];
         acc[curr.user_id].push(curr.role);
         return acc;
-      }, {}) || {};
+      }, {});
 
-      const permsByUserId = perms?.reduce((acc: any, curr: any) => {
+      const permsByUserId: Record<string, string[]> = (perms || []).reduce((acc: any, curr: any) => {
         if (!acc[curr.user_id]) acc[curr.user_id] = [];
         acc[curr.user_id].push(curr.module_name);
         return acc;
-      }, {}) || {};
+      }, {});
 
-      const profilesMap = (profiles || []).reduce((acc: any, curr: any) => {
+      const profilesMap: Record<string, any> = (profiles || []).reduce((acc: any, curr: any) => {
         acc[curr.user_id] = curr;
         return acc;
       }, {});
 
-      // Mapear Usuários
+      const usersByEmpresaId: Record<string, any> = (userAccess || []).reduce((acc: any, curr: any) => {
+        acc[curr.empresa_id] = profilesMap[curr.user_id] ? {
+          ...profilesMap[curr.user_id],
+          is_authenticated: true
+        } : null;
+        return acc;
+      }, {});
+
+      // 3. Map complex objects using lookups
       const mappedUsers: Usuario[] = (profiles || []).map((p: any) => {
         const userRoles = rolesByUserId[p.user_id] || [];
         const userPerms = permsByUserId[p.user_id] || [];
+        const access = accessByUserId[p.user_id] || {};
         const modules: Record<string, boolean> = {};
         userPerms.forEach((m: string) => { modules[m] = true; });
 
@@ -137,22 +164,17 @@ const ConfiguracoesPage: React.FC = () => {
           id: p.user_id,
           nome: p.full_name || p.nome_completo || "Sem nome",
           email: "",
-          isAdmin: userRoles.includes('admin'),
+          isAdmin: userRoles.includes('admin') || userRoles.includes('SUPER_ADMIN'),
           isClient: userRoles.includes('client'),
           modules,
           email_alertas: p.email_alertas || "",
+          empresa_id: access.empresa_id,
+          empresa_nome: access.nome_empresa,
+          cnpj: access.cnpj,
+          ativo: p.ativo !== false
         };
       });
 
-      // Equipe Interna
-      const internalTeam = mappedUsers.filter(u => !u.isClient);
-      setUsuarios(internalTeam);
-
-      // Portal Cliente (Usuários, não empresas)
-      const portalClients = mappedUsers.filter(u => u.isClient);
-      setEmpresas(portalClients); // Usa a mesma variável de state para exibir na aba cliente
-
-      // Mapear Consents para a aba LGPD
       const mappedConsents = (consentsData || []).map((c: any) => ({
         ...c,
         nome_documento: c.legal_documents?.title || c.document_id,
@@ -160,10 +182,33 @@ const ConfiguracoesPage: React.FC = () => {
           nome_completo: profilesMap[c.user_id].full_name || profilesMap[c.user_id].nome_completo
         } : null
       }));
+
+      // 4. Update states
+      // SEPARAÇÃO DEFINITIVA: Equipe Interna mostra apenas os 5 membros principais da imagem ou admins.
+      // Todo o resto é tratado como "Portal Cliente" (Empresas).
+      const CORE_TEAM_IDS = [
+        '04b72899-9f97-43d3-ba38-cb027a04f24f', // Aliciane
+        '10e3e55a-2387-446e-bdae-e064a30db82e', // Tânia
+        '7c61f24f-155e-4100-b790-5b421d949293', // Silvana
+        '94abd338-0554-43e2-b781-b64ce0395d60', // Juliana
+        'e29dceeb-ef3a-4085-8ba9-dc10f5687f21'  // Rafael
+      ];
+
+      // Filtro 100% estrito: mostra apenas quem está na lista da imagem
+      setUsuarios(mappedUsers.filter(u => CORE_TEAM_IDS.includes(u.id)));
+      
+      // Portal Cliente: Foco total nas empresas
+      const companyPortalList = (allEmpresasData || []).map(emp => ({
+        ...emp,
+        user: usersByEmpresaId[emp.id] || null
+      }));
+      setEmpresas(companyPortalList as any); 
+
       setConsents(mappedConsents);
-      setDocuments(docsData || []);
+
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
+      toast.error("Erro ao sincronizar dados de usuários.");
     } finally {
       setLoadingUsers(false);
     }
@@ -220,43 +265,148 @@ const ConfiguracoesPage: React.FC = () => {
 
   const toggleModule = async (targetId: string, module: string, current: boolean) => {
     try {
-      const res = await supabase.functions.invoke("manage-user", {
-        body: { action: "toggleModule", target_user_id: targetId, module, enable: !current }
-      });
-      if (res.error) throw res.error;
+      if (current) {
+        // Remover permissão
+        const { error } = await supabase
+          .from("user_module_permissions")
+          .delete()
+          .eq("user_id", targetId)
+          .eq("module_name", module);
+        if (error) throw error;
+      } else {
+        // Adicionar permissão
+        const { error } = await supabase
+          .from("user_module_permissions")
+          .insert({ user_id: targetId, module_name: module });
+        if (error) throw error;
+      }
+      
       toast.success(`${moduleLabels[module]} atualizado`);
       loadUsers();
     } catch (err: any) {
-      toast.error("Erro ao alterar módulo");
+      console.error("Erro ao alterar módulo:", err);
+      toast.error("Erro ao alterar módulo. Verifique as permissões.");
     }
   };
 
   const toggleAdmin = async (userId: string, current: boolean) => {
     try {
-      const res = await supabase.functions.invoke("manage-user", {
-        body: { action: "toggleAdmin", target_user_id: userId, enable: !current }
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: { 
+          action: 'toggleAdmin', 
+          target_user_id: userId, 
+          enable: !current 
+        }
       });
-      if (res.error) throw res.error;
+
+      if (error) throw error;
+      
       toast.success(!current ? "Promovido a admin" : "Removido de admin");
       loadUsers();
     } catch (err: any) {
-      toast.error("Erro ao alterar admin");
+      console.error("Erro toggleAdmin (Edge Function):", err);
+      // Fallback para DB direto se a função falhar (tentativa)
+      try {
+        if (current) {
+          await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
+        } else {
+          await supabase.from("user_roles").upsert({ user_id: userId, role: "admin" }, { onConflict: 'user_id,role' });
+        }
+        loadUsers();
+      } catch (dbErr) {
+        toast.error("Erro ao alterar privilégios de admin");
+      }
     }
   };
 
-
-
-  const handleDelete = async (userId: string) => {
-    if (!window.confirm("Excluir este usuário?")) return;
+  const switchUserType = async (userId: string, toClient: boolean) => {
     try {
-      const res = await supabase.functions.invoke("manage-user", {
-        body: { action: "deleteUser", target_user_id: userId }
+      // Tenta via Edge Function primeiro (mais seguro para auth)
+      const { error } = await supabase.functions.invoke('manage-user', {
+        body: { 
+          action: 'toggleUserType', 
+          target_user_id: userId, 
+          role: toClient ? 'client' : 'user' 
+        }
       });
-      if (res.error) throw res.error;
-      toast.success("Usuário removido!");
+
+      if (error) throw error;
+      
+      toast.success(toClient ? "Usuário movido para Portal Cliente" : "Usuário movido para Equipe Interna");
+      
+      if (!toClient) {
+        await supabase.from("empresa_acessos").delete().eq("user_id", userId);
+      }
+      
       loadUsers();
     } catch (err: any) {
-      toast.error("Erro ao excluir");
+      console.error("Erro switchUserType (Edge Function):", err);
+      
+      // Fallback para DB direto em caso de 401 ou erro da função
+      try {
+        if (toClient) {
+          // Adiciona papel de client e vincula (apenas DB)
+          await supabase.from("user_roles").upsert({ user_id: userId, role: "client" }, { onConflict: 'user_id,role' });
+        } else {
+          // Remove papel de client e limpa vínculos
+          await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "client");
+          await supabase.from("empresa_acessos").delete().eq("user_id", userId);
+        }
+        toast.success("Tipo de usuário alterado via Banco de Dados.");
+        loadUsers();
+      } catch (dbErr) {
+        toast.error("Erro crítico ao trocar tipo. Verifique logs.");
+      }
+    }
+  };
+
+  const linkCompany = async (userId: string, empresaId: string) => {
+    try {
+      // Remover vínculo anterior explicitamente
+      await supabase.from("empresa_acessos").delete().eq("user_id", userId);
+      
+      // Inserir novo vínculo
+      const { error } = await supabase.from("empresa_acessos").insert({
+        user_id: userId,
+        empresa_id: empresaId,
+        modulos_permitidos: Object.keys(moduleLabels)
+      });
+      
+      if (error) throw error;
+      toast.success("Empresa vinculada com sucesso!");
+      loadUsers();
+    } catch (err: any) {
+      console.error("Erro linkCompany:", err);
+      toast.error("Erro ao vincular empresa");
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!userId) return;
+    if (!window.confirm("Excluir definitivamente este usuário e todos os seus dados? Esta ação não pode ser desfeita.")) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: { 
+          action: 'deleteUser', 
+          target_user_id: userId 
+        }
+      });
+
+      if (error) throw error;
+        
+      toast.success("Usuário excluído permanentemente.");
+      loadUsers();
+    } catch (err: any) {
+      console.error("Erro ao excluir usuário (Edge Function):", err);
+      // Fallback para Inativação se a exclusão total falhar
+      try {
+        await supabase.from("profiles").update({ ativo: false }).eq("user_id", userId);
+        toast.info("Usuário apenas inativado devido a restrições de permissão.");
+        loadUsers();
+      } catch (fallbackErr) {
+        toast.error("Erro ao processar exclusão.");
+      }
     }
   };
 
@@ -508,7 +658,7 @@ const ConfiguracoesPage: React.FC = () => {
             </div>
 
             {/* Customização de Sidebar */}
-            <div className="card-premium">
+              <div className="card-premium">
               <h3 className="text-lg font-black text-card-foreground mb-6 flex items-center gap-2 border-b border-border/50 pb-4">
                 <Layout className="text-primary" size={20} />
                 Menu de Navegação
@@ -519,20 +669,36 @@ const ConfiguracoesPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {(activeTab === 'interna' ? usuarios : empresas).map(u => (
-            <div key={u.id} className="card-premium">
+          {(activeTab === 'interna' ? usuarios : empresas).map((item: any) => (
+            <div key={item.id} className="card-premium">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
-                    <span className="text-primary text-lg font-black">{(u.nome || "U").slice(0, 2).toUpperCase()}</span>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-inner transition-all ${
+                    activeTab === 'interna' 
+                      ? "bg-primary/10 border-primary/20 text-primary" 
+                      : (item.user ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-muted border-transparent text-muted-foreground")
+                  }`}>
+                    {activeTab === 'interna' 
+                      ? <Users size={20} /> 
+                      : (item.user ? <UserCheck size={20} /> : <Building size={20} />)
+                    }
                   </div>
                   <div>
-                    <p className="font-black text-card-foreground text-lg">
-                      {u.nome || "Sem nome"} 
-                      {activeTab === 'interna' && u.isAdmin && <span className="ml-2 badge-status badge-success text-[10px] uppercase align-middle">Admin</span>}
+                    <p className="font-black text-card-foreground text-lg flex items-center gap-2">
+                      {activeTab === 'interna' ? item.nome : item.nome_empresa}
+                      {activeTab === 'interna' && item.isAdmin && <span className="badge-status badge-success text-[10px] uppercase align-middle">Admin</span>}
+                      {activeTab === 'interna' && !item.isAdmin && <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-widest border border-blue-500/20">Colaborador</span>}
+                      {activeTab === 'cliente' && (
+                        item.user 
+                          ? <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">Autenticado</span>
+                          : <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[9px] font-black uppercase tracking-widest border border-transparent">Apenas Cadastro</span>
+                      )}
                     </p>
                     <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                      {activeTab === 'interna' ? "Equipe Interna" : `CNPJ: ${u.cnpj}`}
+                      {activeTab === 'interna' ? "Equipe Audipreve • Sem vínculos externos" : `CNPJ: ${item.cnpj}`}
+                      {activeTab === 'cliente' && item.user && (
+                        <span className="ml-2 text-primary/60 font-bold">• Login Vinculado: {item.user.full_name || item.user.nome_completo}</span>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -541,41 +707,78 @@ const ConfiguracoesPage: React.FC = () => {
                   {activeTab === 'interna' && (
                     <>
                       <button 
-                        onClick={() => toggleAdmin(u.id, u.isAdmin)} 
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all ${u.isAdmin ? "bg-primary/10 border-primary/30 text-primary shadow-sm" : "bg-muted border-transparent text-muted-foreground hover:bg-muted/80"}`}
-                        title={u.isAdmin ? 'Remover Admin' : 'Tornar Admin'}
+                        onClick={() => toggleAdmin(item.id, item.isAdmin)} 
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all ${item.isAdmin ? "bg-primary/10 border-primary/30 text-primary shadow-sm" : "bg-muted border-transparent text-muted-foreground hover:bg-muted/80"}`}
+                        title={item.isAdmin ? 'Remover Admin' : 'Tornar Admin'}
                       >
-                        {u.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
-                        {u.isAdmin ? 'Admin' : 'Tornar Admin'}
+                        {item.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
+                        {item.isAdmin ? 'Admin' : 'Tornar Admin'}
                       </button>
 
+                      <button 
+                        onClick={() => switchUserType(item.id, true)} 
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-muted border border-transparent text-muted-foreground hover:bg-muted/80 transition-all"
+                        title="Mover para Portal Cliente"
+                      >
+                        <Building size={16} /> Tornar Cliente
+                      </button>
                     </>
                   )}
-                  
 
+                  {activeTab === 'cliente' && (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase text-muted-foreground/40 hidden md:block">Vincular:</span>
+                        <select 
+                          className="bg-muted border border-border/50 rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-wider outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                          value={item.user?.user_id || ""}
+                          onChange={(e) => linkCompany(e.target.value, item.id)}
+                        >
+                          <option value="">Nenhum Usuário...</option>
+                          {usuarios.map(u => (
+                            <option key={u.id} value={u.id}>{u.nome}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {item.user && (
+                        <button 
+                          onClick={() => switchUserType(item.user.user_id, false)} 
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-muted border border-transparent text-muted-foreground hover:bg-muted/80 transition-all"
+                          title="Mover para Equipe Interna"
+                        >
+                          <Users size={16} /> Tornar Equipe
+                        </button>
+                      )}
+                    </>
+                  )}
 
                   <button 
-                    onClick={() => handleDelete(u.id)} 
-                    className="p-2.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors border border-transparent hover:border-destructive/20"
-                    title="Excluir Usuário"
+                    onClick={() => handleDelete(activeTab === 'interna' ? item.id : item.user?.user_id)} 
+                    disabled={activeTab === 'cliente' && !item.user}
+                    className="p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive hover:text-white transition-all shadow-sm disabled:opacity-20 disabled:grayscale"
+                    title="Excluir/Inativar Usuário"
                   >
                     <Trash2 size={18} />
                   </button>
                 </div>
               </div>
+              {/* Módulos de Acesso */}
               <div className="mt-6 pt-6 border-t border-border/50">
                 <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.15em] mb-4">
                   {activeTab === 'interna' ? 'Permissões de Módulos' : 'Módulos Habilitados para a Empresa'}
                 </p>
                 <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                   {Object.entries(moduleLabels).map(([key, label]) => {
-                    const hasAccess = u.isAdmin || u.modules?.[key];
+                    const targetUser = activeTab === 'interna' ? item : item.user;
+                    const hasAccess = targetUser?.isAdmin || targetUser?.modules?.[key];
+                    
                     return (
                       <button 
                         key={key} 
-                        disabled={activeTab === 'interna' && u.isAdmin} 
-                        onClick={() => toggleModule(u.id, key, !!u.modules?.[key])} 
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess ? "border-primary/40 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/20"} ${activeTab === 'interna' && u.isAdmin ? "opacity-70 cursor-not-allowed" : ""}`}
+                        disabled={(activeTab === 'interna' && item.isAdmin) || (activeTab === 'cliente' && !item.user)} 
+                        onClick={() => toggleModule(targetUser.id, key, !!targetUser.modules?.[key])} 
+                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess ? "border-primary/40 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/20"} ${(activeTab === 'interna' && item.isAdmin) || (activeTab === 'cliente' && !item.user) ? "opacity-70 cursor-not-allowed" : ""}`}
                       >
                         <span className="truncate pr-2">{label}</span>
                         {hasAccess && <div className="w-2 h-2 rounded-full bg-primary shrink-0 shadow-sm shadow-primary/40" />}

@@ -526,7 +526,7 @@ const DocumentosPage = () => {
                           </div>
 
                           <Button
-                            className="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold h-11"
+                            className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 shadow-lg shadow-primary/20"
                             onClick={() => handleFinalSign()}
                             disabled={!pfxFile || !pfxPassword || signMutation.isPending}
                           >
@@ -577,7 +577,7 @@ const DocumentosPage = () => {
                       <Button variant="outline" className="w-full h-11 font-bold" disabled={uploadMutation.isPending} onClick={() => uploadMutation.mutate()}>
                         {uploadMutation.isPending ? "Enviando..." : "SÓ ENVIAR"}
                       </Button>
-                      <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold h-11" disabled={uploadMutation.isPending} onClick={() => {
+                      <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 shadow-lg shadow-primary/20" disabled={uploadMutation.isPending} onClick={() => {
                         setShouldSignAfterUpload(true);
                         uploadMutation.mutate();
                       }}>
@@ -636,7 +636,7 @@ const DocumentosPage = () => {
                               size="sm"
                               onClick={() => startSigning(doc)}
                               disabled={!!isSigning}
-                              className="bg-orange-600 hover:bg-orange-700 text-white gap-2 font-bold h-9 px-4"
+                              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-bold h-9 px-4 shadow-md shadow-primary/10"
                             >
                               {isSigning === doc.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileSignature className="w-3 h-3" />}
                               Assinar
