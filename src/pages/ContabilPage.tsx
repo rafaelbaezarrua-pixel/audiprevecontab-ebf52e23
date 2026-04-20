@@ -157,17 +157,18 @@ const ContabilPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content -> Agora Accordions com Cabeçalho Rico */}
-      <div className="hidden md:grid grid-cols-[2fr_1.2fr_1fr_1fr_1.2fr_60px] px-6 py-3 bg-black/[0.03] dark:bg-white/[0.02] rounded-t-2xl border border-border/10 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 shadow-inner italic mb-0 relative z-4">
-        <span>Empresa</span>
-        <span className="text-center">Competência</span>
-        <span className="text-center">Movimento</span>
-        <span className="text-center">Integração</span>
-        <span className="text-center">Status</span>
-        <span className="text-right pr-2">Opções</span>
-      </div>
+      <div className="bg-black/[0.03] dark:bg-white/[0.02] border border-border/10 rounded-[2.5rem] shadow-inner p-1 pb-4 relative">
+        {/* Main Content -> Agora Accordions com Cabeçalho Rico */}
+        <div className="hidden md:grid grid-cols-[2fr_1.2fr_1fr_1fr_1.2fr_60px] px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 italic mb-0 relative z-20">
+          <span>Empresa</span>
+          <span className="text-center">Competência</span>
+          <span className="text-center">Movimento</span>
+          <span className="text-center">Integração</span>
+          <span className="text-center">Status</span>
+          <span className="text-right pr-2">Opções</span>
+        </div>
 
-      <div className="space-y-3 relative z-1">
+        <div className="space-y-3 px-1 relative z-10">
         {filteredEmpresas.map((empresa) => {
           const record = contabilData[empresa.id];
           const isExpanded = expanded === empresa.id;
@@ -252,6 +253,8 @@ const ContabilPage: React.FC = () => {
               isOpen={isExpanded}
               onClick={() => toggleExpand(empresa.id)}
               customHeader={customHeader}
+              icon={<Calculator size={18} />}
+              nome_empresa={empresa.nome_empresa}
             >
               <div className="max-w-6xl space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
                 <Tabs value={activeSubTab} onValueChange={(val) => setActiveSubTab(val as any)} className="w-full space-y-4">
@@ -443,6 +446,7 @@ const ContabilPage: React.FC = () => {
         )}
       </div>
     </div>
+  </div>
   );
 };
 

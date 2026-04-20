@@ -221,115 +221,116 @@ const FiscalPage: React.FC = () => {
           ))}
         </div>
 
-        <div className="hidden md:grid grid-cols-[2fr_1.2fr_1fr_80px_1fr_1.2fr_60px] px-6 py-3 bg-black/[0.03] dark:bg-white/[0.02] rounded-t-2xl rounded-b-none border border-border/10 text-[10px] font-black uppercase text-muted-foreground/80 shadow-inner mb-[-0px] relative z-4">
-          <span>Empresa</span>
-          <span>CNPJ</span>
-          <span>Regime</span>
-          <span className="text-center">XML</span>
-          <span className="text-center">Guia</span>
-          <span className="text-center">Data Envio</span>
-          <span className="text-right pr-2">Ações</span>
-        </div>
+        <div className="bg-black/[0.03] dark:bg-white/[0.02] border border-border/10 rounded-[2.5rem] shadow-inner p-1 pb-4 relative">
+          <div className="hidden md:grid grid-cols-[2fr_1.2fr_1fr_80px_1fr_1.2fr_60px] px-6 py-4 text-[10px] font-black uppercase text-muted-foreground/60 mb-0 relative z-20">
+            <span>Empresa</span>
+            <span>CNPJ</span>
+            <span>Regime</span>
+            <span className="text-center">XML</span>
+            <span className="text-center">Guia</span>
+            <span className="text-center">Data Envio</span>
+            <span className="text-right pr-2">Ações</span>
+          </div>
 
-        <div className="space-y-3 relative z-10">
-          {filtered.map(emp => {
-            const isOpen = expanded === emp.id;
-            const r = fiscalData[emp.id];
-            const form = editForm[emp.id] || {};
+          <div className="space-y-3 px-1 relative z-10">
+            {filtered.map(emp => {
+              const isOpen = expanded === emp.id;
+              const r = fiscalData[emp.id];
+              const form = editForm[emp.id] || {};
 
-            const okXml = form.xml_status === "ok";
-            const rOkXml = r?.xml_status === "ok";
-            const isLucro = emp.regime_tributario === "lucro_presumido" || emp.regime_tributario === "lucro_real";
-            const checkDone = (status: any) => status === "gerada" || status === "PGDAS Zerado" || status === "enviada";
+              const okXml = form.xml_status === "ok";
+              const rOkXml = r?.xml_status === "ok";
+              const isLucro = emp.regime_tributario === "lucro_presumido" || emp.regime_tributario === "lucro_real";
+              const checkDone = (status: any) => status === "gerada" || status === "PGDAS Zerado" || status === "enviada";
 
-            const rIsConcluido = rOkXml && (
-              isLucro
-                ? (checkDone(r?.irpj_csll_status) && checkDone(r?.pis_cofins_status) && checkDone(r?.icms_status))
-                : checkDone(r?.status_guia)
-            ) && r?.observacoes?.envio_status === "enviado";
+              const rIsConcluido = rOkXml && (
+                isLucro
+                  ? (checkDone(r?.irpj_csll_status) && checkDone(r?.pis_cofins_status) && checkDone(r?.icms_status))
+                  : checkDone(r?.status_guia)
+              ) && r?.observacoes?.envio_status === "enviado";
 
-            // Custom Header for Fiscal Module
-            const customHeader = (
-              <div className="md:grid md:grid-cols-[2fr_1.2fr_1fr_80px_1fr_1.2fr_60px] items-center w-full py-1">
-                {/* Empresa */}
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 border",
-                    isOpen ? "bg-primary text-white border-primary shadow-lg" : "bg-black/5 dark:bg-white/5 border-border/10 group-hover:border-primary/20"
-                  )}>
-                    <Building2 size={18} />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className={cn(
-                      "font-black text-[13px] uppercase tracking-tight truncate transition-colors",
-                      isOpen ? "text-primary" : "text-foreground group-hover:text-primary"
+              // Custom Header for Fiscal Module
+              const customHeader = (
+                <div className="md:grid md:grid-cols-[2fr_1.2fr_1fr_80px_1fr_1.2fr_60px] items-center w-full py-1">
+                  {/* Empresa */}
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 border",
+                      isOpen ? "bg-primary text-white border-primary shadow-lg" : "bg-black/5 dark:bg-white/5 border-border/10 group-hover:border-primary/20"
                     )}>
-                      {emp.nome_empresa}
-                    </span>
-                    <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-widest">
-                      ID: {emp.id.slice(0, 8).toUpperCase()}
+                      <Building2 size={18} />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className={cn(
+                        "font-black text-[13px] uppercase tracking-tight truncate transition-colors",
+                        isOpen ? "text-primary" : "text-foreground group-hover:text-primary"
+                      )}>
+                        {emp.nome_empresa}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-widest">
+                        ID: {emp.id.slice(0, 8).toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* CNPJ */}
+                  <div className="hidden md:block text-[11px] font-black text-muted-foreground/60 font-mono tracking-tighter">
+                    {emp.cnpj}
+                  </div>
+
+                  {/* Regime */}
+                  <div className="hidden md:block">
+                    <span className="px-3 py-1 bg-black/5 dark:bg-white/5 border border-border/5 rounded-lg text-[9px] font-black uppercase text-muted-foreground/70 tracking-tighter">
+                      {regimeLabels[emp.regime_tributario] || "N/A"}
                     </span>
                   </div>
-                </div>
 
-                {/* CNPJ */}
-                <div className="hidden md:block text-[11px] font-black text-muted-foreground/60 font-mono tracking-tighter">
-                  {emp.cnpj}
-                </div>
+                  {/* XML */}
+                  <div className="hidden md:flex justify-center">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[9px] font-black uppercase border shadow-sm",
+                      rOkXml ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    )}>
+                      {rOkXml ? "OK" : "PEND"}
+                    </span>
+                  </div>
 
-                {/* Regime */}
-                <div className="hidden md:block">
-                  <span className="px-3 py-1 bg-black/5 dark:bg-white/5 border border-border/5 rounded-lg text-[9px] font-black uppercase text-muted-foreground/70 tracking-tighter">
-                    {regimeLabels[emp.regime_tributario] || "N/A"}
-                  </span>
-                </div>
+                  {/* Guia/Fechamento */}
+                  <div className="hidden md:flex justify-center">
+                    <span className={cn(
+                      "px-3 py-1 rounded-lg text-[9px] font-black uppercase border shadow-sm",
+                      rIsConcluido ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    )}>
+                      {rIsConcluido ? "CONCLUÍDO" : "PENDENTE"}
+                    </span>
+                  </div>
 
-                {/* XML */}
-                <div className="hidden md:flex justify-center">
-                  <span className={cn(
-                    "px-2 py-0.5 rounded-full text-[9px] font-black uppercase border shadow-sm",
-                    rOkXml ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                  )}>
-                    {rOkXml ? "OK" : "PEND"}
-                  </span>
-                </div>
+                  {/* Data Envio */}
+                  <div className="hidden md:block text-center text-[11px] font-black text-muted-foreground/40">
+                    {r?.observacoes?.data_envio ? formatDateBR(r.observacoes.data_envio) : "—"}
+                  </div>
 
-                {/* Guia/Fechamento */}
-                <div className="hidden md:flex justify-center">
-                  <span className={cn(
-                    "px-3 py-1 rounded-lg text-[9px] font-black uppercase border shadow-sm",
-                    rIsConcluido ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                  )}>
-                    {rIsConcluido ? "CONCLUÍDO" : "PENDENTE"}
-                  </span>
-                </div>
-
-                {/* Data Envio */}
-                <div className="hidden md:block text-center text-[11px] font-black text-muted-foreground/40">
-                  {r?.observacoes?.data_envio ? formatDateBR(r.observacoes.data_envio) : "—"}
-                </div>
-
-                {/* Ações */}
-                <div className="flex justify-end pr-2">
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border",
-                    isOpen ? "bg-primary text-white border-primary shadow-lg rotate-180" : "bg-black/5 dark:bg-white/5 border-border/10 text-muted-foreground/80"
-                  )}>
-                    <ChevronDown size={14} />
+                  {/* Ações */}
+                  <div className="flex justify-end pr-2">
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border",
+                      isOpen ? "bg-primary text-white border-primary shadow-lg rotate-180" : "bg-black/5 dark:bg-white/5 border-border/10 text-muted-foreground/80"
+                    )}>
+                      <ChevronDown size={14} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
+              );
 
-            return (
-              <EmpresaAccordion
-                key={emp.id}
-                isOpen={isOpen}
-                onClick={() => toggleExpand(emp.id)}
-                customHeader={customHeader}
-                nome_empresa={emp.nome_empresa} // Fallback support
-                icon={<Building2 size={20} />} // Fallback support
-              >
+              return (
+                <EmpresaAccordion
+                  key={emp.id}
+                  isOpen={isOpen}
+                  onClick={() => toggleExpand(emp.id)}
+                  customHeader={customHeader}
+                  nome_empresa={emp.nome_empresa} // Fallback support
+                  icon={<Building2 size={20} />} // Fallback support
+                >
                 <div className="max-w-6xl space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
                   <Tabs value={rowTabs[emp.id] || 'dados'} onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))} className="space-y-4">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-border/10 pb-3">
@@ -574,6 +575,7 @@ const FiscalPage: React.FC = () => {
 
         {isUploaderOpen && <TaxGuideUploader empresas={empresas} onClose={() => setIsUploaderOpen(false)} onConfirm={() => queryClient.invalidateQueries({ queryKey: ["fiscal"] })} competenciaFiltro={competencia} />}
         {dialogEmpresa && <FiscalParametersDialog isOpen={!!dialogEmpresa} empresa={dialogEmpresa} initialData={editForm[dialogEmpresa.id] || {}} onClose={() => setDialogEmpresa(null)} onSave={(data) => handleSaveParameters(dialogEmpresa.id, data)} />}
+        </div>
       </div>
     </div>
   );

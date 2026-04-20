@@ -74,6 +74,38 @@ const HonorariosPage: React.FC = () => {
   const totalCount = paginatedResult?.count || 0;
 
   useEffect(() => {
+    if (paginatedData.length > 0) {
+      const fetchBulkData = async () => {
+        const ids = paginatedData.map(e => (e as any).id);
+        try {
+          const { data: configsData } = await supabase.from("honorarios_config").select("*").in("empresa_id", ids);
+          const newConfigs: Record<string, Partial<HonorarioConfig>> = {};
+          configsData?.forEach(c => { newConfigs[c.empresa_id] = c as any; });
+
+          const newCompetencias = { ...competenciaSelecionada };
+          ids.forEach(id => {
+            if (!newConfigs[id]) newConfigs[id] = { empresa_id: id, valor_honorario: 0, valor_por_funcionario: 0, valor_por_recalculo: 0, valor_trabalhista: 0, outros_servicos: [] };
+            newCompetencias[id] = globalCompetencia;
+          });
+
+          setConfigs(prev => ({ ...prev, ...newConfigs }));
+          setConfigForms(prev => ({ ...prev, ...newConfigs }));
+          setCompetenciaSelecionada(newCompetencias);
+
+          const { data: allMensal } = await supabase.from("honorarios_mensal").select("*").in("empresa_id", ids).order('competencia', { ascending: false });
+          const newMensalMap: Record<string, HonorarioMensal[]> = {};
+          allMensal?.forEach(m => {
+            if (!newMensalMap[m.empresa_id]) newMensalMap[m.empresa_id] = [];
+            newMensalMap[m.empresa_id].push(m as any);
+          });
+          setMensalData(prev => ({ ...prev, ...newMensalMap }));
+        } catch (err) { console.error("Erro bulk fetch:", err); }
+      };
+      fetchBulkData();
+    }
+  }, [paginatedData, globalCompetencia]);
+
+  useEffect(() => {
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
   }, [debouncedSearch, activeStatusTab]);
 

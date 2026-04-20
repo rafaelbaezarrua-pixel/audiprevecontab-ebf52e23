@@ -97,8 +97,9 @@
     --fill-tertiary: rgba(118, 118, 128, 0.12);
     --fill-quaternary: rgba(116, 116, 128, 0.08);
 
-    /* ─── Solid Colors (Replacing Gradients) ─── */
+    /* ─── Solid Colors & Gradients ─── */
     --primary-solid: hsl(211 100% 50%);
+    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 65%) 100%);
     --surface-bg: hsl(240 5% 98%);
 
     /* ─── Minimalist Glassmorphism ─── */
@@ -197,8 +198,9 @@
     --fill-tertiary: rgba(118, 118, 128, 0.24);
     --fill-quaternary: rgba(118, 118, 128, 0.18);
 
-    /* ─── Solid Colors (Dark - Replacing Gradients) ─── */
+    /* ─── Solid Colors & Gradients (Dark) ─── */
     --primary-solid: hsl(211 100% 56%);
+    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 40%) 100%);
     --surface-bg: hsl(240 6% 7%);
 
     /* ─── Minimalist Glassmorphism (Dark) ─── */

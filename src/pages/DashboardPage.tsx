@@ -34,7 +34,7 @@ const DashboardPage: React.FC = () => {
           <h1 className="header-title flex items-center gap-3">
             Dashboard <span className="text-primary/70">Audipreve</span>
             <FavoriteToggleButton moduleId="dashboard" />
-          </h1>o
+          </h1>
           <p className="text-muted-foreground font-bold mt-1">
             Bem-vindo de volta, <span className="font-bold text-foreground">{userData?.nome?.split(' ')[0]}</span>! Aqui está o resumo de hoje.
           </p>

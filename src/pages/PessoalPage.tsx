@@ -215,8 +215,9 @@ const PessoalPage: React.FC = () => {
           ))}
         </div>
 
+        <div className="bg-black/[0.03] dark:bg-white/[0.02] border border-border/10 rounded-[2.5rem] shadow-inner p-1 pb-4 relative">
         {/* Tabela de Dados -> Agora Accordions com Cabeçalho Rico */}
-        <div className="hidden md:grid grid-cols-[2.5fr_1fr_80px_100px_1.2fr_60px] px-6 py-3 bg-black/[0.03] dark:bg-white/[0.02] rounded-t-2xl border border-border/10 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 shadow-inner mb-0 relative z-4">
+        <div className="hidden md:grid grid-cols-[2.5fr_1fr_80px_100px_1.2fr_60px] px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-0 relative z-20">
           <span>Empresas</span>
           <span className="text-center">Competência</span>
           <span className="text-center">Folha</span>
@@ -225,8 +226,8 @@ const PessoalPage: React.FC = () => {
           <span className="text-right pr-2">Opções</span>
         </div>
 
-        <div className="space-y-3 relative z-1">
-          {filtered.map(emp => {
+        <div className="space-y-3 px-1 relative z-10">
+            {filtered.map(emp => {
             const isOpen = expanded === emp.id;
             const r = pessoalData[emp.id];
             const done = !!r?.dctf_web_gerada;
@@ -306,6 +307,8 @@ const PessoalPage: React.FC = () => {
                 isOpen={isOpen}
                 onClick={() => toggleExpand(emp.id)}
                 customHeader={customHeader}
+                icon={<Users size={18} />}
+                nome_empresa={emp.nome_empresa}
               >
                 <div className="max-w-6xl space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
                   <Tabs value={rowTabs[emp.id] || 'dados'} onValueChange={(v) => setRowTabs(prev => ({ ...prev, [emp.id]: v as any }))} className="space-y-4">
@@ -505,8 +508,9 @@ const PessoalPage: React.FC = () => {
             competenciaFiltro={competencia}
           />
         )}
+          </div>
+        </div>
       </div>
-    </div>
   );
 };
 
