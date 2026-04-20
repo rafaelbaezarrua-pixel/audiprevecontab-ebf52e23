@@ -129,7 +129,7 @@ export const HonorarioMensalForm = ({
       <div className="flex justify-end pt-2">
         <button 
           onClick={onSave} 
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-primary-foreground shadow-md" 
+          className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all" 
           style={{ background: "var(--gradient-primary)" }}
         >
           <Save size={16} /> Salvar Mês
