@@ -232,7 +232,7 @@ const FiscalPage: React.FC = () => {
             ].map(t => (
               <button
                 key={t.id}
-                className={`flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-primary text-white shadow-lg scale-[1.01]" : "text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5"}`}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-primary text-primary-foreground shadow-lg scale-[1.01]" : "text-muted-foreground hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5"}`}
                 onClick={() => setActiveTab(t.id as any)}
               >
                 {t.label}
@@ -246,16 +246,16 @@ const FiscalPage: React.FC = () => {
               <div className="flex items-center gap-1.5 p-1 bg-white dark:bg-zinc-800 rounded-xl border border-border/10 shadow-sm">
                 <button
                   onClick={() => setMovimentoTab("com")}
-                  className={`flex items-center gap-2 px-6 h-9 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${movimentoTab === "com" ? "bg-blue-400/100 text-white shadow-md dark:bg-primary" : "text-slate-400 hover:text-slate-600 dark:hover:text-white"}`}
+                  className={`flex items-center gap-2 px-6 h-9 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${movimentoTab === "com" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary dark:hover:text-white"}`}
                 >
-                  <Activity size={12} className={movimentoTab === "com" ? "text-primary dark:text-white" : "opacity-30"} />
+                  <Activity size={12} className={movimentoTab === "com" ? "text-primary-foreground" : "opacity-30"} />
                   Com Movimento
                 </button>
                 <button
                   onClick={() => setMovimentoTab("sem")}
-                  className={`flex items-center gap-2 px-6 h-9 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${movimentoTab === "sem" ? "bg-amber-500 text-white shadow-md" : "text-slate-400 hover:text-amber-500 dark:hover:text-amber-400"}`}
+                  className={`flex items-center gap-2 px-6 h-9 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${movimentoTab === "sem" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary dark:hover:text-white"}`}
                 >
-                  <Trash2 size={12} className={movimentoTab === "sem" ? "text-white" : "opacity-30"} />
+                  <Trash2 size={12} className={movimentoTab === "sem" ? "text-primary-foreground" : "opacity-30"} />
                   Sem Movimento
                 </button>
               </div>
@@ -298,7 +298,7 @@ const FiscalPage: React.FC = () => {
                   <div className="flex items-center gap-4 min-w-0">
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 border",
-                      isOpen ? "bg-primary text-white border-primary shadow-lg" : "bg-black/5 dark:bg-white/5 border-border/10 group-hover:border-primary/20"
+                      isOpen ? "bg-primary text-primary-foreground border-primary shadow-lg" : "bg-black/5 dark:bg-white/5 border-border/10 group-hover:border-primary/20"
                     )}>
                       <Building2 size={18} />
                     </div>
@@ -356,7 +356,7 @@ const FiscalPage: React.FC = () => {
                   <div className="flex justify-end pr-2">
                     <div className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border",
-                      isOpen ? "bg-primary text-white border-primary shadow-lg rotate-180" : "bg-black/5 dark:bg-white/5 border-border/10 text-muted-foreground/80"
+                      isOpen ? "bg-primary text-primary-foreground border-primary shadow-lg rotate-180" : "bg-black/5 dark:bg-white/5 border-border/10 text-muted-foreground/80"
                     )}>
                       <ChevronDown size={14} />
                     </div>
@@ -589,7 +589,7 @@ const FiscalPage: React.FC = () => {
                                 <input type="date" value={editForm[emp.id]?.observacoes?.envio_data || ""} onChange={e => updateForm(emp.id, "observacoes", { ...editForm[emp.id]?.observacoes, envio_data: e.target.value })} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-inner" />
                               </div>
                             </div>
-                            <button onClick={() => handleSaveAction(emp.id)} className="h-9 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 group">
+                            <button onClick={() => handleSaveAction(emp.id)} className="h-9 px-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 group">
                               <Save size={14} className="group-hover:scale-110 transition-transform" />
                               <span className="text-[11px] font-black uppercase tracking-widest">Gravar Fechamento</span>
                             </button>

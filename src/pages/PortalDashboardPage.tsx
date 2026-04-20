@@ -111,7 +111,7 @@ const PortalDashboardPage: React.FC = () => {
             {/* Header / Welcome */}
             <div className="glass-header sticky top-0 z-10 -mx-4 -mt-4 px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 backdrop-blur-xl">
                 <div className="flex items-center gap-4">
-                    <div className="p-3.5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/10">
+                    <div className="p-3.5 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/10">
                         <LayoutDashboard size={28} />
                     </div>
                     <div>
@@ -244,7 +244,7 @@ const PortalDashboardPage: React.FC = () => {
                     
                     <div className="space-y-6 flex-1 flex flex-col justify-center">
                         <div className="p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-dashed border-border/20 flex flex-col items-center text-center gap-6">
-                            <div className="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                            <div className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/20">
                                 <PenTool size={32} />
                             </div>
                             <div>
@@ -358,7 +358,7 @@ const PortalDashboardPage: React.FC = () => {
                             Dúvidas fiscais, contábeis ou de folha de pagamento? Nossa equipe está disponível em tempo real para auxiliar no crescimento da sua empresa.
                         </p>
                     </div>
-                    <button className="h-18 px-12 rounded-2xl text-base font-black gap-4 transition-all bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+                    <button className="h-18 px-12 rounded-2xl text-base font-black gap-4 transition-all bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
                         Abrir chamado técnico <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>

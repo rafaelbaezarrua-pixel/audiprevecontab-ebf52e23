@@ -64,10 +64,7 @@ export function ThemeProvider({
     // Function to apply a set of colors to the DOM
     const applyColorsToDOM = (modeColors: any) => {
         const root = window.document.documentElement;
-        const currentMode = theme === 'system' 
-            ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light')
-            : theme;
-
+        
         Object.entries(modeColors).forEach(([key, value]) => {
             if (value) {
                 const hslValue = value as string;
@@ -84,39 +81,49 @@ export function ThemeProvider({
                 const isDark = l < 50;
 
                 // 1. Text Contrast (Foregrounds)
-                if (['--primary', '--background', '--sidebar-background', '--card'].includes(key)) {
-                    const textHsl = isDark ? '0 0% 100%' : '240 10% 10%';
-                    if (key === '--primary') root.style.setProperty('--primary-foreground', textHsl);
-                    if (key === '--background') root.style.setProperty('--foreground', textHsl);
-                    if (key === '--sidebar-background') root.style.setProperty('--sidebar-foreground', textHsl);
-                    if (key === '--card') root.style.setProperty('--card-foreground', textHsl);
+                if (['--primary', '--background', '--sidebar-background', '--card', '--secondary', '--accent'].includes(key)) {
+                    let foregroundVar = '';
+                    if (key === '--primary') foregroundVar = '--primary-foreground';
+                    else if (key === '--background') foregroundVar = '--foreground';
+                    else if (key === '--sidebar-background') foregroundVar = '--sidebar-foreground';
+                    else if (key === '--card') foregroundVar = '--card-foreground';
+                    else if (key === '--secondary') foregroundVar = '--secondary-foreground';
+                    else if (key === '--accent') foregroundVar = '--accent-foreground';
+                    
+                    // Contrast rule: L > 75% -> Dark Text, else White if L < 50%, or intermediate.
+                    // For buttons (primary), we usually want 100% white unless very light.
+                    const textHsl = l > 70 ? '240 10% 10%' : '0 0% 100%';
+                    if (foregroundVar) root.style.setProperty(foregroundVar, textHsl);
                 }
 
                 // 2. Harmonic Borders & Muted (based on background)
                 if (key === '--background') {
-                    const borderL = isDark ? l + 8 : l - 8;
-                    const mutedL = isDark ? l + 5 : l - 4;
-                    root.style.setProperty('--border', adjustLightness(hslValue, isDark ? 8 : -10));
-                    root.style.setProperty('--input', adjustLightness(hslValue, isDark ? 8 : -10));
+                    // Borders are now much more subtle (+3 in dark mode instead of +8)
+                    root.style.setProperty('--border', adjustLightness(hslValue, isDark ? 3 : -8));
+                    root.style.setProperty('--input', adjustLightness(hslValue, isDark ? 4 : -8));
                     root.style.setProperty('--muted', adjustLightness(hslValue, isDark ? 5 : -4));
                     root.style.setProperty('--muted-foreground', isDark ? '240 5% 70%' : '240 4% 40%');
-                    root.style.setProperty('--secondary', adjustLightness(hslValue, isDark ? 6 : -5));
-                    root.style.setProperty('--secondary-foreground', isDark ? '0 0% 100%' : '240 10% 10%');
-                    root.style.setProperty('--accent', adjustLightness(hslValue, isDark ? 10 : -8));
-                    root.style.setProperty('--accent-foreground', isDark ? '0 0% 100%' : '240 10% 10%');
                     
-                    // Sidebar accent harmony
-                    root.style.setProperty('--sidebar-accent', adjustLightness(hslValue, isDark ? 12 : -6));
-                    root.style.setProperty('--sidebar-border', adjustLightness(hslValue, isDark ? 8 : -8));
+                    if (!modeColors['--secondary']) root.style.setProperty('--secondary', adjustLightness(hslValue, isDark ? 5 : -5));
+                    if (!modeColors['--accent']) root.style.setProperty('--accent', adjustLightness(hslValue, isDark ? 8 : -8));
                     
-                    // Glassmorphism update
                     root.style.setProperty('--glass-bg', isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)');
+                    root.style.setProperty('--surface-bg', `hsl(${hslValue})`);
+                }
+
+                // 2b. Sidebar Borders (based on sidebar background)
+                if (key === '--sidebar-background') {
+                    const sbL = getLightness(hslValue);
+                    const isSbDark = sbL < 50;
+                    root.style.setProperty('--sidebar-border', adjustLightness(hslValue, isSbDark ? 3 : -6));
+                    root.style.setProperty('--sidebar-accent', adjustLightness(hslValue, isSbDark ? 8 : -8));
                 }
 
                 // 3. Ring follows Primary
                 if (key === '--primary') {
                     root.style.setProperty('--ring', hslValue);
                     root.style.setProperty('--sidebar-primary', hslValue);
+                    root.style.setProperty('--sidebar-primary-foreground', l > 70 ? '240 10% 10%' : '0 0% 100%');
                 }
             }
         });
@@ -131,17 +138,18 @@ export function ThemeProvider({
         
         const colorsToApply = previewColors || userData?.theme_config?.[currentMode];
         
-        if (!colorsToApply) {
-            const varsToClear = [
-                '--primary', '--background', '--sidebar-background', '--card', '--accent',
-                '--gradient-bg', '--foreground', '--card-foreground', 
-                '--sidebar-foreground', '--primary-foreground', '--border', '--input',
-                '--muted', '--muted-foreground', '--secondary', '--secondary-foreground',
-                '--accent-foreground', '--ring', '--sidebar-primary'
-            ];
-            varsToClear.forEach(v => root.style.removeProperty(v));
-            return;
-        }
+        // Always clear previous custom variables to ensure no "leaking" between modes
+        const varsToClear = [
+            '--primary', '--background', '--sidebar-background', '--card', '--accent',
+            '--gradient-bg', '--surface-bg', '--glass-bg', '--foreground', 
+            '--card-foreground', '--sidebar-foreground', '--primary-foreground', 
+            '--border', '--input', '--muted', '--muted-foreground', 
+            '--secondary', '--secondary-foreground', '--accent-foreground', 
+            '--ring', '--sidebar-primary', '--sidebar-primary-foreground'
+        ];
+        varsToClear.forEach(v => root.style.removeProperty(v));
+
+        if (!colorsToApply) return;
 
         applyColorsToDOM(colorsToApply);
     }, [userData?.theme_config, theme, previewColors]);

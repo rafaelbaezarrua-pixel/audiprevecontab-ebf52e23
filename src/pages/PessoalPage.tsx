@@ -241,7 +241,7 @@ const PessoalPage: React.FC = () => {
                 <div className="flex items-center gap-4 min-w-0">
                   <div className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 border",
-                    isOpen ? "bg-primary text-white border-primary shadow-lg" : "bg-black/5 dark:bg-white/5 border-border/10 group-hover:border-primary/20"
+                    isOpen ? "bg-primary text-primary-foreground border-primary shadow-lg" : "bg-black/5 dark:bg-white/5 border-border/10 group-hover:border-primary/20"
                   )}>
                     <Users size={18} />
                   </div>
@@ -293,7 +293,7 @@ const PessoalPage: React.FC = () => {
                 <div className="flex justify-end pr-2">
                   <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border",
-                    isOpen ? "bg-primary text-white border-primary shadow-lg rotate-180" : "bg-black/5 dark:bg-white/5 border-border/10 text-muted-foreground/80"
+                    isOpen ? "bg-primary text-primary-foreground border-primary shadow-lg rotate-180" : "bg-black/5 dark:bg-white/5 border-border/10 text-muted-foreground/80"
                   )}>
                     <ChevronDown size={14} />
                   </div>
@@ -425,7 +425,7 @@ const PessoalPage: React.FC = () => {
                         )}
 
                         <div className="flex justify-end pt-2 border-t border-border/5">
-                          <button onClick={() => handleSaveAction(emp.id)} className="h-10 px-10 bg-primary hover:bg-primary/90 text-white rounded-xl flex items-center gap-2 transition-all shadow-lg active:scale-95 group">
+                          <button onClick={() => handleSaveAction(emp.id)} className="h-10 px-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl flex items-center gap-2 transition-all shadow-lg active:scale-95 group">
                             <Save size={16} className="group-hover:scale-110 transition-transform" />
                             <span className="text-[11px] font-black uppercase tracking-widest">Confirmar Fechamento</span>
                           </button>

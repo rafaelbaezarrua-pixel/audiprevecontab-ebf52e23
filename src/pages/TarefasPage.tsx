@@ -357,7 +357,7 @@ const TarefasPage: React.FC = () => {
                                     return (
                                         <button
                                             onClick={() => handleUpdateStatus(a.id, "recebida")}
-                                            className="flex-1 button-action bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white text-[10px] tracking-widest"
+                                            className="flex-1 button-action bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground text-[10px] tracking-widest shadow-sm"
                                         >
                                             <Inbox size={14} /> Receber
                                         </button>
@@ -366,7 +366,7 @@ const TarefasPage: React.FC = () => {
                                     return (
                                         <button
                                             onClick={() => handleUpdateStatus(a.id, "em_andamento")}
-                                            className="flex-1 button-action bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white text-[10px] tracking-widest"
+                                            className="flex-1 button-action bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground text-[10px] tracking-widest shadow-sm"
                                         >
                                             <Play size={14} /> Iniciar
                                         </button>
@@ -379,7 +379,7 @@ const TarefasPage: React.FC = () => {
                                 return (
                                     <button
                                         onClick={() => handleUpdateStatus(a.id, "concluido")}
-                                        className="flex-1 button-action bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-[10px] tracking-widest"
+                                        className="flex-1 button-action bg-primary text-primary-foreground hover:bg-primary/90 text-[10px] tracking-widest shadow-lg shadow-primary/20"
                                     >
                                         <CheckCircle size={14} /> Concluir
                                     </button>
@@ -390,7 +390,7 @@ const TarefasPage: React.FC = () => {
                                 return (
                                     <button
                                         onClick={() => handleUpdateStatus(a.id, "em_andamento")}
-                                        className="flex-1 button-action bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white text-[10px] tracking-widest"
+                                        className="flex-1 button-action bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground text-[10px] tracking-widest shadow-sm"
                                     >
                                         <Play size={14} /> Iniciar
                                     </button>
@@ -405,7 +405,7 @@ const TarefasPage: React.FC = () => {
                                             setRespostaText("");
                                             setRespostaDialogOpen(true);
                                         }}
-                                        className="flex-1 button-action bg-purple-500/10 text-purple-600 hover:bg-purple-500 hover:text-white text-[10px] tracking-widest"
+                                        className="flex-1 button-action bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground text-[10px] tracking-widest shadow-sm"
                                     >
                                         <MessageSquare size={14} /> Responder
                                     </button>
@@ -416,7 +416,7 @@ const TarefasPage: React.FC = () => {
                                 return (
                                     <button
                                         onClick={() => handleUpdateStatus(a.id, "concluido")}
-                                        className="flex-1 button-action bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-[10px] tracking-widest"
+                                        className="flex-1 button-action bg-primary text-primary-foreground hover:bg-primary/90 text-[10px] tracking-widest shadow-lg shadow-primary/20"
                                     >
                                         <CheckCircle size={14} /> Concluir
                                     </button>
@@ -690,7 +690,7 @@ const TarefasPage: React.FC = () => {
 
                         <div className="flex gap-3 pt-4 border-t border-border/50">
                             <button onClick={() => setIsBatchOpen(false)} className="flex-1 h-12 rounded-xl border border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all">Cancelar</button>
-                            <button onClick={handleCreateBatch} className="flex-[2] h-12 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20" disabled={selectedEmpresas.length === 0 || !batchForm.assunto}>Criar {selectedEmpresas.length} Tarefas</button>
+                            <button onClick={handleCreateBatch} className="flex-[2] h-12 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20" disabled={selectedEmpresas.length === 0 || !batchForm.assunto}>Criar {selectedEmpresas.length} Tarefas</button>
                         </div>
                     </div>
                 </DialogContent>
