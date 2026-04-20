@@ -2,13 +2,8 @@ import React, { useState } from "react";
 import { Building2, Eye, Edit2, ChevronLeft, ChevronRight, Hash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Empresa } from "@/types/societario";
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  ColumnDef,
-  PaginationState
-} from "@tanstack/react-table";
+import { PaginationState } from "@tanstack/react-table";
+import { EmpresaAccordion } from "@/components/EmpresaAccordion";
 
 interface EmpresaTableProps {
   empresas: Empresa[];
@@ -38,220 +33,142 @@ export const EmpresaTable = ({
   onInlineEdit
 }: EmpresaTableProps) => {
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState<string | null>(null);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  const columns: ColumnDef<Empresa>[] = [
-    {
-      accessorKey: "nome_empresa",
-      header: "Empresa",
-      cell: ({ row }) => {
-        const emp = row.original;
-        const isEditing = editingId === emp.id + '-nome';
-        return (
-          <div className="flex items-center gap-3 py-1">
-            <div className="w-7 h-7 rounded-lg bg-black/10 dark:bg-white/5 flex items-center justify-center transition-all group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 shrink-0 shadow-inner">
-              <Building2 size={13} />
-            </div>
-            <div className="flex flex-col">
-              {isEditing ? (
-                 <input
-                   autoFocus
-                   type="text"
-                   defaultValue={emp.nome_empresa}
-                   className="border-b border-primary bg-transparent outline-none text-[10px] font-black uppercase tracking-tighter w-full"
-                   onBlur={(e) => {
-                     setEditingId(null);
-                     if (e.target.value !== emp.nome_empresa && onInlineEdit) {
-                       onInlineEdit(emp.id, 'nome_empresa', e.target.value);
-                     }
-                   }}
-                   onKeyDown={(e) => {
-                     if (e.key === 'Enter') e.currentTarget.blur();
-                     if (e.key === 'Escape') setEditingId(null);
-                   }}
-                 />
-              ) : (
-                 <span 
-                   onDoubleClick={(e) => { e.stopPropagation(); setEditingId(emp.id + '-nome'); }}
-                   className="font-black text-card-foreground group-hover:text-primary transition-colors text-[10px] uppercase tracking-tighter select-none truncate max-w-[200px] sm:max-w-xs cursor-text"
-                   title="Dois cliques para editar"
-                 >
-                   {emp.nome_empresa}
-                 </span>
-              )}
-              <span className="text-[7px] text-muted-foreground/40 uppercase font-black tracking-widest flex items-center gap-0.5">
-                <Hash size={7} /> ID: {emp.id.split('-')[0]}
-              </span>
-            </div>
-          </div>
-        );
-      }
-    },
-    {
-      accessorKey: "cnpj",
-      header: "CNPJ",
-      cell: ({ row }) => (
-        <span className="text-muted-foreground/60 font-mono text-[9px] tabular-nums">{row.original.cnpj || "—"}</span>
-      )
-    },
-    {
-      accessorKey: "regime_tributario",
-      header: "Regime",
-      cell: ({ row }) => {
-        const val = row.original.regime_tributario;
-        return (
-          <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-black/5 text-muted-foreground/60 border border-border/5 whitespace-nowrap">
-            {regimeLabels[val || ""] || "—"}
-          </span>
-        );
-      }
-    },
-    {
-      accessorKey: "situacao",
-      header: () => <div className="text-center">Situação</div>,
-      cell: ({ row }) => {
-        const sit = situacaoConfig[row.original.situacao || "ativa"] || situacaoConfig.ativa;
-        return (
-          <div className="flex justify-center">
-             <span className={`badge-status ${sit.cls} shadow-sm shadow-current/5 font-black text-[8px] px-2 py-0.5 uppercase tracking-widest`}>
-               {sit.label}
-             </span>
-          </div>
-        );
-      }
-    },
-    {
-      accessorKey: "socios_count",
-      header: () => <div className="text-center">Sócios</div>,
-      cell: ({ row }) => (
-        <div className="flex justify-center">
-            <span className="inline-flex items-center justify-center w-7 h-7 rounded bg-black/5 text-[9px] font-black text-muted-foreground border border-border/5 shadow-inner">
-              {row.original.socios_count || 0}
-            </span>
-        </div>
-      )
-    },
-    {
-      id: "actions",
-      header: () => <div className="text-right pr-6">Ações</div>,
-      cell: ({ row }) => (
-        <div className="flex items-center justify-end gap-1.5 pr-6" onClick={(e) => e.stopPropagation()}>
-           <button onClick={() => navigate(`/societario/${row.original.id}`)} className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground/30 hover:text-primary transition-all border border-transparent" title="Ver Detalhes">
-             <Eye size={14} />
-           </button>
-           <button onClick={() => navigate(`/societario/${row.original.id}`)} className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground/30 hover:text-primary transition-all border border-transparent" title="Editar">
-             <Edit2 size={14} />
-           </button>
-        </div>
-      )
-    }
-  ];
-
-  const table = useReactTable({
-    data: empresas,
-    columns,
-    rowCount: totalCount,
-    state: {
-      pagination,
-    },
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-  });
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-card border border-border/10 !p-0 overflow-hidden rounded-xl flex flex-col shadow-2xl">
-      <div className="overflow-x-auto flex-1 relative min-h-[300px]">
-        {isLoading && (
-            <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
-                <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            </div>
-        )}
-        <table className="data-table w-full">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="h-9 bg-black/5">
-                {headerGroup.headers.map(header => (
-                  <th key={header.id} className="whitespace-nowrap py-0 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-foreground border-b border-border/10">
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-border/5">
-            {empresas.length === 0 && !isLoading ? (
-              <tr>
-                <td colSpan={columns.length} className="text-center py-20 text-muted-foreground bg-black/5">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="p-4 rounded-full bg-black/10">
-                      <Building2 size={32} className="opacity-10" />
+    <div className="space-y-4">
+      <div className="space-y-3">
+        {empresas.map((emp) => {
+          const isExpanded = expanded === emp.id;
+          const sit = situacaoConfig[emp.situacao || "ativa"] || situacaoConfig.ativa;
+          
+          let statusColor: "success" | "warning" | "danger" | "info" = "success";
+          if (emp.situacao === "paralisada") statusColor = "warning";
+          if (emp.situacao === "baixada") statusColor = "danger";
+
+          return (
+            <EmpresaAccordion
+              key={emp.id}
+              icon={<Building2 size={20} />}
+              nome_empresa={emp.nome_empresa}
+              cnpj={emp.cnpj}
+              status={sit.label}
+              statusColor={statusColor}
+              isOpen={isExpanded}
+              onClick={() => setExpanded(isExpanded ? null : emp.id)}
+            >
+              <div className="max-w-6xl space-y-6 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Detalhes Técnicos */}
+                  <div className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-border/10 shadow-inner space-y-4">
+                    <div className="flex items-center gap-2 border-b border-border/5 pb-2">
+                       <Building2 size={14} className="text-primary" />
+                       <span className="text-[10px] font-black uppercase text-foreground tracking-widest italic">Dados Cadastrais</span>
                     </div>
-                    <div className="space-y-1">
-                      <p className="font-black text-[12px] text-card-foreground uppercase tracking-tight">Nenhuma empresa encontrada</p>
-                      <p className="text-[9px] font-medium opacity-40 uppercase tracking-widest">Ajuste os filtros técnicos.</p>
+                    <div className="space-y-3">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40 italic">Regime Tributário</span>
+                        <span className="text-[11px] font-black text-primary uppercase">{regimeLabels[emp.regime_tributario || ""] || "NÃO INFORMADO"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40 italic">Quant. de Sócios</span>
+                        <span className="text-[11px] font-black text-foreground uppercase">{emp.socios_count || 0} Sócios Registrados</span>
+                      </div>
                     </div>
                   </div>
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr 
-                  key={row.id} 
-                  className="cursor-pointer group transition-all hover:bg-black/5" 
-                  onClick={() => navigate(`/societario/${row.original.id}`)}
-                >
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} className="px-4 py-2 border-b border-border/5 last:border-b-0">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+
+                  {/* Status e ID */}
+                  <div className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-border/10 shadow-inner space-y-4">
+                    <div className="flex items-center gap-2 border-b border-border/5 pb-2">
+                       <Hash size={14} className="text-primary" />
+                       <span className="text-[10px] font-black uppercase text-foreground tracking-widest italic">Metadados</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40 italic">Identificador Único</span>
+                        <span className="text-[11px] font-black text-foreground uppercase font-mono tracking-tighter">{emp.id}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40 italic">Situação Operacional</span>
+                        <div className="flex">
+                           <span className={`badge-status ${sit.cls} font-black text-[9px] px-2.5 py-0.5 uppercase tracking-widest`}>
+                             {sit.label}
+                           </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ações Rápidas */}
+                  <div className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-border/10 shadow-inner space-y-6 flex flex-col justify-center">
+                    <button 
+                      onClick={() => navigate(`/societario/${emp.id}`)}
+                      className="w-full h-11 bg-primary text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-[0.98]"
+                    >
+                      <Eye size={16} /> VER DETALHES DA EMPRESA
+                    </button>
+                    <button 
+                      onClick={() => navigate(`/societario/${emp.id}`)}
+                      className="w-full h-11 bg-black/10 dark:bg-white/5 border border-border/10 text-foreground rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-black/20 transition-all flex items-center justify-center gap-2 shadow-inner"
+                    >
+                      <Edit2 size={16} /> EDITAR CADASTRO
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </EmpresaAccordion>
+          );
+        })}
+
+        {empresas.length === 0 && !isLoading && (
+          <div className="flex flex-col items-center justify-center py-20 bg-black/[0.02] dark:bg-white/[0.01] rounded-xl border border-dashed border-border/10">
+            <Building2 size={32} className="text-muted-foreground/10 mb-4" />
+            <p className="text-[12px] font-black text-muted-foreground/30 uppercase tracking-widest italic">Nenhuma empresa encontrada</p>
+          </div>
+        )}
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex items-center justify-between p-2 border-t border-border/10 bg-black/10 rounded-b-xl h-11 shrink-0">
-        <div className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest flex items-center gap-1.5 ml-2">
-            Mostrando <span className="text-foreground">{table.getRowModel().rows.length}</span> de <span className="text-foreground">{totalCount}</span> REGISTROS
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 bg-black/5 dark:bg-white/5 border border-border/10 rounded-2xl shadow-inner">
+        <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">
+            MOSTRANDO <span className="text-primary">{empresas.length}</span> DE <span className="text-primary">{totalCount}</span> REGISTROS
         </div>
         
-        <div className="flex items-center gap-3">
-            <div className="flex items-baseline gap-1 text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest">
-                PÁGINA <span className="text-foreground text-[10px] tabular-nums">{table.getState().pagination.pageIndex + 1}</span>
-                <span className="opacity-30">/</span> {table.getPageCount() || 1}
+        <div className="flex items-center gap-4">
+            <div className="flex items-baseline gap-1.5 text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">
+                PÁGINA <span className="text-primary text-[13px] tabular-nums">{pagination.pageIndex + 1}</span>
+                <span className="opacity-20 italic">/ de</span> {Math.ceil(totalCount / pagination.pageSize) || 1}
             </div>
 
-            <div className="flex items-center gap-1 p-0.5 bg-black/10 rounded-lg border border-border/10 shadow-inner">
-            <button
-                className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-primary hover:bg-card disabled:opacity-10 transition-all"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-            >
-                <ChevronLeft size={14} />
-            </button>
-            <button
-                className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-primary hover:bg-card disabled:opacity-10 transition-all"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-            >
-                <ChevronRight size={14} />
-            </button>
+            <div className="flex items-center gap-1.5 p-1 bg-black/10 dark:bg-white/5 rounded-xl border border-border/10 shadow-inner">
+              <button
+                  className="w-9 h-9 flex items-center justify-center rounded-lg text-foreground hover:text-primary hover:bg-card disabled:opacity-10 transition-all active:scale-90"
+                  onClick={() => setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex - 1 }))}
+                  disabled={pagination.pageIndex === 0}
+              >
+                  <ChevronLeft size={18} />
+              </button>
+              <button
+                  className="w-9 h-9 flex items-center justify-center rounded-lg text-foreground hover:text-primary hover:bg-card disabled:opacity-10 transition-all active:scale-90"
+                  onClick={() => setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))}
+                  disabled={(pagination.pageIndex + 1) * pagination.pageSize >= totalCount}
+              >
+                  <ChevronRight size={18} />
+              </button>
             </div>
             
             <select
-               value={table.getState().pagination.pageSize}
-               onChange={e => {
-                 table.setPageSize(Number(e.target.value))
-               }}
-               className="h-7 px-2 rounded-lg border border-border/10 bg-black/10 text-[8px] font-black uppercase tracking-widest shadow-inner outline-none cursor-pointer hover:bg-black/20 transition-all"
+               value={pagination.pageSize}
+               onChange={e => setPagination(prev => ({ ...prev, pageSize: Number(e.target.value), pageIndex: 0 }))}
+               className="h-11 px-4 rounded-xl border border-border/10 bg-black/10 dark:bg-white/5 text-[10px] font-black uppercase tracking-widest shadow-inner outline-none cursor-pointer hover:bg-black/20 transition-all"
             >
               {[10, 20, 50, 100].map(pageSize => (
                 <option key={pageSize} value={pageSize}>
