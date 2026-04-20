@@ -237,9 +237,9 @@ const SocietarioPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-black/10 dark:bg-white/5 p-1 rounded-xl border border-border/10 shadow-inner">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white/40 dark:bg-white/[0.02] p-1.5 rounded-2xl border border-border/10 shadow-sm backdrop-blur-sm">
           {/* Main Feature Tabs */}
-          <div className="flex bg-black/10 dark:bg-white/10 p-0.5 rounded-lg w-full md:max-w-[240px] shadow-inner h-9">
+          <div className="flex bg-black/5 dark:bg-white/10 p-1 rounded-xl w-full md:max-w-[240px] h-10">
             <button
               onClick={() => setActiveMainTab("empresas")}
               className={`flex-1 flex items-center justify-center gap-2 h-full rounded-md text-[8px] font-black uppercase tracking-widest transition-all ${activeMainTab === "empresas" ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}
@@ -258,7 +258,7 @@ const SocietarioPage: React.FC = () => {
           </div>
 
           {activeMainTab === "empresas" && (
-            <div className="flex bg-black/10 dark:bg-white/10 p-0.5 rounded-lg overflow-x-auto no-scrollbar gap-1 max-w-full shadow-inner h-9">
+            <div className="flex bg-black/5 dark:bg-white/10 p-1 rounded-xl overflow-x-auto no-scrollbar gap-1 max-w-full h-10">
               {[
                 { id: "ativas", label: "Ativas" },
                 { id: "mei", label: "MEI" },
@@ -293,7 +293,7 @@ const SocietarioPage: React.FC = () => {
                     placeholder="PROCURAR EMPRESA OU CNPJ..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 h-9 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-20 shadow-inner"
+                    className="w-full pl-10 pr-4 h-10 bg-card border border-border/20 rounded-xl outline-none text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-20 shadow-sm"
                   />
                 </div>
 

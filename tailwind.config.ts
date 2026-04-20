@@ -24,11 +24,7 @@ export default {
           'sans-serif',
         ],
         mono: [
-          '"SF Mono"',
-          'ui-monospace',
-          'SFMono-Regular',
-          'Menlo',
-          'Consolas',
+          'Ubuntu',
           'monospace',
         ],
         // Aliases semânticos (mantêm compatibilidade com o existente)

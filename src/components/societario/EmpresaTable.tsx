@@ -71,15 +71,15 @@ export const EmpresaTable = ({
                   <div className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-border/10 shadow-inner space-y-4">
                     <div className="flex items-center gap-2 border-b border-border/5 pb-2">
                        <Building2 size={14} className="text-primary" />
-                       <span className="text-[10px] font-black uppercase text-foreground tracking-widest italic">Dados Cadastrais</span>
+                       <span className="text-[10px] font-black uppercase text-foreground tracking-widest">Dados Cadastrais</span>
                     </div>
                     <div className="space-y-3">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40 italic">Regime Tributário</span>
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40">Regime Tributário</span>
                         <span className="text-[11px] font-black text-primary uppercase">{regimeLabels[emp.regime_tributario || ""] || "NÃO INFORMADO"}</span>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40 italic">Quant. de Sócios</span>
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40">Quant. de Sócios</span>
                         <span className="text-[11px] font-black text-foreground uppercase">{emp.socios_count || 0} Sócios Registrados</span>
                       </div>
                     </div>
@@ -89,15 +89,15 @@ export const EmpresaTable = ({
                   <div className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-border/10 shadow-inner space-y-4">
                     <div className="flex items-center gap-2 border-b border-border/5 pb-2">
                        <Hash size={14} className="text-primary" />
-                       <span className="text-[10px] font-black uppercase text-foreground tracking-widest italic">Metadados</span>
+                       <span className="text-[10px] font-black uppercase text-foreground tracking-widest">Metadados</span>
                     </div>
                     <div className="space-y-3">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40 italic">Identificador Único</span>
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40">Identificador Único</span>
                         <span className="text-[11px] font-black text-foreground uppercase font-mono tracking-tighter">{emp.id}</span>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40 italic">Situação Operacional</span>
+                        <span className="text-[9px] font-black text-foreground uppercase tracking-widest opacity-40">Situação Operacional</span>
                         <div className="flex">
                            <span className={`badge-status ${sit.cls} font-black text-[9px] px-2.5 py-0.5 uppercase tracking-widest`}>
                              {sit.label}
@@ -131,7 +131,7 @@ export const EmpresaTable = ({
         {empresas.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center py-20 bg-black/[0.02] dark:bg-white/[0.01] rounded-xl border border-dashed border-border/10">
             <Building2 size={32} className="text-muted-foreground/10 mb-4" />
-            <p className="text-[12px] font-black text-muted-foreground/30 uppercase tracking-widest italic">Nenhuma empresa encontrada</p>
+            <p className="text-[12px] font-black text-muted-foreground/30 uppercase tracking-widest">Nenhuma empresa encontrada</p>
           </div>
         )}
       </div>
@@ -145,7 +145,7 @@ export const EmpresaTable = ({
         <div className="flex items-center gap-4">
             <div className="flex items-baseline gap-1.5 text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">
                 PÁGINA <span className="text-primary text-[13px] tabular-nums">{pagination.pageIndex + 1}</span>
-                <span className="opacity-20 italic">/ de</span> {Math.ceil(totalCount / pagination.pageSize) || 1}
+                <span className="opacity-20">/ de</span> {Math.ceil(totalCount / pagination.pageSize) || 1}
             </div>
 
             <div className="flex items-center gap-1.5 p-1 bg-black/10 dark:bg-white/5 rounded-xl border border-border/10 shadow-inner">
