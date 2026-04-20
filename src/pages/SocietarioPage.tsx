@@ -202,12 +202,12 @@ const SocietarioPage: React.FC = () => {
       <div className="space-y-6">
         {/* Main Page Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
-          <div className="space-y-1">
+          <div className="space-y-1 -mt-2">
             <div className="flex items-center gap-2">
               <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Societário</span></h1>
               <FavoriteToggleButton moduleId="societario" />
             </div>
-            <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm leading-tight">empresas e acompanhamento de processos.</p>
+            <p className="text-[14px] font-bold text-muted-foreground/70 text-shadow-sm leading-tight">empresas e acompanhamento de processos.</p>
           </div>
 
           <div className="flex items-center gap-2.5">

@@ -130,12 +130,12 @@ const CertificadosPage: React.FC = () => {
 
       {/* Main Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
-        <div className="space-y-1">
+        <div className="space-y-1 -mt-8">
           <div className="flex items-center gap-2">
              <h1 className="header-title">Certificados <span className="text-primary/90 font-black">Digitais</span></h1>
              <FavoriteToggleButton moduleId="certificados" />
           </div>
-          <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Gestão centralizada e alertas inteligentes de validade para certificados A1, A3 e e-CNPJ.</p>
+          <p className="text-[14px] font-bold text-muted-foreground/70 text-shadow-sm">Controle de Certificado Digitais.</p>
         </div>
       </div>
 

@@ -285,19 +285,19 @@ const OcorrenciasPage: React.FC = () => {
       <div className="space-y-6">
         {/* Main Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
-          <div className="space-y-1">
+          <div className="space-y-1 -mt-2">
             <div className="flex items-center gap-2">
               <h1 className="header-title">Gestão de <span className="text-primary/90 font-black">Ocorrências</span></h1>
               <FavoriteToggleButton moduleId="ocorrencias" />
             </div>
-            <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest text-shadow-sm">Registros oficiais e controle interno de eventos corporativos.</p>
+            <p className="text-[14px] font-bold text-muted-foreground/70 text-shadow-sm">Registros e controle interno de ocorrências.</p>
           </div>
 
           <div className="flex items-center gap-3">
             {isFetching && (
               <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-primary/5 border border-primary/10">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                <span className="text-[9px] font-black text-primary uppercase tracking-widest">Sinc</span>
+                <span className="text-[9px] font-black text-primary">Sinc</span>
               </div>
             )}
 
@@ -310,7 +310,7 @@ const OcorrenciasPage: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-5 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/50 hover:text-foreground"}`}
+                  className={`px-5 py-2 rounded-lg text-[9px] font-bold transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/50 hover:text-foreground"}`}
                 >
                   {tab.icon} {tab.label}
                 </button>
@@ -517,7 +517,7 @@ const OcorrenciasPage: React.FC = () => {
                 {ocorrencias.length === 0 ? (
                   <div className="py-16 text-center bg-black/5 dark:bg-white/5 border border-dashed border-border/10 rounded-2xl opacity-40">
                     <FileText size={24} className="mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Nenhuma ocorrência</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nenhuma ocorrência</p>
                   </div>
                 ) : (
                   ocorrencias.map(oc => (
@@ -527,8 +527,8 @@ const OcorrenciasPage: React.FC = () => {
                           <Building2 size={16} />
                         </div>
                         <div className="space-y-0.5 flex-1 min-w-0">
-                          <h4 className="font-black text-[10px] text-foreground uppercase tracking-tight truncate">{oc.empresas.nome_empresa}</h4>
-                          <div className="flex flex-wrap items-center gap-3 text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                          <h4 className="font-black text-[14px] text-foreground uppercase tracking-tight truncate">{oc.empresas.nome_empresa}</h4>
+                          <div className="flex flex-wrap items-center gap-3 text-[8px] font-black text-muted-foreground/60 uppercase">
                             <span className="flex items-center gap-1 text-primary/60">
                               <LayoutGrid size={9} /> {oc.departamento}
                             </span>

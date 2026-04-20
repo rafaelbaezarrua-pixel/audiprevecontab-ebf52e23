@@ -158,23 +158,22 @@ const FiscalPage: React.FC = () => {
       {/* Background decoration elements */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/2 rounded-full blur-[120px] -z-10" />
 
-      <div className="space-y-6">
+      <div className="space-y-10">
         {/* Header Estilo Societário */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
-          <div className="space-y-1">
+          <div className="space-y-1 -mt-2">
             <div className="flex items-center gap-2">
               <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Fiscal</span></h1>
               <FavoriteToggleButton moduleId="fiscal" />
             </div>
-            <p className="text-[13px] font-medium text-foreground uppercase tracking-widest text-shadow-sm">Controle de XML, impostos e obrigações tributárias mensais.</p>
+            <p className="text-[14px] font-bold text-muted-foreground/70 text-shadow-sm">Controle de XML, impostos e obrigações tributárias mensais.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => setIsUploaderOpen(true)} className="flex items-center gap-2 px-4 h-9 bg-black/10 dark:bg-white/5 text-primary hover:bg-primary/5 rounded-xl transition-all font-black text-[11px] uppercase tracking-widest border border-border/10 shadow-sm active:scale-95">
+            <button onClick={() => setIsUploaderOpen(true)} className="flex items-center gap-2 px-4 h-9 bg-black/10 dark:bg-white/5 text-primary hover:bg-primary/5 rounded-xl transition-all font-black text-[11px] uppercase border border-border/10 shadow-sm active:scale-95">
               <FileUp size={14} /> <span>Processar Guias</span>
             </button>
             <div className="flex items-center gap-3 px-3 h-9 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl shadow-inner">
-              <span className="text-[10px] font-black text-foreground uppercase tracking-widest">Comp.</span>
-              <input type="month" value={competencia} onChange={(e) => setCompetencia(e.target.value)} className="bg-transparent border-none focus:ring-0 text-[12px] font-black outline-none h-full text-primary uppercase cursor-pointer w-24" />
+              <input type="month" value={competencia} onChange={(e) => setCompetencia(e.target.value)} className="bg-transparent border-none focus:ring-0 text-[12px] font-bold outline-none h-full text-primary cursor-pointer w-24" />
             </div>
           </div>
         </div>
@@ -184,25 +183,25 @@ const FiscalPage: React.FC = () => {
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="flex bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl overflow-hidden h-10 shrink-0 p-0.5 shadow-inner">
               <div className="px-4 py-1 flex flex-col justify-center border-r border-border/5">
-                <span className="text-[10px] text-foreground font-black uppercase tracking-wider mb-0.5">Total</span>
+                <span className="text-[8px] text-foreground font-black tracking-wider">Total</span>
                 <span className="text-sm font-black">{filtered.length}</span>
               </div>
               <div className="px-4 py-1 flex flex-col justify-center border-r border-border/5">
-                <span className="text-[10px] text-primary font-black uppercase tracking-wider mb-0.5">OK</span>
+                <span className="text-[8px] text-primary font-black tracking-wider">OK</span>
                 <span className="text-sm font-black text-primary">{completedCount}</span>
               </div>
               <div className="px-4 py-1 flex flex-col justify-center">
-                <span className="text-[10px] text-rose-600 font-black uppercase tracking-wider mb-0.5">Alertas</span>
+                <span className="text-[10px] text-rose-600 font-bold tracking-wider">Alertas</span>
                 <span className="text-sm font-black text-rose-600">{filtered.length - completedCount}</span>
               </div>
             </div>
             <div className="relative flex-1 md:w-[280px] group">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={14} />
-              <input type="text" placeholder="PROCURAR EMPRESA..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-4 h-10 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[12px] font-black uppercase tracking-widest focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-40 shadow-inner" />
+              <input type="text" placeholder="PROCURAR EMPRESA..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-4 h-10 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl outline-none text-[12px] font-black uppercase focus:ring-1 focus:ring-primary/20 transition-all placeholder:opacity-40 shadow-inner" />
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <select value={filterRecebimento} onChange={e => setFilterRecebimento(e.target.value)} className="h-10 px-4 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl text-[11px] font-black outline-none cursor-pointer text-foreground uppercase tracking-widest min-w-[150px] shadow-inner">
+            <select value={filterRecebimento} onChange={e => setFilterRecebimento(e.target.value)} className="h-10 px-4 bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl text-[11px] font-black outline-none cursor-pointer text-foreground uppercase min-w-[150px] shadow-inner">
               <option value="todos">RECB: TODOS</option>
               {recebimentoOptions.map(opt => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
             </select>
@@ -227,12 +226,12 @@ const FiscalPage: React.FC = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-black/5 dark:bg-white/5 border-b border-border/10">
-                  <th className="px-4 py-2 text-left text-[13px] font-black uppercase tracking-widest text-foreground min-w-[200px]">Empresas</th>
-                  <th className="px-4 py-2 text-left text-[13px] font-black uppercase tracking-widest text-foreground">CNPJ</th>
-                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase tracking-widest text-foreground">XML</th>
-                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase tracking-widest text-foreground w-24">Guia</th>
-                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase tracking-widest text-foreground w-32">Envio</th>
-                  <th className="px-4 py-2 text-right text-[13px] font-black uppercase tracking-widest text-foreground pr-8 w-10">...</th>
+                  <th className="px-4 py-2 text-left text-[13px] font-black uppercase text-foreground min-w-[200px]">Empresas</th>
+                  <th className="px-4 py-2 text-left text-[13px] font-black uppercase text-foreground">CNPJ</th>
+                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase text-foreground">XML</th>
+                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase text-foreground w-24">Guia</th>
+                  <th className="px-4 py-2 text-center text-[13px] font-black uppercase text-foreground w-32">Envio</th>
+                  <th className="px-4 py-2 text-right text-[13px] font-black uppercase text-foreground pr-8 w-10">...</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/5">
@@ -268,7 +267,7 @@ const FiscalPage: React.FC = () => {
                             </div>
                             <div className="flex flex-col min-w-0">
                               <span className="font-black text-foreground text-[13px] uppercase tracking-tight truncate max-w-[400px] group-hover:text-primary transition-colors">{emp.nome_empresa}</span>
-                              <span className="text-[09px] text-muted-foreground/30 font-black uppercase tracking-widest opacity-60 font-mono">{regimeLabels[emp.regime_tributario] || "—"}</span>
+                              <span className="text-[09px] text-muted-foreground/30 font-black font-mono">{regimeLabels[emp.regime_tributario] || "—"}</span>
                             </div>
                           </div>
                         </td>
@@ -279,7 +278,7 @@ const FiscalPage: React.FC = () => {
                             {rIsConcluido ? "FECHADO" : "PENDENTE"}
                           </span>
                         </td>
-                        <td className="px-4 py-5 text-center whitespace-nowrap"><span className="text-foreground font-black text-[12px] uppercase tracking-widest">{formatDateBR(r?.data_envio)}</span></td>
+                        <td className="px-4 py-5 text-center whitespace-nowrap"><span className="text-foreground font-black text-[12px]">{formatDateBR(r?.data_envio)}</span></td>
                         <td className="px-4 py-5 pr-8 text-right"><div className={`p-1 rounded-lg transition-all ${isOpen ? "rotate-180 bg-primary/10 text-primary" : "text-muted-foreground/20"}`}><ChevronDown size={14} /></div></td>
                       </tr>
                       {isOpen && (
@@ -290,7 +289,7 @@ const FiscalPage: React.FC = () => {
                                 <div className="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-border/10 pb-3">
                                   <TabsList className="bg-black/10 dark:bg-white/10 p-0.5 rounded-xl h-9 border border-border/10 shadow-inner">
                                     <TabsTrigger value="dados" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel Fiscal</TabsTrigger>
-                                    <TabsTrigger value="pastas" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Repositório</TabsTrigger>
+                                    <TabsTrigger value="pastas" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Pastas</TabsTrigger>
                                   </TabsList>
                                   <button onClick={() => setDialogEmpresa(emp)} className="h-8 px-4 text-[11px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-xl transition-all flex items-center gap-2 active:scale-95 shadow-sm"><Settings size={12} /> Parâmetros</button>
                                 </div>
@@ -332,10 +331,10 @@ const FiscalPage: React.FC = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                       <div className="space-y-1">
-                                        <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">XML Status</label>
+                                        <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">XML</label>
                                         <select value={editForm[emp.id]?.xml_status || "pendente"} onChange={e => updateForm(emp.id, "xml_status", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/10 bg-black/10 dark:bg-white/5 text-[11px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer shadow-inner">
                                           <option value="pendente">PENDENTE</option>
-                                          <option value="ok">PROCESSADO (OK)</option>
+                                          <option value="ok">OK</option>
                                         </select>
                                       </div>
                                       <div className="space-y-1">
