@@ -40,12 +40,12 @@ const FiscalPage: React.FC = () => {
     return empresas.filter(e => {
       const matchSearch = e.nome_empresa?.toLowerCase().includes(search.toLowerCase()) || e.cnpj?.includes(search);
       let matchTab = false;
-      const isOutra = e.situacao === "paralisada" || e.situacao === "baixada" || e.situacao === "entregue";
+      const isOutra = e.situacao === "entregue";
 
       if (activeTab === "simples") matchTab = !isOutra && e.regime_tributario === "simples" && e.porte_empresa !== "mei";
       else if (activeTab === "lucro") matchTab = !isOutra && (e.regime_tributario === "lucro_presumido" || e.regime_tributario === "lucro_real");
       else if (activeTab === "mei") matchTab = !isOutra && (e.regime_tributario === "mei" || e.regime_tributario === "simei" || e.porte_empresa === "mei" || e.situacao === "mei");
-      else if (activeTab === "outras") matchTab = isOutra;
+      else if (activeTab === "outras") matchTab = false; // Tab removed
 
       let matchStatus = true;
       if (filterStatus !== "todos") {
@@ -216,7 +216,7 @@ const FiscalPage: React.FC = () => {
 
         {/* Navegação por Abas */}
         <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 overflow-x-auto no-scrollbar gap-0.5 w-full shadow-inner">
-          {[{ id: "simples", label: "Simples Nacional" }, { id: "lucro", label: "Lucro Presumido/Real" }, { id: "mei", label: "MEI / Simei" }, { id: "outras", label: "Paralisadas/Baixadas" }].map(t => (
+          {[{ id: "simples", label: "Simples Nacional" }, { id: "lucro", label: "Lucro Presumido/Real" }, { id: "mei", label: "MEI / Simei" }].map(t => (
             <button key={t.id} className={`flex-1 px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap ${activeTab === t.id ? "bg-card text-primary shadow-sm border border-border/5" : "text-foreground hover:text-foreground hover:bg-card/20"}`} onClick={() => setActiveTab(t.id as any)}>{t.label}</button>
           ))}
         </div>

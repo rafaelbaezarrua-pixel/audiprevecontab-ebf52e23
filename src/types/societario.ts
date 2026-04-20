@@ -23,6 +23,15 @@ export interface Empresa {
   opcao_pelo_mei?: boolean | null;
   data_opcao_pelo_mei?: string | null;
   porte_rfb?: string | null;
+  endereco?: {
+    logradouro: string;
+    numero: string;
+    complemento?: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+  } | null;
 }
 
 export interface DetalhesPasso {
