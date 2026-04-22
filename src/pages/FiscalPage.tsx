@@ -34,6 +34,21 @@ const FiscalPage: React.FC = () => {
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
   const [dialogEmpresa, setDialogEmpresa] = useState<any>(null);
   const [rowTabs, setRowTabs] = useState<Record<string, 'dados' | 'pastas'>>({});
+  const [latestParams, setLatestParams] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const { data } = await supabase.from('fiscal').select('empresa_id, observacoes').order('competencia', { ascending: false }).limit(2500);
+        const map: any = {};
+        data?.forEach(r => {
+          if (!map[r.empresa_id]) map[r.empresa_id] = r.observacoes || {};
+        });
+        setLatestParams(map);
+      } catch (err) { console.error("Error fetching latest params", err); }
+    };
+    fetchLatest();
+  }, []);
 
   const recebimentoOptions = ["E-mail", "WhatsApp", "Drive", "Físico"];
 
@@ -52,7 +67,8 @@ const FiscalPage: React.FC = () => {
       // Filtro de Movimentação (apenas para Simples e Lucro)
       let matchMovimento = true;
       if (activeTab === "simples" || activeTab === "lucro") {
-        const status = record?.observacoes?.movimento_status || "com_movimento";
+        const obs = record?.observacoes || latestParams[e.id] || {};
+        const status = obs.movimento_status || "com_movimento";
         matchMovimento = movimentoTab === "com" ? status === "com_movimento" : status === "sem_movimento";
       }
 
@@ -81,29 +97,72 @@ const FiscalPage: React.FC = () => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
     const existing = (fiscalData[id] || {}) as Partial<FiscalRecord>;
-    let fixedFields = { tipo_nota: "", recebimento_arquivos: "", aliquota: null as number | null, ramo_empresarial: "", xml_status: "pendente" as any };
+    let fixedFields: any = { 
+      tipo_nota: "", 
+      recebimento_arquivos: "", 
+      aliquota: null, 
+      ramo_empresarial: "", 
+      xml_status: "pendente",
+      forma_envio: "",
+      aliquota_irpj: null,
+      aliquota_csll: null,
+      aliquota_pis: null,
+      aliquota_cofins: null,
+      aliquota_icms: null,
+      aliquota_iss: null,
+      observacoes: {}
+    };
 
     if (!existing.id) {
       const { data: prev } = await supabase.from("fiscal").select("*").eq("empresa_id", id).order("competencia", { ascending: false }).limit(1);
       if (prev?.[0]) {
-        fixedFields = { tipo_nota: prev[0].tipo_nota || "", recebimento_arquivos: prev[0].recebimento_arquivos || "", aliquota: prev[0].aliquota, ramo_empresarial: prev[0].ramo_empresarial || "", xml_status: prev[0].xml_status || "pendente" };
+        fixedFields = { 
+          tipo_nota: prev[0].tipo_nota || "", 
+          recebimento_arquivos: prev[0].recebimento_arquivos || "", 
+          aliquota: prev[0].aliquota, 
+          ramo_empresarial: prev[0].ramo_empresarial || "", 
+          xml_status: prev[0].xml_status || "pendente",
+          forma_envio: prev[0].forma_envio || "",
+          aliquota_irpj: prev[0].aliquota_irpj,
+          aliquota_csll: prev[0].aliquota_csll,
+          aliquota_pis: prev[0].aliquota_pis,
+          aliquota_cofins: prev[0].aliquota_cofins,
+          aliquota_icms: prev[0].aliquota_icms,
+          aliquota_iss: prev[0].aliquota_iss,
+          observacoes: prev[0].observacoes || {}
+        };
       }
     } else {
-      fixedFields = { tipo_nota: existing.tipo_nota || "", recebimento_arquivos: existing.recebimento_arquivos || "", aliquota: existing.aliquota, ramo_empresarial: existing.ramo_empresarial || "", xml_status: existing.xml_status || "pendente" };
+      fixedFields = { 
+        tipo_nota: existing.tipo_nota || "", 
+        recebimento_arquivos: existing.recebimento_arquivos || "", 
+        aliquota: existing.aliquota, 
+        ramo_empresarial: existing.ramo_empresarial || "", 
+        xml_status: existing.xml_status || "pendente",
+        forma_envio: existing.forma_envio || "",
+        aliquota_irpj: existing.aliquota_irpj,
+        aliquota_csll: existing.aliquota_csll,
+        aliquota_pis: existing.aliquota_pis,
+        aliquota_cofins: existing.aliquota_cofins,
+        aliquota_icms: existing.aliquota_icms,
+        aliquota_iss: existing.aliquota_iss,
+        observacoes: existing.observacoes || {}
+      };
     }
 
     setEditForm(prev => ({
       ...prev, [id]: {
-        ...fixedFields, forma_envio: existing.forma_envio || "",
-        status_guia: existing.status_guia || "pendente", data_envio: existing.data_envio || "",
-        irpj_csll_status: existing.irpj_csll_status || "pendente", irpj_csll_data_envio: existing.irpj_csll_data_envio || "",
-        pis_cofins_status: existing.pis_cofins_status || "pendente", pis_cofins_data_envio: existing.pis_cofins_data_envio || "",
-        icms_status: existing.icms_status || "pendente", icms_data_envio: existing.icms_data_envio || "",
-        iss_status: existing.iss_status || "pendente", iss_data_envio: existing.iss_data_envio || "",
-        aliquota_irpj: existing.aliquota_irpj, aliquota_csll: existing.aliquota_csll,
-        aliquota_pis: existing.aliquota_pis, aliquota_cofins: existing.aliquota_cofins,
-        aliquota_icms: existing.aliquota_icms,
-        observacoes: existing.observacoes || {},
+        ...fixedFields,
+        status_guia: existing.status_guia || "pendente", 
+        data_envio: existing.data_envio || "",
+        irpj_csll_status: existing.irpj_csll_status || "pendente", 
+        irpj_csll_data_envio: existing.irpj_csll_data_envio || "",
+        pis_cofins_status: existing.pis_cofins_status || "pendente", 
+        pis_cofins_data_envio: existing.pis_cofins_data_envio || "",
+        icms_status: existing.icms_status || "pendente", 
+        icms_data_envio: existing.icms_data_envio || "",
+        iss_status: existing.iss_status || "pendente", 
+        iss_data_envio: existing.iss_data_envio || "",
       }
     }));
   };
@@ -139,6 +198,10 @@ const FiscalPage: React.FC = () => {
   const handleSaveParameters = async (empresaId: string, data: any) => {
     try {
       await saveFiscalRecord({ empresa_id: empresaId, competencia, ...data });
+      setEditForm(prev => ({ ...prev, [empresaId]: { ...prev[empresaId], ...data } }));
+      if (data.observacoes) {
+        setLatestParams(prev => ({ ...prev, [empresaId]: data.observacoes }));
+      }
       toast.success("Parâmetros atualizados!");
     } catch (err: any) { toast.error(err.message); }
   };
