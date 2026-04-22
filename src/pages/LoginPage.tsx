@@ -152,8 +152,8 @@ const LoginPage: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
           <div className="mb-10 text-center">
-            <h2 className="text-xl font-black text-card-foreground uppercase tracking-tight">Portal <span className="text-primary">Administrativo</span></h2>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-50">Ambiente Restrito — Protocolo TLS 1.3</p>
+            <h2 className="text-xl font-black text-card-foreground uppercase tracking-tight">Portal <span className="text-primary">Audipreve</span></h2>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-50">Ambiente Restrito</p>
           </div>
 
           {blockedUntil ? (
@@ -173,7 +173,7 @@ const LoginPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary ml-1 flex items-center gap-2">
-                  <Mail size={12} /> ID de Usuário (E-mail)
+                  <Mail size={12} />E-mail
                 </label>
                 <input
                   type="email"
@@ -188,7 +188,7 @@ const LoginPage: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center ml-1">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-                    <Lock size={12} /> Credencial Secreta
+                    <Lock size={12} /> Senha
                   </label>
                   <Link to="/esqueci-senha" title="Redefinir acesso" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
                     Esqueceu a senha?
