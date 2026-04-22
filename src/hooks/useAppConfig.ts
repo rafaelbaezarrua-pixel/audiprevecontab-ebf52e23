@@ -9,9 +9,9 @@ export interface AppConfig {
 }
 
 const DEFAULT_CONFIG: AppConfig = {
-  system_title: "Audipreve",
+  system_title: "Audipreve Contabilidade",
   system_logo_url: "",
-  welcome_message: "Bem-vindo ao portal Audipreve Contábil",
+  welcome_message: "Bem-vindo ao portal Audipreve",
 };
 
 export function useAppConfig() {
