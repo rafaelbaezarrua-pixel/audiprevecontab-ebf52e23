@@ -198,7 +198,7 @@ const HonorariosPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
         <div className="space-y-1 -mt-5">
           <div className="flex items-center gap-2">
-            <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Financeira</span></h1>
+            <h1 className="header-title">Departamento <span className="text-primary/90 font-black">Financeiro</span></h1>
             <FavoriteToggleButton moduleId="honorarios" />
             {isFetchingHonorarios && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 shadow-sm ml-2">

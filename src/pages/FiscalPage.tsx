@@ -97,11 +97,11 @@ const FiscalPage: React.FC = () => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
     const existing = (fiscalData[id] || {}) as Partial<FiscalRecord>;
-    let fixedFields: any = { 
-      tipo_nota: "", 
-      recebimento_arquivos: "", 
-      aliquota: null, 
-      ramo_empresarial: "", 
+    let fixedFields: any = {
+      tipo_nota: "",
+      recebimento_arquivos: "",
+      aliquota: null,
+      ramo_empresarial: "",
       xml_status: "pendente",
       forma_envio: "",
       aliquota_irpj: null,
@@ -116,11 +116,11 @@ const FiscalPage: React.FC = () => {
     if (!existing.id) {
       const { data: prev } = await supabase.from("fiscal").select("*").eq("empresa_id", id).order("competencia", { ascending: false }).limit(1);
       if (prev?.[0]) {
-        fixedFields = { 
-          tipo_nota: prev[0].tipo_nota || "", 
-          recebimento_arquivos: prev[0].recebimento_arquivos || "", 
-          aliquota: prev[0].aliquota, 
-          ramo_empresarial: prev[0].ramo_empresarial || "", 
+        fixedFields = {
+          tipo_nota: prev[0].tipo_nota || "",
+          recebimento_arquivos: prev[0].recebimento_arquivos || "",
+          aliquota: prev[0].aliquota,
+          ramo_empresarial: prev[0].ramo_empresarial || "",
           xml_status: prev[0].xml_status || "pendente",
           forma_envio: prev[0].forma_envio || "",
           aliquota_irpj: prev[0].aliquota_irpj,
@@ -133,11 +133,11 @@ const FiscalPage: React.FC = () => {
         };
       }
     } else {
-      fixedFields = { 
-        tipo_nota: existing.tipo_nota || "", 
-        recebimento_arquivos: existing.recebimento_arquivos || "", 
-        aliquota: existing.aliquota, 
-        ramo_empresarial: existing.ramo_empresarial || "", 
+      fixedFields = {
+        tipo_nota: existing.tipo_nota || "",
+        recebimento_arquivos: existing.recebimento_arquivos || "",
+        aliquota: existing.aliquota,
+        ramo_empresarial: existing.ramo_empresarial || "",
         xml_status: existing.xml_status || "pendente",
         forma_envio: existing.forma_envio || "",
         aliquota_irpj: existing.aliquota_irpj,
@@ -153,15 +153,15 @@ const FiscalPage: React.FC = () => {
     setEditForm(prev => ({
       ...prev, [id]: {
         ...fixedFields,
-        status_guia: existing.status_guia || "pendente", 
+        status_guia: existing.status_guia || "pendente",
         data_envio: existing.data_envio || "",
-        irpj_csll_status: existing.irpj_csll_status || "pendente", 
+        irpj_csll_status: existing.irpj_csll_status || "pendente",
         irpj_csll_data_envio: existing.irpj_csll_data_envio || "",
-        pis_cofins_status: existing.pis_cofins_status || "pendente", 
+        pis_cofins_status: existing.pis_cofins_status || "pendente",
         pis_cofins_data_envio: existing.pis_cofins_data_envio || "",
-        icms_status: existing.icms_status || "pendente", 
+        icms_status: existing.icms_status || "pendente",
         icms_data_envio: existing.icms_data_envio || "",
-        iss_status: existing.iss_status || "pendente", 
+        iss_status: existing.iss_status || "pendente",
         iss_data_envio: existing.iss_data_envio || "",
       }
     }));
@@ -234,7 +234,7 @@ const FiscalPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
           <div className="space-y-1 -mt-2">
             <div className="flex items-center gap-2">
-              <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Fiscal</span></h1>
+              <h1 className="header-title">Departamento <span className="text-primary/90 font-black">Fiscal</span></h1>
               <FavoriteToggleButton moduleId="fiscal" />
             </div>
             <p className="text-[14px] font-bold text-muted-foreground/70 text-shadow-sm">Controle de XML, impostos e obrigações tributárias mensais.</p>
