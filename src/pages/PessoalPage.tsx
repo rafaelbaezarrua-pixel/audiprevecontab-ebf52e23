@@ -118,7 +118,7 @@ const PessoalPage: React.FC = () => {
         va_data_envio: existing.va_data_envio || "",
         vr_data_envio: existing.vr_data_envio || "",
         vc_data_envio: existing.vc_data_envio || "",
-        dctf_web_gerada: existing.dctf_web_gerada || false, 
+        dctf_web_gerada: existing.dctf_web_gerada || false,
         dctf_web_data_envio: existing.dctf_web_data_envio || "",
       }
     }));
@@ -212,7 +212,7 @@ const PessoalPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 pt-0">
           <div className="space-y-1 -mt-2">
             <div className="flex items-center gap-2">
-              <h1 className="header-title">Gestão <span className="text-primary/90 font-black">Pessoal</span></h1>
+              <h1 className="header-title">Departamento <span className="text-primary/90 font-black">Pessoal</span></h1>
               <FavoriteToggleButton moduleId="pessoal" />
             </div>
             <p className="text-[14px] font-bold text-muted-foreground/70 text-shadow-sm">Folha, pró-labore, benefícios e obrigações mensais.</p>
@@ -489,41 +489,41 @@ const PessoalPage: React.FC = () => {
 
                           <div className="space-y-3 pt-3 border-t border-border/5">
                             <h5 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-                              <Send size={14}/> Envio para o Cliente
+                              <Send size={14} /> Envio para o Cliente
                             </h5>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data INSS</label>
+                                <input type="date" value={editForm[emp.id]?.inss_data_envio || ""} onChange={e => updateForm(emp.id, "inss_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data FGTS</label>
+                                <input type="date" value={editForm[emp.id]?.fgts_data_envio || ""} onChange={e => updateForm(emp.id, "fgts_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
+                              </div>
+                              {editForm[emp.id]?.possui_vt && (
                                 <div className="space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data INSS</label>
-                                  <input type="date" value={editForm[emp.id]?.inss_data_envio || ""} onChange={e => updateForm(emp.id, "inss_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
+                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data VT</label>
+                                  <input type="date" value={editForm[emp.id]?.vt_data_envio || ""} onChange={e => updateForm(emp.id, "vt_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
                                 </div>
+                              )}
+                              {editForm[emp.id]?.possui_vr && (
                                 <div className="space-y-1">
-                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data FGTS</label>
-                                  <input type="date" value={editForm[emp.id]?.fgts_data_envio || ""} onChange={e => updateForm(emp.id, "fgts_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
+                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data VR</label>
+                                  <input type="date" value={editForm[emp.id]?.vr_data_envio || ""} onChange={e => updateForm(emp.id, "vr_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
                                 </div>
-                                {editForm[emp.id]?.possui_vt && (
-                                  <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data VT</label>
-                                    <input type="date" value={editForm[emp.id]?.vt_data_envio || ""} onChange={e => updateForm(emp.id, "vt_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
-                                  </div>
-                                )}
-                                {editForm[emp.id]?.possui_vr && (
-                                  <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data VR</label>
-                                    <input type="date" value={editForm[emp.id]?.vr_data_envio || ""} onChange={e => updateForm(emp.id, "vr_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
-                                  </div>
-                                )}
-                                {editForm[emp.id]?.possui_va && (
-                                  <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data VA</label>
-                                    <input type="date" value={editForm[emp.id]?.va_data_envio || ""} onChange={e => updateForm(emp.id, "va_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
-                                  </div>
-                                )}
-                                  {editForm[emp.id]?.possui_vc && (
-                                    <div className="space-y-1">
-                                      <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data VC</label>
-                                      <input type="date" value={editForm[emp.id]?.vc_data_envio || ""} onChange={e => updateForm(emp.id, "vc_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
-                                    </div>
-                                  )}
+                              )}
+                              {editForm[emp.id]?.possui_va && (
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data VA</label>
+                                  <input type="date" value={editForm[emp.id]?.va_data_envio || ""} onChange={e => updateForm(emp.id, "va_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
+                                </div>
+                              )}
+                              {editForm[emp.id]?.possui_vc && (
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-black text-foreground uppercase tracking-widest ml-1">Data VC</label>
+                                  <input type="date" value={editForm[emp.id]?.vc_data_envio || ""} onChange={e => updateForm(emp.id, "vc_data_envio", e.target.value)} className="w-full h-9 px-3 rounded-md border border-border/10 bg-card text-[10px] font-black focus:ring-1 focus:ring-primary/20 outline-none uppercase shadow-sm" />
+                                </div>
+                              )}
                             </div>
                           </div>
 
