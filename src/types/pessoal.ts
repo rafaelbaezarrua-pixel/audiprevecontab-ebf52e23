@@ -19,11 +19,15 @@ export interface PessoalRecord {
   possui_va: boolean | null;
   va_status: string | null;
   va_data_envio: string | null;
+  possui_vr: boolean | null;
+  vr_status: string | null;
+  vr_data_envio: string | null;
   possui_vc: boolean | null;
   vc_status: string | null;
   vc_data_envio: string | null;
   possui_vt: boolean | null;
   vt_status: string | null;
   vt_data_envio: string | null;
+  observacoes?: any;
   created_at?: string | null;
 }
