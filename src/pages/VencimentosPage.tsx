@@ -218,19 +218,22 @@ const VencimentosPage: React.FC = () => {
       }
 
       const companyVencs = vencimentos.filter(v => v.empresa_id === e.id);
-      const hasVencs = companyVencs.length > 0;
+      if (companyVencs.length === 0) return false;
+      
+      let targetVencs = companyVencs;
 
-      let matchFilter = true;
-      if (filter !== "todos") {
-        matchFilter = companyVencs.some(v => v.status === filter);
-      }
-
-      let matchCategory = true;
       if (categoryFilter !== "todos") {
-        matchCategory = companyVencs.some(v => v.tipo.toLowerCase().includes(categoryFilter));
+        targetVencs = targetVencs.filter(v => v.tipo.toLowerCase().includes(categoryFilter));
       }
 
-      return matchSearch && matchTab && hasVencs && matchFilter && matchCategory;
+      if (targetVencs.length === 0) return false;
+
+      if (filter !== "todos") {
+        const hasStatusMatch = targetVencs.some(v => v.status === filter);
+        if (!hasStatusMatch) return false;
+      }
+
+      return matchSearch && matchTab;
     });
   }, [empresas, search, activeStatusTab, vencimentos, filter, categoryFilter]);
 
