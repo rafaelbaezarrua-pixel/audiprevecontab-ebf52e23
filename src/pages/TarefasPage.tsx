@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Calendar, Clock, User, Plus, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil, Send, Play, Inbox, ArrowRight, MessageSquare, History, ChevronDown } from "lucide-react";
+import { Search, Calendar, Clock, User, Plus, X, ClipboardList, CheckCircle, Circle, RefreshCw, Trash2, LayoutDashboard, List, Pencil, Send, Play, Inbox, ArrowRight, MessageSquare, History, ChevronDown, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { format, parseISO, lastDayOfMonth } from "date-fns";
@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { formatDateBR, formatMonthYearBR } from "@/lib/utils";
+import { formatDateBR, formatMonthYearBR, cn } from "@/lib/utils";
 
 // ── Status helpers ──────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode; border: string }> = {
@@ -47,8 +47,8 @@ const TarefasPage: React.FC = () => {
     const [historicoDialogOpen, setHistoricoDialogOpen] = useState(false);
     const [historicoTarefa, setHistoricoTarefa] = useState<Tarefa | null>(null);
 
-    // Accordion state for kanban rows
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+    const [expandedListItems, setExpandedListItems] = useState<Record<string, boolean>>({});
 
     const { tarefas, isLoading, isFetching, updateStatus, updateArquivado, deleteTarefa } = useTarefas(competencia);
     
@@ -540,17 +540,24 @@ const TarefasPage: React.FC = () => {
                     </div>
                 )}
 
+                {a.protocolo_recebimento && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10 w-fit">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600/60">Protocolo:</span>
+                        <span className="text-[10px] font-bold text-emerald-600 tracking-wider font-mono">{a.protocolo_recebimento}</span>
+                    </div>
+                )}
+
                 {/* Additional Info / Comments */}
                 {a.informacoes_adicionais && (
-                    <div className="bg-black/[0.02] dark:bg-white/[0.02] p-3 rounded-xl text-[11px] text-muted-foreground/80 border border-border/20">
+                    <div className="bg-black/[0.02] dark:bg-white/[0.02] p-3 rounded-xl text-[11px] text-muted-foreground/80 border border-border/20 max-h-[100px] overflow-y-auto custom-scrollbar italic leading-relaxed">
                         {a.informacoes_adicionais}
                     </div>
                 )}
 
                 {a.resposta && (
-                    <div className="bg-primary/5 border border-primary/10 p-3 rounded-xl text-xs space-y-1">
+                    <div className="bg-primary/5 border border-primary/10 p-3 rounded-xl text-xs space-y-1 max-h-[100px] overflow-y-auto custom-scrollbar">
                         <span className="text-[9px] font-black uppercase tracking-widest text-primary opacity-60">Resposta Final</span>
-                        <p className="text-foreground/80">{a.resposta}</p>
+                        <p className="text-foreground/80 leading-relaxed">{a.resposta}</p>
                     </div>
                 )}
 
@@ -616,13 +623,13 @@ const TarefasPage: React.FC = () => {
                         <ClipboardList size={18} /> LOTE
                     </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-3xl border border-border/50 shadow-2xl">
+                <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-3xl border border-border/50 shadow-2xl max-h-[95vh] flex flex-col">
                     <DialogHeader className="p-8 bg-muted/20 border-b border-border/50">
                         <DialogTitle className="text-xl font-black text-card-foreground uppercase tracking-tight">Novos Lançamentos em Lote</DialogTitle>
                         <p className="text-xs text-muted-foreground font-medium">Crie a mesma tarefa para múltiplas empresas simultaneamente.</p>
                     </DialogHeader>
 
-                    <div className="p-8 space-y-8">
+                    <div className="p-6 md:p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Assunto da Tarefa</Label>
@@ -688,10 +695,11 @@ const TarefasPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex gap-3 pt-4 border-t border-border/50">
-                            <button onClick={() => setIsBatchOpen(false)} className="flex-1 h-12 rounded-xl border border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all">Cancelar</button>
-                            <button onClick={handleCreateBatch} className="flex-[2] h-12 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20" disabled={selectedEmpresas.length === 0 || !batchForm.assunto}>Criar {selectedEmpresas.length} Tarefas</button>
-                        </div>
+                    </div>
+
+                    <div className="p-6 md:p-8 bg-muted/10 border-t border-border/50 flex gap-3">
+                        <button onClick={() => setIsBatchOpen(false)} className="flex-1 h-12 rounded-xl border border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all">Cancelar</button>
+                        <button onClick={handleCreateBatch} className="flex-[2] h-12 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20" disabled={selectedEmpresas.length === 0 || !batchForm.assunto}>Criar {selectedEmpresas.length} Tarefas</button>
                     </div>
                 </DialogContent>
             </Dialog>
@@ -765,20 +773,160 @@ const TarefasPage: React.FC = () => {
 
       {/* ── Main View ────────────────────────────────────────────────── */}
       {viewMode === "list" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
+        <div className="flex flex-col gap-3 pb-12">
             {filtered.length === 0 ? (
-                <div className="col-span-full py-32 text-center glass-card border-2 border-dashed border-border/40 opacity-40">
+                <div className="py-32 text-center glass-card border-2 border-dashed border-border/40 opacity-40 rounded-[2rem]">
                      <ClipboardList size={48} className="mx-auto mb-4 text-muted-foreground" />
                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         Nenhuma tarefa encontrada
                      </p>
                 </div>
             ) : (
-                filtered.map(a => (
-                    <div key={a.id} className="glass-interactive overflow-hidden rounded-2xl">
-                         {renderItemContent(a)}
-                    </div>
-                ))
+                filtered.map(a => {
+                    const isExp = !!expandedListItems[a.id];
+                    const cfg = STATUS_CONFIG[a.status] || STATUS_CONFIG.em_aberto;
+                    const isAssignee = activeTab === "para_mim";
+
+                    return (
+                        <div key={a.id} className={cn(
+                            "glass-card overflow-hidden transition-all duration-300 border",
+                            isExp ? "border-primary/30 ring-1 ring-primary/10 shadow-xl" : "border-border/10 hover:border-primary/20"
+                        )}>
+                            {/* List Header - ALWAYS VISIBLE */}
+                            <button 
+                                onClick={() => setExpandedListItems(prev => ({ ...prev, [a.id]: !isExp }))}
+                                className="w-full flex flex-col md:grid md:grid-cols-[1fr_1.2fr_120px_100px_120px_40px] items-center gap-4 p-4 md:px-6 md:py-4 text-left group"
+                            >
+                                <div className="flex items-center gap-3 min-w-0 w-full">
+                                    <div className={cn(
+                                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                                        isExp ? "bg-primary text-white" : "bg-black/5 dark:bg-white/5 text-muted-foreground group-hover:text-primary"
+                                    )}>
+                                        {cfg.icon}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className={cn(
+                                            "text-[13px] font-bold uppercase truncate transition-colors",
+                                            isExp ? "text-primary" : "text-foreground group-hover:text-primary"
+                                        )}>
+                                            {a.assunto}
+                                        </span>
+                                        <span className="text-[9px] text-muted-foreground/50 font-black uppercase tracking-widest">
+                                            ID: {a.id.slice(0, 8)}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 min-w-0 w-full">
+                                    <Building2 size={14} className="text-muted-foreground/30 shrink-0" />
+                                    <span className="text-[11px] font-bold text-muted-foreground/70 uppercase truncate">
+                                        {a.empresas?.nome_empresa || "Sem Empresa"}
+                                    </span>
+                                </div>
+
+                                <div className="hidden md:flex items-center gap-2">
+                                    <User size={14} className="text-muted-foreground/30 shrink-0" />
+                                    <span className="text-[10px] font-black uppercase text-muted-foreground/60 truncate">
+                                        {isAssignee ? a.criado_por_nome : a.usuario_nome}
+                                    </span>
+                                </div>
+
+                                <div className="hidden md:flex items-center justify-center">
+                                    <div className={cn(
+                                        "flex items-center gap-2 text-[10px] font-black uppercase",
+                                        a.data ? "text-muted-foreground/80" : "text-muted-foreground/30"
+                                    )}>
+                                        {a.data ? formatDateBR(a.data) : "S/ PRAZO"}
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-center w-full md:w-auto">
+                                    {renderStatusBadge(a.status)}
+                                </div>
+
+                                <div className="hidden md:flex justify-end">
+                                    <ChevronDown size={18} className={cn("text-muted-foreground/30 transition-transform duration-300", isExp && "rotate-180 text-primary")} />
+                                </div>
+                            </button>
+
+                            {/* List Content - ACCORDION EFEITO SANFONA */}
+                            {isExp && (
+                                <div className="px-6 pb-6 pt-2 animate-in fade-in slide-in-from-top-2 duration-300 border-t border-border/5 bg-black/[0.01] dark:bg-white/[0.01]">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        {/* Left Side: Info */}
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-4 py-2 border-b border-border/5">
+                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                                                    <Calendar size={14} className="text-primary/50" />
+                                                    {a.data ? formatDateBR(a.data) : "Sem data definida"}
+                                                </div>
+                                                {a.horario && (
+                                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                                                        <Clock size={14} className="text-primary/50" />
+                                                        {a.horario.slice(0, 5)}
+                                                    </div>
+                                                )}
+                                                {a.protocolo_recebimento && (
+                                                    <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-emerald-500/5 border border-emerald-500/10">
+                                                        <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600/40">Protocolo:</span>
+                                                        <span className="text-[9px] font-bold text-emerald-600 font-mono">{a.protocolo_recebimento}</span>
+                                                    </div>
+                                                )}
+                                                <div className="ml-auto flex items-center gap-2">
+                                                    <button onClick={() => { setHistoricoTarefa(a); setHistoricoDialogOpen(true); }} className="p-2 rounded-lg text-muted-foreground/50 hover:bg-black/5 hover:text-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase">
+                                                        <History size={14} /> Histórico
+                                                    </button>
+                                                    {(a.criado_por === user?.id || userData?.isAdmin) && (
+                                                        <button onClick={() => navigate(`/tarefas/editar/${a.id}`)} className="p-2 rounded-lg text-muted-foreground/50 hover:bg-black/5 hover:text-primary transition-all">
+                                                            <Pencil size={14} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {a.informacoes_adicionais && (
+                                                <div className="space-y-2">
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Observações</span>
+                                                    <div className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl text-xs text-muted-foreground leading-relaxed italic max-h-[150px] overflow-y-auto custom-scrollbar border border-border/5">
+                                                        {a.informacoes_adicionais}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {a.resposta && (
+                                                <div className="space-y-2">
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-primary opacity-50">Resposta Final</span>
+                                                    <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl text-xs text-foreground/80 leading-relaxed max-h-[150px] overflow-y-auto custom-scrollbar">
+                                                        {a.resposta}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Right Side: Workflow & Actions */}
+                                        <div className="space-y-6 flex flex-col justify-between">
+                                            <div className="space-y-4">
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Progresso da Tarefa</span>
+                                                <div className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-border/5">
+                                                    {renderStatusFlow(a)}
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-4">
+                                                {renderAssigneeActions(a)}
+                                                {activeTab === "por_mim" && a.status === "resposta" && (
+                                                    <button onClick={() => handleUpdateStatus(a.id, "concluido")} className="button-premium w-full text-[10px] py-4 mt-2 shadow-xl shadow-primary/10">
+                                                        <CheckCircle size={14} /> CONCLUIR VERIFICAÇÃO FINAL
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })
             )}
         </div>
       ) : (

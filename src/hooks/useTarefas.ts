@@ -17,6 +17,7 @@ export interface Tarefa {
     arquivado: boolean;
     empresas?: { nome_empresa: string } | null;
     resposta?: string;
+    protocolo_recebimento?: string;
     historico?: TarefaHistorico[];
 }
 
@@ -218,6 +219,13 @@ export const useTarefas = (competencia: string) => {
             };
             if (resposta !== undefined) {
                 updatePayload.resposta = resposta;
+            }
+
+            // Gerar protocolo se estiver recebendo a tarefa
+            if (status === "recebida") {
+                const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+                const randomPart = Math.floor(1000 + Math.random() * 9000);
+                updatePayload.protocolo_recebimento = `PRC-${datePart}-${randomPart}`;
             }
 
             const { error } = await (supabase.from("tarefas" as any).update(updatePayload).eq("id", id) as any);
