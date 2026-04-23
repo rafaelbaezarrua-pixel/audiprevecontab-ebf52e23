@@ -8,7 +8,7 @@ import {
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
-import { maskCPFCNPJ } from "@/lib/utils";
+import { maskCPFCNPJ, formatDateBR } from "@/lib/utils";
 
 type DeclaracaoAnualRow = Database['public']['Tables']['declaracoes_anuais']['Row'];
 type DeclaracaoIRPFRow = Database['public']['Tables']['declaracoes_irpf']['Row'];
@@ -542,7 +542,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
 
                     <div className="hidden md:flex flex-col items-center justify-center">
                       <span className="text-[10px] font-black uppercase text-muted-foreground/60 truncate max-w-[150px]">{decl.quem_transmitiu || '-'}</span>
-                      {decl.data_envio && <span className="text-[9px] font-mono text-muted-foreground/40">{decl.data_envio}</span>}
+                      {decl.data_envio && <span className="text-[9px] font-mono text-muted-foreground/40">{formatDateBR(decl.data_envio)}</span>}
                     </div>
 
                     <div className="flex items-center justify-end w-full md:w-auto">
@@ -636,7 +636,7 @@ const DeclaracoesAnuaisPage: React.FC = () => {
 
                     <div className="hidden md:flex flex-col items-center justify-center">
                       <span className="text-[10px] font-black uppercase text-muted-foreground/60 truncate max-w-[150px]">{decl.quem_transmitiu || '-'}</span>
-                      {decl.data_transmissao && <span className="text-[9px] font-mono text-muted-foreground/40">{decl.data_transmissao}</span>}
+                      {decl.data_transmissao && <span className="text-[9px] font-mono text-muted-foreground/40">{formatDateBR(decl.data_transmissao)}</span>}
                     </div>
 
                     <div className="flex items-center justify-end w-full md:w-auto">

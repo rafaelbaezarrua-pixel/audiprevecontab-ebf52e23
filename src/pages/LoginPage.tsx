@@ -152,8 +152,8 @@ const LoginPage: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
           <div className="mb-10 text-center">
-            <h2 className="text-xl font-black text-card-foreground uppercase tracking-tight">Portal <span className="text-primary">Audipreve</span></h2>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-50">Ambiente Restrito</p>
+            <h2 className="text-[30px] font-black text-card-foreground uppercase tracking-tight">Portal <span className="text-primary">Audipreve</span></h2>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-0 opacity-50">Ambiente Restrito</p>
           </div>
 
           {blockedUntil ? (
@@ -232,7 +232,7 @@ const LoginPage: React.FC = () => {
                 {submitting ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
-                  <>Autenticar no Sistema <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" /></>
+                  <>login <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" /></>
                 )}
               </button>
             </form>

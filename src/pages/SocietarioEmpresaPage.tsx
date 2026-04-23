@@ -19,7 +19,7 @@ interface Socio {
   email?: string;
   telefone?: string;
 }
-interface LicencaRow { id?: string; tipo_licenca: string; status: string | null; vencimento: string | null; numero_processo: string | null; }
+interface LicencaRow { id?: string; tipo_licenca: string; status: string | null; vencimento: string | null; numero_processo: string | null; file_url?: string | null; }
 interface Endereco { logradouro: string; numero: string; complemento?: string; bairro: string; city: string; state: string; cep: string; }
 
 const emptyEndereco = { logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", cep: "" };
@@ -177,8 +177,8 @@ const SocietarioEmpresaPage: React.FC = () => {
       const { data: licData } = await supabase.from("licencas").select("*").eq("empresa_id", id);
       const existingTypes = new Set((licData || []).map(l => l.tipo_licenca));
       const allLicencas = [
-        ...(licData || []).map(l => ({ id: l.id, tipo_licenca: l.tipo_licenca, status: l.status, vencimento: l.vencimento, numero_processo: l.numero_processo })),
-        ...Object.keys(licencaLabels).filter(t => !existingTypes.has(t)).map(t => ({ tipo_licenca: t, status: null, vencimento: null, numero_processo: null })),
+        ...(licData || []).map(l => ({ id: l.id, tipo_licenca: l.tipo_licenca, status: l.status, vencimento: l.vencimento, numero_processo: l.numero_processo, file_url: l.file_url })),
+        ...Object.keys(licencaLabels).filter(t => !existingTypes.has(t)).map(t => ({ tipo_licenca: t, status: null, vencimento: null, numero_processo: null, file_url: null })),
       ];
       setLicencas(allLicencas);
       setLoading(false);
@@ -246,7 +246,14 @@ const SocietarioEmpresaPage: React.FC = () => {
       if (!isNew && empresaId) await supabase.from("licencas").delete().eq("empresa_id", empresaId!);
       const licToInsert = licencas.filter(l => l.status);
       if (licToInsert.length > 0) {
-        const { error: licError } = await supabase.from("licencas").insert(licToInsert.map(l => ({ empresa_id: empresaId!, tipo_licenca: l.tipo_licenca, status: l.status as any, vencimento: l.vencimento || null, numero_processo: l.numero_processo || null })));
+        const { error: licError } = await supabase.from("licencas").insert(licToInsert.map(l => ({ 
+          empresa_id: empresaId!, 
+          tipo_licenca: l.tipo_licenca, 
+          status: l.status as any, 
+          vencimento: l.vencimento || null, 
+          numero_processo: l.numero_processo || null,
+          file_url: l.file_url || null
+        })));
         if (licError) throw licError;
       }
 
