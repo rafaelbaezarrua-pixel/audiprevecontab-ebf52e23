@@ -1,9 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
+require('dotenv').config();
 
 const env = {
-    VITE_SUPABASE_URL: "https://jnqwvysjpbcpbwhlwgqq.supabase.co",
-    VITE_SUPABASE_ANON_KEY: "sb_publishable_BJf-1X4iJTcX0GSu4eHfBQ_HI9lUbuT"
+    VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY
 };
 
 const supabase = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
