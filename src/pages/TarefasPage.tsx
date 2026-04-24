@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { formatDateBR, formatMonthYearBR, cn } from "@/lib/utils";
+import EmpresaDetailsDialog from "@/components/societario/EmpresaDetailsDialog";
 
 // ── Status helpers ──────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode; border: string }> = {
@@ -49,6 +50,10 @@ const TarefasPage: React.FC = () => {
 
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
     const [expandedListItems, setExpandedListItems] = useState<Record<string, boolean>>({});
+
+    // Empresa details state
+    const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null);
+    const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
     const { tarefas, isLoading, isFetching, updateStatus, updateArquivado, deleteTarefa } = useTarefas(competencia);
     
@@ -501,9 +506,16 @@ const TarefasPage: React.FC = () => {
                             </div>
                         )}
                         {a.empresas?.nome_empresa && (
-                            <div className="inline-flex px-2 py-0.5 rounded-lg bg-primary/5 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary w-fit">
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedEmpresaId((a as any).empresa_id);
+                                    setDetailsDialogOpen(true);
+                                }}
+                                className="inline-flex px-2 py-0.5 rounded-lg bg-primary/5 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary w-fit hover:bg-primary/10 transition-colors"
+                            >
                                 {a.empresas.nome_empresa}
-                            </div>
+                            </button>
                         )}
                     </div>
                 </div>
@@ -817,12 +829,19 @@ const TarefasPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 min-w-0 w-full">
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedEmpresaId((a as any).empresa_id);
+                                        setDetailsDialogOpen(true);
+                                    }}
+                                    className="flex items-center gap-2 min-w-0 w-full hover:text-primary transition-colors text-left"
+                                >
                                     <Building2 size={14} className="text-muted-foreground/30 shrink-0" />
                                     <span className="text-[11px] font-bold text-muted-foreground/70 uppercase truncate">
                                         {a.empresas?.nome_empresa || "Sem Empresa"}
                                     </span>
-                                </div>
+                                </button>
 
                                 <div className="hidden md:flex items-center gap-2">
                                     <User size={14} className="text-muted-foreground/30 shrink-0" />
@@ -1096,6 +1115,16 @@ const TarefasPage: React.FC = () => {
             </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Empresa Details Dialog ────────────────────────────────────── */}
+      <EmpresaDetailsDialog 
+        empresaId={selectedEmpresaId}
+        isOpen={detailsDialogOpen}
+        onClose={() => {
+            setDetailsDialogOpen(false);
+            setSelectedEmpresaId(null);
+        }}
+      />
     </div>
     );
 };
