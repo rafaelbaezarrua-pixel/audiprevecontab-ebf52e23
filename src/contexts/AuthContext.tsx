@@ -2,14 +2,14 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-// Configurações de segurança de sessão
+// Configurações de segurança de sessão (Inatividade desativada a pedido do usuário)
 const SESSION_CONFIG = {
-    // Timeout de inatividade: 30 minutos (em milissegundos)
-    INACTIVITY_TIMEOUT_MS: 30 * 60 * 1000,
-    // Aviso de timeout: 5 minutos antes
-    WARNING_BEFORE_TIMEOUT_MS: 5 * 60 * 1000,
-    // Check interval: verificar a cada 30 segundos
-    CHECK_INTERVAL_MS: 30 * 1000,
+    // Timeout de inatividade desativado
+    INACTIVITY_TIMEOUT_MS: 0, 
+    // Aviso de timeout desativado
+    WARNING_BEFORE_TIMEOUT_MS: 0,
+    // Check interval desativado
+    CHECK_INTERVAL_MS: 0,
 };
 
 export interface UserPermissions {
@@ -151,37 +151,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [forceLogoutDueToInactivity]);
 
-  // Setup do monitor de inatividade
+  // Monitor de inatividade desativado a pedido do usuário
   useEffect(() => {
-    if (!user) {
-      // Limpa timeouts se não há usuário logado
-      if (checkTimeoutRef.current) clearInterval(checkTimeoutRef.current);
-      if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
-      return;
-    }
-
-    // Reset da atividade no login
-    updateActivity();
-
-    // Check periódico de inatividade
-    checkTimeoutRef.current = setInterval(checkInactivity, SESSION_CONFIG.CHECK_INTERVAL_MS);
-
-    // Event listeners para atividade do usuário
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
-    const handleActivity = () => updateActivity();
-
-    events.forEach(event => {
-      window.addEventListener(event, handleActivity);
-    });
-
-    return () => {
-      if (checkTimeoutRef.current) clearInterval(checkTimeoutRef.current);
-      if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
-      events.forEach(event => {
-        window.removeEventListener(event, handleActivity);
-      });
-    };
-  }, [user, updateActivity, checkInactivity]);
+    // Inatividade desativada para manter usuário logado persistentemente
+    return () => {};
+  }, [user]);
 
   const loadUserData = useCallback(async (currentUser: User): Promise<boolean> => {
     if (loadingUserRef.current === currentUser.id) return;

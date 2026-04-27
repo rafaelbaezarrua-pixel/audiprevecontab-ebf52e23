@@ -175,14 +175,15 @@ const LoginPage: React.FC = () => {
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary ml-1 flex items-center gap-2">
                   <Mail size={12} />E-mail
                 </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full h-14 px-6 border border-white/5 rounded-2xl bg-background/40 text-sm font-bold text-card-foreground focus:ring-4 focus:ring-primary/10 focus:border-primary/40 outline-none transition-all shadow-inner"
-                  placeholder="exemplo@audipreve.com.br"
-                />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="username"
+                    className="w-full h-14 px-6 border border-white/5 rounded-2xl bg-background/40 text-sm font-bold text-card-foreground focus:ring-4 focus:ring-primary/10 focus:border-primary/40 outline-none transition-all shadow-inner"
+                    placeholder="exemplo@audipreve.com.br"
+                  />
               </div>
 
               <div className="space-y-3">
