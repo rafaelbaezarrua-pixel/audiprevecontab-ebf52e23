@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/utils";
-import { Search, Plus, ChevronDown, ChevronUp, Save, CheckCircle, Circle, Users, Building2, Clock } from "lucide-react";
+import { Search, Plus, ChevronDown, ChevronUp, Save, CheckCircle, Circle, Users, Building2, Clock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { RecalculoRecord, ParcelamentoRecord, GuiaStatus } from "@/types/administrative";
@@ -108,6 +108,18 @@ const RecalculosPage: React.FC = () => {
       loadData();
     } catch (err: any) {
       toast.error(err.message);
+    }
+  };
+
+  const handleDeleteRecalculo = async (id: string) => {
+    if (!window.confirm("Tem certeza que deseja excluir este recálculo?")) return;
+    try {
+      const { error } = await supabase.from("recalculos").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Recálculo excluído com sucesso!");
+      loadData();
+    } catch (err: any) {
+      toast.error("Erro ao excluir: " + err.message);
     }
   };
 
@@ -412,7 +424,11 @@ const RecalculosPage: React.FC = () => {
                               placeholder="EMAIL, WA..."
                             />
                           </div>
-                          <div className="flex justify-end">
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => handleDeleteRecalculo(r.id)} className="w-full md:w-auto h-9 px-4 bg-rose-500/10 text-rose-500 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md group hover:bg-rose-500/20 active:scale-[0.98]">
+                              <Trash2 size={14} className="group-hover:scale-110 transition-transform" />
+                              <span className="text-[9px] font-black uppercase tracking-widest hidden md:inline">Excluir</span>
+                            </button>
                             <button onClick={() => handleSaveUpdate(r.id)} className="w-full md:w-auto h-9 px-6 bg-primary text-primary-foreground rounded-lg flex items-center justify-center gap-2 transition-all shadow-md shadow-primary/10 group active:scale-[0.98]">
                               <Save size={12} className="group-hover:scale-110 transition-transform" />
                               <span className="text-[9px] font-black uppercase tracking-widest">Salvar</span>
