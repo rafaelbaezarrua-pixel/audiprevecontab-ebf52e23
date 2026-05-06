@@ -57,8 +57,6 @@ const FiscalPage: React.FC = () => {
 
   const recebimentoOptions = React.useMemo(() => {
     const options = new Set<string>();
-    // Default options to ensure they always exist
-    ["E-mail", "WhatsApp", "Drive", "Físico"].forEach(o => options.add(o));
     
     // Options from current fiscal data
     Object.values(fiscalData).forEach(r => {
@@ -70,7 +68,10 @@ const FiscalPage: React.FC = () => {
       if (p.recebimento_arquivos?.trim()) options.add(p.recebimento_arquivos.trim());
     });
     
-    return Array.from(options).sort((a, b) => a.localeCompare(b));
+    // Normalize to avoid duplicates like "WhatsApp" and "whatsapp"
+    const uniqueOptions = Array.from(new Set(Array.from(options).map(o => o.trim())));
+    
+    return uniqueOptions.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
   }, [fiscalData, latestParams]);
 
   const filtered = React.useMemo(() => {
@@ -83,7 +84,7 @@ const FiscalPage: React.FC = () => {
       if (activeTab === "simples") matchTab = !isOutra && (e.regime_tributario === "simples" || (e.regime_tributario !== "mei" && e.regime_tributario !== "simei" && e.regime_tributario !== "lucro_presumido" && e.regime_tributario !== "lucro_real" && e.porte_empresa !== "mei"));
       else if (activeTab === "lucro") matchTab = !isOutra && (e.regime_tributario === "lucro_presumido" || e.regime_tributario === "lucro_real");
       else if (activeTab === "mei") matchTab = !isOutra && (e.regime_tributario === "mei" || e.regime_tributario === "simei" || (e.porte_empresa === "mei" && e.regime_tributario !== "simples" && e.regime_tributario !== "lucro_presumido" && e.regime_tributario !== "lucro_real"));
-      else if (activeTab === "outras") matchTab = false; // Tab removed
+      else if (activeTab === "outras") matchTab = isOutra;
 
       // Filtro de Movimentação (apenas para Simples e Lucro)
       let matchMovimento = true;
@@ -95,14 +96,18 @@ const FiscalPage: React.FC = () => {
 
       let matchStatus = true;
       if (filterStatus !== "todos") {
-        const items = e.regime_tributario === 'simples' ? ['status_guia'] :
+        const isSimplesOuMei = e.regime_tributario === 'simples' || e.regime_tributario === 'mei' || e.regime_tributario === 'simei' || e.porte_empresa === 'mei';
+        const items = isSimplesOuMei ? ['status_guia'] :
           (e.regime_tributario === 'lucro_presumido' || e.regime_tributario === 'lucro_real') ?
             ['irpj_csll_status', 'pis_cofins_status', 'icms_status', 'iss_status'] : [];
+        
         if (items.length > 0) {
           const statuses = items.map(field => record?.[field as keyof FiscalRecord] || 'pendente');
           const isAllConcluido = statuses.every(s => s === 'enviada' || s === 'gerada' || s === 'PGDAS Zerado');
           matchStatus = filterStatus === 'concluido' ? isAllConcluido : !isAllConcluido;
-        } else matchStatus = filterStatus === 'pendente';
+        } else {
+          matchStatus = filterStatus === 'pendente';
+        }
       }
 
       let matchRecebimento = true;
