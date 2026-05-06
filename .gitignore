@@ -163,3 +163,38 @@ build/
 cypress/downloads/
 playwright-report/
 test-results/
+
+# ============================================================
+# API E SERVERLESS (Informações sensíveis)
+# ============================================================
+api/
+.vercel/
+.claude/
+scratch/
+*.log
+debug.log
+server_logs*.txt
+diagnostic.txt
+output.txt
+api-test.log
+eslint-report.json
+eslint-results.json
+lint_report*.json
+lint_results*.json
+linter-report.txt
+linter_final.txt
+schema.json
+dump.mjs
+debug-betha.mjs
+test-api*.ts
+test-api*.mjs
+test-emissao.mjs
+test_betha*.mjs
+test_certs.ts
+add_*.sql
+create_*.sql
+fix_*.sql
+insert_*.sql
+verify_*.sql
+tmp_*.sql
+tmp_*.csv
