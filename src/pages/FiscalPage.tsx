@@ -39,10 +39,15 @@ const FiscalPage: React.FC = () => {
   useEffect(() => {
     const fetchLatest = async () => {
       try {
-        const { data } = await supabase.from('fiscal').select('empresa_id, observacoes').order('competencia', { ascending: false }).limit(2500);
+        const { data } = await supabase.from('fiscal').select('empresa_id, observacoes, recebimento_arquivos').order('competencia', { ascending: false }).limit(2500);
         const map: any = {};
         data?.forEach(r => {
-          if (!map[r.empresa_id]) map[r.empresa_id] = r.observacoes || {};
+          if (!map[r.empresa_id]) {
+            map[r.empresa_id] = {
+              observacoes: r.observacoes || {},
+              recebimento_arquivos: r.recebimento_arquivos || ""
+            };
+          }
         });
         setLatestParams(map);
       } catch (err) { console.error("Error fetching latest params", err); }
@@ -50,7 +55,23 @@ const FiscalPage: React.FC = () => {
     fetchLatest();
   }, []);
 
-  const recebimentoOptions = ["E-mail", "WhatsApp", "Drive", "Físico"];
+  const recebimentoOptions = React.useMemo(() => {
+    const options = new Set<string>();
+    // Default options to ensure they always exist
+    ["E-mail", "WhatsApp", "Drive", "Físico"].forEach(o => options.add(o));
+    
+    // Options from current fiscal data
+    Object.values(fiscalData).forEach(r => {
+      if (r.recebimento_arquivos?.trim()) options.add(r.recebimento_arquivos.trim());
+    });
+    
+    // Options from latest params (company parameters)
+    Object.values(latestParams).forEach((p: any) => {
+      if (p.recebimento_arquivos?.trim()) options.add(p.recebimento_arquivos.trim());
+    });
+    
+    return Array.from(options).sort((a, b) => a.localeCompare(b));
+  }, [fiscalData, latestParams]);
 
   const filtered = React.useMemo(() => {
     return empresas.filter(e => {
@@ -67,7 +88,7 @@ const FiscalPage: React.FC = () => {
       // Filtro de Movimentação (apenas para Simples e Lucro)
       let matchMovimento = true;
       if (activeTab === "simples" || activeTab === "lucro") {
-        const obs = record?.observacoes || latestParams[e.id] || {};
+        const obs = record?.observacoes || latestParams[e.id]?.observacoes || {};
         const status = obs.movimento_status || "com_movimento";
         matchMovimento = movimentoTab === "com" ? status === "com_movimento" : status === "sem_movimento";
       }
@@ -86,12 +107,15 @@ const FiscalPage: React.FC = () => {
 
       let matchRecebimento = true;
       if (filterRecebimento !== "todos") {
-        matchRecebimento = (record?.recebimento_arquivos?.trim() || "").toLowerCase() === filterRecebimento.toLowerCase();
+        const currentRec = record?.recebimento_arquivos?.trim() || "";
+        const paramRec = latestParams[e.id]?.recebimento_arquivos?.trim() || "";
+        const finalRec = currentRec || paramRec;
+        matchRecebimento = finalRec.toLowerCase() === filterRecebimento.toLowerCase();
       }
 
       return matchSearch && matchTab && matchStatus && matchRecebimento && matchMovimento;
     });
-  }, [search, activeTab, movimentoTab, filterStatus, filterRecebimento, empresas, fiscalData]);
+  }, [search, activeTab, movimentoTab, filterStatus, filterRecebimento, empresas, fiscalData, latestParams]);
 
   const toggleExpand = async (id: string) => {
     if (expanded === id) { setExpanded(null); return; }
@@ -199,9 +223,13 @@ const FiscalPage: React.FC = () => {
     try {
       await saveFiscalRecord({ empresa_id: empresaId, competencia, ...data });
       setEditForm(prev => ({ ...prev, [empresaId]: { ...prev[empresaId], ...data } }));
-      if (data.observacoes) {
-        setLatestParams(prev => ({ ...prev, [empresaId]: data.observacoes }));
-      }
+      setLatestParams(prev => ({ 
+        ...prev, 
+        [empresaId]: {
+          observacoes: data.observacoes || prev[empresaId]?.observacoes || {},
+          recebimento_arquivos: data.recebimento_arquivos !== undefined ? data.recebimento_arquivos : prev[empresaId]?.recebimento_arquivos
+        }
+      }));
       toast.success("Parâmetros atualizados!");
     } catch (err: any) { toast.error(err.message); }
   };
