@@ -6,7 +6,7 @@ import {
   Building2, FileText, Award, Clock, Calculator,
   Users, Receipt, RefreshCw, DollarSign, ClipboardList,
   LayoutDashboard, Shield, Calendar, FileSignature,
-  Database, Settings, Bell,
+  Database, Settings, Bell, HardDrive
 } from "lucide-react";
 
 export interface NavItemConfig {
@@ -45,7 +45,15 @@ export const DEFAULT_NAV_ITEMS: NavItemConfig[] = [
   { id: "declaracoes-mensais",label: "Declarações Mensais",icon: <ClipboardList size={18} />,  path: "/declaracoes-mensais",moduleKey: "declaracoes_mensais",section: "CONTROLES" },
   { id: "faturamento",        label: "Faturamento",        icon: <DollarSign size={18} />,     path: "/faturamento",        moduleKey: "faturamento",        section: "CONTROLES" },
 
-
+  {
+    id: "gerenciador_arquivos",
+    label: "Arquivos",
+    icon: <HardDrive size={18} />,
+    path: "/arquivos",
+    moduleKey: "gerenciador_arquivos",
+    section: "CONTROLES",
+    color: "#0ea5e9",  // azul céu — personalize se quiser
+  },
 
   { id: "licencas",      label: "Licenças",      icon: <Shield size={18} />,     path: "/licencas",      moduleKey: "licencas",      section: "CONTROLES" },
   { id: "parcelamentos", label: "Parcelamentos",  icon: <Calculator size={18} />, path: "/parcelamentos", moduleKey: "parcelamentos", section: "CONTROLES" },

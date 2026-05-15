@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Save, User } from "lucide-react";
+import { Search, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Save, User, FolderOpen } from "lucide-react";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { useAlertasInteligentes } from "@/contexts/AlertasInteligentesProvider";
@@ -113,9 +115,6 @@ const CertificadosPage: React.FC = () => {
       setCertData(map);
     } catch (err: any) { toast.error(err.message); }
   };
-
-  const inputCls = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none";
-  const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -250,7 +249,13 @@ const CertificadosPage: React.FC = () => {
 
               {isOpen && (
                 <div className="border-t border-border/5 p-4 bg-black/[0.01] dark:bg-white/[0.01] animate-in slide-in-from-top-2 duration-200">
-                   <div className="space-y-4 animate-in fade-in duration-200 outline-none">
+                  <Tabs defaultValue="dados" className="w-full space-y-4">
+                    <TabsList className="bg-black/10 dark:bg-white/10 p-1 rounded-lg h-9 border border-border/10 shadow-inner">
+                       <TabsTrigger value="dados" className="px-4 h-full text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm">Dados Certificado</TabsTrigger>
+                       <TabsTrigger value="pastas" className="px-4 h-full text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm">Drive / Pastas</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="dados" className="space-y-4 animate-in fade-in duration-200 outline-none">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-border/10 shadow-inner">
                         <div className="space-y-1">
                             <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Data de Validade</label>
@@ -300,7 +305,12 @@ const CertificadosPage: React.FC = () => {
                           <Save size={14} /> ATUALIZAR DADOS
                         </button>
                       </div>
-                    </div>
+                    </TabsContent>
+
+                    <TabsContent value="pastas" className="animate-in slide-in-from-right-2 duration-300 outline-none">
+                       <ModuleFolderView empresa={emp} departamentoId="geral" />
+                    </TabsContent>
+                  </Tabs>
                 </div>
               )}
             </div>

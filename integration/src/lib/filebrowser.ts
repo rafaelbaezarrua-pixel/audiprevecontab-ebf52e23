@@ -1,7 +1,12 @@
+// src/lib/filebrowser.ts
+// Camada de comunicação com o FileBrowser (servidor local)
 // ─────────────────────────────────────────────────────────────────────────────
-// integration/src/lib/filebrowser.ts
-// Integração com FileBrowser — desabilitada
-// ─────────────────────────────────────────────────────────────────────────────
+
+const FB_BASE_URL = import.meta.env.VITE_FILEBROWSER_URL ?? "http://192.168.1.100:8080";
+const FB_USER     = import.meta.env.VITE_FILEBROWSER_USER ?? "admin";
+const FB_PASS     = import.meta.env.VITE_FILEBROWSER_PASS ?? "";
+
+// ── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface FBFile {
   name: string;
@@ -28,54 +33,152 @@ export interface FBListing {
   sorting: { by: string; asc: boolean };
 }
 
-const OFFLINE_ERROR = "Servidor de arquivos indisponível";
+// ── Cache de token ────────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function fbList(_path: string): Promise<FBListing> {
-  throw new Error(OFFLINE_ERROR);
+let _token: string | null = null;
+let _tokenExpiry = 0;
+
+async function getToken(): Promise<string> {
+  if (_token && Date.now() < _tokenExpiry) return _token;
+
+  const res = await fetch(`${FB_BASE_URL}/api/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: FB_USER, password: FB_PASS }),
+  });
+
+  if (!res.ok) throw new Error("Falha na autenticação com o servidor de arquivos");
+
+  _token = await res.text();
+  _tokenExpiry = Date.now() + 90 * 60 * 1000; // 90 minutos
+  return _token;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function fbCreateFolder(_path: string): Promise<void> {
-  throw new Error(OFFLINE_ERROR);
+function authHeader(token: string): HeadersInit {
+  return { "X-Auth": token, "Content-Type": "application/json" };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function fbDelete(_paths: string[]): Promise<void> {
-  throw new Error(OFFLINE_ERROR);
+function encodePath(path: string): string {
+  return encodeURIComponent(path).replace(/%2F/g, "/");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function fbMove(_from: string[], _toFolder: string, _overwrite = false): Promise<void> {
-  throw new Error(OFFLINE_ERROR);
+// ── Operações ─────────────────────────────────────────────────────────────────
+
+export async function fbList(path: string): Promise<FBListing> {
+  const token = await getToken();
+  const res = await fetch(`${FB_BASE_URL}/api/resources${encodePath(path)}`, {
+    headers: authHeader(token),
+  });
+  if (!res.ok) throw new Error(`Erro ao listar pasta: ${path}`);
+  return res.json();
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function fbCopy(_from: string[], _toFolder: string, _overwrite = false): Promise<void> {
-  throw new Error(OFFLINE_ERROR);
+export async function fbCreateFolder(path: string): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${FB_BASE_URL}/api/resources${encodePath(path)}/`, {
+    method: "POST",
+    headers: authHeader(token),
+  });
+  if (!res.ok) throw new Error("Erro ao criar pasta");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function fbRename(_oldPath: string, _newName: string): Promise<void> {
-  throw new Error(OFFLINE_ERROR);
+export async function fbDelete(paths: string[]): Promise<void> {
+  const token = await getToken();
+  await Promise.all(
+    paths.map(async (p) => {
+      const res = await fetch(`${FB_BASE_URL}/api/resources${encodePath(p)}`, {
+        method: "DELETE",
+        headers: authHeader(token),
+      });
+      if (!res.ok) throw new Error(`Erro ao excluir: ${p}`);
+    })
+  );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function fbUpload(_folderPath: string, _file: File, _onProgress?: (pct: number) => void): Promise<void> {
-  throw new Error(OFFLINE_ERROR);
+export async function fbMove(
+  from: string[],
+  toFolder: string,
+  overwrite = false
+): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${FB_BASE_URL}/api/resources`, {
+    method: "PATCH",
+    headers: authHeader(token),
+    body: JSON.stringify({
+      action: "move",
+      items: from.map((src) => ({
+        from: src,
+        to: `${toFolder}/${src.split("/").pop()}`,
+      })),
+      overwrite,
+    }),
+  });
+  if (!res.ok) throw new Error("Erro ao mover itens");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function fbDownloadUrl(_path: string): Promise<string> {
-  throw new Error(OFFLINE_ERROR);
+export async function fbCopy(
+  from: string[],
+  toFolder: string,
+  overwrite = false
+): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${FB_BASE_URL}/api/resources`, {
+    method: "PATCH",
+    headers: authHeader(token),
+    body: JSON.stringify({
+      action: "copy",
+      items: from.map((src) => ({
+        from: src,
+        to: `${toFolder}/${src.split("/").pop()}`,
+      })),
+      overwrite,
+    }),
+  });
+  if (!res.ok) throw new Error("Erro ao copiar itens");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function fbPreviewUrl(_path: string): Promise<string> {
-  throw new Error(OFFLINE_ERROR);
+export async function fbRename(oldPath: string, newName: string): Promise<void> {
+  const parent = oldPath.substring(0, oldPath.lastIndexOf("/"));
+  await fbMove([oldPath], `${parent}/${newName}`, false);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function fbDownload(_url: string, _name: string): void {
-  // no-op
+export async function fbUpload(
+  folderPath: string,
+  file: File,
+  onProgress?: (pct: number) => void
+): Promise<void> {
+  const token = await getToken();
+  const encoded = encodePath(`${folderPath}/${file.name}`);
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${FB_BASE_URL}/api/resources${encoded}`);
+    xhr.setRequestHeader("X-Auth", token);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+    xhr.onload  = () => (xhr.status < 300 ? resolve() : reject(new Error("Erro no upload")));
+    xhr.onerror = () => reject(new Error("Erro de rede no upload"));
+    xhr.send(file);
+  });
+}
+
+export async function fbDownloadUrl(path: string): Promise<string> {
+  const token = await getToken();
+  return `${FB_BASE_URL}/api/raw${encodePath(path)}?auth=${token}`;
+}
+
+export async function fbPreviewUrl(path: string): Promise<string> {
+  return fbDownloadUrl(path);
+}
+
+export function fbDownload(url: string, name: string): void {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }

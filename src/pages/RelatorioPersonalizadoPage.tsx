@@ -261,8 +261,8 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                             {selectedModules.map(modId => {
                                 const mod = MODULES_CONFIG.find(m => m.id === modId)!;
                                 return (
-                                    <div key={modId} className="bg-card rounded-3xl border border-border/50 shadow-sm">
-                                        <div className="space-y-6 animate-fade-in relative pb-10">
+                                    <div key={modId} className="bg-card rounded-3xl border border-border/50 shadow-sm p-6">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                             <div className="flex items-center gap-3">
                                                 <div className={`p-2 rounded-lg ${mod.color} text-white`}>
                                                     {mod.icon}
@@ -277,7 +277,7 @@ const RelatorioPersonalizadoPage: React.FC = () => {
                                             </button>
                                         </div>
 
-                                        <div className="p-6">
+                                        <div className="">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                                 {mod.fields
                                                     .filter(f => !["tipo", "status", "data", "status_taxa", "data_envio", "forma_envio"].includes(f.id))

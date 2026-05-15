@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/utils";
-import { Search, ChevronDown, Save, Building2, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Search, ChevronDown, Save, Building2, AlertTriangle, CheckCircle, Clock, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { ProcuracaoRecord } from "@/types/administrative";
@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmpresaAccordion } from "@/components/EmpresaAccordion";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 import { cn } from "@/lib/utils";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
 
@@ -17,20 +18,21 @@ const ProcuracoesPage: React.FC = () => {
   const { empresas, loading } = useEmpresas("procuracoes");
   const [procData, setProcData] = useState<Record<string, ProcuracaoRecord>>({});
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"todos" | "ativa" | "proxima" | "vencida">("todos");
+  const [filterStatus, setFilterStatus] = useState<"todos" | "ativa" | "proxima" | "vencida" | "sem_dados">("todos");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, Partial<ProcuracaoRecord>>>({});
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
   const [rowTabs, setRowTabs] = useState<Record<string, "dados" | "pastas">>({});
 
+  const loadData = async () => {
+    const { data: procs } = await supabase.from("procuracoes").select("*");
+    const map: Record<string, ProcuracaoRecord> = {};
+    (procs as unknown as ProcuracaoRecord[])?.forEach(p => { map[p.empresa_id] = p; });
+    setProcData(map);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      const { data: procs } = await supabase.from("procuracoes").select("*");
-      const map: Record<string, ProcuracaoRecord> = {};
-      (procs as unknown as ProcuracaoRecord[])?.forEach(p => { map[p.empresa_id] = p; });
-      setProcData(map);
-    };
-    load();
+    loadData();
   }, []);
 
   const empresasWithProc = empresas.map(emp => {
@@ -64,6 +66,7 @@ const ProcuracoesPage: React.FC = () => {
     ativas: filtered.filter(e => e.status === "ativa").length,
     proximas: filtered.filter(e => e.status === "proxima").length,
     vencidas: filtered.filter(e => e.status === "vencida").length,
+    semDados: filtered.filter(e => e.status === "sem_dados").length
   };
 
   const toggleExpand = (id: string) => {
@@ -72,7 +75,14 @@ const ProcuracoesPage: React.FC = () => {
     const emp = empresasWithProc.find(e => e.id === id);
     if (emp) {
       const p = emp.proc as ProcuracaoRecord;
-      setEditForm(prev => ({ ...prev, [id]: { data_cadastro: p.data_cadastro || "", data_vencimento: p.data_vencimento || "", observacao: p.observacao || "" } }));
+      setEditForm(prev => ({ 
+        ...prev, 
+        [id]: { 
+          data_cadastro: p.data_cadastro || "", 
+          data_vencimento: p.data_vencimento || "", 
+          observacao: p.observacao || "" 
+        } 
+      }));
     }
   };
 
@@ -86,10 +96,7 @@ const ProcuracoesPage: React.FC = () => {
         await supabase.from("procuracoes").insert({ empresa_id: empresaId, data_cadastro: form.data_cadastro || null, data_vencimento: form.data_vencimento || null, observacao: form.observacao || null });
       }
       toast.success("Procuração atualizada!");
-      const { data: procs } = await supabase.from("procuracoes").select("*");
-      const map: Record<string, ProcuracaoRecord> = {};
-      (procs as unknown as ProcuracaoRecord[])?.forEach(p => { map[p.empresa_id] = p; });
-      setProcData(map);
+      loadData();
       setExpanded(null);
     } catch (err: any) { toast.error(err.message); }
   };
@@ -119,19 +126,19 @@ const ProcuracoesPage: React.FC = () => {
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="flex bg-black/10 dark:bg-white/5 border border-border/10 rounded-xl overflow-hidden h-10 shrink-0 p-0.5 shadow-inner">
               <div className="px-4 py-1 flex flex-col justify-center border-r border-border/5">
-                <span className="text-[8px] text-foreground font-black tracking-wider">Total</span>
+                <span className="text-[8px] text-foreground font-black tracking-wider uppercase">Total</span>
                 <span className="text-sm font-black">{filtered.length}</span>
               </div>
               <div className="px-4 py-1 flex flex-col justify-center border-r border-border/5">
-                <span className="text-[8px] text-primary font-black tracking-wider">Ativas</span>
+                <span className="text-[8px] text-primary font-black tracking-wider uppercase">Ativas</span>
                 <span className="text-sm font-black text-primary">{counts.ativas}</span>
               </div>
               <div className="px-4 py-1 flex flex-col justify-center border-r border-border/5">
-                <span className="text-[10px] text-amber-500 font-bold tracking-wider">Próximas</span>
+                <span className="text-[8px] text-amber-500 font-black tracking-wider uppercase">Próximas</span>
                 <span className="text-sm font-black text-amber-500">{counts.proximas}</span>
               </div>
               <div className="px-4 py-1 flex flex-col justify-center">
-                <span className="text-[10px] text-rose-600 font-bold tracking-wider">Vencidas</span>
+                <span className="text-[8px] text-rose-600 font-black tracking-wider uppercase">Vencidas</span>
                 <span className="text-sm font-black text-rose-600">{counts.vencidas}</span>
               </div>
             </div>
@@ -141,7 +148,13 @@ const ProcuracoesPage: React.FC = () => {
             </div>
           </div>
           <div className="flex bg-black/10 dark:bg-white/5 p-0.5 rounded-xl border border-border/10 shrink-0 h-10 items-center shadow-inner">
-            {[{ id: "todos", label: "Geral" }, { id: "ativa", label: "Ativas" }, { id: "proxima", label: "Próximas" }, { id: "vencida", label: "Vencidas" }].map(s => (
+            {[
+              { id: "todos", label: "Geral" }, 
+              { id: "ativa", label: "Ativas" }, 
+              { id: "proxima", label: "Próximas" }, 
+              { id: "vencida", label: "Vencidas" },
+              { id: "sem_dados", label: "S/ Dados" }
+            ].map(s => (
               <button key={s.id} onClick={() => setFilterStatus(s.id as any)} className={`px-4 h-full rounded-lg text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${filterStatus === s.id ? "bg-card text-primary shadow-sm" : "text-foreground hover:text-foreground"}`}>{s.label}</button>
             ))}
           </div>
@@ -149,7 +162,7 @@ const ProcuracoesPage: React.FC = () => {
 
         {/* Category Tabs Container */}
         <div className="bg-white dark:bg-zinc-900/80 rounded-[1.5rem] border border-border/20 shadow-md overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex p-1 gap-1 border-b border-border/10">
+          <div className="flex p-1 gap-1 border-b border-border/10 overflow-x-auto no-scrollbar">
             {[
               { id: "ativas", label: "Empresas Ativas" },
               { id: "mei", label: "MEI" },
@@ -258,7 +271,9 @@ const ProcuracoesPage: React.FC = () => {
                       <div className="flex items-center justify-between border-b border-border/10 pb-3">
                         <TabsList className="bg-black/10 dark:bg-white/10 p-0.5 rounded-xl h-9 border border-border/10 shadow-inner">
                           <TabsTrigger value="dados" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Dados da Procuração</TabsTrigger>
-                          <TabsTrigger value="pastas" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Pastas</TabsTrigger>
+                          <TabsTrigger value="pastas" className="px-6 h-7 text-[11px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm flex items-center gap-1.5">
+                            <FolderOpen size={12} /> Pastas
+                          </TabsTrigger>
                         </TabsList>
                       </div>
 
@@ -306,6 +321,7 @@ const ProcuracoesPage: React.FC = () => {
 
                       <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none">
                         <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden shadow-inner">
+                           <ModuleFolderView empresa={emp} departamentoId="geral" />
                         </div>
                       </TabsContent>
                     </Tabs>

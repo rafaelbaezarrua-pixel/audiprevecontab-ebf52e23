@@ -6,12 +6,13 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error("ERRO CRÍTICO: Variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY não definidas!");
+  console.error("ERRO CRÍTICO: Variáveis de ambiente do Supabase não encontradas!");
+  console.info("Certifique-se de definir VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env ou no painel da Vercel.");
 }
 
 export const supabase = createClient<Database>(
-  SUPABASE_URL, 
-  SUPABASE_ANON_KEY, 
+  SUPABASE_URL || 'https://url-temporaria-para-evitar-crash.supabase.co', 
+  SUPABASE_ANON_KEY || 'fake-key', 
   {
   auth: {
     storage: localStorage,

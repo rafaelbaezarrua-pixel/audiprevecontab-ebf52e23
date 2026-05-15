@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { LicencaRecord, LicencaTaxaRecord, GuiaStatus } from "@/types/administrative";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
-
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmpresaAccordion } from "@/components/EmpresaAccordion";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
@@ -674,7 +674,7 @@ const LicencasPage: React.FC = () => {
 
                       <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none">
                         <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden shadow-inner">
-
+                          <ModuleFolderView empresa={emp} departamentoId="geral" />
                         </div>
                       </TabsContent>
                     </Tabs>

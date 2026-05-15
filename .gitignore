@@ -198,4 +198,7 @@ insert_*.sql
 verify_*.sql
 tmp_*.sql
 tmp_*.csv
+<<<<<<< HEAD
 vite.config.ts.timestamp-*
+=======
+>>>>>>> e7179645278bbf1c41e5c3292f702280e97485ec

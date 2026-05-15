@@ -827,7 +827,6 @@ const TarefasPage: React.FC = () => {
                                     {group.tasks.map(a => {
                                         const isExp = !!expandedListItems[a.id];
                                         const isAssignee = activeTab === "para_mim";
-                                        const isCO = a.competencia < filtered.find(t => t.id === a.id)?.competencia || (a.competencia !== undefined && a.competencia < competencia);
 
                                         return (
                                             <div key={a.id} className={cn(

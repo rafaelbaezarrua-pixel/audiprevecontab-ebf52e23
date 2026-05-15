@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { RecalculoRecord, ParcelamentoRecord, GuiaStatus } from "@/types/administrative";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
-
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
+import { FolderOpen } from "lucide-react";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI" };
 
@@ -387,6 +387,9 @@ const RecalculosPage: React.FC = () => {
                     <Tabs defaultValue="dados" className="w-full">
                       <TabsList className="bg-black/10 dark:bg-white/5 p-1 rounded-lg h-9 mb-4 max-w-fit">
                         <TabsTrigger value="dados" className="px-4 h-7 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all">Dados da Guia</TabsTrigger>
+                        <TabsTrigger value="pastas" className="px-4 h-7 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm transition-all flex items-center gap-1.5">
+                          <FolderOpen size={10} /> Arquivos
+                        </TabsTrigger>
                       </TabsList>
  
                       <TabsContent value="dados" className="space-y-4 animate-in fade-in duration-200">
@@ -434,6 +437,17 @@ const RecalculosPage: React.FC = () => {
                         </div>
                       </TabsContent>
  
+                      <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200">
+                        {r.empresas ? (
+                          <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden">
+                             <ModuleFolderView empresa={{ id: r.empresa_id, ...r.empresas } as any} departamentoId="geral" />
+                          </div>
+                        ) : (
+                          <div className="py-8 text-center opacity-30">
+                            <p className="text-[8px] font-black uppercase tracking-widest">Gestão de arquivos desabilitada para pessoa física</p>
+                          </div>
+                        )}
+                      </TabsContent>
                     </Tabs>
                   </div>
                 )}

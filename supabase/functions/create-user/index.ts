@@ -55,7 +55,6 @@ Deno.serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "").trim();
 
-    // Verify JWT via Supabase Auth (validates signature + expiration)
     const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !caller) {
       console.error("Token verification failed:", authError?.message);
@@ -65,7 +64,6 @@ Deno.serve(async (req) => {
     }
     const callerId = caller.id;
 
-    // MANDATORY: Check if the caller is an admin
     const { data: roles, error: rolesError } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", callerId);
     if (rolesError) throw rolesError;
     const isAdminCaller = roles?.some((r: any) => r.role === 'admin' || r.role === 'SUPER_ADMIN');
@@ -82,7 +80,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Email é obrigatório" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Check if user already exists via secure Admin API with filter (instead of loading all users)
     let existingUser = null;
     try {
       const userSearchRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(email)}`, {
@@ -133,7 +130,6 @@ Deno.serve(async (req) => {
 
     const isClientRole = role === 'client' || !!empresa_id;
 
-    // Profiles upsert - Only safe columns
     const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
       user_id: userId,
       full_name: nome,
@@ -145,17 +141,13 @@ Deno.serve(async (req) => {
 
     if (profileError) {
       console.error("Profile upsert error:", profileError);
-      // We continue anyway as the user is created
     }
 
-    // --- ENVIO DE E-MAIL VIA RESEND ---
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     
     if (RESEND_API_KEY) {
       console.log(`Gerando link de recuperação para ${email}...`);
-      
       const resetRedirectUrl = origin ? `${origin}/reset-password` : undefined;
-      
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: 'recovery',
         email,
@@ -166,8 +158,6 @@ Deno.serve(async (req) => {
         console.error("Erro ao gerar link de recuperação:", linkError);
       } else if (linkData?.properties?.action_link) {
         const actionLink = linkData.properties.action_link;
-        console.log("Enviando e-mail de boas-vindas via Resend...");
-        
         try {
           const res = await fetch("https://api.resend.com/emails", {
             method: "POST",
@@ -206,45 +196,28 @@ Deno.serve(async (req) => {
               `,
             }),
           });
-
-          if (!res.ok) {
-            const errorData = await res.json();
-            console.error("Erro no Resend ao enviar boas-vindas:", errorData);
-          } else {
-            console.log("E-mail de boas-vindas enviado com sucesso!");
-          }
+          if (res.ok) console.log("E-mail de boas-vindas enviado com sucesso!");
         } catch (mailErr) {
           console.error("Exceção ao enviar e-mail via Resend:", mailErr);
         }
       }
-    } else {
-      console.warn("RESEND_API_KEY não configurada. E-mail de boas-vindas NÃO enviado.");
     }
 
-    // Role assignment
     if (makeAdmin || role === 'admin') {
-      const { error: roleErr } = await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "admin" }, { onConflict: 'user_id,role' });
-      if (roleErr) throw roleErr;
+      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "admin" }, { onConflict: 'user_id,role' });
     } else if (role === 'client') {
-      const { error: roleErr } = await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "client" }, { onConflict: 'user_id,role' });
-      if (roleErr) throw roleErr;
+      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "client" }, { onConflict: 'user_id,role' });
     } else {
-      // Ensure they have 'user' role at least
-      const { error: roleErr } = await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "user" }, { onConflict: 'user_id,role' });
-      if (roleErr) throw roleErr;
+      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "user" }, { onConflict: 'user_id,role' });
     }
 
-    // Client assignment (empresa_acessos)
     if (role === 'client' || empresa_id) {
-      const { error: accessError } = await supabaseAdmin.from("empresa_acessos").upsert({
+      await supabaseAdmin.from("empresa_acessos").upsert({
         user_id: userId,
         empresa_id: empresa_id,
-        modulos_permitidos: allowedModules // Default all for now or pass from body
+        modulos_permitidos: allowedModules
       }, { onConflict: 'user_id,empresa_id' });
-
-      if (accessError) console.error("Access upsert error:", accessError);
     } else if (modules && typeof modules === 'object') {
-      // User Module Permissions assignment (for internal users)
       const moduleInserts = Object.entries(modules)
         .filter(([_, isGranted]) => isGranted === true)
         .map(([moduleName, _]) => ({
@@ -253,15 +226,8 @@ Deno.serve(async (req) => {
         }));
 
       if (moduleInserts.length > 0) {
-        // Clear existing permissions just in case it's an update
-        const { error: clrErr } = await supabaseAdmin.from("user_module_permissions").delete().eq("user_id", userId);
-        if (clrErr) throw clrErr;
-
-        const { error: modulesError } = await supabaseAdmin.from("user_module_permissions").insert(moduleInserts);
-        if (modulesError) {
-          console.error("Modules insert error:", modulesError);
-          throw modulesError;
-        }
+        await supabaseAdmin.from("user_module_permissions").delete().eq("user_id", userId);
+        await supabaseAdmin.from("user_module_permissions").insert(moduleInserts);
       }
     }
 
@@ -271,9 +237,7 @@ Deno.serve(async (req) => {
 
   } catch (err: any) {
     console.error("create-user error:", err);
-    return new Response(JSON.stringify({
-      error: "Erro interno"
-    }), {
+    return new Response(JSON.stringify({ error: "Erro interno" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -1,7 +1,7 @@
 import React from "react";
 import { formatDateBR, formatMonthYearBR, cn } from "@/lib/utils";
-import { Building2, ChevronDown, ChevronUp, Plus, Clock } from "lucide-react";
-
+import { Building2, ChevronDown, ChevronUp, Plus, Clock, FolderOpen } from "lucide-react";
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { Empresa } from "@/types/societario";
 import { HonorarioConfig, HonorarioMensal } from "@/types/honorarios";
 import { HonorarioConfigForm } from "./HonorarioConfigForm";
@@ -12,8 +12,8 @@ interface HonorariosEmpresasViewProps {
   empresas: Empresa[];
   expanded: string | null;
   onToggleExpand: (id: string) => void;
-  activeTabs: Record<string, "mensal" | "configuracao">;
-  setActiveTab: (id: string, tab: "mensal" | "configuracao") => void;
+  activeTabs: Record<string, "mensal" | "configuracao" | "pastas">;
+  setActiveTab: (id: string, tab: "mensal" | "configuracao" | "pastas") => void;
   configs: Record<string, Partial<HonorarioConfig>>;
   configForms: Record<string, Partial<HonorarioConfig>>;
   onUpdateConfigField: (id: string, field: string, value: string | number | boolean) => void;
@@ -101,13 +101,11 @@ export const HonorariosEmpresasView = ({
 
             const valorBase = config?.valor_honorario || 0;
 
-            // Buscar dados da competência selecionada para o cabeçalho
             const selectedMonth = competenciaSelecionada[emp.id];
             const monthRecord = (mensalData[emp.id] || []).find(r => r.competencia === selectedMonth);
 
             const customHeader = (
               <div className="md:grid md:grid-cols-[2fr_1.2fr_1fr_1.2fr_1fr_60px] items-center w-full py-1">
-                {/* Empresa */}
                 <div className="flex items-center gap-4 min-w-0">
                   <div className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 border",
@@ -128,19 +126,16 @@ export const HonorariosEmpresasView = ({
                   </div>
                 </div>
 
-                {/* Honorário Base */}
                 <div className="hidden md:block text-center">
                   <span className="text-[11px] font-black text-muted-foreground font-mono">
                     {formatCurrency(valorBase)}
                   </span>
                 </div>
 
-                {/* Mês Ref */}
                 <div className="hidden md:block text-center text-[10px] font-black text-muted-foreground/50 font-mono uppercase">
                   {selectedMonth ? formatMonthYearBR(selectedMonth) : "—"}
                 </div>
 
-                {/* Status Mês */}
                 <div className="hidden md:flex justify-center">
                   {monthRecord ? (
                     <span className={cn(
@@ -158,7 +153,6 @@ export const HonorariosEmpresasView = ({
                   )}
                 </div>
 
-                {/* Valor Total */}
                 <div className="hidden md:block text-center">
                   <span className={cn(
                     "text-[11px] font-black font-mono",
@@ -168,7 +162,6 @@ export const HonorariosEmpresasView = ({
                   </span>
                 </div>
 
-                {/* Ações */}
                 <div className="flex justify-end pr-2">
                   <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border",
@@ -194,13 +187,15 @@ export const HonorariosEmpresasView = ({
                     <div className="flex gap-1.5 h-10 items-center bg-black/10 dark:bg-white/5 p-1 rounded-xl shadow-inner">
                       {[
                         { id: "mensal", label: "Fechamentos" },
-                        { id: "configuracao", label: "Configurações" }
+                        { id: "configuracao", label: "Configurações" },
+                        { id: "pastas", label: "Arquivos", icon: FolderOpen }
                       ].map(t => (
                         <button
                           key={t.id}
                           className={`h-full px-5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all gap-2 flex items-center ${tab === t.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}
                           onClick={() => setActiveTab(emp.id, t.id as any)}
                         >
+                          {t.icon && <t.icon size={12} />}
                           {t.label}
                         </button>
                       ))}
@@ -318,6 +313,11 @@ export const HonorariosEmpresasView = ({
                       </div>
                     )}
 
+                    {tab === "pastas" && (
+                      <div className="animate-in slide-in-from-right-1 duration-200 h-[380px] bg-black/5 dark:bg-white/5 rounded-2xl border border-dashed border-border/10 p-0.5 overflow-hidden shadow-inner">
+                        <ModuleFolderView empresa={emp} departamentoId="financeiro" />
+                      </div>
+                    )}
                   </div>
                 </div>
               </EmpresaAccordion>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, Save, Users, Building2, FileUp, Settings, Activity, Filter, Gift, Send } from "lucide-react";
+import { Search, ChevronDown, Save, Users, Building2, FileUp, Settings, Activity, Filter, Gift, Send, FolderOpen } from "lucide-react";
 import { isBefore, parseISO, addDays } from "date-fns";
 import { formatDateBR, formatMonthYearBR, cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ import { PessoalRecord } from "@/types/pessoal";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { TaxGuideUploader } from "@/components/TaxGuideUploader";
-
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmpresaAccordion } from "@/components/EmpresaAccordion";
 
@@ -29,7 +29,7 @@ const PessoalPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "todas" | "folha" | "prolabore">("folha");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
-  const [rowTabs, setRowTabs] = useState<Record<string, 'dados' | 'config'>>({});
+  const [rowTabs, setRowTabs] = useState<Record<string, 'dados' | 'config' | 'pastas'>>({});
   const [alertsSummary, setAlertsSummary] = useState({ aso: 0, ferias: 0 });
   const [dialogEmpresa, setDialogEmpresa] = useState<any>(null);
 
@@ -364,6 +364,9 @@ const PessoalPage: React.FC = () => {
                         <TabsList className="h-10 bg-black/10 dark:bg-white/10 p-1 rounded-lg shadow-inner">
                           <TabsTrigger value="dados" className="px-6 h-full text-[11px] font-black uppercase data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel</TabsTrigger>
                           <TabsTrigger value="config" className="px-6 h-full text-[11px] font-black uppercase data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Parâmetros</TabsTrigger>
+                          <TabsTrigger value="pastas" className="px-6 h-full text-[11px] font-black uppercase data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm flex items-center gap-1.5">
+                            <FolderOpen size={12} /> Arquivos
+                          </TabsTrigger>
                         </TabsList>
                         <div className="flex items-center gap-2">
                           <button onClick={() => navigate(`/pessoal/funcionarios/${emp.id}`)} className="h-9 px-4 text-[11px] font-black uppercase text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-lg transition-all flex items-center gap-2 shadow-sm"><Users size={14} /> Colaboradores</button>
@@ -585,6 +588,11 @@ const PessoalPage: React.FC = () => {
                         </div>
                       </TabsContent>
 
+                      <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none h-[400px] overflow-hidden bg-black/5 rounded-xl border border-dashed border-border/10 p-0.5 shadow-inner">
+                        <div className="h-full overflow-hidden rounded-lg">
+                          <ModuleFolderView empresa={emp} departamentoId="pessoal" />
+                        </div>
+                      </TabsContent>
                     </Tabs>
                   </div>
                 </EmpresaAccordion>

@@ -11,8 +11,8 @@ import React, { Suspense, lazy } from "react";
 
 // Layouts
 const AppLayout = lazy(() => import("@/components/AppLayout"));
+const PortalLayout = lazy(() => import("@/components/PortalLayout"));
 const ConsentModal = lazy(() => import("@/components/legal/ConsentModal").then(m => ({ default: m.ConsentModal })));
-
 
 // Lazy Loaded Pages
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -56,11 +56,23 @@ const VerificationPage = lazy(() => import("@/pages/VerificationPage"));
 const EsqueciSenhaPage = lazy(() => import("@/pages/EsqueciSenhaPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+
 const MessagesPage = lazy(() => import("@/pages/MessagesPage"));
 const SimuladorCalculosPage = lazy(() => import("@/pages/SimuladorCalculosPage"));
 const DocumentosPage = lazy(() => import("@/pages/DocumentosPage"));
 const FaturamentoPage = lazy(() => import("@/pages/FaturamentoPage"));
+const GerenciadorArquivosPage = lazy(() => import("@/pages/GerenciadorArquivosPage"));
 
+// Portal Pages
+const PortalDashboardPage = lazy(() => import("@/pages/PortalDashboardPage"));
+const ClientLoginPage = lazy(() => import("@/pages/ClientLoginPage"));
+const PortalLicencasPage = lazy(() => import("@/pages/PortalLicencasPage"));
+const PortalCertidoesPage = lazy(() => import("@/pages/PortalCertidoesPage"));
+const PortalVencimentosPage = lazy(() => import("@/pages/PortalVencimentosPage"));
+const PortalPerfilPage = lazy(() => import("@/pages/PortalPerfilPage"));
+const PortalProcessosPage = lazy(() => import("@/pages/PortalProcessosPage"));
+const PortalDocumentosPage = lazy(() => import("@/pages/PortalDocumentosPage"));
+const PortalHelpDeskPage = lazy(() => import("@/pages/PortalHelpDeskPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,16 +103,21 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (!user) return <Navigate to="/login" replace />;
   if (!userData) return <Navigate to="/login" replace />;
 
-  if (!userData.profileCompleted) {
+  if (!userData.isClient && !userData.profileCompleted) {
     return <Navigate to="/completar-perfil" replace />;
   }
   
-  if (userData.profileCompleted && !userData.termsAccepted) {
+  if (!userData.isClient && userData.profileCompleted && !userData.termsAccepted) {
     return <Navigate to="/termos" replace />;
   }
 
-  if (userData.termsAccepted && !userData.firstAccessDone) {
+  if (!userData.isClient && userData.termsAccepted && !userData.firstAccessDone) {
     return <Navigate to="/verificacao" replace />;
+  }
+
+  // Redirect clients to portal if they try to access internal app
+  if (userData?.isClient && !window.location.pathname.startsWith("/portal")) {
+    return <Navigate to="/portal" replace />;
   }
 
   return <>{children}</>;
@@ -122,6 +139,21 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+const ClientRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading, userData, authError } = useAuth();
+  if (loading) return null;
+  if (authError) return <Navigate to="/login" replace />;
+  if (!user || (!userData?.isClient && !userData?.isAdmin)) {
+    if (user) {
+      import("@/lib/audit").then(({ logAction }) => {
+        logAction(user.id, 'ACCESS_DENIED', 'routes', window.location.pathname);
+      });
+    }
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading, authError } = useAuth();
@@ -146,6 +178,7 @@ const App = () => {
               <ConsentModal />
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/portal/login" element={<ClientLoginPage />} />
                 <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/completar-perfil" element={<OnboardingRoute><CompletarPerfilPage /></OnboardingRoute>} />
@@ -162,7 +195,7 @@ const App = () => {
                   <Route path="/certidoes" element={<CertidoesPage />} />
                   <Route path="/procuracoes" element={<ProcuracoesPage />} />
                   <Route path="/contabil" element={<ContabilPage />} />
-                <Route path="/fiscal" element={<FiscalPage />} />
+                  <Route path="/fiscal" element={<FiscalPage />} />
                   <Route path="/pessoal" element={<PessoalPage />} />
                   <Route path="/pessoal/simulador" element={<SimuladorCalculosPage />} />
                   <Route path="/pessoal/funcionarios/:empresaId" element={<FuncionariosPage />} />
@@ -193,9 +226,21 @@ const App = () => {
                   <Route path="/configuracoes/auditoria" element={<AdminRoute><AuditoriaPage /></AdminRoute>} />
                   <Route path="/documentos" element={<DocumentosPage />} />
                   <Route path="/faturamento" element={<FaturamentoPage />} />
-
+                  <Route path="/arquivos" element={<GerenciadorArquivosPage />} />
                 </Route>
 
+                {/* Portal do Cliente Routes */}
+                <Route element={<ClientRoute><PortalLayout /></ClientRoute>}>
+                  <Route path="/portal" element={<PortalDashboardPage />} />
+                  <Route path="/portal/licencas" element={<PortalLicencasPage />} />
+                  <Route path="/portal/certidoes" element={<PortalCertidoesPage />} />
+                  <Route path="/portal/vencimentos" element={<PortalVencimentosPage />} />
+                  <Route path="/portal/perfil" element={<PortalPerfilPage />} />
+                  <Route path="/portal/documentos" element={<PortalDocumentosPage />} />
+                  <Route path="/portal/helpdesk" element={<PortalHelpDeskPage />} />
+                  <Route path="/portal/processos" element={<PortalProcessosPage />} />
+                  <Route path="/portal/mensagens" element={<MessagesPage />} />
+                </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

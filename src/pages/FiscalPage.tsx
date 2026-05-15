@@ -10,13 +10,12 @@ import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { TaxGuideUploader, ProcessingResult } from "@/components/TaxGuideUploader";
 import { FiscalParametersDialog } from "@/components/FiscalParametersDialog";
-
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatDateBR, formatMonthYearBR, cn } from "@/lib/utils";
 import { EmpresaAccordion } from "@/components/EmpresaAccordion";
 
 const regimeLabels: Record<string, string> = { simples: "Simples Nacional", lucro_presumido: "Lucro Presumido", lucro_real: "Lucro Real", mei: "MEI", simei: "Simei" };
-
 
 const FiscalPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -695,7 +694,7 @@ const FiscalPage: React.FC = () => {
 
                       <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none">
                         <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden shadow-inner">
-
+                          <ModuleFolderView empresa={emp} departamentoId="fiscal" />
                         </div>
                       </TabsContent>
                     </Tabs>

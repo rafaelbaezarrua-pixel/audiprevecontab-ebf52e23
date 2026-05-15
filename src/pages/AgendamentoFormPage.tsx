@@ -29,7 +29,6 @@ const AgendamentoFormPage: React.FC = () => {
         const loadUsers = async () => {
             try {
                 // Busca apenas usuários com papel de 'admin' ou 'user'
-                // 1. Buscar IDs de usuários que são da equipe interna (admin ou user)
                 const { data: rolesData } = await supabase
                     .from("user_roles")
                     .select("user_id")
@@ -37,7 +36,7 @@ const AgendamentoFormPage: React.FC = () => {
                 
                 const teamUserIds = rolesData?.map(r => r.user_id) || [];
 
-                // 2. Buscar perfis desses usuários
+                // Buscar perfis desses usuários
                 const { data: profiles, error: pErr } = await supabase
                     .from("profiles")
                     .select("user_id, nome_completo, full_name")

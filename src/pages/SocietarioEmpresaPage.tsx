@@ -5,7 +5,7 @@ import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Save, Building2, MapPin, Users, ScrollText, Plus, Trash2, Crown, Calendar as CalendarIcon, FileText, Settings, Shield, CheckCircle, Upload, Eye, Briefcase, FolderOpen } from "lucide-react";
-
+import { ModuleFolderView } from "@/components/ModuleFolderView";
 import { maskCNPJ, maskCPF, maskCPFCNPJ } from "@/lib/utils";
 
 interface Socio { 
@@ -30,6 +30,7 @@ const tabs = [
   { id: "socios", label: "Sócios", icon: <Users size={16} /> },
   { id: "licencas", label: "Licenças Municipais", icon: <ScrollText size={16} /> },
   { id: "depto_pessoal", label: "Departamento Pessoal", icon: <Briefcase size={16} /> },
+  { id: "arquivos", label: "Pastas / Arquivos", icon: <FolderOpen size={16} /> },
   { id: "configuracoes", label: "Configurações", icon: <Settings size={16} /> },
 ];
 
@@ -460,6 +461,24 @@ const SocietarioEmpresaPage: React.FC = () => {
           <button onClick={() => navigate("/societario")} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft size={20} /></button>
         </div>
         <div className="flex gap-2">
+          {!isNew && (
+            <button
+              onClick={async () => {
+                if (!cnpj || !emailRfb) { toast.error("Dados incompletos para criar acesso."); return; }
+                toast.loading("Criando acesso...", { id: "sync" });
+                try {
+                  const { error } = await supabase.functions.invoke("create-user", {
+                    body: { email: emailRfb, nome: nomeEmpresa, role: 'client', empresa_id: id }
+                  });
+                  if (error) throw error;
+                  toast.success("Acesso criado com sucesso. O cliente receberá um link para ativação.", { id: "sync" });
+                } catch (err: any) { toast.error("Erro: " + err.message, { id: "sync" }); }
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-info/10 text-info hover:bg-info/20 transition-all shadow-sm"
+            >
+              <Shield size={16} /> Criar Acesso Portal
+            </button>
+          )}
           <button
             onClick={handleSave}
             disabled={saving}
@@ -705,7 +724,22 @@ const SocietarioEmpresaPage: React.FC = () => {
           </div>
         )}
 
-
+        {activeTab === "arquivos" && (
+          <div className="space-y-6 animate-fade-in">
+             <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2"><FolderOpen size={20} className="text-primary" /> Pastas no Servidor</h2>
+                {isNew && <span className="text-[10px] font-black text-warning uppercase border border-warning/20 px-3 py-1 rounded-lg bg-warning/5">Disponível após o cadastro</span>}
+             </div>
+             {!isNew ? (
+               <ModuleFolderView empresa={{ id: id!, nome_empresa: nomeEmpresa }} departamentoId="societario" />
+             ) : (
+               <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border-2 border-dashed rounded-3xl text-muted-foreground opacity-50">
+                  <FolderOpen size={40} className="mb-4" />
+                  <p className="text-sm font-bold uppercase tracking-widest">Salve a empresa para habilitar as pastas</p>
+               </div>
+             )}
+          </div>
+        )}
 
         {activeTab === "configuracoes" && (
           <div className="space-y-8">

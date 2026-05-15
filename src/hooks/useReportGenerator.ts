@@ -181,7 +181,6 @@ export function useReportGenerator() {
         else if (modId === "faturamentos") {
           const { data: indData } = await supabase.from("faturamentos" as any).select("*").eq("competencia", competencia);
           const { data: relData } = await supabase.from("relacao_faturamentos" as any).select("*"); 
-          // Note: for Relacao, we might want to filter by periodo? But relData is usually less records, so we can filter in JS
           
           const mappedInd = (indData || []).map((d: any) => ({ ...d, tipo_descricao: "Faturamento Emitido" }));
           const mappedRel = (relData || []).filter((r: any) => 
@@ -201,7 +200,6 @@ export function useReportGenerator() {
           const selectedTypes = moduleFilters[modId] || [];
           let combinedData: any[] = [];
           
-          // 1. Outras Declarações (DEFIS, ECD, etc)
           if (selectedTypes.length === 0 || selectedTypes.some(t => t !== "IRPF")) {
             let q = supabase.from("declaracoes_anuais").select("*").eq("ano", parseInt(ano));
             if (selectedTypes.length > 0) {
@@ -211,7 +209,6 @@ export function useReportGenerator() {
             if (data) combinedData = [...combinedData, ...data];
           }
           
-          // 2. IRPF de Sócios (específico)
           if (selectedTypes.length === 0 || selectedTypes.includes("IRPF")) {
             const { data: irpf } = await supabase.from("declaracoes_irpf" as any).select(`
               *,
@@ -235,7 +232,6 @@ export function useReportGenerator() {
               combinedData = [...combinedData, ...mapped];
             }
 
-            // Add missing administrators
             if (admins) {
               const virtualRecords = (admins as any[])
                 .filter(a => !sociosWithRecords.has(a.id))
@@ -259,7 +255,6 @@ export function useReportGenerator() {
             mQuery = mQuery.eq("competencia", competencia);
           }
 
-          // Aplicar filtros específicos do módulo (ex: tipo de declaração)
           if (mod.filterField && moduleFilters[modId]) {
             mQuery = mQuery.in(mod.filterField, moduleFilters[modId]);
           }
@@ -268,7 +263,6 @@ export function useReportGenerator() {
           moduleData = data || [];
         }
 
-        // IRPF Special Handling
         if (modId === "irpf") {
           const categorias = ["IRPF Clientes", "IRPF Clientes Empresa"];
           for (const cat of categorias) {
@@ -287,7 +281,6 @@ export function useReportGenerator() {
           continue;
         }
 
-        // Processos orphaned / Avulsos / Standalone Modules
         if (["processos_societarios", "recibos"].includes(modId)) {
           const orphaned = moduleData.filter(d => !d.empresa_id);
           if (orphaned.length > 0) {
@@ -303,11 +296,9 @@ export function useReportGenerator() {
             else if (format === 'excel') excelAoA.push([], [`--- ${title} ---`], head[0], ...body);
           }
           
-          // Se forem módulos totalmente avulsos, não processar o loop de empresas abaixo
           if (modId === "recibos") continue;
         }
 
-        // Situation Grouping
         for (const sit of SITUATIONS) {
           if (!selectedSituations.includes(sit.id.toLowerCase())) continue;
           const situationCompanies = allCompanies.filter(c => {
@@ -330,7 +321,6 @@ export function useReportGenerator() {
             if (modId === "societario") {
               companyRecords = moduleData.filter(d => d.id === company.id);
             } else if (modId === "faturamentos") {
-              // Faturamento vincula por ID (Relação) ou Nome (Individual)
               companyRecords = moduleData.filter(d => 
                 d.empresa_id === company.id || 
                 (d.nome_cliente && d.nome_cliente.toLowerCase() === company.nome_empresa.toLowerCase())
@@ -342,7 +332,6 @@ export function useReportGenerator() {
             if (companyRecords.length > 0) {
               companyRecords.forEach(r => body.push([company.nome_empresa, ...compValues, ...activeFields.map(f => f.accessor ? f.accessor(r) : (r[f.id] ?? "—"))]));
             } else if (!["faturamentos", "recalculos"].includes(modId)) {
-              // Para faturamento e recálculos, não mostrar empresas sem movimento. Para os outros, mostrar com traços.
               body.push([company.nome_empresa, ...compValues, ...activeFields.map(() => "—")]);
             }
           });
@@ -352,7 +341,6 @@ export function useReportGenerator() {
         }
       }
 
-      // 4. Save
       if (format === 'pdf' && doc) doc.save(`Relatorio_${formatMonthYearBR(competencia).replace('/', '-')}.pdf`);
       else if (format === 'excel') {
         const ws = XLSX.utils.aoa_to_sheet(excelAoA);

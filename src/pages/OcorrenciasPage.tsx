@@ -10,7 +10,7 @@ import logoCaduceu from "@/assets/logo-caduceu.png";
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
 import { useOcorrencias, Ocorrencia } from "@/hooks/useOcorrencias";
 import { useQuery } from "@tanstack/react-query";
-
+import GerenciadorArquivosPage from "./GerenciadorArquivosPage";
 import { formatDateBR } from "@/lib/utils";
 
 interface HeaderConfig {
@@ -103,7 +103,7 @@ const OcorrenciasPage: React.FC = () => {
     const headerConfig = headerConfigData || DEFAULT_HEADER;
 
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<"geral" | "config">("geral");
+    const [activeTab, setActiveTab] = useState<"geral" | "config" | "pastas">("geral");
     const [savingConfig, setSavingConfig] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
     const [localHeaderConfig, setLocalHeaderConfig] = useState<HeaderConfig>(DEFAULT_HEADER);
@@ -305,6 +305,7 @@ const OcorrenciasPage: React.FC = () => {
               {[
                 { id: "geral", label: "Ocorrências", icon: null },
                 { id: "config", label: "Cabeçalho PDF", icon: <Settings2 size={12} /> },
+                { id: "pastas", label: "Pastas", icon: <HistoryIcon size={12} /> }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -404,6 +405,15 @@ const OcorrenciasPage: React.FC = () => {
               </div>
             </div>
           </div>
+        ) : activeTab === "pastas" ? (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="module-card">
+              <h2 className="text-[11px] font-black uppercase tracking-widest mb-6">Repositório de Documentos</h2>
+              <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden">
+                 <GerenciadorArquivosPage />
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
             {/* Form Column */}
@@ -433,7 +443,7 @@ const OcorrenciasPage: React.FC = () => {
                     <div className="space-y-1">
                       <label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 ml-1">Departamento</label>
                       <select
-                        className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all"
+                        className="w-full h-9 px-3 bg-black/10 dark:bg-white/5 border border-border/10 rounded-lg text-[10px) font-black uppercase outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                         value={selectedDepto}
                         onChange={(e) => setSelectedDepto(e.target.value)}
                       >

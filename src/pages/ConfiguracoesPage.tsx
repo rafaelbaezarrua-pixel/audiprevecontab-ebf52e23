@@ -72,7 +72,7 @@ const ConfiguracoesPage: React.FC = () => {
   const [documents, setDocuments] = useState<LegalDoc[]>([]);
   const [editingDoc, setEditingDoc] = useState<LegalDoc | null>(null);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [activeTab, setActiveTab] = useState<'interna' | 'auditoria' | 'personalizacao' | 'lgpd'>('interna');
+  const [activeTab, setActiveTab] = useState<'interna' | 'cliente' | 'auditoria' | 'lgpd' | 'personalizacao'>('interna');
 
   // Local state for branding edits
   const [brandForm, setBrandForm] = useState({
@@ -95,7 +95,6 @@ const ConfiguracoesPage: React.FC = () => {
     try {
       setLoadingUsers(true);
       
-      // 1. Fetch all raw data first
       const [
         { data: profiles },
         { data: allEmpresasData },
@@ -108,16 +107,15 @@ const ConfiguracoesPage: React.FC = () => {
         supabase.from("profiles").select("*").neq('ativo', false),
         supabase.from("empresas").select("id, nome_empresa, cnpj").order('nome_empresa'),
         supabase.from("empresa_acessos").select("user_id, empresa_id, empresas(nome_empresa, cnpj)"),
-        (supabase as any).from("user_consents").select('*, legal_documents(title)').order('created_at', { ascending: false }),
+        supabase.from("user_consents").select('*, legal_documents(title)').order('created_at', { ascending: false }),
         supabase.from("user_roles").select("user_id, role"),
         supabase.from("user_module_permissions").select("user_id, module_name"),
-        (supabase as any).from("legal_documents").select("*").eq("is_active", true)
+        supabase.from("legal_documents").select("*").eq("is_active", true)
       ]);
 
       setListaEmpresas(allEmpresasData || []);
-      setDocuments((docsData || []) as any);
+      setDocuments(docsData || []);
 
-      // 2. Build lookups
       const accessByUserId: Record<string, any> = (userAccess || []).reduce((acc: any, curr: any) => {
         acc[curr.user_id] = {
           empresa_id: curr.empresa_id,
@@ -152,7 +150,6 @@ const ConfiguracoesPage: React.FC = () => {
         return acc;
       }, {});
 
-      // 3. Map complex objects using lookups
       const mappedUsers: Usuario[] = (profiles || []).map((p: any) => {
         const userRoles = rolesByUserId[p.user_id] || [];
         const userPerms = permsByUserId[p.user_id] || [];
@@ -183,9 +180,6 @@ const ConfiguracoesPage: React.FC = () => {
         } : null
       }));
 
-      // 4. Update states
-      // SEPARAÇÃO DEFINITIVA: Equipe Interna mostra apenas os 5 membros principais da imagem ou admins.
-      // Todo o resto é tratado como "Portal Cliente" (Empresas).
       const CORE_TEAM_IDS = [
         '04b72899-9f97-43d3-ba38-cb027a04f24f', // Aliciane
         '10e3e55a-2387-446e-bdae-e064a30db82e', // Tânia
@@ -194,10 +188,8 @@ const ConfiguracoesPage: React.FC = () => {
         'e29dceeb-ef3a-4085-8ba9-dc10f5687f21'  // Rafael
       ];
 
-      // Filtro 100% estrito: mostra apenas quem está na lista da imagem
       setUsuarios(mappedUsers.filter(u => CORE_TEAM_IDS.includes(u.id)));
       
-      // Portal Cliente: Foco total nas empresas
       const companyPortalList = (allEmpresasData || []).map(emp => ({
         ...emp,
         user: usersByEmpresaId[emp.id] || null
@@ -240,7 +232,6 @@ const ConfiguracoesPage: React.FC = () => {
   const releaseVersion = async (doc: LegalDoc) => {
     if (!window.confirm(`Deseja lançar a versão ${doc.version} como obrigatória para todos? Isso fará com que todos os usuários tenham que aceitar novamente.`)) return;
     try {
-      // Cria uma nova versão baseada na atual (ex: v1.0 -> v1.1)
       const currentV = parseFloat(doc.version.replace('v', '')) || 1.0;
       const nextVersion = `v${(currentV + 0.1).toFixed(1)}`;
       
@@ -266,7 +257,6 @@ const ConfiguracoesPage: React.FC = () => {
   const toggleModule = async (targetId: string, module: string, current: boolean) => {
     try {
       if (current) {
-        // Remover permissão
         const { error } = await supabase
           .from("user_module_permissions")
           .delete()
@@ -274,7 +264,6 @@ const ConfiguracoesPage: React.FC = () => {
           .eq("module_name", module);
         if (error) throw error;
       } else {
-        // Adicionar permissão
         const { error } = await supabase
           .from("user_module_permissions")
           .insert({ user_id: targetId, module_name: module });
@@ -305,7 +294,6 @@ const ConfiguracoesPage: React.FC = () => {
       loadUsers();
     } catch (err: any) {
       console.error("Erro toggleAdmin (Edge Function):", err);
-      // Fallback para DB direto se a função falhar (tentativa)
       try {
         if (current) {
           await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
@@ -319,6 +307,60 @@ const ConfiguracoesPage: React.FC = () => {
     }
   };
 
+  const switchUserType = async (userId: string, toClient: boolean) => {
+    try {
+      const { error } = await supabase.functions.invoke('manage-user', {
+        body: { 
+          action: 'toggleUserType', 
+          target_user_id: userId, 
+          role: toClient ? 'client' : 'user' 
+        }
+      });
+
+      if (error) throw error;
+      
+      toast.success(toClient ? "Usuário movido para Portal Cliente" : "Usuário movido para Equipe Interna");
+      
+      if (!toClient) {
+        await supabase.from("empresa_acessos").delete().eq("user_id", userId);
+      }
+      
+      loadUsers();
+    } catch (err: any) {
+      console.error("Erro switchUserType (Edge Function):", err);
+      try {
+        if (toClient) {
+          await supabase.from("user_roles").upsert({ user_id: userId, role: "client" }, { onConflict: 'user_id,role' });
+        } else {
+          await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "client");
+          await supabase.from("empresa_acessos").delete().eq("user_id", userId);
+        }
+        toast.success("Tipo de usuário alterado via Banco de Dados.");
+        loadUsers();
+      } catch (dbErr) {
+        toast.error("Erro crítico ao trocar tipo. Verifique logs.");
+      }
+    }
+  };
+
+  const linkCompany = async (userId: string, empresaId: string) => {
+    try {
+      await supabase.from("empresa_acessos").delete().eq("user_id", userId);
+      
+      const { error } = await supabase.from("empresa_acessos").insert({
+        user_id: userId,
+        empresa_id: empresaId,
+        modulos_permitidos: Object.keys(moduleLabels)
+      });
+      
+      if (error) throw error;
+      toast.success("Empresa vinculada com sucesso!");
+      loadUsers();
+    } catch (err: any) {
+      console.error("Erro linkCompany:", err);
+      toast.error("Erro ao vincular empresa");
+    }
+  };
 
   const handleDelete = async (userId: string) => {
     if (!userId) return;
@@ -338,7 +380,6 @@ const ConfiguracoesPage: React.FC = () => {
       loadUsers();
     } catch (err: any) {
       console.error("Erro ao excluir usuário (Edge Function):", err);
-      // Fallback para Inativação se a exclusão total falhar
       try {
         await supabase.from("profiles").update({ ativo: false }).eq("user_id", userId);
         toast.info("Usuário apenas inativado devido a restrições de permissão.");
@@ -356,7 +397,7 @@ const ConfiguracoesPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <h1 className="header-title">Configurações</h1>
           </div>
-          <p className="subtitle-premium">Gerencie usuários, permissões e auditoria do sistema.</p>
+          <p className="subtitle-premium">Gerencie usuários, permissões, acessos ao portal e auditoria.</p>
         </div>
         <button onClick={() => navigate("/configuracoes/usuarios/novo")} className="button-premium shadow-lg shadow-primary/20">
           <Plus size={18} /> Novo Usuário
@@ -369,6 +410,12 @@ const ConfiguracoesPage: React.FC = () => {
           className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'interna' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <Users size={16} /> Equipe Interna
+        </button>
+        <button 
+          onClick={() => setActiveTab('cliente')} 
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'cliente' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          <Building size={16} /> Portal Cliente
         </button>
         <button 
           onClick={() => setActiveTab('auditoria')} 
@@ -394,7 +441,6 @@ const ConfiguracoesPage: React.FC = () => {
         <AuditoriaPage />
       ) : activeTab === 'lgpd' ? (
         <div className="space-y-8">
-          {/* Painel de Documentos Ativos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {documents.map((doc) => (
               <div key={doc.id} className="card-premium border-l-4 border-l-emerald-500">
@@ -427,7 +473,6 @@ const ConfiguracoesPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Modal de Edição (Condicional) */}
           {editingDoc && (
             <div className="fixed inset-0 z-[110] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-card border border-border w-full max-w-4xl rounded-2xl shadow-2xl p-8 space-y-6">
@@ -461,7 +506,6 @@ const ConfiguracoesPage: React.FC = () => {
             </div>
           )}
 
-          {/* Histórico de Consentimentos */}
           <div className="card-premium">
             <h3 className="text-lg font-black text-card-foreground mb-4 flex items-center gap-2">
               <Shield className="text-emerald-500" size={20} />
@@ -508,7 +552,6 @@ const ConfiguracoesPage: React.FC = () => {
         </div>
       ) : activeTab === 'personalizacao' ? (
         <div className="space-y-8 animate-in fade-in duration-500">
-          {/* Identidade Visual */}
           <div className="card-premium">
             <h3 className="text-lg font-black text-card-foreground mb-6 flex items-center gap-2 border-b border-border/50 pb-4">
               <LucideImage className="text-primary" size={20} />
@@ -587,7 +630,6 @@ const ConfiguracoesPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Customização de Cores */}
             <div className="card-premium h-fit">
               <h3 className="text-lg font-black text-card-foreground mb-6 flex items-center gap-2 border-b border-border/50 pb-4">
                 <Palette className="text-primary" size={20} />
@@ -596,7 +638,6 @@ const ConfiguracoesPage: React.FC = () => {
               <ColorCustomizer />
             </div>
 
-            {/* Customização de Sidebar */}
               <div className="card-premium">
               <h3 className="text-lg font-black text-card-foreground mb-6 flex items-center gap-2 border-b border-border/50 pb-4">
                 <Layout className="text-primary" size={20} />
@@ -608,7 +649,7 @@ const ConfiguracoesPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {usuarios.map((item: any) => (
+          {(activeTab === 'interna' ? usuarios : empresas).map((item: any) => (
             <div key={item.id} className="card-premium">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -627,7 +668,7 @@ const ConfiguracoesPage: React.FC = () => {
                       {activeTab === 'interna' ? item.nome : item.nome_empresa}
                       {activeTab === 'interna' && item.isAdmin && <span className="badge-status badge-success text-[10px] uppercase align-middle">Admin</span>}
                       {activeTab === 'interna' && !item.isAdmin && <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-widest border border-blue-500/20">Colaborador</span>}
-                      {activeTab !== 'interna' && (
+                      {activeTab === 'cliente' && (
                         item.user 
                           ? <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">Autenticado</span>
                           : <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[9px] font-black uppercase tracking-widest border border-transparent">Apenas Cadastro</span>
@@ -653,12 +694,48 @@ const ConfiguracoesPage: React.FC = () => {
                         {item.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
                         {item.isAdmin ? 'Admin' : 'Tornar Admin'}
                       </button>
+
+                      <button 
+                        onClick={() => switchUserType(item.id, true)} 
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-muted border border-transparent text-muted-foreground hover:bg-muted/80 transition-all"
+                        title="Mover para Portal Cliente"
+                      >
+                        <Building size={16} /> Tornar Cliente
+                      </button>
+                    </>
+                  )}
+
+                  {activeTab === 'cliente' && (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase text-muted-foreground/40 hidden md:block">Vincular:</span>
+                        <select 
+                          className="bg-muted border border-border/50 rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-wider outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                          value={item.user?.user_id || ""}
+                          onChange={(e) => linkCompany(e.target.value, item.id)}
+                        >
+                          <option value="">Nenhum Usuário...</option>
+                          {usuarios.map(u => (
+                            <option key={u.id} value={u.id}>{u.nome}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {item.user && (
+                        <button 
+                          onClick={() => switchUserType(item.user.user_id, false)} 
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-muted border border-transparent text-muted-foreground hover:bg-muted/80 transition-all"
+                          title="Mover para Equipe Interna"
+                        >
+                          <Users size={16} /> Tornar Equipe
+                        </button>
+                      )}
                     </>
                   )}
 
                   <button 
-                    onClick={() => handleDelete(item.id)} 
-                    disabled={false}
+                    onClick={() => handleDelete(activeTab === 'interna' ? item.id : item.user?.user_id)} 
+                    disabled={activeTab === 'cliente' && !item.user}
                     className="p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive hover:text-white transition-all shadow-sm disabled:opacity-20 disabled:grayscale"
                     title="Excluir/Inativar Usuário"
                   >
@@ -666,7 +743,6 @@ const ConfiguracoesPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-              {/* Módulos de Acesso */}
               <div className="mt-6 pt-6 border-t border-border/50">
                 <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.15em] mb-4">
                   {activeTab === 'interna' ? 'Permissões de Módulos' : 'Módulos Habilitados para a Empresa'}
@@ -679,9 +755,9 @@ const ConfiguracoesPage: React.FC = () => {
                     return (
                       <button 
                         key={key} 
-                        disabled={(activeTab === 'interna' && item.isAdmin) || (activeTab !== 'interna' && !item.user)} 
+                        disabled={(activeTab === 'interna' && item.isAdmin) || (activeTab === 'cliente' && !item.user)} 
                         onClick={() => toggleModule(targetUser.id, key, !!targetUser.modules?.[key])} 
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess ? "border-primary/40 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/20"} ${(activeTab === 'interna' && item.isAdmin) || (activeTab !== 'interna' && !item.user) ? "opacity-70 cursor-not-allowed" : ""}`}
+                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess ? "border-primary/40 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/20"} ${(activeTab === 'interna' && item.isAdmin) || (activeTab === 'cliente' && !item.user) ? "opacity-70 cursor-not-allowed" : ""}`}
                       >
                         <span className="truncate pr-2">{label}</span>
                         {hasAccess && <div className="w-2 h-2 rounded-full bg-primary shrink-0 shadow-sm shadow-primary/40" />}

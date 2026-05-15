@@ -93,8 +93,6 @@ const sanitizeTarefa = (a: any, mappedUsers: any[]): Tarefa => {
     }
 
     // Verificar se está pendente (atrasado)
-    // SOMENTE se a tarefa estiver em aberto. Se já foi recebida ou iniciada, ela deve seguir o fluxo normal.
-    // Isso evita que a tarefa "volte" para pendente quando o usuário tenta mudar o status.
     const now = new Date();
     if (currentStatus === "em_aberto" && a.data) {
         const scheduledDateTime = new Date(`${a.data}T${a.horario || '00:00'}`);
@@ -120,7 +118,6 @@ const sanitizeTarefa = (a: any, mappedUsers: any[]): Tarefa => {
 export const useTarefas = (competencia: string) => {
     const queryClient = useQueryClient();
     const lastRequestTimeRef = useRef<number>(0);
-    const requestQueueRef = useRef<Promise<any> | null>(null);
 
     // Rate limiting: aguarda intervalo mínimo entre requisições
     const enforceRateLimit = async (): Promise<void> => {
@@ -195,9 +192,8 @@ export const useTarefas = (competencia: string) => {
 
             return enrichedData;
         },
-        staleTime: 5 * 60 * 1000, // 5 minutos
+        staleTime: 5 * 60 * 1000,
         retry: (failureCount, error) => {
-            // Não retry para erros de permissão/RLS
             if (error.message?.includes('permission') || error.message?.includes('RLS')) {
                 return false;
             }
@@ -208,7 +204,6 @@ export const useTarefas = (competencia: string) => {
 
     const updateStatus = useMutation({
         mutationFn: async ({ id, status, userId, resposta }: { id: string, status: string, userId?: string, resposta?: string }) => {
-            // Buscar tarefa atual para atualizar historico
             const { data: currentTask } = await (supabase.from("tarefas" as any).select("historico").eq("id", id).single() as any);
             
             let historico: TarefaHistorico[] = [];
@@ -218,7 +213,6 @@ export const useTarefas = (competencia: string) => {
                 }
             } catch { historico = []; }
 
-            // Adicionar entrada no historico
             historico.push({
                 status,
                 data: new Date().toISOString(),
@@ -234,7 +228,6 @@ export const useTarefas = (competencia: string) => {
                 updatePayload.resposta = resposta;
             }
 
-            // Gerar protocolo se estiver recebendo a tarefa
             if (status === "recebida") {
                 const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
                 const randomPart = Math.floor(1000 + Math.random() * 9000);
