@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Search, ChevronDown, ChevronUp, Save, CheckCircle2, Circle, Calculator, BookOpen, ClipboardCheck, BarChart3, FolderOpen } from "lucide-react";
-import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Search, ChevronDown, ChevronUp, Save, CheckCircle2, Circle, Calculator, BookOpen, ClipboardCheck, BarChart3 } from "lucide-react";
+
 import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { useContabil } from "@/hooks/useContabil";
@@ -37,7 +37,7 @@ const ContabilPage: React.FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [activeStatusTab, setActiveStatusTab] = useState<"ativas" | "mei" | "paralisadas" | "baixadas" | "entregue">("ativas");
-  const [activeSubTab, setActiveSubTab] = useState<"rotinas" | "fechamentos" | "obrigacoes" | "gestao" | "pastas">("rotinas");
+  const [activeSubTab, setActiveSubTab] = useState<"rotinas" | "fechamentos" | "obrigacoes" | "gestao">("rotinas");
 
   const filteredEmpresas = useMemo(() => {
     return empresas.filter(e => {
@@ -272,9 +272,6 @@ const ContabilPage: React.FC = () => {
                         <TabsTrigger value="gestao" className="px-5 h-7 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
                           <BarChart3 size={12} /> Gestão
                         </TabsTrigger>
-                        <TabsTrigger value="pastas" className="px-5 h-7 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                          <FolderOpen size={12} /> Arquivos
-                        </TabsTrigger>
                       </TabsList>
 
                       <h3 className="text-[10px] font-black text-foreground uppercase tracking-widest flex items-center gap-2 opacity-40">
@@ -418,11 +415,6 @@ const ContabilPage: React.FC = () => {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none">
-                      <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden shadow-inner h-[400px]">
-                        <ModuleFolderView empresa={empresa} departamentoId="contabil" />
-                      </div>
-                    </TabsContent>
 
                     <div className="mt-4 flex justify-end gap-3 border-t border-border/5 pt-4">
                       <button

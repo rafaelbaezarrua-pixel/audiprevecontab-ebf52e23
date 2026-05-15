@@ -10,7 +10,7 @@ import logoCaduceu from "@/assets/logo-caduceu.png";
 import { UbuntuRegular, UbuntuBold } from "@/lib/fonts/ubuntu-base64";
 import { useOcorrencias, Ocorrencia } from "@/hooks/useOcorrencias";
 import { useQuery } from "@tanstack/react-query";
-import GerenciadorArquivosPage from "./GerenciadorArquivosPage";
+
 import { formatDateBR } from "@/lib/utils";
 
 interface HeaderConfig {
@@ -103,7 +103,7 @@ const OcorrenciasPage: React.FC = () => {
     const headerConfig = headerConfigData || DEFAULT_HEADER;
 
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<"geral" | "config" | "pastas">("geral");
+    const [activeTab, setActiveTab] = useState<"geral" | "config">("geral");
     const [savingConfig, setSavingConfig] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
     const [localHeaderConfig, setLocalHeaderConfig] = useState<HeaderConfig>(DEFAULT_HEADER);
@@ -305,7 +305,6 @@ const OcorrenciasPage: React.FC = () => {
               {[
                 { id: "geral", label: "Ocorrências", icon: null },
                 { id: "config", label: "Cabeçalho PDF", icon: <Settings2 size={12} /> },
-                { id: "pastas", label: "Pastas", icon: <HistoryIcon size={12} /> }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -402,15 +401,6 @@ const OcorrenciasPage: React.FC = () => {
                 >
                   {savingConfig ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save size={14} /> SALVAR ALTERAÇÕES</>}
                 </button>
-              </div>
-            </div>
-          </div>
-        ) : activeTab === "pastas" ? (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="module-card">
-              <h2 className="text-[11px] font-black uppercase tracking-widest mb-6">Repositório de Documentos</h2>
-              <div className="bg-black/5 dark:bg-white/5 rounded-xl border border-dashed border-border/10 p-0.5 overflow-hidden">
-                 <GerenciadorArquivosPage />
               </div>
             </div>
           </div>

@@ -1,11 +1,11 @@
 -- Create the 'documentos' bucket if it doesn't exist
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('documentos', 'documentos', true)
+VALUES ('documentos', 'documentos', false)
 ON CONFLICT (id) DO NOTHING;
 
--- Allow public read access (if public = true isn't enough depending on policies)
-CREATE POLICY "Public Access" ON storage.objects
-  FOR SELECT USING (bucket_id = 'documentos');
+-- Allow authenticated users to view files
+CREATE POLICY "Authenticated users can view" ON storage.objects
+  FOR SELECT USING (bucket_id = 'documentos' AND auth.uid() IS NOT NULL);
 
 -- Allow authenticated users to upload files
 CREATE POLICY "Authenticated users can upload" ON storage.objects

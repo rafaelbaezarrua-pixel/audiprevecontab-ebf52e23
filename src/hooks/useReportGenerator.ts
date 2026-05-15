@@ -341,8 +341,8 @@ export function useReportGenerator() {
             const compValues = extraHeaders.map(f => f.accessor ? f.accessor(company) : (company[f.id] ?? "—"));
             if (companyRecords.length > 0) {
               companyRecords.forEach(r => body.push([company.nome_empresa, ...compValues, ...activeFields.map(f => f.accessor ? f.accessor(r) : (r[f.id] ?? "—"))]));
-            } else if (modId !== "faturamentos") {
-              // Para faturamento, não mostrar empresas sem movimento. Para os outros, mostrar com traços.
+            } else if (!["faturamentos", "recalculos"].includes(modId)) {
+              // Para faturamento e recálculos, não mostrar empresas sem movimento. Para os outros, mostrar com traços.
               body.push([company.nome_empresa, ...compValues, ...activeFields.map(() => "—")]);
             }
           });

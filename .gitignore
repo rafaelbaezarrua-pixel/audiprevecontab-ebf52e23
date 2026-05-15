@@ -198,3 +198,4 @@ insert_*.sql
 verify_*.sql
 tmp_*.sql
 tmp_*.csv
+vite.config.ts.timestamp-*

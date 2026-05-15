@@ -6,9 +6,6 @@ import { toast } from "sonner";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { CertidaoRecord } from "@/types/administrative";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
-import { ModuleFolderView } from "@/components/ModuleFolderView";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FolderOpen } from "lucide-react";
 
 const tiposCertidao = ["CND Federal", "CND Estadual", "CND Municipal", "CND FGTS", "CND Trabalhista", "CNDT", "Certidão INSS", "Certidão Tributos Federais", "Outra"];
 const calcDias = (data?: string | null) => { if (!data) return 999; return Math.ceil((new Date(data).getTime() - Date.now()) / 86400000); };
@@ -244,18 +241,13 @@ const CertidoesPage: React.FC = () => {
 
               {isOpen && (
                 <div className="border-t border-border/5 p-4 space-y-6 bg-black/[0.01] dark:bg-white/[0.01] animate-in slide-in-from-top-2 duration-200">
-                  <Tabs defaultValue="dados" className="w-full">
-                    <div className="flex items-center justify-between border-b border-border/5 pb-3 mb-4">
-                      <TabsList className="bg-black/10 dark:bg-white/10 p-1 rounded-lg h-9 border border-border/10 shadow-inner">
-                         <TabsTrigger value="dados" className="px-4 h-full text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm">Documentos</TabsTrigger>
-                         <TabsTrigger value="pastas" className="px-4 h-full text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-card data-[state=active]:text-primary shadow-sm">Drive / Pastas</TabsTrigger>
-                      </TabsList>
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                        <span className="w-1.5 h-3 bg-primary rounded-full" /> Detalhes Técnicos
-                      </h3>
+                   <div className="space-y-6 animate-in fade-in duration-200 outline-none pt-2">
+                    <div className="flex items-center justify-between border-b border-border/5 pb-3 mb-2">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                          <span className="w-1.5 h-3 bg-primary rounded-full" /> Certidões Armazenadas
+                        </h3>
                     </div>
 
-                    <TabsContent value="dados" className="space-y-6 animate-in fade-in duration-200 outline-none">
                   {empCerts.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {empCerts.map((c: CertidaoRecord) => {
@@ -306,11 +298,11 @@ const CertidoesPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="bg-black/10 dark:bg-white/5 border border-border/10 rounded-2xl p-4 md:p-5 space-y-4 shadow-inner">
+                  <div className="bg-black/10 dark:bg-white/5 border border-border/10 rounded-2xl p-4 md:p-5 space-y-4 shadow-inner mt-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-border/5 pb-3">
                        <div className="flex items-center gap-2">
                          <Plus size={14} className="text-primary" />
-                         <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Nova Certidão</span>
+                         <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Novo Lançamento Manual</span>
                        </div>
                        
                        {newCert.tipo_certidao === "CND Federal" && (
@@ -333,6 +325,50 @@ const CertidoesPage: React.FC = () => {
                          </div>
                        )}
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className={labelCls}>Tipo de Certidão</label>
+                        <select 
+                          value={newCert.tipo_certidao} 
+                          onChange={e => setNewCert({ ...newCert, tipo_certidao: e.target.value })}
+                          className={inputCls}
+                        >
+                          {tiposCertidao.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelCls}>Data de Vencimento</label>
+                        <input 
+                          type="date" 
+                          value={newCert.vencimento} 
+                          onChange={e => setNewCert({ ...newCert, vencimento: e.target.value })}
+                          className={inputCls} 
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Arquivo (PDF)</label>
+                        <input 
+                          type="file" 
+                          ref={newFileInputRef}
+                          onChange={e => setNewFile(e.target.files?.[0] || null)}
+                          accept=".pdf"
+                          className={inputCls + " py-1.5 file:hidden"} 
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={labelCls}>Observações</label>
+                      <input 
+                        type="text" 
+                        placeholder="Ex: CND em conjunto com INSS..."
+                        value={newCert.observacao} 
+                        onChange={e => setNewCert({ ...newCert, observacao: e.target.value })}
+                        className={inputCls} 
+                      />
+                    </div>
+
                     <div className="flex justify-end pt-2">
                       <button 
                         onClick={() => addCertidao(emp.id)} 
@@ -342,12 +378,7 @@ const CertidoesPage: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  </TabsContent>
-
-                  <TabsContent value="pastas" className="animate-in slide-in-from-right-2 duration-300 outline-none">
-                     <ModuleFolderView empresa={emp} departamentoId="certidoes" />
-                  </TabsContent>
-                </Tabs>
+                </div>
               </div>
             )}
           </div>

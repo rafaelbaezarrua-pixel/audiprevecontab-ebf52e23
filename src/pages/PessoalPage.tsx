@@ -12,7 +12,7 @@ import { PessoalRecord } from "@/types/pessoal";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { TaxGuideUploader } from "@/components/TaxGuideUploader";
-import { ModuleFolderView } from "@/components/ModuleFolderView";
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmpresaAccordion } from "@/components/EmpresaAccordion";
 
@@ -29,7 +29,7 @@ const PessoalPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"ativas" | "mei" | "todas" | "folha" | "prolabore">("folha");
   const [filterStatus, setFilterStatus] = useState<"todos" | "pendente" | "concluido">("todos");
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
-  const [rowTabs, setRowTabs] = useState<Record<string, 'dados' | 'pastas'>>({});
+  const [rowTabs, setRowTabs] = useState<Record<string, 'dados' | 'config'>>({});
   const [alertsSummary, setAlertsSummary] = useState({ aso: 0, ferias: 0 });
   const [dialogEmpresa, setDialogEmpresa] = useState<any>(null);
 
@@ -70,7 +70,7 @@ const PessoalPage: React.FC = () => {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
     const existing = (pessoalData[id] || {}) as Partial<PessoalRecord> & Record<string, any>;
-    let infoGerais = { forma_envio: "", qtd_funcionarios: 0, qtd_pro_labore: 0, possui_vt: false, possui_va: false, possui_vr: false, possui_vc: false };
+    let infoGerais: { forma_envio: string; qtd_funcionarios: number; qtd_pro_labore: number; possui_vt: boolean; possui_va: boolean; possui_vr: boolean; possui_vc: boolean; observacoes?: any } = { forma_envio: "", qtd_funcionarios: 0, qtd_pro_labore: 0, possui_vt: false, possui_va: false, possui_vr: false, possui_vc: false };
 
     if (!existing.id) {
       const { data: prev } = await supabase.from("pessoal").select("*").eq("empresa_id", id).order("competencia", { ascending: false }).limit(1);
@@ -364,7 +364,6 @@ const PessoalPage: React.FC = () => {
                         <TabsList className="h-10 bg-black/10 dark:bg-white/10 p-1 rounded-lg shadow-inner">
                           <TabsTrigger value="dados" className="px-6 h-full text-[11px] font-black uppercase data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Painel</TabsTrigger>
                           <TabsTrigger value="config" className="px-6 h-full text-[11px] font-black uppercase data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Parâmetros</TabsTrigger>
-                          <TabsTrigger value="pastas" className="px-6 h-full text-[11px] font-black uppercase data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Arquivos</TabsTrigger>
                         </TabsList>
                         <div className="flex items-center gap-2">
                           <button onClick={() => navigate(`/pessoal/funcionarios/${emp.id}`)} className="h-9 px-4 text-[11px] font-black uppercase text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-lg transition-all flex items-center gap-2 shadow-sm"><Users size={14} /> Colaboradores</button>
@@ -586,11 +585,6 @@ const PessoalPage: React.FC = () => {
                         </div>
                       </TabsContent>
 
-                      <TabsContent value="pastas" className="animate-in slide-in-from-right-1 duration-200 outline-none h-[400px] overflow-hidden bg-black/5 rounded-xl border border-dashed border-border/10 p-0.5 shadow-inner">
-                        <div className="h-full overflow-hidden rounded-lg">
-                          <ModuleFolderView empresa={emp} departamentoId="pessoal" />
-                        </div>
-                      </TabsContent>
                     </Tabs>
                   </div>
                 </EmpresaAccordion>

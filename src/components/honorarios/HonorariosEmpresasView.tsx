@@ -1,7 +1,7 @@
 import React from "react";
 import { formatDateBR, formatMonthYearBR, cn } from "@/lib/utils";
-import { Building2, ChevronDown, ChevronUp, Plus, Clock, FolderOpen } from "lucide-react";
-import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { Building2, ChevronDown, ChevronUp, Plus, Clock } from "lucide-react";
+
 import { Empresa } from "@/types/societario";
 import { HonorarioConfig, HonorarioMensal } from "@/types/honorarios";
 import { HonorarioConfigForm } from "./HonorarioConfigForm";
@@ -12,8 +12,8 @@ interface HonorariosEmpresasViewProps {
   empresas: Empresa[];
   expanded: string | null;
   onToggleExpand: (id: string) => void;
-  activeTabs: Record<string, "mensal" | "configuracao" | "pastas">;
-  setActiveTab: (id: string, tab: "mensal" | "configuracao" | "pastas") => void;
+  activeTabs: Record<string, "mensal" | "configuracao">;
+  setActiveTab: (id: string, tab: "mensal" | "configuracao") => void;
   configs: Record<string, Partial<HonorarioConfig>>;
   configForms: Record<string, Partial<HonorarioConfig>>;
   onUpdateConfigField: (id: string, field: string, value: string | number | boolean) => void;
@@ -194,15 +194,13 @@ export const HonorariosEmpresasView = ({
                     <div className="flex gap-1.5 h-10 items-center bg-black/10 dark:bg-white/5 p-1 rounded-xl shadow-inner">
                       {[
                         { id: "mensal", label: "Fechamentos" },
-                        { id: "configuracao", label: "Confiigurações" },
-                        { id: "pastas", label: "Arquivos", icon: FolderOpen }
+                        { id: "configuracao", label: "Configurações" }
                       ].map(t => (
                         <button
                           key={t.id}
                           className={`h-full px-5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all gap-2 flex items-center ${tab === t.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground/40 hover:text-foreground"}`}
                           onClick={() => setActiveTab(emp.id, t.id as any)}
                         >
-                          {t.icon && <t.icon size={12} />}
                           {t.label}
                         </button>
                       ))}
@@ -320,11 +318,6 @@ export const HonorariosEmpresasView = ({
                       </div>
                     )}
 
-                    {tab === "pastas" && (
-                      <div className="animate-in slide-in-from-right-1 duration-200 h-[380px] bg-black/5 dark:bg-white/5 rounded-2xl border border-dashed border-border/10 p-0.5 overflow-hidden shadow-inner">
-                        <ModuleFolderView empresa={emp} departamentoId="financeiro" />
-                      </div>
-                    )}
                   </div>
                 </div>
               </EmpresaAccordion>

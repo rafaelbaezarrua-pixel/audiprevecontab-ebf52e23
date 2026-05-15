@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     // MANDATORY: Check if the caller is an admin
     const { data: roles, error: rolesError } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", callerId);
     if (rolesError) throw rolesError;
-    const isAdminCaller = roles?.some((r: any) => r.role === 'admin');
+    const isAdminCaller = roles?.some((r: any) => r.role === 'admin' || r.role === 'SUPER_ADMIN');
     if (!isAdminCaller) {
       return new Response(JSON.stringify({ error: "Apenas administradores podem gerenciar usuários." }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -82,11 +82,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Email é obrigatório" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Check if user already exists
-    const { data: userDataObj, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-    if (listError) throw listError;
+    // Check if user already exists via secure Admin API with filter (instead of loading all users)
+    let existingUser = null;
+    try {
+      const userSearchRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(email)}`, {
+        headers: {
+          "Authorization": `Bearer ${supabaseServiceKey}`,
+          "apikey": supabaseServiceKey
+        }
+      });
+      if (userSearchRes.ok) {
+        const usersList = await userSearchRes.json();
+        const usersArray = Array.isArray(usersList) ? usersList : (usersList.users || []);
+        existingUser = usersArray.find((u: any) => u.email === email) || null;
+      }
+    } catch (searchErr) {
+      console.error("Error searching user by email:", searchErr);
+    }
 
-    const existingUser = userDataObj.users.find((u: any) => u.email === email);
     let userId;
 
     if (existingUser) {

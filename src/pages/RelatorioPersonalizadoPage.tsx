@@ -106,50 +106,49 @@ const RelatorioPersonalizadoPage: React.FC = () => {
             </div>
 
             <div className="bg-card rounded-[2rem] border border-border/50 shadow-sm shadow-primary/5 overflow-hidden">
-                <div className="p-8 space-y-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-end gap-6">
-
-                        <div className="flex items-center gap-3">
-                            <div className="hidden md:flex flex-col items-end px-4 border-r border-border/50">
+                <div className="p-8 space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="flex flex-col px-6 py-2.5 border-l-4 border-primary bg-primary/5 rounded-r-2xl">
                                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Status da Seleção</span>
                                 <span className="text-sm font-bold text-primary">
                                     {selectedModules.length} {selectedModules.length === 1 ? "módulo selecionado" : "módulos selecionados"}
                                 </span>
                             </div>
+                        </div>
 
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => handleAction('excel')}
-                                    disabled={loadingType !== null || selectedModules.length === 0}
-                                    className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm transition-all shadow-sm ${loadingType !== null || selectedModules.length === 0
-                                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                                        : "bg-surface text-foreground border border-border/50 hover:bg-muted active:scale-95"
-                                        }`}
-                                >
-                                    {loadingType === 'excel' ? (
-                                        <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                        <FileSpreadsheet size={18} className="text-emerald-600" />
-                                    )}
-                                    <span>{loadingType === 'excel' ? "Gerando..." : "Excel"}</span>
-                                </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => handleAction('excel')}
+                                disabled={loadingType !== null || selectedModules.length === 0}
+                                className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm transition-all shadow-sm ${loadingType !== null || selectedModules.length === 0
+                                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                                    : "bg-surface text-foreground border border-border/50 hover:bg-muted active:scale-95"
+                                    }`}
+                            >
+                                {loadingType === 'excel' ? (
+                                    <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <FileSpreadsheet size={18} className="text-emerald-600" />
+                                )}
+                                <span>{loadingType === 'excel' ? "Gerando..." : "Excel"}</span>
+                            </button>
 
-                                <button
-                                    onClick={() => handleAction('pdf')}
-                                    disabled={loadingType !== null || selectedModules.length === 0}
-                                    className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 ${loadingType !== null || selectedModules.length === 0
-                                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                                        : "bg-primary text-white shadow-primary/20 hover:scale-105"
-                                        }`}
-                                >
-                                    {loadingType === 'pdf' ? (
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                        <Download size={18} />
-                                    )}
-                                    <span>{loadingType === 'pdf' ? "Gerando..." : "PDF"}</span>
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => handleAction('pdf')}
+                                disabled={loadingType !== null || selectedModules.length === 0}
+                                className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 ${loadingType !== null || selectedModules.length === 0
+                                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                                    : "bg-primary text-white shadow-primary/20 hover:scale-105"
+                                    }`}
+                            >
+                                {loadingType === 'pdf' ? (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <Download size={18} />
+                                )}
+                                <span>{loadingType === 'pdf' ? "Gerando..." : "PDF"}</span>
+                            </button>
                         </div>
                     </div>
 

@@ -98,7 +98,7 @@ const LoginPage: React.FC = () => {
     const startTime = Date.now();
 
     try {
-      await login(email, password);
+      await login(email, password, recaptchaToken || undefined);
       localStorage.removeItem(RATE_LIMIT_KEY);
       localStorage.removeItem(BLOCK_TIME_KEY);
       toast.success("Bem-vindo de volta!");
@@ -248,17 +248,12 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-4 py-4">
-          <Link to="/portal" className="text-[11px] font-black uppercase tracking-[0.3em] text-primary/80 hover:text-primary transition-all flex items-center gap-2 hover:gap-3">
-            Portal do Cliente <ArrowRight size={14} />
-          </Link>
           <p className="text-[9px] font-bold text-muted-foreground/30 text-center uppercase tracking-[0.3em]">
             Audipreve Contabilidade • Todos os direitos reservados
           </p>
         </div>
       </div>
-    </div>
-  );
+    );
 };
 
 export default LoginPage;

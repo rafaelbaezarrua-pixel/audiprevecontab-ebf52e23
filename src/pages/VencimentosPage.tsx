@@ -8,7 +8,7 @@ import { LicencaTaxaRecord, CertidaoRecord } from "@/types/administrative";
 import { FavoriteToggleButton } from "@/components/FavoriteToggleButton";
 import { EmpresaAccordion } from "@/components/EmpresaAccordion";
 import { PageHeaderSkeleton, TableSkeleton } from "@/components/PageSkeleton";
-import { ModuleFolderView } from "@/components/ModuleFolderView";
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
@@ -88,12 +88,11 @@ const VencimentosPage: React.FC = () => {
       });
 
       // Fetch all sources
-      const [licsRes, certsRes, procsRes, certidRes, taxasRes] = await Promise.all([
+      const [licsRes, certsRes, procsRes, certidRes] = await Promise.all([
         supabase.from("licencas").select("*").eq("status", "com_vencimento").not("vencimento", "is", null),
         supabase.from("certificados_digitais").select("*").not("data_vencimento", "is", null),
         supabase.from("procuracoes").select("*").not("data_vencimento", "is", null),
         supabase.from("certidoes").select("*").not("vencimento", "is", null),
-        supabase.from("licencas_taxas").select("*").not("data_vencimento", "is", null)
       ]);
 
       // Process Licenças
@@ -169,24 +168,7 @@ const VencimentosPage: React.FC = () => {
         });
       });
 
-      // Process Taxas
-      (taxasRes.data as unknown as LicencaTaxaRecord[])?.forEach((t) => {
-        const dias = calcDias(t.data_vencimento);
-        const empInfo = empMap[t.empresa_id] || { nome: "—", situacao: "", porte: "" };
-        list.push({
-          id: t.id,
-          source: 'taxa',
-          empresa_id: t.empresa_id,
-          empresa: empInfo.nome,
-          tipo: `Taxa: ${licencaLabels[t.tipo_licenca] || t.tipo_licenca}`,
-          data: t.data_vencimento!,
-          diasRestantes: dias,
-          status: calcStatus(dias),
-          empresa_situacao: empInfo.situacao,
-          empresa_porte: empInfo.porte,
-          original_tipo_licenca: t.tipo_licenca
-        });
-      });
+
 
       list.sort((a, b) => a.diasRestantes - b.diasRestantes);
       setVencimentos(list);
@@ -287,7 +269,6 @@ const VencimentosPage: React.FC = () => {
               <option value="todos">Todas Categorias</option>
               <option value="certificado">Certificados Digitais</option>
               <option value="licença">Licenças</option>
-              <option value="taxa">Taxas</option>
               <option value="certidão">Certidões</option>
               <option value="procuração">Procurações</option>
             </select>
@@ -469,7 +450,7 @@ const VencimentosPage: React.FC = () => {
                       </TabsContent>
 
                       <TabsContent value="pastas" className="mt-0">
-                        <ModuleFolderView empresa={emp} departamentoId="vencimentos" />
+
                       </TabsContent>
                     </Tabs>
                   </EmpresaAccordion>

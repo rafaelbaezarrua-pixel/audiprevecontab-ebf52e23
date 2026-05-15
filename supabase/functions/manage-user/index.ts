@@ -61,7 +61,7 @@ Deno.serve(async (req: Request) => {
       });
       return new Response(JSON.stringify({ 
         error: "Token inválido ou expirado", 
-        details: authError?.message 
+        details: "Autenticação falhou" 
       }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -152,7 +152,7 @@ Deno.serve(async (req: Request) => {
       const { error: profileError } = await supabaseAdmin.from("profiles").delete().eq("user_id", target_user_id);
       if (profileError) {
         console.error("Erro ao deletar perfil:", profileError);
-        throw new Error(`Erro ao excluir perfil: ${profileError.message}`);
+        throw new Error("Erro ao excluir perfil");
       }
 
       // 6. Deletar o usuário do Auth
@@ -173,7 +173,7 @@ Deno.serve(async (req: Request) => {
 
   } catch (err: any) {
     console.error("manage-user error:", err);
-    return new Response(JSON.stringify({ error: err.message || "Erro interno" }), {
+    return new Response(JSON.stringify({ error: "Erro interno ao processar a solicitação" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

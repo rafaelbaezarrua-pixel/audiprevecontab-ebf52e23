@@ -150,17 +150,31 @@ export const useTarefas = (competencia: string) => {
                     nome: u.full_name || "Sem Nome"
                 }));
 
-            // 2. Carregar tarefas
+            // 2. Carregar tarefas do mês selecionado
             const { data: agendaData, error } = await (supabase
                 .from("tarefas" as any)
                 .select("*, empresas(nome_empresa)")
                 .eq("competencia", competencia)
                 .order("horario", { ascending: true }) as any);
 
+            // 3. Carregar tarefas pendentes/abertas de meses ANTERIORES (sem prazo ou não concluídas)
+            const { data: previousData } = await (supabase
+                .from("tarefas" as any)
+                .select("*, empresas(nome_empresa)")
+                .lt("competencia", competencia)
+                .not("status", "in", "(\"concluido\")")
+                .eq("arquivado", false)
+                .order("competencia", { ascending: false }) as any);
+
+            // Unificar: tarefas do mês + tarefas anteriores pendentes (evitando duplicatas)
+            const agendaIds = new Set((agendaData || []).map((t: any) => t.id));
+            const carryoverTasks = (previousData || []).filter((t: any) => !agendaIds.has(t.id));
+            const combinedData = [...(agendaData || []), ...carryoverTasks];
+
             if (error) throw error;
 
             const overdueIds: string[] = [];
-            const enrichedData = (agendaData || []).map((a: any) => {
+            const enrichedData = (combinedData || []).map((a: any) => {
                 const sanitized = sanitizeTarefa(a, mappedUsers);
                 if (sanitized.status === "pendente" && a.status !== "pendente") {
                     overdueIds.push(a.id);
@@ -170,14 +184,13 @@ export const useTarefas = (competencia: string) => {
 
             // Atualiza o status no banco para os que ficaram pendentes (fire and forget)
             if (overdueIds.length > 0) {
-                // Usamos 'as any' porque a tabela tarefas pode não estar nos tipos gerados
-                supabase.from("tarefas" as any)
-                    .update({ status: "pendente" } as any)
-                    .in("id", overdueIds)
-                    .then(({ error }) => { 
-                        if (error) console.error("[TAREFAS] Erro ao atualizar automáticos para pendente:", error); 
-                    })
-                    .catch(err => console.error("[TAREFAS] Falha crítica na atualização de background:", err));
+                Promise.resolve(
+                    supabase.from("tarefas" as any)
+                        .update({ status: "pendente" } as any)
+                        .in("id", overdueIds)
+                ).then(({ error }: any) => {
+                    if (error) console.error("[TAREFAS] Erro ao atualizar automáticos para pendente:", error);
+                }).catch((err: any) => console.error("[TAREFAS] Falha crítica na atualização de background:", err));
             }
 
             return enrichedData;

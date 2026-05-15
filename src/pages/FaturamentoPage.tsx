@@ -34,7 +34,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmpresas } from "@/hooks/useEmpresas";
 import { useRelacaoFaturamentos, RelacaoFaturamento, RelacaoItem as RelacaoItemType } from "@/hooks/useRelacaoFaturamentos";
-import GerenciadorArquivosPage from "./GerenciadorArquivosPage";
+
 
 interface HeaderConfig {
     logoUrl: string;
@@ -692,7 +692,6 @@ const FaturamentoPage: React.FC = () => {
             { value: "emissao", label: "Emissão", icon: DollarSign },
             { value: "historico", label: "Histórico", icon: History },
             { value: "relacao", label: "Relação", icon: TableIcon },
-            { value: "pastas", label: "Pastas", icon: FolderOpen }
           ].map(tab => (
             <TabsTrigger
               key={tab.value}
@@ -1059,9 +1058,7 @@ const FaturamentoPage: React.FC = () => {
             </div>
         </TabsContent>
 
-        <TabsContent value="pastas" className="animate-in fade-in slide-in-from-bottom-2">
-            <GerenciadorArquivosPage />
-        </TabsContent>
+
       </Tabs>
       </div>
     </div>

@@ -1,8 +1,8 @@
 
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, CheckCircle2, XCircle, ChevronUp, ChevronDown, DollarSign, FileText, Save, Trash2, Plus, FolderOpen } from "lucide-react";
-import { ModuleFolderView } from "@/components/ModuleFolderView";
+import { User, CheckCircle2, XCircle, ChevronUp, ChevronDown, DollarSign, FileText, Save, Trash2, Plus } from "lucide-react";
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IRPFRecord } from "@/types/irpf";
 
@@ -86,9 +86,6 @@ export const IRPFRecordCard = ({
           <Tabs defaultValue="dados" className="w-full">
             <TabsList className="bg-muted/50 p-1 rounded-lg h-10 mb-6">
               <TabsTrigger value="dados" className="text-[10px] font-black uppercase tracking-widest px-6 h-8 data-[state=active]:bg-card shadow-sm transition-all">Dados da Declaração</TabsTrigger>
-              <TabsTrigger value="pastas" className="text-[10px] font-black uppercase tracking-widest px-6 h-8 data-[state=active]:bg-card shadow-sm transition-all flex items-center gap-2">
-                <FolderOpen size={14} /> Arquivos / Pastas
-              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="dados" className="space-y-8 animate-in fade-in duration-300">
@@ -202,9 +199,6 @@ export const IRPFRecordCard = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="pastas" className="animate-in slide-in-from-right-4 duration-300">
-             <ModuleFolderView empresa={{ id: record.id, nome_empresa: record.nome_completo } as any} departamentoId="geral" />
-          </TabsContent>
           </Tabs>
         </div>
       )}

@@ -2,14 +2,13 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-// Configurações de segurança de sessão (Inatividade desativada a pedido do usuário)
 const SESSION_CONFIG = {
-    // Timeout de inatividade desativado
-    INACTIVITY_TIMEOUT_MS: 0, 
-    // Aviso de timeout desativado
-    WARNING_BEFORE_TIMEOUT_MS: 0,
-    // Check interval desativado
-    CHECK_INTERVAL_MS: 0,
+    // Timeout de inatividade: 30 minutos
+    INACTIVITY_TIMEOUT_MS: 30 * 60 * 1000, 
+    // Aviso de timeout: 5 minutos antes
+    WARNING_BEFORE_TIMEOUT_MS: 5 * 60 * 1000,
+    // Check interval: 1 minuto
+    CHECK_INTERVAL_MS: 60 * 1000,
 };
 
 export interface UserPermissions {
@@ -62,10 +61,10 @@ interface AuthContextType {
   userData: UserPermissions | null;
   authError: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, captchaToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUserData: () => Promise<void>;
-  loginAsClient: (email: string, password: string) => Promise<void>;
+  loginAsClient: (email: string, password: string, captchaToken?: string) => Promise<void>;
   toggleFavorito: (moduleId: string) => Promise<void>;
   updateSidebarConfig: (config: any[]) => Promise<void>;
   updateThemeConfig: (config: any) => Promise<void>;
@@ -151,11 +150,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [forceLogoutDueToInactivity]);
 
-  // Monitor de inatividade desativado a pedido do usuário
+  // Monitor de inatividade
   useEffect(() => {
-    // Inatividade desativada para manter usuário logado persistentemente
-    return () => {};
-  }, [user]);
+    if (!user) return;
+
+    // Reseta atividade inicial
+    lastActivityRef.current = Date.now();
+
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const handleActivity = () => updateActivity();
+
+    activityEvents.forEach(event => {
+      window.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    checkTimeoutRef.current = setInterval(checkInactivity, SESSION_CONFIG.CHECK_INTERVAL_MS);
+
+    return () => {
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+      if (checkTimeoutRef.current) clearInterval(checkTimeoutRef.current);
+      if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+    };
+  }, [user, checkInactivity, updateActivity]);
 
   const loadUserData = useCallback(async (currentUser: User): Promise<boolean> => {
     if (loadingUserRef.current === currentUser.id) return;
@@ -166,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("*")
+        .select("nome_completo, cpf, departamento, profile_completed, terms_accepted_at, first_access_done, role, empresa_id, foto_url, favoritos, sidebar_config, theme_config")
         .eq("user_id", currentUser.id)
         .maybeSingle();
 
@@ -180,8 +198,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("AuthProvider: Error fetching profile for user", currentUser.id, profileError);
       }
 
+      interface ProfileData {
+        nome_completo?: string | null;
+        cpf?: string | null;
+        departamento?: string | null;
+        profile_completed?: boolean | null;
+        terms_accepted_at?: string | null;
+        first_access_done?: boolean | null;
+        role?: string | null;
+        empresa_id?: string | null;
+        foto_url?: string | null;
+        favoritos?: string[] | null;
+        sidebar_config?: any[] | null;
+        theme_config?: any | null;
+      }
+
       // Robust state derivation
-      const profileData = profile as any;
+      const profileData = profile as unknown as ProfileData;
       const profileCompleted = !!profileData?.profile_completed;
       const termsAccepted = !!profileData?.terms_accepted_at;
       const firstAccessDone = !!profileData?.first_access_done;
@@ -408,7 +441,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, captchaToken?: string) => {
     // Validação básica de input (prevenir injection)
     if (!email || typeof email !== 'string' || email.length > 255) {
       throw new Error('E-mail inválido');
@@ -417,7 +450,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Senha inválida');
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: captchaToken ? { captchaToken } : undefined
+    });
     if (error) throw error;
     if (data.user) {
       const { logAction } = await import("@/lib/audit");
@@ -428,7 +465,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Removed individual logout definition from here as it was moved up
 
-  const loginAsClient = useCallback(async (email: string, password: string) => {
+  const loginAsClient = useCallback(async (email: string, password: string, captchaToken?: string) => {
     // Validação de input
     if (!email || typeof email !== 'string' || email.length > 255 || !email.includes("@")) {
       throw new Error("E-mail inválido.");
@@ -439,21 +476,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const cleanPassword = password.replace(/\D/g, "");
 
-    // Capture user/session on success
-    const result = await (async () => {
-      const res = await supabase.auth.signInWithPassword({ email, password });
-      if (res.error && cleanPassword.length === 14 && password !== cleanPassword) {
-        const res2 = await supabase.auth.signInWithPassword({ email, password: cleanPassword });
-        if (!res2.error) return res2;
-      }
-      return res;
-    })();
+    // Apenas faz o login com a senha fornecida e repassa o token captcha se houver
+    const result = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: captchaToken ? { captchaToken } : undefined
+    });
 
     if (result.error) {
       const { error } = result;
       console.error("Login Error:", error);
       if (error.message === "Invalid login credentials" || error.message === "Invalid credentials") {
-        throw new Error("E-mail ou senha inválidos. Utilize o E-mail RFB da empresa e o CNPJ (apenas números) como senha inicial.");
+        throw new Error("E-mail ou senha inválidos.");
       }
       if (error.message.includes("Email not confirmed")) {
         throw new Error("O e-mail deste acesso ainda não foi confirmado. Por favor, solicite ao administrador para sincronizar os acessos.");

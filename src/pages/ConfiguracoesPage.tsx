@@ -72,7 +72,7 @@ const ConfiguracoesPage: React.FC = () => {
   const [documents, setDocuments] = useState<LegalDoc[]>([]);
   const [editingDoc, setEditingDoc] = useState<LegalDoc | null>(null);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [activeTab, setActiveTab] = useState<'interna' | 'cliente' | 'auditoria' | 'lgpd' | 'personalizacao'>('interna');
+  const [activeTab, setActiveTab] = useState<'interna' | 'auditoria' | 'personalizacao' | 'lgpd'>('interna');
 
   // Local state for branding edits
   const [brandForm, setBrandForm] = useState({
@@ -108,14 +108,14 @@ const ConfiguracoesPage: React.FC = () => {
         supabase.from("profiles").select("*").neq('ativo', false),
         supabase.from("empresas").select("id, nome_empresa, cnpj").order('nome_empresa'),
         supabase.from("empresa_acessos").select("user_id, empresa_id, empresas(nome_empresa, cnpj)"),
-        supabase.from("user_consents").select('*, legal_documents(title)').order('created_at', { ascending: false }),
+        (supabase as any).from("user_consents").select('*, legal_documents(title)').order('created_at', { ascending: false }),
         supabase.from("user_roles").select("user_id, role"),
         supabase.from("user_module_permissions").select("user_id, module_name"),
-        supabase.from("legal_documents").select("*").eq("is_active", true)
+        (supabase as any).from("legal_documents").select("*").eq("is_active", true)
       ]);
 
       setListaEmpresas(allEmpresasData || []);
-      setDocuments(docsData || []);
+      setDocuments((docsData || []) as any);
 
       // 2. Build lookups
       const accessByUserId: Record<string, any> = (userAccess || []).reduce((acc: any, curr: any) => {
@@ -319,67 +319,6 @@ const ConfiguracoesPage: React.FC = () => {
     }
   };
 
-  const switchUserType = async (userId: string, toClient: boolean) => {
-    try {
-      // Tenta via Edge Function primeiro (mais seguro para auth)
-      const { error } = await supabase.functions.invoke('manage-user', {
-        body: { 
-          action: 'toggleUserType', 
-          target_user_id: userId, 
-          role: toClient ? 'client' : 'user' 
-        }
-      });
-
-      if (error) throw error;
-      
-      toast.success(toClient ? "Usuário movido para Portal Cliente" : "Usuário movido para Equipe Interna");
-      
-      if (!toClient) {
-        await supabase.from("empresa_acessos").delete().eq("user_id", userId);
-      }
-      
-      loadUsers();
-    } catch (err: any) {
-      console.error("Erro switchUserType (Edge Function):", err);
-      
-      // Fallback para DB direto em caso de 401 ou erro da função
-      try {
-        if (toClient) {
-          // Adiciona papel de client e vincula (apenas DB)
-          await supabase.from("user_roles").upsert({ user_id: userId, role: "client" }, { onConflict: 'user_id,role' });
-        } else {
-          // Remove papel de client e limpa vínculos
-          await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "client");
-          await supabase.from("empresa_acessos").delete().eq("user_id", userId);
-        }
-        toast.success("Tipo de usuário alterado via Banco de Dados.");
-        loadUsers();
-      } catch (dbErr) {
-        toast.error("Erro crítico ao trocar tipo. Verifique logs.");
-      }
-    }
-  };
-
-  const linkCompany = async (userId: string, empresaId: string) => {
-    try {
-      // Remover vínculo anterior explicitamente
-      await supabase.from("empresa_acessos").delete().eq("user_id", userId);
-      
-      // Inserir novo vínculo
-      const { error } = await supabase.from("empresa_acessos").insert({
-        user_id: userId,
-        empresa_id: empresaId,
-        modulos_permitidos: Object.keys(moduleLabels)
-      });
-      
-      if (error) throw error;
-      toast.success("Empresa vinculada com sucesso!");
-      loadUsers();
-    } catch (err: any) {
-      console.error("Erro linkCompany:", err);
-      toast.error("Erro ao vincular empresa");
-    }
-  };
 
   const handleDelete = async (userId: string) => {
     if (!userId) return;
@@ -417,7 +356,7 @@ const ConfiguracoesPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <h1 className="header-title">Configurações</h1>
           </div>
-          <p className="subtitle-premium">Gerencie usuários, permissões, acessos ao portal e auditoria.</p>
+          <p className="subtitle-premium">Gerencie usuários, permissões e auditoria do sistema.</p>
         </div>
         <button onClick={() => navigate("/configuracoes/usuarios/novo")} className="button-premium shadow-lg shadow-primary/20">
           <Plus size={18} /> Novo Usuário
@@ -432,12 +371,6 @@ const ConfiguracoesPage: React.FC = () => {
           <Users size={16} /> Equipe Interna
         </button>
         <button 
-          onClick={() => setActiveTab('cliente')} 
-          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'cliente' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-        >
-          <Building size={16} /> Portal Cliente
-        </button>
-        <button 
           onClick={() => setActiveTab('auditoria')} 
           className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'auditoria' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
         >
@@ -448,6 +381,12 @@ const ConfiguracoesPage: React.FC = () => {
           className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'personalizacao' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <Palette size={16} /> Personalizar Sistema
+        </button>
+        <button 
+          onClick={() => setActiveTab('lgpd')} 
+          className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'lgpd' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          <ShieldCheck size={16} /> Termos e Privacidade
         </button>
       </div>
 
@@ -669,7 +608,7 @@ const ConfiguracoesPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {(activeTab === 'interna' ? usuarios : empresas).map((item: any) => (
+          {usuarios.map((item: any) => (
             <div key={item.id} className="card-premium">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -688,7 +627,7 @@ const ConfiguracoesPage: React.FC = () => {
                       {activeTab === 'interna' ? item.nome : item.nome_empresa}
                       {activeTab === 'interna' && item.isAdmin && <span className="badge-status badge-success text-[10px] uppercase align-middle">Admin</span>}
                       {activeTab === 'interna' && !item.isAdmin && <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-widest border border-blue-500/20">Colaborador</span>}
-                      {activeTab === 'cliente' && (
+                      {activeTab !== 'interna' && (
                         item.user 
                           ? <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">Autenticado</span>
                           : <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[9px] font-black uppercase tracking-widest border border-transparent">Apenas Cadastro</span>
@@ -714,48 +653,12 @@ const ConfiguracoesPage: React.FC = () => {
                         {item.isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
                         {item.isAdmin ? 'Admin' : 'Tornar Admin'}
                       </button>
-
-                      <button 
-                        onClick={() => switchUserType(item.id, true)} 
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-muted border border-transparent text-muted-foreground hover:bg-muted/80 transition-all"
-                        title="Mover para Portal Cliente"
-                      >
-                        <Building size={16} /> Tornar Cliente
-                      </button>
-                    </>
-                  )}
-
-                  {activeTab === 'cliente' && (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase text-muted-foreground/40 hidden md:block">Vincular:</span>
-                        <select 
-                          className="bg-muted border border-border/50 rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-wider outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                          value={item.user?.user_id || ""}
-                          onChange={(e) => linkCompany(e.target.value, item.id)}
-                        >
-                          <option value="">Nenhum Usuário...</option>
-                          {usuarios.map(u => (
-                            <option key={u.id} value={u.id}>{u.nome}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {item.user && (
-                        <button 
-                          onClick={() => switchUserType(item.user.user_id, false)} 
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-muted border border-transparent text-muted-foreground hover:bg-muted/80 transition-all"
-                          title="Mover para Equipe Interna"
-                        >
-                          <Users size={16} /> Tornar Equipe
-                        </button>
-                      )}
                     </>
                   )}
 
                   <button 
-                    onClick={() => handleDelete(activeTab === 'interna' ? item.id : item.user?.user_id)} 
-                    disabled={activeTab === 'cliente' && !item.user}
+                    onClick={() => handleDelete(item.id)} 
+                    disabled={false}
                     className="p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive hover:text-white transition-all shadow-sm disabled:opacity-20 disabled:grayscale"
                     title="Excluir/Inativar Usuário"
                   >
@@ -776,9 +679,9 @@ const ConfiguracoesPage: React.FC = () => {
                     return (
                       <button 
                         key={key} 
-                        disabled={(activeTab === 'interna' && item.isAdmin) || (activeTab === 'cliente' && !item.user)} 
+                        disabled={(activeTab === 'interna' && item.isAdmin) || (activeTab !== 'interna' && !item.user)} 
                         onClick={() => toggleModule(targetUser.id, key, !!targetUser.modules?.[key])} 
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess ? "border-primary/40 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/20"} ${(activeTab === 'interna' && item.isAdmin) || (activeTab === 'cliente' && !item.user) ? "opacity-70 cursor-not-allowed" : ""}`}
+                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${hasAccess ? "border-primary/40 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/20"} ${(activeTab === 'interna' && item.isAdmin) || (activeTab !== 'interna' && !item.user) ? "opacity-70 cursor-not-allowed" : ""}`}
                       >
                         <span className="truncate pr-2">{label}</span>
                         {hasAccess && <div className="w-2 h-2 rounded-full bg-primary shrink-0 shadow-sm shadow-primary/40" />}
